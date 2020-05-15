@@ -1,0 +1,11 @@
+[run]
+
+omit = */tests/*
+	   */examples/*
+	   */setup.py
+	   */src/pykiso/__init__.py
+	   */src/pykiso/lib/connectors/__init__.py
+	   */src/pykiso/lib/auxiliaries/__init__.py
+	   */tasks.py
+	   */src/pykiso/__main__.py
+
