@@ -12,16 +12,14 @@
 ## Install ##
 
 ```bash
-git clone https://github.com/dbuehler85/pykiso.git
-cd pykiso
+cd kiso-testing
 pip install .
 ```
 
 [Pipenv](https://github.com/pypa/pipenv) is more appropriate for developers as it automatically creates virtual environments.
 
 ```bash
-git clone https://github.com/dbuehler85/pykiso.git
-cd pykiso
+cd kiso-testing
 pipenv install --dev
 pipenv shell
 ```
