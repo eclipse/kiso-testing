@@ -1,16 +1,21 @@
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
 import io
 import re
 from glob import glob
-from os.path import basename
-from os.path import dirname
-from os.path import join
-from os.path import splitext
+from os.path import basename, dirname, join, splitext
 
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 def read(*names, **kwargs):
@@ -22,7 +27,7 @@ def read(*names, **kwargs):
 
 setup(
     name="pykiso",
-    version="0.1.0",
+    version="0.9.4",
     license="Eclipse Public License - v 2.0",
     description="Embedded integration testing framework.",
     long_description=read("README.md"),
@@ -36,7 +41,7 @@ setup(
     zip_safe=False,
     classifiers=[
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
         "Operating System :: Unix",
@@ -49,7 +54,12 @@ setup(
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Utilities",
     ],
-    keywords=["testing", "integration testing", "framework", "testing framework",],
+    keywords=[
+        "testing",
+        "integration testing",
+        "framework",
+        "testing framework",
+    ],
     python_requires=">=3.6",
     install_requires=[
         "pyserial",
@@ -57,9 +67,19 @@ setup(
         "click",
         "pyyaml",
         "pylink-square",
+        "python-can",
+        "unittest-xml-reporting",
+        "robotframework==3.2.2",
+        "pyvisa",
+        "pyvisa-py",
     ],
     tests_require=["pytest", "pytest-mock", "coverage"],
     extras_require={},
     setup_requires=[],
-    entry_points={"console_scripts": ["pykiso = pykiso.cli:main",]},
+    entry_points={
+        "console_scripts": [
+            "pykiso = pykiso.cli:main",
+            "instrument-control = pykiso.lib.auxiliaries.instrument_control_auxiliary.instrument_control_cli:main",
+        ]
+    },
 )

@@ -1,0 +1,40 @@
+#__________________________ Auxiliaries section ________________________
+auxiliaries:
+  proxy_aux:
+    connectors:
+        com: can_channel
+    config:
+      aux_list : [aux1, aux2]
+      activate_trace : True
+      trace_dir: ./suite_proxy
+      trace_name: can_trace
+    type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
+  aux1:
+    connectors:
+        com: proxy_com1
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+  aux2:
+    connectors:
+        com: proxy_com2
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+
+#__________________________ Connectors section _________________________
+connectors:
+  proxy_com1:
+    config: ~
+    type: pykiso.lib.connectors.cc_proxy:CCProxy
+  proxy_com2:
+    config: ~
+    type: pykiso.lib.connectors.cc_proxy:CCProxy
+  can_channel:
+    config:
+      interface : 'pcan'
+      channel: 'PCAN_USBBUS1'
+      state: 'ACTIVE'
+      remote_id : 0x300
+    type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
+#__________________________ Test Suite section _________________________
+test_suite_list:
+- suite_dir: suite_proxy
+  test_filter_pattern: 'test_*.py'
+  test_suite_id: 2

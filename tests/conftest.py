@@ -1,16 +1,45 @@
-import pytest
-import unittest
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 import subprocess
 import time
-from pykiso.dynamic_loader import DynamicImportLinker
-from pykiso import CChannel
-from pykiso import Flasher
+import unittest
 
-from pykiso import test_case
-from pykiso import test_suite
-from pykiso.lib.connectors import cc_example
+import pytest
+
+from pykiso import CChannel, Flasher, test_suite
 from pykiso.lib.auxiliaries import example_test_auxiliary
-from pykiso.test_case import define_test_parameters
+from pykiso.lib.connectors import cc_example
+from pykiso.test_coordinator import test_case
+from pykiso.test_coordinator.test_case import define_test_parameters
+from pykiso.test_setup.dynamic_loader import DynamicImportLinker
+
+
+## skip slow test by default
+def pytest_addoption(parser):
+    parser.addoption(
+        "--runslow", action="store_true", default=False, help="run slow tests"
+    )
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: mark test as slow to run")
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--runslow"):
+        # --runslow given in cli: do not skip slow tests
+        return
+    skip_slow = pytest.mark.skip(reason="need --runslow option to run")
+    for item in items:
+        if "slow" in item.keywords:
+            item.add_marker(skip_slow)
 
 
 EX_MODULE = """
@@ -106,9 +135,7 @@ def serial_interface(tmp_path):
 
 @pytest.fixture(scope="class")
 def CustomTestCaseAndSuite(request):
-    
     class InitTestCaseAndSuite:
-
         def __init__(self):
             self.channel_in_use = cc_example.CCExample
             self.auxiliary_in_use = example_test_auxiliary.ExampleAuxiliary
@@ -124,14 +151,15 @@ def CustomTestCaseAndSuite(request):
                 self.auxiliaries[-1].create_instance()
 
         def prepare_default_test_cases(self, param):
-            @define_test_parameters(suite_id=param[0], case_id=param[1], aux_list=param[2])
+            @define_test_parameters(
+                suite_id=param[0], case_id=param[1], aux_list=param[2]
+            )
             class MyTestCase(test_case.BasicTest):
                 pass
 
             self.suite.addTest(MyTestCase("test_run"))
 
         def prepare_default_test_suites(self, test_suite_params):
-
             class MyTestSuite(test_suite.BasicTestSuite):
                 def __init__(self, params):
                     super(MyTestSuite, self).__init__(*params)
@@ -140,7 +168,7 @@ def CustomTestCaseAndSuite(request):
             self.custom_test_suite = MyTestSuite(test_suite_params)
 
         def stop(self):
-            for aux in self.auxiliaries :
+            for aux in self.auxiliaries:
                 aux.delete_instance()
                 aux.stop()
 

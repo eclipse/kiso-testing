@@ -1,0 +1,14 @@
+auxiliaries:
+  aux1:
+    connectors:
+        com: chan1
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+  aux2:
+    connectors:
+        com: chan2
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+connectors:
+  chan1:
+    type: pykiso.lib.connectors.cc_raw_loopback:CCLoopback
+  chan2:
+    type: pykiso.lib.connectors.cc_raw_loopback:CCLoopback

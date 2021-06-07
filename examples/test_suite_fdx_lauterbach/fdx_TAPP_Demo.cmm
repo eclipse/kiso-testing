@@ -1,0 +1,47 @@
+; --------------------------------------------------------------------------------
+; @Title: FDX communication demo for PowerPC (Simulator)
+; @Description: -
+; @Keywords: Fast Data Exchange
+; @Author: -
+; @Copyright: (c) 1989-2014 Lauterbach GmbH, licensed for use with TRACE32(R) only
+; --------------------------------------------------------------------------------
+; $Id: fdx.cmm 7493 2014-07-29 13:25:08Z hstainl $
+
+
+// disable the FDX trace (in case it was enabled)
+FDX.DISable
+FDX.RESet
+SYStem.RESet
+
+Do BES3_FlashApplication_TAPP_Demo.cmm
+
+SYStem.Up
+
+;enable run-time memory access
+;NEXUS memory access is possible also with JTAG-only debugger (LA-7753)
+SYStem.MemAccess NEXUS
+
+;enable debugger address translation to allow access for virtual addresses while CPU running (1:1 translation used)
+IF CPU.FEATURE(MMU)
+(
+  TRANSlation.RESet
+  TRANSlation.Create 0--0xFFFFFFFF 0
+  TRANSlation.ON
+)
+
+// open and show channels
+WinPOS 0% 0%
+FDX.OutChannel FdxTestSendBuffer
+WinPOS 30% 30%
+FDX.InChannel FdxTestReceiveBuffer
+
+WAIT 1s
+
+;Start FDX test application
+LOCAL &systempath &t32fdxhostparam
+&systempath=OS.PSD()
+&t32fdxhostparam="localhost"
+
+PRINT "Press Go to start test"
+
+ENDDO

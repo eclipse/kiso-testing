@@ -1,5 +1,15 @@
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 import pytest
-from pykiso.dynamic_loader import DynamicImportLinker
+
+from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
 
 @pytest.fixture(scope="module")
@@ -25,7 +35,10 @@ def linker(example_module):
             "connectors": {"com": "chan1"},
             "type": str(example_module) + ":TestAux",
         },
-        "aux_no_class": {"connectors": {"com": "chan1"}, "type": str(example_module),},
+        "aux_no_class": {
+            "connectors": {"com": "chan1"},
+            "type": str(example_module),
+        },
         "aux_no_file": {
             "connectors": {"com": "chan1"},
             "type": str(example_module)[:-3] + "-nope.py:None",
@@ -43,7 +56,10 @@ def linker(example_module):
     for auxiliary, aux_details in aux_cfg.items():
         cfg = aux_details.get("config") or dict()
         linker.provide_auxiliary(
-            auxiliary, aux_details["type"], aux_cons=aux_details["connectors"], **cfg,
+            auxiliary,
+            aux_details["type"],
+            aux_cons=aux_details["connectors"],
+            **cfg,
         )
     linker.install()
     return linker
@@ -78,6 +94,7 @@ def test_import_aux_instances(linker):
 
     assert aux11 != aux12
     assert aux11.com == aux12.com
+
 
 def test_bad_type_spec(linker):
     with pytest.raises(Exception):

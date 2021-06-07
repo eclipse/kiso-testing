@@ -24,12 +24,12 @@ pipeline
         {
             steps
             {
-                script
-                {
-                    echo "Build Pipenv"
-                    sh 'pipenv --python 3'
-                    sh 'pipenv install --dev'
-                }
+                // Clean workspace
+                cleanWs()
+                // checkout repo
+                checkoutCode()
+                // Use pipenv
+                sh 'pipenv install --dev'
             }
         }
         stage('Format check')
@@ -46,32 +46,31 @@ pipeline
         {
             steps
             {
-                script
-                {
-                    echo "Run all the unittests"
-                    sh 'pipenv run invoke unittest'
-                    // TODO: call coverage report + save it
-                }
+                sh 'pipenv run pytest --junitxml=reports/testReport.xml --ignore tests/test_cc_pcan_can.py'
             }
         }
         stage('Run virtual-test')
         {
             steps
             {
-                script
-                {
-                    echo "Run a virtual communication: TODO"
-                }
+                // Run dummy yaml file
+                sh 'pipenv run pykiso -c examples/dummy.yaml --junit'
             }
         }
         stage('Generate documentation')
         {
-            steps
-            {
-                script
-                {
-                    echo "Generate documentation"
-                    sh 'pipenv run invoke docs'
+            steps {
+                script {
+                    sh "pipenv run invoke docs"
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: false,
+                            keepAll: true,
+                            reportDir: 'docs/_build',
+                            reportFiles: 'index.html',
+                            reportName: 'pykiso documentation',
+                            ])
+                    zip zipFile: 'pykiso_documentation.zip', archive: true, glob:'docs/_build/**/*.*'
                 }
             }
         }
@@ -99,7 +98,7 @@ pipeline
                     {
                         script
                         {
-                            echo "Release package on PyPI.org: TODO"
+                            echo "Release documentation on pypi.org: TODO"
                         }
                     }
                 }
@@ -115,10 +114,7 @@ pipeline
                 artifacts: 'TBD',
                 fingerprint: true
             )
-            junit (
-                allowEmptyResults: true,
-                testResults: 'TBD'
-            )
+            junit 'reports/*.xml'
         }
         success
         {

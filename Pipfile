@@ -9,13 +9,13 @@ pytest = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
 invoke = "*"
-invocations = "*"
 bump2version = "*"
 pytest-mock = "*"
 sphinxcontrib-programoutput = "*"
 sphinx-autodoc-typehints = "*"
 pytest-cov = "*"
 coverage = "*"
+pylint = "*"
 
 [packages]
 pyserial = "*"
@@ -24,3 +24,7 @@ click = "*"
 pyyaml = "*"
 pykiso = {editable = true,path = "."}
 pylink-square = "*"
+unittest-xml-reporting = "*" # to generate junit reports
+robotframework = "3.2.2"
+pyvisa = "*"
+pyvisa-py = "*"

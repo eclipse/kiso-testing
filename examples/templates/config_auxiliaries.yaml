@@ -1,0 +1,120 @@
+########################################################################
+#                         !!!!!!! WARNING !!!!!!!
+# THIS CONFIGURATION FILE DOESN'T WORK, THE GOAL IS TO DESCRIBE ALL ITF
+# EMBEDDED AUXILIARIES CONFIGURATIONS:
+#
+# - Device Under Test auxiliary (Test-App)
+# - Communication auxiliary
+# - Proxy auxiliary
+# - Instrument Control Auxiliary
+########################################################################
+
+#__________________________ Auxiliaries section ________________________
+auxiliaries:
+########################################################################
+#                 ****** DEVICE UNDER TEST AUXILIARY ******
+########################################################################
+  dut_aux:
+    connectors:
+      # In addition to communication channel, DUT auxiliary can be
+      # coupled with a flasher channel to put the define device under
+      # test at the desire software version. Currently, two flasher
+      # channels are available for two different hardwares :
+      # Lauterbach and Segger J-Link (see config_connectors.yaml).
+      # communication channel alias
+      com: <channel-alias>
+      # flasher channel alias
+      flash: <flasher-alias>
+    config: ~
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+
+########################################################################
+#                 ****** COMMUNICATION AUXILIARY ******
+#
+# Simply use to send/receive raw messages from the given connectors
+########################################################################
+  com_aux:
+    connectors:
+      # communication channel alias
+      com: <channel-alias>
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+
+########################################################################
+#                 ****** PROXY AUXILIARY ******
+#
+# Use to connect multiple auxiliaries on a unique connector
+#     ___________   ___________         ___________
+#    |           | |           | ..... |           |
+#    |   Aux 1   | |   Aux 1   |       |   Aux n   |
+#    |___________| |___________|       |___________|
+#          |             |                   |
+#          |             |                   |
+#     ___________   ___________         ___________
+#    |           | |           | ..... |           |
+#    |Proxy_con 1| |Proxy_con 2|       |Proxy_con n|
+#    |___________| |___________|       |___________|
+#          |             |                   |
+#          |             |                   |
+#          |             |                   |
+#     _____________________________________________
+#    |                                             |
+#    |               Proxy Auxiliary               |
+#    |_____________________________________________|
+#                        |
+#                        |
+#     _____________________________________________
+#    |                                             |
+#    |               Connector Channel             |
+#    |_____________________________________________|
+#
+########################################################################
+  proxy_aux:
+    connectors:
+      # communication channel alias
+      com: <channel-alias>
+    config:
+      # Auxiliaries alias list bound to proxy auxiliary
+      aux_list : [<aux alias 1>, <aux alias 2>, <aux alias 3>]
+      # activate trace at proxy level, sniff everything received at
+      # connector level and write it in .log file.
+      activate_trace : True
+      # by default the trace is placed where pykiso is launched
+      # otherwise user should specify his own path
+      # (absolute and relative)
+      trace_dir: ./suite_proxy
+      # by default the trace file's name is :
+      # YY-MM-DD_hh-mm-ss_proxy_logging.log
+      # otherwise user should specify his own name
+      trace_name: can_trace
+    type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
+
+########################################################################
+#                 ****** INSTRUMENT CONTROL AUXILIARY ******
+#
+# Used to communicate with test device like power supply using SCPI
+# protocol
+########################################################################
+  instrument_control_aux:
+    connectors:
+      # communication channel alias
+      com: <channel-alias>
+    config:
+      # name of the instrument currently in use
+      instrument: "Elektro-Automatik"
+      # terminator character
+      write_termination: "\n"
+      # output channel to use on the instrument
+      output_channel: 1
+    type: pykiso.lib.auxiliaries.instrument_control_auxiliary:InstrumentControlAuxiliary
+
+#__________________________ Connectors section _________________________
+connectors:
+  <chan>:                    # channel alias
+    config:                  # channel config, optional
+        <key>: <value>       # collection of key-value pairs, e.g. "port: 80"
+    type: <module:Class>     # location of the python class that represents this channel
+#__________________________ Test Suite section _________________________
+test_suite_list:
+- suite_dir: <suite/folder/path>  # suite folder path
+  test_filter_pattern: '*.py'     # filter applied on files
+  test_suite_id: 1                # test suite id

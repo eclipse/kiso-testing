@@ -1,0 +1,21 @@
+#__________________________ Auxiliaries section ________________________
+auxiliaries:
+  instr_aux:
+    connectors:
+      com: visa_serial
+    config:
+      instrument: "Elektro-Automatik"
+    type: pykiso.lib.auxiliaries.instrument_control_auxiliary:InstrumentControlAuxiliary
+
+#__________________________ Connectors section _________________________
+connectors:
+  visa_serial:
+    config:
+      serial_port: 4
+    type: pykiso.lib.connectors.cc_visa:VISASerial
+
+#__________________________ Test Suite section _________________________
+test_suite_list:
+- suite_dir: suite_instrument
+  test_filter_pattern: 'test*.py'
+  test_suite_id: 4
