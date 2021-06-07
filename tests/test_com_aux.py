@@ -1,5 +1,15 @@
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 import pytest
-from pykiso.dynamic_loader import DynamicImportLinker
+
+from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
 
 @pytest.fixture
@@ -20,7 +30,10 @@ def com_aux_linker():
     for auxiliary, aux_details in aux_conf.items():
         cfg = aux_details.get("config") or dict()
         linker.provide_auxiliary(
-            auxiliary, aux_details["type"], aux_cons=aux_details["connectors"], **cfg,
+            auxiliary,
+            aux_details["type"],
+            aux_cons=aux_details["connectors"],
+            **cfg,
         )
     linker.install()
     yield linker
@@ -34,3 +47,4 @@ def test_com_aux_messaging(com_aux_linker):
     assert com_aux.send_message(msg)
     rec_msg = com_aux.receive_message()
     assert rec_msg == msg
+    assert com_aux.is_proxy_capable

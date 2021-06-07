@@ -1,8 +1,15 @@
 # PyKiso
 
 ## Introduction ##
-**Pykiso** is an integration test framework that is used by [kiso](https://github.com/eclipse/kiso) to ensure that all provided kiso features will always work.
-**Pykiso** can nevertheless be used as stand-alone to test any features in an embedded device.
+**pykiso** is an integration test framework. With it, it is possible to write
+* Whitebox integration tests directly on my target device
+* Graybox integration tests to make sure the communication-link with my target device is working as expected
+* Blackbox integration tests to make sure my external device interfaces are working as expected
+
+The project will contain:
+* The core python framework (this repository)
+* Framework plugins that are generic enough to be integrated as "native" (this repository)
+* Additional "testApps" for different targets platforms (e.g. stm32, ...) or languages (C, C++, ...) . It could be pure SW or also HW (other repositories)
 
 ## Requirements ##
 
@@ -24,7 +31,7 @@ pipenv install --dev
 pipenv shell
 ```
 
-### Pre-Commit ##
+### Pre-Commit
 
 To improve code-quality, a configuration of [pre-commit](https://pre-commit.com/) hooks are available.
 The following pre-commit hooks are used:
@@ -49,6 +56,7 @@ Start using the hooks with
 ```bash
 pre-commit install
 ```
+
 ## Usage ##
 
 Once installed the application is bound to `pykiso`, it can be called with the following arguments:
@@ -92,9 +100,14 @@ or
 pytest
 ```
 
-## List of limitations / todos for the python side ##
+## List of limitations / todos for the python side
 
 * [ ] **When the auxiliary does not answer (ping or else), GenericTest.BasicTest.cleanup_and_skip() call will result in a lock and break the framework.**
-* [ ] Add verbosity parameters to pass to the unittest framework to get more details about the test.
+* [x] No test-setion will be executed, needs to be removed later.
+* [x] test configuration files need to be reworked
+* [x] Names & configurations in the *cfg file json* are character precise class names & associated parameters.
+* [ ] Spelling mistakes need to be fixed!  _*ongoing*_
+* [x] Add verbosity parameters to pass to the unittest framework to get more details about the test.
 * [ ] **Add result parsing for Jenkins (see: https://stackoverflow.com/questions/11241781/python-unittests-in-jenkins).**
-* [ ] Host it on pypi.
+* [x] Create a python package
+    * [ ] and host it on pip.

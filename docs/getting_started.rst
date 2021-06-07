@@ -8,13 +8,15 @@ Requirements
 -  Python 3.6+
 -  pip/pipenv (used to get the rest of the requirements)
 
+.. _pykiso_installation:
+
 Install
 -------
 
 .. code:: bash
 
-   git clone https://github.com/dbuehler85/pykiso.git
-   cd pykiso
+   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
+   cd integration-test-framework
    pip install .
 
 `Pipenv <https://github.com/pypa/pipenv>`__ is more appropriate for
@@ -22,8 +24,8 @@ developers as it automatically creates virtual environments.
 
 .. code:: bash
 
-   git clone https://github.com/dbuehler85/pykiso.git
-   cd pykiso
+   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
+   cd integration-test-framework
    pipenv install --dev
    pipenv shell
 

@@ -1,0 +1,15 @@
+#__________________________ Auxiliaries section ________________________
+auxiliaries:
+  com_aux:
+    connectors:
+        com: loopback_channel
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+#__________________________ Connectors section _________________________
+connectors:
+  loopback_channel:
+    type: pykiso.lib.connectors.cc_raw_loopback:CCLoopback
+#__________________________ Test Suite section _________________________
+test_suite_list:
+- suite_dir: suite_com
+  test_filter_pattern: 'test_*.py'
+  test_suite_id: 3

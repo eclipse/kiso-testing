@@ -19,6 +19,10 @@ Thanks goes to these wonderful people (sorted by last name):
  * Daniel Buehler
  * Sebastian Fischer
  * Damien Kayser
+ * Sebastian Clerson
+ * Yoann Garcia
+ * Uwe Lang
+ * Loic Riegel
 
 ## Copyright
 
@@ -61,6 +65,22 @@ pylink-square 0.6.1
 
  * License: Apache License 2.0
 
+unittest-xml-reporting 3.0.4
+
+ * License: BSD License
+
+robotframework 4.0.3
+
+* License: Apache License 2.0
+
+PyVISA 1.11.3
+
+ * License: MIT
+
+PyVISA-py 0.5.2
+
+ * License: MIT
+ 
 ## Cryptography
 
 Content may contain encryption software. The country in which you are currently

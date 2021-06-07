@@ -1,3 +1,12 @@
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 """
 Communication Channel Via Usb
 ********************************
@@ -8,24 +17,18 @@ Communication Channel Via Usb
 
 .. currentmodule:: cc_usb
 
-:Copyright: Copyright (c) 2010-2020 Robert Bosch GmbH
-    This program and the accompanying materials are made available under the
-    terms of the Eclipse Public License 2.0 which is available at
-    http://www.eclipse.org/legal/epl-2.0.
-
-    SPDX-License-Identifier: EPL-2.0
 
 .. warning: Still under test
 """
 
 import serial
+
 from pykiso.lib.connectors import cc_uart
-from pykiso import message
 
 
 class CCUsb(cc_uart.CCUart):
     def __init__(self, serial_port):
-        super(CCUsb, self).__init__(serial_port, baudrate=9600)
+        super().__init__(serial_port, baudrate=9600)
 
     def _cc_send(self, msg, raw=False):
         if raw:
@@ -57,7 +60,6 @@ class CCUsb(cc_uart.CCUart):
     #################### todo TO DELETE IF NOT NEEDED ANYMORE #######################
 
     def CCwaitAfterReboot(self, retry_count, reboot_time):
-        import logging
         import time
 
         self.CCclose()

@@ -14,3 +14,15 @@ Included Auxiliaries
 
 .. automodule:: pykiso.lib.auxiliaries.example_test_auxiliary
     :members:
+
+.. automodule:: pykiso.lib.auxiliaries.simulated_auxiliary
+    :members:
+
+.. automodule:: pykiso.lib.auxiliaries.instrument_control_auxiliary
+    :members:
+
+.. automodule:: pykiso.lib.auxiliaries.dut_auxiliary
+    :members:
+
+.. automodule:: pykiso.lib.auxiliaries.proxy_auxiliary
+    :members:

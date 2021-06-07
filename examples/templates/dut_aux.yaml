@@ -1,0 +1,26 @@
+#__________________________ Auxiliaries section ________________________
+auxiliaries:
+  aux1:
+    connectors:
+      com: chan1
+    config:
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+  aux2:
+    connectors:
+      com: chan2
+    type: dependencies/ext_auxiliaries.py:DUTAuxiliary
+
+#__________________________ Connectors section _________________________
+connectors:
+  chan1:
+    config: null
+    type: pykiso.lib.connectors.cc_example:CCExample
+  chan2:
+    config: null
+    type: dependencies/ext_connectors.py:CCExample
+
+#__________________________ Test Suite section _________________________
+test_suite_list:
+- suite_dir: suite_dut
+  test_filter_pattern: 'test_*.py'
+  test_suite_id: 1

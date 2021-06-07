@@ -1,14 +1,25 @@
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 """
 Tasks for maintaining the project.
 
 Execute 'invoke --list' for guidance on using Invoke
 """
-import shutil
+import pathlib
 import platform
+import re
+import shutil
+import webbrowser
+from pathlib import Path
 
 from invoke import task
-from pathlib import Path
-import webbrowser
 
 ROOT_DIR = Path(__file__).parent
 TEST_DIR = ROOT_DIR / "tests"
@@ -18,6 +29,18 @@ DOCS_DIR = ROOT_DIR / "docs"
 DOCS_BUILD_DIR = DOCS_DIR / "_build"
 DOCS_INDEX = DOCS_BUILD_DIR / "index.html"
 PYTHON_DIRS = [str(d) for d in [SOURCE_DIR, TEST_DIR]]
+
+COPYRIGHT = """\
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
+"""
 
 
 def _delete_file(file):
@@ -119,3 +142,26 @@ def run(c, level="INFO"):
     """ run pykiso with dummy.yaml setup and loglevel INFO """
     c.run("rm -f killme.log")
     c.run(f"pykiso -c examples/dummy.yaml --log-level={level} -l killme.log")
+
+
+@task
+def update_copyright(c):
+    p = pathlib.Path(".")
+    files = p.glob("**/*.py")
+
+    # RST docs copyright notice
+    pat = r":Copyright:.*?SPDX-License-Identifier: EPL-[0-9.]+\s"
+    cp_doc_pat = re.compile(pat, re.MULTILINE + re.DOTALL)
+    # comment copyright notice
+    pat = r"#*\s*#\s*Copyright.*?#\s*SPDX-License-Identifier: EPL-[0-9.]+\s*#*\s+"
+    cp_com_pat = re.compile(pat, re.MULTILINE + re.DOTALL)
+
+    for pyf in files:
+        with open(pyf, "r+") as f:
+            text = f.read()
+            text = cp_doc_pat.sub("", text, count=1)
+            text = cp_com_pat.sub("", text, count=1)
+            text = COPYRIGHT + text
+            f.seek(0)
+            f.write(text)
+            f.truncate()

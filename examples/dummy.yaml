@@ -9,11 +9,17 @@ auxiliaries:
         com:   chan2
         flash: chan3
     type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
+  aux3:
+    connectors:
+        com:   chan4
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
 connectors:
   chan1:
     config: null
     type: ext_lib/cc_example.py:CCExample
   chan2:
+    type: ext_lib/cc_example.py:CCExample
+  chan4:
     type: ext_lib/cc_example.py:CCExample
   chan3:
     config:

@@ -1,0 +1,39 @@
+auxiliaries:
+  fdx_aux:
+    connectors:
+      com: fdx_channel
+      flash: flash_lauterbach
+    config: null
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+connectors:
+  #  Every path can be set as absolute or relative to the yaml file
+  #  Todo: Fix the cmm dependencies in order to not be compulsory to run the tests from the cmm's folder
+  fdx_channel:
+    config:
+      t32_exc_path: 'C:/T32/bin/windows64/t32mppc.exe'
+      t32_config: './test_suite_fdx_lauterbach/config_mc.t32'
+      t32_main_script_path: './test_suite_fdx_lauterbach/fdx_TAPP_Demo.cmm'
+      t32_reset_script_path: './test_suite_fdx_lauterbach/reset.cmm'
+      t32_api_path: 'C:/T32/demo/api/capi/dll/t32api.dll'
+      port: '20000'
+      node: 'localhost'
+      packlen: '1024'
+      device: 1
+    type: pykiso.lib.connectors.cc_fdx_lauterbach:CCFdxLauterbach
+
+  flash_lauterbach:
+    config:
+      t32_exc_path: 'C:/T32/bin/windows64/t32mppc.exe'
+      t32_config: './test_suite_fdx_lauterbach/config_mc.t32'
+      t32_script_path: './test_suite_fdx_lauterbach/BES3_FlashApplication_TAPP_Demo.cmm'
+      t32_api_path: 'C:/T32/demo/api/capi/dll/t32api.dll'
+      port: '20000'
+      node: 'localhost'
+      packlen: '1024'
+      device: 1
+    type: pykiso.lib.connectors.flash_lauterbach:LauterbachFlasher
+
+test_suite_list:
+- suite_dir: test_suite_fdx_lauterbach
+  test_filter_pattern: 'test*.py'
+  test_suite_id: 1

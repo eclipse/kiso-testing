@@ -1,0 +1,22 @@
+auxiliaries:
+  aux_virtual:
+    connectors:
+        com: chan2
+    config: null
+    type: pykiso.lib.auxiliaries.simulated_auxiliary:SimulatedAuxiliary
+  aux_udp:
+    connectors:
+        com: chan1
+    config: null
+    type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
+connectors:
+  chan1:
+    config: {dest_ip : '127.0.0.1', dest_port: 5005}
+    type: pykiso.lib.connectors.cc_udp:CCUdp
+  chan2:
+    config: {dest_ip : '127.0.0.1', dest_port: 5005}
+    type: pykiso.lib.connectors.cc_udp_server:CCUdpServer
+test_suite_list:
+- suite_dir: test_suite_virtual
+  test_filter_pattern: '*.py'
+  test_suite_id: 1

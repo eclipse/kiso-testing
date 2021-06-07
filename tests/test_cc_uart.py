@@ -1,12 +1,23 @@
-import pytest
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 import sys
+
+import pytest
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="tests for linux only")
 
-import threading
 import pathlib
 import subprocess
+import threading
 import time
+
 from pykiso import message
 from pykiso.lib.connectors.cc_uart import CCUart
 
@@ -95,7 +106,8 @@ def test_virtual_communication(virtual_serial):
             kwargs=dict(serial_port=uart0, baud=BAUD),
         ),
         threading.Thread(
-            target=_communication_send_check, kwargs=dict(serial_port=uart1, baud=BAUD),
+            target=_communication_send_check,
+            kwargs=dict(serial_port=uart1, baud=BAUD),
         ),
     ]
     for t in threads:
