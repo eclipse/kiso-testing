@@ -1,0 +1,68 @@
+########################################################################
+#                         !!!!!!! WARNING !!!!!!!
+# THIS CONFIGURATION FILE DOESN'T WORK, THE GOAL IS TO DESCRIBE ITF
+# CONFIGURATION FILE STRUCTURE
+########################################################################
+
+#__________________________ Auxiliaries section ________________________
+# The auxiliary definition is a named list (dictionary in python) of
+# key-value pairs, namely config, connectors and type.
+#
+# The auxiliary alias will identify this configuration for the cases.
+# When running the tests the testcases can import an auxiliary instance
+# defined here using :
+#
+# from pykiso.auxiliaries import <alias>
+#
+# The connectors can be omitted, null, or any number of role-connector
+# pairs. The roles are defined in the auxiliary implementation, usual
+# examples are com and flash. The channel aliases are the ones you
+# defined in the connectors section below.
+#
+# The config can be omitted, null, or any number of key-value pairs.
+#
+# The type consists of a module location and a class name that is
+# expected to be found in the module. The location can be a path to a
+# python file (Win/Linux, relative/absolute) or a python module on the
+# python path (e.h. pykiso.lib.auxiliaries.communication_auxiliary).
+#_______________________________________________________________________
+auxiliaries:
+  <aux>:                         # aux alias
+    connectors:                  # list of connectors this auxiliary needs
+        <role>: <channel-alias>  # <role> has to be the name defined in the Auxiliary class,
+                                 # <channel-alias> is the alias defined above
+    config:                      # channel config, optional
+        <key>: <value>           # collection of key-value pairs, e.g. "port: 80"
+    type: <module:Class>         # location of the python class that represents this auxiliary
+
+#__________________________ Connectors section _________________________
+# The connector definition is a named list (dictionary in python) of
+# key-value pairs, namely config and type.
+#
+# The channel alias will identify this configuration for the
+# auxiliaries.
+#
+# The config can be omitted, null, or any number of key-value pairs.
+#
+# The type consists of a module location and a class name that is
+# expected to be found in the module. The location can be a path to a
+# python file (Win/Linux, relative/absolute) or a python module on the
+# python path (e.h. pykiso.lib.connectors.cc_example).
+#_______________________________________________________________________
+connectors:
+  <chan>:                    # channel alias
+    config:                  # channel config, optional
+        <key>: <value>       # collection of key-value pairs, e.g. "port: 80"
+    type: <module:Class>     # location of the python class that represents this channel
+
+#__________________________ Test Suite section _________________________
+# A suite is always represented by :
+# - suite_dir: folder path where tests are located
+# - test_filter_pattern : a filter applied on files during tests
+#   collection
+# - test_suite_id : test suite identification number
+#_______________________________________________________________________
+test_suite_list:
+- suite_dir: <suite/folder/path>  # suite folder path
+  test_filter_pattern: '*.py'     # filter applied on files
+  test_suite_id: 1                # test suite id

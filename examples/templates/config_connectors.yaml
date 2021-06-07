@@ -1,0 +1,265 @@
+########################################################################
+#                         !!!!!!! WARNING !!!!!!!
+# THIS CONFIGURATION FILE DOESN'T WORK, THE GOAL IS TO DESCRIBE ALL ITF
+# EMBEDDED CONNECTOR CONFIGURATIONS:
+#
+# Two types of connector have to be distinguished, communication channel
+# (com channel) and flasher channel(flasher).
+#
+# - Lauterbach hardware : cc_fdx_lauterbach (com channel) and
+#	                      flash_lauterbach (flasher)
+# - Segger hardware : cc_rtt_segger (com channel) and flash_jlink
+#                     (flasher)
+# - Pcan hardware : cc_pcan_can (com channel)
+# - Vector hardware : cc_vector_can (com channel)
+# - Proxy : cc_proxy (com channel) specific channel for proxy_auxiliary
+#           usage
+# - TCP/IP socket : cc_tcp_ip (com channel)
+# - UDP socket : cc_udp (com channel)
+# - Visa hardware : cc_visa (com channel)
+########################################################################
+#__________________________ Auxiliaries section ________________________
+auxiliaries:
+  <aux>:                         # aux alias
+    connectors:                  # list of connectors this auxiliary needs
+        <role>: <channel-alias>  # <role> has to be the name defined in the Auxiliary class,
+                                 # <channel-alias> is the alias defined above
+    config:                      # channel config, optional
+        <key>: <value>           # collection of key-value pairs, e.g. "port: 80"
+    type: <module:Class>         # location of the python class that represents this auxiliary
+#__________________________ Connectors section _________________________
+connectors:
+########################################################################
+#                 ****** LAUTERBACH HARDWARE ******
+########################################################################
+  # Lauterbach flasher channel configuration example
+  flash_lauterbach:
+    config:
+      # path to Trace32 executable
+      t32_exc_path: 'C:/T32/bin/windows64/t32mppc.exe'
+      # path to Trace32 configuration file
+      t32_config: './test_suite_fdx_lauterbach/config_mc.t32'
+      # path to flash script
+      t32_script_path: './test_suite_fdx_lauterbach/BES3_FlashApplication_TAPP_Demo.cmm'
+      # path to Trace32 remote API
+      t32_api_path: 'C:/T32/demo/api/capi/dll/t32api.dll'
+      # port number
+      port: '20000'
+      # ip address
+      node: 'localhost'
+      # max data packet length
+      packlen: '1024'
+      # device number
+      device: 1
+    type: pykiso.lib.connectors.flash_lauterbach:LauterbachFlasher
+
+  # Lauterbach communication channel configuration example
+  fdx_channel:
+    config:
+      # path to Trace32 executable
+      t32_exc_path: 'C:/T32/bin/windows64/t32mppc.exe'
+      # path to Trace32 configuration file
+      t32_config: './test_suite_fdx_lauterbach/config_mc.t32'
+      # path to the main cmm script to execute
+      t32_main_script_path: './test_suite_fdx_lauterbach/fdx_TAPP_Demo.cmm'
+      # path to the reset cmm script to execute
+      t32_reset_script_path: './test_suite_fdx_lauterbach/reset.cmm'
+      # path to Trace32 remote API
+      t32_api_path: 'C:/T32/demo/api/capi/dll/t32api.dll'
+      # port number
+      port: '20000'
+      # ip address
+      node: 'localhost'
+      # max data packet length
+      packlen: '1024'
+      # device number
+      device: 1
+    type: pykiso.lib.connectors.cc_fdx_lauterbach:CCFdxLauterbach
+########################################################################
+#                 ****** SEGGER HARDWARE ******
+########################################################################
+  # Segger flasher channel configuration example
+  rtt_flasher:
+    config:
+      # path to the binary firmware file
+      binary: "PATH_TO_BINARY"
+      # device chip name
+      chip_name: "STM32L562QE"
+      # path to the location of the JLink.so/JLink.DLL, usually
+      # automatically determined
+      lib: "PATH/_TO/JLink.dll"
+      # optional debugger's S/N (required if many connected)
+      serial_number: 123456
+      # communication baud rate
+      speed: 9600
+      # boolean indicating if connection should be verbose in logging
+      verbose: True
+      # whether to power the target before flashing
+      power_on: False
+      # Adapt this parameter depending on your device
+      start_addr: 0x90000000
+      # device configuration file
+      xml_path: "PATH_TO_THE_DEVICE_CONFIG"
+    type: pykiso.lib.connectors.flash_jlink:JLinkFlasher
+
+  # Segger communication channel configuration example
+  rtt_channel:
+    config:
+      # optional segger debugger serial number (required if many
+      # connected)
+      serial_number: 123456
+      # device chip name
+      chip_name: "STM32L562QE"
+      # communication baud rate
+      speed: 4000
+      # Adapt this parameter depending on your device
+      block_address: 0x2003F800
+      # boolean indicating if connection should be verbose in logging
+      verbose: True
+      # buffer index used for transmission
+      tx_buffer_idx: 1
+      # buffer index used for reception
+      rx_buffer_idx: 1
+      # Path to the folder where the RTT logs should be written to
+      # creates a file named rtt.log
+      rtt_log_path: ./
+      # RTT channel from where the RTT logs should be read
+      rtt_log_buffer_idx: 0
+      # available time (in seconds) to open the connection
+      connection_timeout: 5
+    type: pykiso.lib.connectors.cc_rtt_segger:CCRttSegger
+########################################################################
+#                 ****** PCAN HARDWARE ******
+########################################################################
+  pcan_channel:
+    config:
+      # python-can interface modules used
+      interface: 'pcan'
+      # the can interface name used
+      channel: 'PCAN_USBBUS1'
+      # bus state of the channel ACTIVE or PASSIVE
+      state: 'ACTIVE'
+      # bitrate of channel in bit/s
+      bitrate: 500000
+      # should the Bus be initialized in CAN-FD mode or not
+      is_fd: True
+      # clock rate in MHz
+      f_clock_mhz: 80
+      # clock prescaler for nominal time quantum
+      nom_brp: 2
+      # time segment 1 for nominal bit rate
+      nom_tseg1: 63
+      # time segment 2 for nominal bit rate
+      nom_tseg2: 16
+      # synchronization Jump Width for nominal bit rate
+      nom_sjw: 16
+      # clock prescaler for fast data time quantum
+      data_brp: 4
+      # time segment 1 for fast data bit rate
+      data_tseg1: 7
+      # time segment 2 for fast data bit rate
+      data_tseg2: 2
+      # synchronization Jump Width for fast data bit rate
+      data_sjw: 2
+      # this flag controls the size of the arbitration_id field
+      is_extended_id: False
+      # id used for transmission
+      remote_id: 0x123
+      # iterable used to filter can id on reception
+      can_filters: [{"can_id": 0x600, "can_mask": 0xFFF, "extended": False}]
+      # boolean used to disable/enable logfile creation
+      logging_activated: True
+    type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
+
+########################################################################
+#                 ****** VECTOR HARDWARE ******
+########################################################################
+  can_channel:
+    config:
+      # python-can interface modules used
+      bustype: 'vector'
+      # poll interval in seconds
+      poll_interval: 0.01
+      # number of messages in receive queue
+      rx_queue_size: 524288
+      # vector box's serial number, can be replaced by the
+      # "AUTO" flag to trigger the Vector Box automatic detection
+      serial: 0000
+      # The channel index
+      channel: 3
+      # bitrate of channel in bit/s
+      bitrate: 500000
+      # which bitrate to use for data phase in CAN FD
+      data_bitrate: 2000000
+      # should the Bus be initialized in CAN-FD mode or not
+      fd: True
+      # name of application in Hardware Config, if set to None, the
+      # channel should be a global channel index
+      app_name:
+      # iterable used to filter can id on reception
+      can_filters: [{"can_id": 0x600, "can_mask": 0xFFF, "extended": False}]
+      # this flag controls the size of the arbitration_id field
+      is_extended_id: False
+    type: pykiso.lib.connectors.cc_vector_can:CCVectorCan
+########################################################################
+#                 ****** PROXY ******
+########################################################################
+  proxy_channel:
+    # no configuration needed for proxy channel
+    config: ~
+    type: pykiso.lib.connectors.cc_proxy:CCProxy
+########################################################################
+#                 ****** TCP/IP SOCKET ******
+########################################################################
+  tcp_ip_channel:
+    config:
+      # destination ip address
+      dest_ip: 10.83.131.246
+      # destination port
+      dest_port: 5025
+      # the maximum amount of data to be received at once
+      max_msg_size: 256
+    type: pykiso.lib.connectors.cc_tcp_ip:CCTcpip
+########################################################################
+#                 ****** UDP SOCKET ******
+########################################################################
+  # UDP client communication channel configuration example
+  udp_client_channel:
+    config:
+      # destination ip address
+      dest_ip: '127.0.0.1'
+      # destination port
+      dest_port: 5005
+    type: pykiso.lib.connectors.cc_udp:CCUdp
+
+  # UDP server communication channel configuration example
+  udp_server_channel:
+    config:
+      # destination ip address
+      dest_ip : '127.0.0.1'
+      # destination port
+      dest_port: 5005
+    type: pykiso.lib.connectors.cc_udp_server:CCUdpServer
+########################################################################
+#                 ****** VISA HARDWARE ******
+########################################################################
+  visa_serial_channel:
+    config:
+      # serial communication port in use
+      serial_port: 4
+      # serial communication baud rate
+      baud_rate: 9600
+    type: pykiso.lib.connectors.cc_visa:VISASerial
+
+  visa_tcp_ip_channel:
+    config:
+      # serial communication port in use
+      ip_address: 10.83.131.246
+      # serial communication baud rate
+      protocol: "INSTR"
+    type: pykiso.lib.connectors.cc_visa:VISATcpip
+#__________________________ Test Suite section _________________________
+test_suite_list:
+- suite_dir: <suite/folder/path>  # suite folder path
+  test_filter_pattern: '*.py'     # filter applied on files
+  test_suite_id: 1                # test suite id

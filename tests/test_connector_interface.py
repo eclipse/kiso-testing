@@ -1,6 +1,15 @@
+##########################################################################
+# Copyright (c) 2010-2020 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 import pytest
-from pykiso import CChannel
-from pykiso import Flasher
+
+from pykiso import CChannel, Flasher
 
 
 def test_cchan_abstract():
@@ -40,8 +49,8 @@ def test_cchan_interface(cchannel_inst, mocker):
         ch.cc_receive(0)
     expected_calls = [
         mocker.call._cc_open(),
-        mocker.call._cc_send("test", raw=False),
-        mocker.call._cc_receive(0, raw=False),
+        mocker.call._cc_send(msg="test", raw=False),
+        mocker.call._cc_receive(timeout=0, raw=False),
         mocker.call._cc_close(),
     ]
     print(repr(expected_calls))

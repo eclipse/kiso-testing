@@ -13,8 +13,8 @@ Install
 
 .. code:: bash
 
-   git clone https://github.com/dbuehler85/pykiso.git
-   cd pykiso
+   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
+   cd integration-test-framework
    pipenv install --dev
    pipenv shell
 

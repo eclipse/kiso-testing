@@ -1,0 +1,49 @@
+########################################################################
+#                         !!!!!!! WARNING !!!!!!!
+# THIS CONFIGURATION FILE DOESN'T WORK, THE GOAL IS TO DESCRIBE ITF
+# CONFIGURATION FILE FEATURES :
+#
+# - specify files and folders : see below Auxiliaries section
+# - Make a reference to an external yaml : see below Connectors section
+# - Use environment variables : see below Test Suite section
+########################################################################
+
+#__________________________ Auxiliaries section ________________________
+# FEATURE : relative and absolute paths
+#
+# To specify files and folders you can use absolute or relative paths.
+# Relative paths are always given relative to the location of the yaml
+# file.
+#_______________________________________________________________________
+auxiliaries:
+  <aux>:
+    connectors:
+        <role>: <channel-alias>
+    config:
+        # Relative path or file locations must always start with “./”
+        rel_path: './script_folder/my_awesome_script.py'
+        abs_path: 'C:/script_folder'
+    type: <module:Class>
+
+#__________________________ Connectors section _________________________
+# FEATURE : yaml in yaml
+#
+# In order to call a yaml file inside a other yaml file, the special
+# tag !include has to be used. The path could be in a relative or
+# absolute form.
+#_______________________________________________________________________
+connectors:
+  <chan>: !include ./channel_config/my_channel_config.yaml
+
+#__________________________ Test Suite section _________________________
+
+# FEATURE : environment variables
+#
+# It is possible to replace any value by an environment variable in the
+# YAML files. When using environment variables, the following format
+# should be respected : ENV{my-env-var}
+#_______________________________________________________________________
+test_suite_list:
+- suite_dir: ENV{TEST_SUITE_DIR}
+  test_filter_pattern: '*.py'
+  test_suite_id: 1

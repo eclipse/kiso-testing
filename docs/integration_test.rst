@@ -288,12 +288,15 @@ the following values:
 +---------+---------+---------------------+-------------+-----------+
 |         |         | TEST_FAILED         | 1           |           |
 +---------+---------+---------------------+-------------+-----------+
+|         |         | TEST_NOT_IMPLEMENTED| 2           |           |
++---------+---------+---------------------+-------------+-----------+
 | ACK     | 2       | ACK                 | 0           |           |
 +---------+---------+---------------------+-------------+-----------+
 |         |         | NACK                | 1           |           |
 +---------+---------+---------------------+-------------+-----------+
-| LOG     | 3       |                     |             |           |
+| LOG     | 3       | RESERVED            | 0           |           |
 +---------+---------+---------------------+-------------+-----------+
+
 
 The TLV only supported *Tag* are:
 
@@ -325,6 +328,84 @@ Flow
 6. If the tests fail, you will see it in the the output. For more
    details, you can take a look at the log file (logs to STDOUT as default).
 
+Define the test information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For each test fixture (setup, teardown or test_run), users have to define
+the test information using the decorator define_test_parameters. This decorator
+gives access to the following parameters:
+
+- suite_id : current test suite identification number
+- case_id : current test case identification number (optional for test suite setup and teardown)
+- aux_list : list of used auxiliaries
+
+Based on Message Protocol, users can configure the maximum time (in seconds) used to wait for a report.
+This "timeout" is configurable for each available fixtures :
+
+- setup_timeout : the maximum time (in seconds) used to wait for a report during setup execution (optional)
+- run_timeout : the maximum time (in seconds) used to wait for a report during test_run execution (optional)
+- teardown_timeout : the maximum time (in seconds) used to wait for a report during teardown execution (optional)
+
+.. note:: by default those timeout values are set to 10 seconds.
+
+In order to link the architecture requirement to the test,
+an additional reference can be added into the test_run decorator:
+-  test_ids: [optional] requirements has to be defined like follow:
+
+{"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
+
+Find below a full example for a test suite/case declaration :
+
+.. code:: python
+
+  """
+  Add test suite setup fixture, run once at test suite's beginning.
+  Test Suite Setup Information:
+  -> suite_id : set to 1
+  -> case_id : Parameter case_id is not mandatory for setup.
+  -> aux_list : used aux1 and aux2 is used
+  -> setup_timeout : time to wait for a report 5 seconds
+  -> run_timeout : Parameter run_timeout is not mandatory for test suite setup.
+  -> teardown_timeout : Parameter run_timeout is not mandatory for test suite setup.
+  """
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=5)
+    class SuiteSetup(pykiso.BasicTestSuiteSetup):
+        pass
+
+  """
+  Add test suite teardown fixture, run once at test suite's end.
+  Test Suite Teardown Information:
+  -> suite_id : set to 1
+  -> case_id : Parameter case_id is not mandatory for setup.
+  -> aux_list : used aux1 and aux2 is used
+  -> setup_timeout : Parameter run_timeout is not mandatory for test suite teardown.
+  -> run_timeout : Parameter run_timeout is not mandatory for test suite teardown.
+  -> teardown_timeout : time to wait for a report 5 seconds
+  """
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], teardown_timeout=5,)
+    class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+        pass
+
+  """
+  Add a test case 1 from test suite 1 using auxiliary 1.
+    Test Suite Teardown Information:
+  -> suite_id : set to 1
+  -> case_id : set to 1
+  -> aux_list : used aux1 and aux2 is used
+  -> setup_timeout : time to wait for a report 3 seconds during setup
+  -> run_timeout : time to wait for a report 10 seconds during test_run
+  -> teardown_timeout : time to wait for a report 3 seconds during teardown
+  -> test_ids: [optional] store the requirements into the report
+  """
+    @pykiso.define_test_parameters(
+            suite_id=1, case_id=1, aux_list=[aux1, aux2], setup_timeout=3,
+            run_timeout=10, teardown_timeout=3,
+            test_ids={"Component1": ["Req1", "Req2"]}
+    )
+    class MyTest(pykiso.BasicTest):
+        pass
+
+
 Implementation of Basic Tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -344,7 +425,7 @@ Implementation of Basic Tests
   Add test suite setup fixture, run once at test suite's beginning.
   Parameter case_id is not mandatory for setup.
   """
-    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=1, run_timeout=2, teardown_timeout=3)
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
         pass
 
@@ -381,7 +462,7 @@ For this test we will assume that we have configured a :py:class:`pykiso.lib.aux
 .. code:: python
 
     """
-    send a message, receive a responce, compare to expected response
+    send a message, receive a response, compare to expected response
     """
     import pykiso
     from pykiso.auxiliaries import com_aux
@@ -406,7 +487,7 @@ Implementation of Advanced Tests - Custom Setup
 If you need to have more complex tests, you can do the following:
 
 -  ``BasicTest`` is a specific implementation of ``unittest.TestCase``
-   therefor it contains 3 steps/methods **setUp()**, **tearDown()** and
+   therefore it contains 3 steps/methods **setUp()**, **tearDown()** and
    **test_run()** that can be overwritten.
 -  ``BasicTest`` will contain the list of **auxiliaries** you can use.
    It will be hold in the attribute ``test_auxiliary_list``.
@@ -433,7 +514,7 @@ If you need to have more complex tests, you can do the following:
            # I loop through all the auxiliaries
            for aux in self.test_auxiliary_list:
                if aux.name == "aux1": # If I find the auxiliary to which I need to send a special message, I compose the message and send it.
-                   # Compose the message to send with some additional informations
+                   # Compose the message to send with some additional information
                    tlv = { TEST_REPORT:"Give me something" }
                    testcase_setup_special_message = message.Message(msg_type=message.MessageType.COMMAND, sub_type=message.MessageCommandType.TEST_CASE_SETUP,
                                                            test_section=self.test_section_id, test_suite=self.test_suite_id, test_case=self.test_case_id, tlv_dict=tlv)

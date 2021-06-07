@@ -11,7 +11,9 @@ Welcome to pykiso's documentation!
     config_file
     connectors
     auxiliaries
+    robot_framework
     api
+    instrument_control
 
 Indices and tables
 ==================

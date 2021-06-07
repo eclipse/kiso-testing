@@ -1,0 +1,17 @@
+auxiliaries:
+  dut_aux1:
+    connectors:
+        com: dut_chan1
+    config: null
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+  dut_aux2:
+    connectors:
+        com: dut_chan2
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+
+connectors:
+  dut_chan1:
+    config: null
+    type: ext_lib/cc_example.py:CCExample
+  dut_chan2:
+    type: ext_lib/cc_example.py:CCExample
