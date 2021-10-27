@@ -54,12 +54,12 @@ def test_get_message_without_source(mocker, communication_aux_instance):
 
 def test_get_message_with_source(mocker, communication_aux_instance):
     receive_msg_mock = mocker.patch.object(
-        ComAux, "receive_message", return_value=(b"\x01\x02\x03", 0x502)
+        ComAux, "receive_message", return_value=(b"\x01\x02\x03", 0x123)
     )
 
     msg, source = communication_aux_instance.receive_message("itf_com_aux", True, 10.0)
 
     receive_msg_mock.assert_called_once()
     assert isinstance(msg, list)
-    assert source == 0x502
+    assert source == 0x123
     assert msg == [1, 2, 3]
