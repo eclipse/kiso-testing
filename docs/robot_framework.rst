@@ -90,13 +90,13 @@ See below a complete example of the Robot Communication Auxiliary plugin:
 
       Log    ${msg}
 
-Dut Auxiliary
+DUT Auxiliary
 ~~~~~~~~~~~~~
 
 This plugin can be used to control the ITF TestApp on the DUT.
 
 
-See below an example of the Robot Dut Auxiliary plugin:
+See below an example of the Robot DUT Auxiliary plugin:
 
 .. code-block:: robotframework
 

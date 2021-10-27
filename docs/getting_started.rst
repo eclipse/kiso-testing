@@ -15,8 +15,8 @@ Install
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
+   git clone https://github.com/eclipse/kiso-testing.git
+   cd kiso-testing
    pip install .
 
 `Pipenv <https://github.com/pypa/pipenv>`__ is more appropriate for
@@ -24,8 +24,8 @@ developers as it automatically creates virtual environments.
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
+   git clone https://github.com/eclipse/kiso-testing.git
+   cd kiso-testing
    pipenv install --dev
    pipenv shell
 
@@ -67,7 +67,7 @@ List of limitations / todos for the python side
 -  ☐ **When the auxiliary does not answer (ping or else),
    BasicTest.cleanup_and_skip() call will result in a lock
    and break the framework.**
--  ☐ No test-setion will be executed, needs to be removed later.
+-  ☐ No test-section will be executed, needs to be removed later.
 -  ☒ test configuration files need to be reworked
 -  ☒ Names & configurations in the *cfg file json* are character precise
    class names & associated parameters.

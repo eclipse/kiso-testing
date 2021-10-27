@@ -13,8 +13,8 @@ Install
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
+   git clone https://github.com/eclipse/kiso-testing.git
+   cd kiso-testing
    pipenv install --dev
    pipenv shell
 

@@ -50,7 +50,7 @@ Examples:
 .. _instrument_control_integration_test:
 
 Implementation of Instrument Tests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using the instrument auxiliary (`instr_aux`) inside integration tests is useful to control the instrument (e.g. a power supply) the device under test is connected to. There are two different ways to interface with an instrument:
 
