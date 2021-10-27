@@ -22,7 +22,6 @@ import logging
 
 import pykiso
 
-# as usual import your auxiliairies
 from pykiso.auxiliaries import aux1, aux2, proxy_aux
 
 

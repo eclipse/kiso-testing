@@ -84,7 +84,7 @@ connectors:
       # path to the binary firmware file
       binary: "PATH_TO_BINARY"
       # device chip name
-      chip_name: "STM32L562QE"
+      chip_name: "STMXXXXXXXX"
       # path to the location of the JLink.so/JLink.DLL, usually
       # automatically determined
       lib: "PATH/_TO/JLink.dll"
@@ -97,7 +97,7 @@ connectors:
       # whether to power the target before flashing
       power_on: False
       # Adapt this parameter depending on your device
-      start_addr: 0x90000000
+      start_addr: 0x12345678
       # device configuration file
       xml_path: "PATH_TO_THE_DEVICE_CONFIG"
     type: pykiso.lib.connectors.flash_jlink:JLinkFlasher
@@ -109,11 +109,11 @@ connectors:
       # connected)
       serial_number: 123456
       # device chip name
-      chip_name: "STM32L562QE"
+      chip_name: "STMXXXXXXXX"
       # communication baud rate
       speed: 4000
       # Adapt this parameter depending on your device
-      block_address: 0x2003F800
+      block_address: 0x12345678
       # boolean indicating if connection should be verbose in logging
       verbose: True
       # buffer index used for transmission
@@ -166,7 +166,7 @@ connectors:
       # id used for transmission
       remote_id: 0x123
       # iterable used to filter can id on reception
-      can_filters: [{"can_id": 0x600, "can_mask": 0xFFF, "extended": False}]
+      can_filters: [{"can_id": 0x123, "can_mask": 0xFFF, "extended": False}]
       # boolean used to disable/enable logfile creation
       logging_activated: True
     type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
@@ -197,7 +197,7 @@ connectors:
       # channel should be a global channel index
       app_name:
       # iterable used to filter can id on reception
-      can_filters: [{"can_id": 0x600, "can_mask": 0xFFF, "extended": False}]
+      can_filters: [{"can_id": 0x123, "can_mask": 0xFFF, "extended": False}]
       # this flag controls the size of the arbitration_id field
       is_extended_id: False
     type: pykiso.lib.connectors.cc_vector_can:CCVectorCan
@@ -214,7 +214,7 @@ connectors:
   tcp_ip_channel:
     config:
       # destination ip address
-      dest_ip: 10.83.131.246
+      dest_ip: '127.0.0.1'
       # destination port
       dest_port: 5025
       # the maximum amount of data to be received at once
@@ -254,7 +254,7 @@ connectors:
   visa_tcp_ip_channel:
     config:
       # serial communication port in use
-      ip_address: 10.83.131.246
+      ip_address: '127.0.0.1'
       # serial communication baud rate
       protocol: "INSTR"
     type: pykiso.lib.connectors.cc_visa:VISATcpip

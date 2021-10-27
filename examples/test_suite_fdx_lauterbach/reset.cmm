@@ -1,8 +1,0 @@
- // disable the FDX trace
- FDX.DISable
- FDX.RESet
-
- // Release target reset
- SYStem.RESet
-
- enddo

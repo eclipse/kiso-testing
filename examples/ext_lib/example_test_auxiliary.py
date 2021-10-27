@@ -11,14 +11,12 @@
 Auxiliary Interface
 *******************
 
-:module: test_auxiliary_interface
+:module: example_test_auxiliary
 
 :synopsis: Entry point to the integration test framework
 
-.. currentmodule:: integration_test
+.. currentmodule:: example_test_auxiliary
 
-
-.. warning:: Still under test
 """
 
 # this is for testing the usage of external files.

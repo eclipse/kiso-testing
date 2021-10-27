@@ -12,27 +12,25 @@ auxiliaries:
 connectors:
   rtt_flasher:
     config:
-      # Example: ./test_suite_rtt/TestApp-Signed.hex
       binary: "PATH_TO_BINARY"
-      chip_name: "STM32L562QE"
+      chip_name: "STMXXXXXXXX"
       speed: 9600
       verbose: True
-      # Adapt this parameter depending on your component (here BRC)
-      start_addr: 0x90000000
-      # Example: ./test_suite_rtt/JLinkDevices.xml
+      # Adapt this parameter depending on your target
+      start_addr: 0x12345678
       xml_path: "PATH_TO_THE_DEVICE_CONFIG"
     type: pykiso.lib.connectors.flash_jlink:JLinkFlasher
 
   rtt_channel:
     config:
-      chip_name: "STM32L562QE"
+      chip_name: "STMXXXXXXXX"
       speed: 4000
-      block_address: 0x2003F800
+      block_address: 0x12345678
       verbose: True
       tx_buffer_idx: 1
       rx_buffer_idx: 1
-      # Path to the folder where the RTT logs should be written to (Optional)
-      # Creates a file named rtt.log
+      # Path to the folder where the RTT logs should be written to 
+      # (Optional) creates a file named rtt.log
       rtt_log_path: ./
       # RTT channel from where the RTT logs should be read
       rtt_log_buffer_idx: 0
