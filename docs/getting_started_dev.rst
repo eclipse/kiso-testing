@@ -33,6 +33,8 @@ following pre-commit hooks are used:
 -  check-added-large-files
 -  check-yaml
 -  debug-statements
+-  flake8
+-  isort
 
 If you don’t have pre-commit installed, you can get it using pip:
 
