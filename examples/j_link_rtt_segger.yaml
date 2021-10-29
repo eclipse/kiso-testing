@@ -29,7 +29,7 @@ connectors:
       verbose: True
       tx_buffer_idx: 1
       rx_buffer_idx: 1
-      # Path to the folder where the RTT logs should be written to 
+      # Path to the folder where the RTT logs should be written to
       # (Optional) creates a file named rtt.log
       rtt_log_path: ./
       # RTT channel from where the RTT logs should be read

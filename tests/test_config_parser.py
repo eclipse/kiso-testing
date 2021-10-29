@@ -90,7 +90,7 @@ def tmp_cfg_mod(tmp_cfg):
     |── ext_lib
     │   │   import_connector.py
     │
-    └── BDU
+    └── COMP1
         │   aux1.yaml
         │
         │── test_suite_aux1

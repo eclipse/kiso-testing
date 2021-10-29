@@ -30,7 +30,8 @@ class Connector(abc.ABC):
     """Abstract interface for all connectors to inherit from.
 
     Defines hooks for opening and closing the connector and
-    also defines a contextmanager interface."""
+    also defines a contextmanager interface.
+    """
 
     def __init__(self, name: str = None):
         """Constructor.

@@ -21,7 +21,6 @@ Proxy auxiliary usage example
 import logging
 
 import pykiso
-
 from pykiso.auxiliaries import aux1, aux2, proxy_aux
 
 
