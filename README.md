@@ -44,6 +44,8 @@ The following pre-commit hooks are used:
 - check-added-large-files
 - check-yaml
 - debug-statements
+- flake8
+- isort
 
 If you don't have pre-commit installed, you can get it using pip:
 
@@ -80,7 +82,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-Suitable config files are available in the `test-examples` folder.
+Suitable config files are available in the `examples` folder.
 
 ### Demo using example config ##
 
@@ -110,4 +112,4 @@ pytest
 * [x] Add verbosity parameters to pass to the unittest framework to get more details about the test.
 * [ ] **Add result parsing for Jenkins (see: https://stackoverflow.com/questions/11241781/python-unittests-in-jenkins).**
 * [x] Create a python package
-    * [ ] and host it on pip.
+* [ ] and host it on pip.

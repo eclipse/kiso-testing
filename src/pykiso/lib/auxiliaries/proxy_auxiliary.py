@@ -121,7 +121,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
             dir_path / t_name if dir_path.exists() else (Path() / t_name).resolve()
         )
 
-        # configure the file handler and create the tarce file
+        # configure the file handler and create the trace file
         log_format = logging.Formatter("%(asctime)s : %(message)s")
         log.info(f"create proxy trace file at {log_path}")
         handler = logging.FileHandler(log_path, "w+")

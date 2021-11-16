@@ -87,7 +87,8 @@ def execute(config: Dict, report_type: str = "text"):
     """create test environment base on config
 
     :param config: dict from converted YAML config file
-    :param report_type: str to set the type of report wanted, i.e. test or junit"""
+    :param report_type: str to set the type of report wanted, i.e. test or junit
+    """
     try:
         list_of_test_suites = []
         for test_suite_configuration in config["test_suite_list"]:

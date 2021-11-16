@@ -137,7 +137,6 @@ Features:
 - add proxy connector
 - add proxy auxiliary
 - allow relative paths in yaml file
-- added automatic detection of Vector Boxes' serial number
 - add nested yaml capability (introduce !include tag)
 
 Changes:
@@ -154,14 +153,8 @@ Tests:
 
 ### Version 0.4.0 (internal release)
 
-Features:
-
-Changes:
-
 Bugfixes:
 - fixed bug when generating junit report and reports folder does not exist
-- fixed bug Vector serial number with leading zeros
-
 
 ### Version 0.3.0 (internal release)
 
@@ -198,11 +191,8 @@ Tests :
 
 Features:
 - add Device Under Test Auxiliary (DUT)
-- add PCAN connector
-- add logging capability for PCAN connector
 - add Segger RTT connector (communication channel)
 - add dummy jenkins file
-
 
 Changes:
 - add example/configuration file for Segger RTT channel (flasher and communication)
@@ -216,7 +206,6 @@ Bugfixes:
 
 Tests :
 - add unit tests for DUT auxiliary
-- add unit tests for PCAN connector
 - add unit tests for Segger RTT connector
 - adapt integration tests (using virtual auxiliary) for DUT auxiliary
 
