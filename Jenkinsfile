@@ -36,6 +36,7 @@ pipeline
         {
             steps
             {
+
                 script
                 {
                     echo "Run different format checks: TODO"
