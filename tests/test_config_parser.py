@@ -135,10 +135,7 @@ auxiliaries:
     connectors:
         com:   chan1
         flash: chan2
-    config:
-      simulated_entity : "CMP1"
-      entity_under_test : "CMP2"
-      request_source : "mysource"
+    config: null
     type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
 connectors:
   chan1:
@@ -339,7 +336,7 @@ def test_parse_config_folder_name_eq_entity_name(tmp_cfg_mod, mocker, caplog):
     cfg = parse_config(tmp_cfg_mod)
 
     # Test if config key "entity_under_test" stays unchanged when key matches folder name.
-    assert cfg["auxiliaries"]["aux1"]["config"]["entity_under_test"] == "CMP2"
+    assert not cfg["auxiliaries"]["aux1"]["config"]
 
 
 def test_parse_config_folder_conflict(
