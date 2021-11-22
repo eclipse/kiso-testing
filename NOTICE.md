@@ -80,7 +80,7 @@ PyVISA 1.11.3
 PyVISA-py 0.5.2
 
  * License: MIT
- 
+
 ## Cryptography
 
 Content may contain encryption software. The country in which you are currently

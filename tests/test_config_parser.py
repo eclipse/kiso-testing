@@ -81,7 +81,7 @@ def tmp_cfg(tmp_path):
 @pytest.fixture
 def tmp_cfg_mod(tmp_cfg):
     """Inherit folder structure from tmp_cfg.
-    Rename folder tests->BDU and replace content of aux1.yaml
+    Rename folder tests->CMP and replace content of aux1.yaml
     tmp_dir
     │
     │── cc_config
@@ -90,7 +90,7 @@ def tmp_cfg_mod(tmp_cfg):
     |── ext_lib
     │   │   import_connector.py
     │
-    └── BDU
+    └── COMP1
         │   aux1.yaml
         │
         │── test_suite_aux1
@@ -100,7 +100,7 @@ def tmp_cfg_mod(tmp_cfg):
             │   suite_conf.yaml
 
     """
-    test_folder = tmp_cfg.parent.parent / "BDU"
+    test_folder = tmp_cfg.parent.parent / "CMP"
     os.rename(tmp_cfg.parent, test_folder)
     cfg_content = create_simple_config()
     config_file = test_folder / "aux1.yaml"
@@ -135,10 +135,7 @@ auxiliaries:
     connectors:
         com:   chan1
         flash: chan2
-    config:
-      simulated_entity : "BP1"
-      entity_under_test : "BDU"
-      request_source : "battery.singleGateway"
+    config: null
     type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
 connectors:
   chan1:
@@ -339,7 +336,7 @@ def test_parse_config_folder_name_eq_entity_name(tmp_cfg_mod, mocker, caplog):
     cfg = parse_config(tmp_cfg_mod)
 
     # Test if config key "entity_under_test" stays unchanged when key matches folder name.
-    assert cfg["auxiliaries"]["aux1"]["config"]["entity_under_test"] == "BDU"
+    assert not cfg["auxiliaries"]["aux1"]["config"]
 
 
 def test_parse_config_folder_conflict(

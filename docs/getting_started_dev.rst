@@ -13,8 +13,8 @@ Install
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
+   git clone https://github.com/eclipse/kiso-testing.git
+   cd kiso-testing
    pipenv install --dev
    pipenv shell
 
@@ -33,6 +33,8 @@ following pre-commit hooks are used:
 -  check-added-large-files
 -  check-yaml
 -  debug-statements
+-  flake8
+-  isort
 
 If you don’t have pre-commit installed, you can get it using pip:
 

@@ -54,7 +54,7 @@ def test_run_failed(mocker, dut_aux_instance):
     mocked_report = MockReportMsg(MessageReportType.TEST_FAILED, MessageType.REPORT)
 
     mock_report_infos = [
-        (None, mocked_report, lambda *args: None, "Somethin went wrong")
+        (None, mocked_report, lambda *args: None, "Something went wrong")
     ]
 
     mock_client = mocker.patch(
@@ -66,7 +66,7 @@ def test_run_failed(mocker, dut_aux_instance):
         dut_aux_instance.test_app_run(
             "TEST_CASE_RUN", 1, 1, ["itf_com_aux"], timeout_cmd=0, timeout_resp=0
         )
-    assert "Somethin went wrong" in str(excinfo.value)
+    assert "Something went wrong" in str(excinfo.value)
 
 
 def test_run_not_implemented(mocker, dut_aux_instance):

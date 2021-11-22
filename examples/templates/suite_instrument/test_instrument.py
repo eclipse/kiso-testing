@@ -21,8 +21,6 @@ Instrument Control auxiliary usage example
 import logging
 
 import pykiso
-
-# as usual import your auxiliairies
 from pykiso.auxiliaries import instr_aux
 
 
