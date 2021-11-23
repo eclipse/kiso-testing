@@ -1,5 +1,7 @@
 # PyKiso
 
+![Optional Text](./docs/images/pykiso_logo.png)
+
 ## Introduction ##
 **pykiso** is an integration test framework. With it, it is possible to write
 * Whitebox integration tests directly on my target device

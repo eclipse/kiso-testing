@@ -1,6 +1,8 @@
 Welcome to pykiso's documentation!
 ==================================
 
+.. figure:: images/pykiso_logo.png
+
 .. toctree::
     :maxdepth: 2
     :caption: Contents:
