@@ -27,9 +27,10 @@ pipeline
                 // Clean workspace
                 cleanWs()
                 // checkout repo
-                checkoutCode()
+                //checkoutCode()
                 // Use pipenv
-                sh 'pipenv install --dev'
+                sh """ls -la
+                pipenv install --dev"""
             }
         }
         stage('Format check')
