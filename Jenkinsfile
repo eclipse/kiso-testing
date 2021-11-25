@@ -7,7 +7,7 @@ pipeline
             containerTemplate
             {
                 name 'kiso-build-env'
-                image 'eclipse/kiso-build-env:v0.0.5'
+                image 'eclipse/kiso-build-env:v0.1.0'
                 alwaysPullImage 'true'
                 ttyEnabled true
                 resourceRequestCpu '2'
@@ -17,7 +17,6 @@ pipeline
             }
         }
     }
-
     stages
     {
         stage('Setup Env')
@@ -26,18 +25,14 @@ pipeline
             {
                 // Clean workspace
                 cleanWs()
-                // checkout repo
-                //checkoutCode()
-                // Use pipenv
-                sh """ls -la
-                pipenv install --dev"""
+                checkout scm
+                sh 'pipenv install --dev'
             }
         }
         stage('Format check')
         {
             steps
             {
-
                 script
                 {
                     echo "Run different format checks: TODO"
@@ -64,15 +59,6 @@ pipeline
             steps {
                 script {
                     sh "pipenv run invoke docs"
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: false,
-                            keepAll: true,
-                            reportDir: 'docs/_build',
-                            reportFiles: 'index.html',
-                            reportName: 'pykiso documentation',
-                            ])
-                    zip zipFile: 'pykiso_documentation.zip', archive: true, glob:'docs/_build/**/*.*'
                 }
             }
         }
@@ -84,16 +70,6 @@ pipeline
             }
             parallel
             {
-                stage('Release documentation')
-                {
-                    steps
-                    {
-                        script
-                        {
-                            echo "Release documentation on readthedocs.org: TODO"
-                        }
-                    }
-                }
                 stage('Release package')
                 {
                     steps
@@ -112,18 +88,10 @@ pipeline
     {
         always
         {
-            archiveArtifacts (
-                artifacts: 'TBD',
-                fingerprint: true
-            )
             junit 'reports/*.xml'
         }
         success
         {
-            archiveArtifacts (
-                artifacts: 'builddir-debug/docs/doxygen/**, builddir-unittests/*_cov/**, docs/website/public/**/*',
-                fingerprint: true
-            )
             cleanWs()
         }
         unstable
