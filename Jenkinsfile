@@ -43,7 +43,7 @@ pipeline
         {
             steps
             {
-                sh 'pipenv run pytest --junitxml=reports/testReport.xml --ignore tests/test_cc_pcan_can.py'
+                sh 'pipenv run pytest --junitxml=reports/testReport.xml'
             }
         }
         stage('Run virtual-test')
