@@ -75,7 +75,7 @@ class Mock_t32_api:
 
 
 def test_open_success(mocker):
-    """ Test the open function """
+    """Test the open function"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -99,7 +99,7 @@ def test_open_success(mocker):
 
 
 def test_open_fail_to_init(mocker):
-    """ Test the open function with failed init from t32 api"""
+    """Test the open function with failed init from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -127,7 +127,7 @@ def test_open_fail_to_init(mocker):
 
 
 def test_open_fail_to_ping(mocker):
-    """ Test the open function with failed ping from t32 api """
+    """Test the open function with failed ping from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -154,7 +154,7 @@ def test_open_fail_to_ping(mocker):
 
 
 def test_open_fail_to_load_script(mocker):
-    """ Test the open function with failed loading a script from t32 api """
+    """Test the open function with failed loading a script from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -181,7 +181,7 @@ def test_open_fail_to_load_script(mocker):
 
 
 def test_open_fail_to_open_fdx_communication(mocker):
-    """ Test the open function with failed fdx communication from t32 api """
+    """Test the open function with failed fdx communication from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -208,7 +208,7 @@ def test_open_fail_to_open_fdx_communication(mocker):
 
 
 def test_load_script_success(mocker):
-    """ Test the load script function """
+    """Test the load script function"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -231,7 +231,7 @@ def test_load_script_success(mocker):
 
 
 def test_load_script_fail_cmd(mocker):
-    """ Test the load script function with failed sending a command from t32 api"""
+    """Test the load script function with failed sending a command from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -257,7 +257,7 @@ def test_load_script_fail_cmd(mocker):
 
 
 def test_load_script_fail_T32_GetPracticeState(mocker):
-    """ Test the load script function with failing while getting practice state from t32 api"""
+    """Test the load script function with failing while getting practice state from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -283,7 +283,7 @@ def test_load_script_fail_T32_GetPracticeState(mocker):
 
 
 def test_send_raw_bytes():
-    """ Test send raw bytes using t32 api """
+    """Test send raw bytes using t32 api"""
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
         "C:/PATH_OF_config_mc.t32",
@@ -309,7 +309,7 @@ def test_send_raw_bytes():
 
 
 def test_send_message():
-    """ Test send a Message using t32 api """
+    """Test send a Message using t32 api"""
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
         "C:/PATH_OF_config_mc.t32",
@@ -336,7 +336,7 @@ def test_send_message():
 
 
 def test_receive():
-    """ Test receive message using t32 api """
+    """Test receive message using t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",
@@ -363,7 +363,7 @@ def test_receive():
 
 
 def test_reset_board_success(mocker):
-    """ Test the open function """
+    """Test the open function"""
 
     lauterbach_inst = CCFdxLauterbach(
         "C:/T32/bin/windows64/t32mppc.exe",

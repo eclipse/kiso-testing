@@ -29,7 +29,7 @@ scpi_cmds = {
 
 
 class MockSerialInstrument:
-    """ Class used to mock pyvisa.resources.serial.SerialInstrument class """
+    """Class used to mock pyvisa.resources.serial.SerialInstrument class"""
 
     def __init__(self, serial_port: int, baud_rate: int = 9600, **kwargs):
         self.resource_name = f"ASRL{serial_port}::INSTR"
@@ -53,7 +53,7 @@ class MockSerialInstrument:
 
 
 class MockTcpipInstrument:
-    """ Class used to mock pyvisa.resources.tcpip.TCPIPInstrument() class """
+    """Class used to mock pyvisa.resources.tcpip.TCPIPInstrument() class"""
 
     def __init__(self, ip_address: str, **kwargs):
         self.resource_name = f"TCPIP::{ip_address}::INSTR"
@@ -219,7 +219,7 @@ def test_query(mocker, constructor_params_serial, scpi_cmds):
     [constructor_params_serial],
 )
 def test__cc_send(mocker, constructor_params_serial):
-    """ Test _cc_send """
+    """Test _cc_send"""
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
     assert visa_inst._cc_send("cmd") == None
@@ -282,7 +282,7 @@ def test_constructor(
     ],
 )
 def test_cc_open(mocker, serial_port, constructor_params_tcpip):
-    """ Test open instrument """
+    """Test open instrument"""
     ## Test VisaSerial connector
     # Test open an available instrument
     visa_inst = cc_visa.VISASerial(serial_port["available"])

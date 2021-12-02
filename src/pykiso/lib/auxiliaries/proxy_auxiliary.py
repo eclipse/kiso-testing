@@ -273,7 +273,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
             )
 
     def run(self) -> None:
-        """Run function of the auxiliary thread """
+        """Run function of the auxiliary thread"""
 
         while not self.stop_event.is_set():
             # Step 1: Check if a request is available & process it

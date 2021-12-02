@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 class CCTcpip(CChannel):
-    """Connector channel used to communicate via socket """
+    """Connector channel used to communicate via socket"""
 
     def __init__(self, dest_ip: str, dest_port: int, max_msg_size: int = 256, **kwargs):
         """Initialize channel settings.
@@ -53,7 +53,7 @@ class CCTcpip(CChannel):
         self.socket.connect((self.dest_ip, self.dest_port))
 
     def _cc_close(self) -> None:
-        """ Close UDP socket."""
+        """Close UDP socket."""
         log.info(
             f"Disconnect from socket at address {self.dest_ip}, port {self.dest_port}"
         )

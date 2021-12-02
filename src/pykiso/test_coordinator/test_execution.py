@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 
 @enum.unique
 class ExitCode(enum.IntEnum):
-    """ List of possible exit codes"""
+    """List of possible exit codes"""
 
     ALL_TESTS_SUCCEEDED = 0
     ONE_OR_MORE_TESTS_FAILED = 1

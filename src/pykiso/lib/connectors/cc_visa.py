@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 
 class VISAChannel(CChannel):
-    """VISA Interface for devices communicating with SCPI """
+    """VISA Interface for devices communicating with SCPI"""
 
     def __init__(self, **kwargs):
         """Initialize channel settings."""

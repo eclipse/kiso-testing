@@ -139,7 +139,7 @@ def release(c):
 
 @task
 def run(c, level="INFO"):
-    """ run pykiso with dummy.yaml setup and loglevel INFO """
+    """run pykiso with dummy.yaml setup and loglevel INFO"""
     c.run("rm -f killme.log")
     c.run(f"pykiso -c examples/dummy.yaml --log-level={level} -l killme.log")
 
