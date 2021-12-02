@@ -2,6 +2,8 @@
 
 Features:
 - add capability to generate a trace file for proxy auxiliary
+- add PCAN connector
+- add Vector-CAN connector
 
 Bugfix:
 - failing attempt to quit trace32 will not affect the pykiso test result
