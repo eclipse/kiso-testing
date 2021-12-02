@@ -54,7 +54,7 @@ class CCUdpServer(connector.CChannel):
         self.udp_socket.bind((self.dest_ip, self.dest_port))
 
     def _cc_close(self) -> None:
-        """ Close UDP socket."""
+        """Close UDP socket."""
         log.info(f"UDP socket closed at address: {self.address}")
         self.udp_socket.close()
 

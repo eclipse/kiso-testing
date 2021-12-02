@@ -18,7 +18,7 @@ from pykiso.lib.auxiliaries.instrument_control_auxiliary import (
 
 
 class MockVisaObject:
-    """ Mocker of Visa object (connector or auxiliary) """
+    """Mocker of Visa object (connector or auxiliary)"""
 
     def __init__(self, **kwargs):
         self.resource_name = "messagebased_resource"
@@ -199,7 +199,7 @@ class MockInstrumentControlAuxiliary:
     ],
 )
 def test_initialize_logging(level, expected_level):
-    """ Test the logging initialization """
+    """Test the logging initialization"""
     logger = instrument_control_cli.initialize_logging(level)
 
     assert logger.isEnabledFor(expected_level)
@@ -212,7 +212,7 @@ def test_initialize_logging(level, expected_level):
     ],
 )
 def test_setup_interface(mocker, port, ip_address, baud_rate):
-    """ Test setup_interface """
+    """Test setup_interface"""
     mocker.patch.object(instrument_control_cli, "VISASerial", new=MockVisaObject)
     mocker.patch.object(instrument_control_cli, "VISATcpip", new=MockVisaObject)
     mocker.patch.object(instrument_control_cli, "CCTcpip", new=MockVisaObject)
@@ -259,7 +259,7 @@ def test_setup_interface(mocker, port, ip_address, baud_rate):
 
 
 def test_perform_actions_flags(mocker):
-    """ Test perform_actions with flags """
+    """Test perform_actions with flags"""
     mocker.patch.object(instrument_control_cli, "VISASerial", new=MockVisaObject)
     mocker.patch.object(instrument_control_cli, "VISATcpip", new=MockVisaObject)
     mocker.patch.object(
@@ -298,7 +298,7 @@ def test_perform_actions_flags(mocker):
 
 
 def test_perform_actions_sets(mocker):
-    """ Test perform_actions with writes """
+    """Test perform_actions with writes"""
     mocker.patch.object(instrument_control_cli, "VISASerial", new=MockVisaObject)
     mocker.patch.object(instrument_control_cli, "VISATcpip", new=MockVisaObject)
     mocker.patch.object(
@@ -356,12 +356,12 @@ def test_perform_actions_unset(mocker):
     ],
 )
 def test_parse_user_command(input):
-    """ Test parse_user_command """
+    """Test parse_user_command"""
     assert instrument_control_cli.parse_user_command(input) == {"command": "payload"}
 
 
 def test_parse_user_command_tag():
-    """ Test parse_user_command with tags """
+    """Test parse_user_command with tags"""
     assert instrument_control_cli.parse_user_command("--input") == {"input": "get"}
 
 

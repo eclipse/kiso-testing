@@ -25,7 +25,7 @@ errors_to_catch = {
 
 @pytest.fixture
 def mock_socket(mocker):
-    """ Class used to mock socket.socket class """
+    """Class used to mock socket.socket class"""
 
     class MockSocket:
         def __init__(self, address_family: int, socket_kind: int, **kwargs):
@@ -60,7 +60,7 @@ def mock_socket(mocker):
     ],
 )
 def test_constructor(constructor_params):
-    """Test constructor """
+    """Test constructor"""
     param = constructor_params.values()
 
     socket_connector = cc_tcp_ip.CCTcpip(*param)
@@ -78,7 +78,7 @@ def test_constructor(constructor_params):
     ],
 )
 def test__cc_open(mock_socket, constructor_params):
-    """Test _cc_open """
+    """Test _cc_open"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
 
@@ -93,7 +93,7 @@ def test__cc_open(mock_socket, constructor_params):
     ],
 )
 def test__cc_close(mock_socket, constructor_params):
-    """Test _cc_close """
+    """Test _cc_close"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
 
@@ -111,7 +111,7 @@ def test__cc_close(mock_socket, constructor_params):
 def test__cc_send(
     mock_socket, constructor_params, msg_to_send, expected_sent_message, is_raw
 ):
-    """Test _cc_send """
+    """Test _cc_send"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
 
@@ -127,7 +127,7 @@ def test__cc_send(
     ],
 )
 def test__cc_receive(mock_socket, constructor_params, expected_response, is_raw):
-    """Test _cc_receive """
+    """Test _cc_receive"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
 

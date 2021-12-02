@@ -49,7 +49,7 @@ def virtual_serial(tmp_path):
 
 
 def _communication_send_check(serial_port, baud):
-    """ Test to do with HW connected or UART emulator"""
+    """Test to do with HW connected or UART emulator"""
     # message_to_send = message.Message(msg_type=message.MessageType.COMMAND, sub_type=message.MessageCommandType.TEST_CASE_SETUP, test_section=1, test_suite=1, test_case=1)
     message_to_send = message.Message(
         msg_type=message.MessageType.ACK,
@@ -71,7 +71,7 @@ def _communication_send_check(serial_port, baud):
 
 
 def _communication_receive_check(serial_port, baud):
-    """ Test to do with HW connected or UART emulator """
+    """Test to do with HW connected or UART emulator"""
     message_sent = message.Message(
         msg_type=message.MessageType.COMMAND,
         sub_type=message.MessageCommandType.TEST_CASE_SETUP,

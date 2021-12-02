@@ -41,7 +41,7 @@ def mock_jlink(mocker):
 
 
 def test_jlink_flasher(tmp_file, mock_jlink):
-    """ assert that the correct library functions are called """
+    """assert that the correct library functions are called"""
     with JLinkFlasher(tmp_file, serial_number=1234) as fl:
         fl.flash()
 

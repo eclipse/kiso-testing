@@ -55,7 +55,7 @@ MOCK_SCPI_COMMANDS_DICT = {
 
 
 def test_lib_SCPI_command_init():
-    """ Test init """
+    """Test init"""
 
     visa_object = MockVisaObject()
 
@@ -65,7 +65,7 @@ def test_lib_SCPI_command_init():
 
 
 def test_lib_SCPI_command_init_registered_instrument():
-    """ Test init """
+    """Test init"""
 
     visa_object = MockVisaObject()
 
@@ -83,7 +83,7 @@ def test_lib_SCPI_command_init_registered_instrument():
 def test__send_scpi_command(
     mocker, MOCK_REGISTERED_INSTRUMENTS, MOCK_SCPI_COMMANDS_DICT, value
 ):
-    """ Test _send_scpi_command """
+    """Test _send_scpi_command"""
 
     mocker.patch.object(
         lib_scpi_commands, "REGISTERED_INSTRUMENTS", new=MOCK_REGISTERED_INSTRUMENTS
@@ -143,7 +143,7 @@ def test__send_scpi_command(
     [(10.0)],
 )
 def test_library_functions(value):
-    """ Test library functions with default instrument"""
+    """Test library functions with default instrument"""
 
     visa_object = MockVisaObject()
     lib = lib_scpi_commands.LibSCPI(visa_object)

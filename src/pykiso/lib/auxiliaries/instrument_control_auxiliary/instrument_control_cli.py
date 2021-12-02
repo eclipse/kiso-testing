@@ -36,7 +36,7 @@ from . import REGISTERED_INSTRUMENTS
 
 @enum.unique
 class ExitCode(enum.IntEnum):
-    """ List of possible exit codes"""
+    """List of possible exit codes"""
 
     SUCCESS = 0
     INTERFACE_NOT_PROVIDED = 1
@@ -45,7 +45,7 @@ class ExitCode(enum.IntEnum):
 
 @enum.unique
 class Interface(enum.Enum):
-    """ List of available interfaces"""
+    """List of available interfaces"""
 
     VISA_SERIAL = "VISA_SERIAL"
     VISA_TCPIP = "VISA_TCPIP"

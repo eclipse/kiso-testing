@@ -77,7 +77,7 @@ class MockFlasher:
 
 
 def test_dut_auxiliary_init(mocker):
-    """ Test the constructor with the connector and the flasher """
+    """Test the constructor with the connector and the flasher"""
     com = MockCChanel()
     flash = MockFlasher()
 
@@ -91,7 +91,7 @@ def test_dut_auxiliary_init(mocker):
 
 
 def test_dut_auxiliary_init_com_only(mocker):
-    """ Test the constructor with the connector only """
+    """Test the constructor with the connector only"""
 
     com = MockCChanel()
 
@@ -103,7 +103,7 @@ def test_dut_auxiliary_init_com_only(mocker):
 
 
 def test_create_auxiliary_instance(mocker):
-    """ Test create the auxiliary instance with success with the connector and the flasher """
+    """Test create the auxiliary instance with success with the connector and the flasher"""
 
     com = MockCChanel()
     flash = MockFlasher()
@@ -118,7 +118,7 @@ def test_create_auxiliary_instance(mocker):
 
 
 def test_create_auxiliary_instance_fail_ping_pong(mocker):
-    """ Test fail to create the auxiliary instance with the connector and the flasher due to ping-pong """
+    """Test fail to create the auxiliary instance with the connector and the flasher due to ping-pong"""
 
     com = MockCChanel()
     flash = MockFlasher()
@@ -133,7 +133,7 @@ def test_create_auxiliary_instance_fail_ping_pong(mocker):
 
 
 def test_create_auxiliary_instance_fail_flash(mocker):
-    """ Test fail to create the auxiliary instance with the connector and the flasher due to flash """
+    """Test fail to create the auxiliary instance with the connector and the flasher due to flash"""
 
     com = MockCChanel()
     flash = MockFlasher(is_flashed=False)
@@ -148,7 +148,7 @@ def test_create_auxiliary_instance_fail_flash(mocker):
 
 
 def test_create_auxiliary_instance_com_only(mocker):
-    """ Test create the auxiliary instance with success with the connector only """
+    """Test create the auxiliary instance with success with the connector only"""
 
     com = MockCChanel()
 
@@ -162,7 +162,7 @@ def test_create_auxiliary_instance_com_only(mocker):
 
 
 def test_create_auxiliary_instance_com_only_fail_ping_pong(mocker):
-    """ Test fail to create the auxiliary instance with the connector only due to ping-pong """
+    """Test fail to create the auxiliary instance with the connector only due to ping-pong"""
 
     com = MockCChanel()
 
@@ -176,7 +176,7 @@ def test_create_auxiliary_instance_com_only_fail_ping_pong(mocker):
 
 
 def test_delete_auxiliary_instance(mocker):
-    """ Test delete the auxiliary """
+    """Test delete the auxiliary"""
 
     com = MockCChanel()
 
@@ -187,7 +187,7 @@ def test_delete_auxiliary_instance(mocker):
 
 
 def test_run_command(mocker):
-    """ Test run command """
+    """Test run command"""
 
     com = MockCChanel()
 
@@ -199,7 +199,7 @@ def test_run_command(mocker):
 
 
 def test_run_command_send_and_wait_ack_fail(mocker):
-    """ Test run command fail """
+    """Test run command fail"""
 
     com = MockCChanel()
 
@@ -211,7 +211,7 @@ def test_run_command_send_and_wait_ack_fail(mocker):
 
 
 def test_abort_command(mocker):
-    """ Test abort command """
+    """Test abort command"""
 
     com = MockCChanel()
 
@@ -223,7 +223,7 @@ def test_abort_command(mocker):
 
 
 def test_abort_command_fail(mocker):
-    """ Test run command fail """
+    """Test run command fail"""
 
     com = MockCChanel()
 
@@ -238,7 +238,7 @@ def test_abort_command_fail(mocker):
 
 
 def test_receive_message(mocker):
-    """ Test receive message """
+    """Test receive message"""
 
     receive_msg = Message()
     com = MockCChanel(msg=receive_msg)
@@ -252,7 +252,7 @@ def test_receive_message(mocker):
 
 
 def test_receive_message_fail(mocker):
-    """ Test receive message fail """
+    """Test receive message fail"""
 
     com = MockCChanel()
 
@@ -265,7 +265,7 @@ def test_receive_message_fail(mocker):
 
 
 def test_ping_pong(mocker):
-    """ Test ping-pong """
+    """Test ping-pong"""
 
     receive_msg = Message(msg_type=MessageType.ACK)
     com = MockCChanel(msg=receive_msg)
@@ -279,7 +279,7 @@ def test_ping_pong(mocker):
 
 
 def test_ping_pong_fail(mocker):
-    """ Test ping-pong fail """
+    """Test ping-pong fail"""
 
     com = MockCChanel()
 
@@ -292,7 +292,7 @@ def test_ping_pong_fail(mocker):
 
 
 def test_ping_pong_fail_wrong_message(mocker):
-    """ Test ping-pong fail """
+    """Test ping-pong fail"""
 
     com = MockCChanel(msg=Message())
 
@@ -305,7 +305,7 @@ def test_ping_pong_fail_wrong_message(mocker):
 
 
 def test__send_and_wait_ack(mocker):
-    """ Test send and wait ack """
+    """Test send and wait ack"""
 
     msg = Message()
     com = MockCChanel(msg=msg)
@@ -319,7 +319,7 @@ def test__send_and_wait_ack(mocker):
 
 
 def test__send_and_wait_ack_fail_check(mocker):
-    """ Test send and wait ack fail due to check """
+    """Test send and wait ack fail due to check"""
 
     msg = Message()
     com = MockCChanel(msg=msg)
@@ -333,7 +333,7 @@ def test__send_and_wait_ack_fail_check(mocker):
 
 
 def test__send_and_wait_ack_fail_receive(mocker):
-    """ Test send and wait ack fail due to receiving nothing """
+    """Test send and wait ack fail due to receiving nothing"""
 
     msg = Message()
     com = MockCChanel()
@@ -404,7 +404,7 @@ def test_suspend_with_error(mocker, caplog):
     ],
 )
 def test_initialize_loggers(mocker, logger_names, loggers_to_activate, expected_level):
-    """ Test the logger activation from AuxiliaryInterface """
+    """Test the logger activation from AuxiliaryInterface"""
 
     mocker.patch.object(AuxiliaryInterface, "start")
     mocker.patch.object(CCRttSegger, "_cc_open")
@@ -420,7 +420,7 @@ def test_initialize_loggers(mocker, logger_names, loggers_to_activate, expected_
 
 
 def test_initialize_loggers_default(mocker):
-    """ Test the default logger activation from AuxiliaryInterface """
+    """Test the default logger activation from AuxiliaryInterface"""
 
     aux_log = logging.getLogger("my_auxiliary")
     pykiso_log = logging.getLogger("pykiso.test_suite.dynamic_loader")

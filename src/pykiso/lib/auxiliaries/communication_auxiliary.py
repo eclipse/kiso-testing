@@ -117,7 +117,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         return False
 
     def _abort_command(self) -> None:
-        """No-op since we don't wait for ACKs """
+        """No-op since we don't wait for ACKs"""
         pass
 
     def _receive_message(self, timeout_in_s: float) -> bytes:

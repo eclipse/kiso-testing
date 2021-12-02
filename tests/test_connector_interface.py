@@ -13,13 +13,13 @@ from pykiso import CChannel, Flasher
 
 
 def test_cchan_abstract():
-    """ ensure CChannel is not instantiable  """
+    """ensure CChannel is not instantiable"""
     with pytest.raises(TypeError):
         c = CChannel("will fail")
 
 
 def test_flash_abstract():
-    """ ensure Flasher is not instantiable  """
+    """ensure Flasher is not instantiable"""
     with pytest.raises(TypeError):
         f = Flasher("will fail")
 

@@ -222,7 +222,7 @@ def define_test_parameters(
     teardown_timeout: Optional[int] = None,
     test_ids: Optional[dict] = None,
 ):
-    """ Decorator to fill out test parameters of the BasicTest automatically. """
+    """Decorator to fill out test parameters of the BasicTest automatically."""
 
     def generate_modified_class(DecoratedClass):
         """Generates the same class but with the test IDs already filled.
