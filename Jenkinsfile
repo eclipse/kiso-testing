@@ -35,7 +35,16 @@ pipeline
             {
                 script
                 {
-                    echo "Run different format checks: TODO"
+                    sh "pipenv run black --diff . > ${env.WORKSPACE}/black.patch"
+
+                    final def patch = readFile("${env.WORKSPACE}/black.patch")
+
+                    if (patch != "") {
+                        echo patch
+                        error("Changes in commit do not follow black rules. Consider applying black.patch.")
+                    } else {
+                        sh "rm ${env.WORKSPACE}/black.patch"
+                    }
                 }
             }
         }
