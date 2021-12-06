@@ -24,6 +24,13 @@ from pykiso.message import (
     TlvKnownTags,
 )
 
+try:
+    # Try to import the dll
+    PCANBasic.PCANBasic()
+except:
+    pytestmark = pytest.mark.skip(reason="Peak driver is not installed: DLL not found")
+
+
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",
     TlvKnownTags.FAILURE_REASON: b"\x12\x34\x56",
