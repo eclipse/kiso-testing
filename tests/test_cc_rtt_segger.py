@@ -9,6 +9,7 @@
 
 from itertools import cycle
 from pathlib import Path
+from time import sleep
 
 import pylink
 import pytest
@@ -183,14 +184,17 @@ def test_rtt_segger_rtt_logger_running(
     cc_rtt_inst = CCRttSegger(rtt_log_path=tmpdir)
     cc_rtt_inst._cc_open()
 
+    # Let 1ms to the log thread
+    sleep(1e-3)
+
     mocker_buffer.assert_called_once()
     mocker_rtt_read.assert_called()
-    assert cc_rtt_inst._is_running == True
+    assert cc_rtt_inst._is_running is True
     assert cc_rtt_inst.rtt_log_buffer_size == expected_size_of_buffer
     assert (Path(tmpdir) / "rtt.log").is_file()
 
     cc_rtt_inst._cc_close()
-    assert cc_rtt_inst._is_running == False
+    assert cc_rtt_inst._is_running is False
     assert rtt_log in (Path(tmpdir) / "rtt.log").read_text()
 
 
