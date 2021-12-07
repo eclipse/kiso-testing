@@ -25,6 +25,7 @@ click = "*"
 pyyaml = "*"
 pykiso = {editable = true,path = "."}
 pylink-square = "*"
+python-can = "*"
 unittest-xml-reporting = "*" # to generate junit reports
 robotframework = "3.2.2"
 pyvisa = "*"

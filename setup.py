@@ -67,6 +67,7 @@ setup(
         "click",
         "pyyaml",
         "pylink-square",
+        "python-can",
         "unittest-xml-reporting",
         "robotframework==3.2.2",
         "pyvisa",
