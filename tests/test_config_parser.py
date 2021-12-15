@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -9,11 +9,12 @@
 
 import logging
 import os
+from collections import namedtuple
 from pathlib import Path
 
 import pytest
 
-from pykiso.config_parser import parse_config
+from pykiso.config_parser import check_requirements, parse_config
 
 
 @pytest.fixture
@@ -136,6 +137,7 @@ auxiliaries:
         com:   chan1
         flash: chan2
     config: null
+      request_source : "battery.singleGateway"
     type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
 connectors:
   chan1:
@@ -335,7 +337,6 @@ def test_parse_config_folder_name_eq_entity_name(tmp_cfg_mod, mocker, caplog):
 
     cfg = parse_config(tmp_cfg_mod)
 
-    # Test if config key "entity_under_test" stays unchanged when key matches folder name.
     assert not cfg["auxiliaries"]["aux1"]["config"]
 
 
@@ -352,3 +353,84 @@ def test_parse_config_folder_conflict(
     assert "aux1" == cfg["auxiliaries"]["aux1"]["config"]
     assert Path(cfg["auxiliaries"]["aux1"]["absPath"]).is_absolute()
     os.chdir(old_cwd)
+
+
+@pytest.mark.parametrize(
+    "requirements, mock_installed_versions, exit_reason",
+    [
+        # test simple specification
+        ([{"pykiso": "0.9.4"}], {"pykiso": "0.9.4"}, None),
+        (
+            [{"pykiso": "0.9.4"}],
+            {"pykiso": "0.9.3"},
+            "'0.9.3' instead of '0.9.4' (minimum)",
+        ),
+        ([{"pykiso": "0.9.4"}], {"pykiso": "0.9.5"}, None),
+        ([{"pykiso": "any"}], {"pykiso": "0.9.5"}, None),
+        # test condition
+        ([{"pykiso": "==0.9.4"}], {"pykiso": "0.9.5"}, "'0.9.5' but '==0.9.4' given"),
+        ([{"pykiso": "==0.9.4"}], {"pykiso": "0.9.4"}, None),
+        ([{"pykiso": "<=0.9.4"}], {"pykiso": "0.9.5"}, "'0.9.5' but '<=0.9.4' given"),
+        ([{"pykiso": "<=0.9.4"}], {"pykiso": "0.9.4"}, None),
+        ([{"pykiso": ">=0.9.6"}], {"pykiso": "0.9.5"}, "'0.9.5' but '>=0.9.6' given"),
+        ([{"pykiso": ">=0.9.5"}], {"pykiso": "0.9.5"}, None),
+        ([{"pykiso": ">0.9.5"}], {"pykiso": "0.9.5"}, "'0.9.5' but '>0.9.5' given"),
+        ([{"pykiso": ">0.9.5"}], {"pykiso": "0.9.6"}, None),
+        ([{"pykiso": "<0.9.5"}], {"pykiso": "0.9.5"}, "'0.9.5' but '<0.9.5' given"),
+        ([{"pykiso": "<0.9.5"}], {"pykiso": "0.9.4"}, None),
+        (
+            [{"pykiso": "<<0.9.5"}],
+            {"pykiso": "0.9.4"},
+            "comparator '<<' not among [<, <=, >, >=, ==, !=]",
+        ),
+        ([{"pykiso": "== 0.9.5"}], {"pykiso": "0.9.4"}, "'0.9.4' but '== 0.9.5' given"),
+        ([{"pykiso": "== 0.9.5"}], {"pykiso": "0.9.5"}, None),
+        ([{"pykiso": "!= 0.9.5"}], {"pykiso": "0.9.5"}, "'0.9.5' but '!= 0.9.5' given"),
+        # test multi requirements
+        (
+            [{"pykiso": ">=0.9.5"}, {"pykiso": "<0.10.1"}],
+            {"pykiso": "0.9.4"},
+            "'0.9.4' but '>=0.9.5' given",
+        ),
+        (
+            [{"pykiso": ">=0.9.5"}, {"pykiso": "<0.10.1"}],
+            {"pykiso": "0.10.1"},
+            "'0.10.1' but '<0.10.1' given",
+        ),
+        ([{"pykiso": ">=0.9.5"}, {"pykiso": "<0.10.1"}], {"pykiso": "0.10.0"}, None),
+        (
+            [{"package_a": ">=1.a"}, {"package_b": "1.2.3"}],
+            {"package_a": "1.b", "package_b": "1.2.3"},
+            None,
+        ),
+    ],
+)
+def test_check_requirements(
+    requirements, mock_installed_versions, caplog, exit_reason, mocker
+):
+    Version = namedtuple("Version", "version")
+
+    def get_version(package):
+        return Version(mock_installed_versions[package])
+
+    mocker.patch("pkg_resources.get_distribution", new=get_version)
+    mock_exit = mocker.patch("sys.exit")
+
+    with caplog.at_level(logging.INFO):
+        check_requirements(requirements)
+
+    if exit_reason:
+        mock_exit.assert_called_once_with(1)
+        assert exit_reason in caplog.text
+    else:
+        mock_exit.assert_not_called()
+
+
+def test_check_requirements_package(caplog, mocker):
+    mock_exit = mocker.patch("sys.exit")
+
+    with caplog.at_level(logging.INFO):
+        check_requirements([{"not_installed_package": "1.2.3"}])
+
+    mock_exit.assert_called_once_with(1)
+    assert "not_installed_package not found" in caplog.text

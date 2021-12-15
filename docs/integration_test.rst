@@ -350,9 +350,24 @@ This "timeout" is configurable for each available fixtures :
 
 In order to link the architecture requirement to the test,
 an additional reference can be added into the test_run decorator:
--  test_ids: [optional] requirements has to be defined like follow:
 
+- test_ids : [optional] requirements has to be defined like follow:
 {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
+
+In order to run only a subset of tests, an additional reference can be added to the test_run decorator:
+
+- variant : [optional] the variant can be defined like:
+{"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]}
+
+Both parameters (variant/branch_level), will play the role of filter to fine
+tune the test collection and at the end ensure the execution of very specific tests subset.
+
+.. note:: branch_level parameter is also part of the CLI and both (variant/branch_level)
+    accept multiple values.
+
+.. code:: bash
+
+    pykiso -c configuration_file --variant var1 --variant var2 --branch-level daily --branch-level nightly
 
 Find below a full example for a test suite/case declaration :
 
@@ -396,11 +411,17 @@ Find below a full example for a test suite/case declaration :
   -> run_timeout : time to wait for a report 10 seconds during test_run
   -> teardown_timeout : time to wait for a report 3 seconds during teardown
   -> test_ids: [optional] store the requirements into the report
+  -> variant: [optional] list of variances if a subset of tests need to be executed
   """
     @pykiso.define_test_parameters(
-            suite_id=1, case_id=1, aux_list=[aux1, aux2], setup_timeout=3,
-            run_timeout=10, teardown_timeout=3,
-            test_ids={"Component1": ["Req1", "Req2"]}
+            suite_id=1,
+            case_id=1,
+            aux_list=[aux1, aux2],
+            setup_timeout=3,
+            run_timeout=10,
+            teardown_timeout=3,
+            test_ids={"Component1": ["Req1", "Req2"]},
+            variant={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
     )
     class MyTest(pykiso.BasicTest):
         pass
@@ -581,6 +602,60 @@ implement parts of the framework to fulfil your needs. For example:
     @pykiso.define_test_parameters(suite_id=3, case_id=2, aux_list=[aux1])
     class MyTest2(MyTestTemplate):
        pass
+
+
+Implementation of Advanced Tests - Repeat testCases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: pykiso.retry_test_case
+    :members:
+
+**test_suite_1.py**:
+
+.. code:: python
+
+    # define an external iterator that can be used for retry_test_case demo
+    side_effect = cycle([False, False, True])
+
+    @pykiso.define_test_parameters()
+    class MyTest1(pykiso.BasicTest):
+        """This test case definition will override the setUp, test_run and tearDown method."""
+
+        @pykiso.retry_test_case(max_try=3)
+        def setUp(self):
+            """Hook method from unittest in order to execute code before test case run.
+            In this case the default setUp method is overridden, allowing us to apply the
+            retry_test_case's decorator. The syntax super() access to the BasicTest and
+            we will run the default setUp()
+            """
+            super().setUp()
+
+        @pykiso.retry_test_case(max_try=5, rerun_setup=True, rerun_teardown=False)
+        def test_run(self):
+            """In this case the default test_run method is overridden and
+            instead of calling test_run from BasicTest class the following
+            code is called.
+
+            Here, the test pass at the 3rd attempt out of 5. The setup and
+            tearDown methods are called for each attempt.
+            """
+            logging.info(
+                f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
+            )
+            self.assertTrue(next(side_effect))
+            logging.info(f"I HAVE RUN 0.1.1 for variant {self.variant}!")
+
+        @pykiso.retry_test_case(max_try=3, stability_test=True)
+        def tearDown(self):
+            """Hook method from unittest in order to execute code after the test case ran.
+            In this case the default tearDown method is overridden, allowing us to apply the
+            retry_test_case's decorator. The syntax super() access to the BasicTest and
+            we will run the default tearDown().
+
+            The retry_test_case has stability test activated, so the tearDown method will
+            be run 3 times.
+            """
+            super().tearDown()
 
 
 Add Config File

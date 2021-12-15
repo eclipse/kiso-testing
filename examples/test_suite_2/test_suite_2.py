@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -69,18 +69,34 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     pass
 
 
-@pykiso.define_test_parameters(suite_id=2, case_id=1, aux_list=[aux1])
-class MyTest(pykiso.BasicTest):
+@pykiso.define_test_parameters(
+    suite_id=2,
+    case_id=1,
+    aux_list=[aux1],
+    setup_timeout=5,
+    run_timeout=2,
+    teardown_timeout=3,
+    variant={"variant": ["variant3", "variant2"], "branch_level": ["daily"]},
+)
+class MyTest4(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
     given by BasicTest.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp, test_run and tearDown:
 
-    -> suite_id : set to 2
-    -> case_id : set to 1
-    -> aux_list : test case executed using aux1(see yaml
-    configuration file)
+    -> suite_id : set to 1
+    -> case_id : set to 3
+    -> aux_list : test case test_run, setUp, and tearDown executed using
+    aux1(see yaml configuration file)
+    -> setup_timeout : ITF will wait 5 seconds (maximum) to receive a
+    report from device under test otherwise an abort command is sent.
+    -> run_timeout : ITF will wait 2 seconds (maximum) to receive a
+    report from device under test otherwise an abort command is sent.
+    -> teardown_timeout : ITF will wait 3 seconds (maximum) to receive a
+    report from device under test otherwise an abort command is sent.
+    -> test_ids: [optional] store the requirements into the report
+    -> variant: [optional] allows the run of subset of tests
 
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.

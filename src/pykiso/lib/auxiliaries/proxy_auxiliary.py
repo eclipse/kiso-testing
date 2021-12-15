@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -54,8 +54,7 @@ import time
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from pykiso import CChannel
-from pykiso.auxiliary import AuxiliaryInterface
+from pykiso import AuxiliaryInterface, CChannel
 from pykiso.test_setup.config_registry import ConfigRegistry
 from pykiso.test_setup.dynamic_loader import PACKAGE
 
@@ -121,7 +120,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
             dir_path / t_name if dir_path.exists() else (Path() / t_name).resolve()
         )
 
-        # configure the file handler and create the trace file
+        # configure the file handler and create the tarce file
         log_format = logging.Formatter("%(asctime)s : %(message)s")
         log.info(f"create proxy trace file at {log_path}")
         handler = logging.FileHandler(log_path, "w+")
@@ -147,7 +146,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
         channel_inst = []
 
         for aux_name in aux_list:
-            aux_inst = sys.modules.get(f"{PACKAGE}.auxiliarie.{aux_name}")
+            aux_inst = sys.modules.get(f"{PACKAGE}.auxiliaries.{aux_name}")
             if aux_inst is not None:
                 self._check_compatibility(aux_inst)
                 channel_inst.append(aux_inst.channel)
@@ -217,7 +216,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
         using proxy connector queue out.
         """
         for conn in self.proxy_channels:
-            for _ in range(conn.queue_in.qsize()):
+            if not conn.queue_in.empty():
                 args, kwargs = conn.queue_in.get()
                 message = kwargs.get("msg")
                 if message is not None:
@@ -274,7 +273,6 @@ class ProxyAuxiliary(AuxiliaryInterface):
 
     def run(self) -> None:
         """Run function of the auxiliary thread"""
-
         while not self.stop_event.is_set():
             # Step 1: Check if a request is available & process it
             request = ""
@@ -306,6 +304,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
             if self.is_instance:
                 self._run_command()
                 self._receive_message(timeout_in_s=0)
+
         # Thread stop command was set
         log.info("{} was stopped".format(self))
         # Delete auxiliary external instance if not done

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -89,7 +89,11 @@ def initialize_logging(
         root_logger.addHandler(stream_handler)
     # if report_type is junit use sys.stdout as stream
     if report_type == "junit":
-        # reset all handler but keep FileHandler
+        # flush all StreamHandler
+        for handler in root_logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                handler.flush()
+        # but keep FileHandler
         root_logger.handlers = [
             handler
             for handler in root_logger.handlers
@@ -113,7 +117,7 @@ def get_logging_options() -> LogOptions:
     return log_options
 
 
-@click.command()
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "-c",
     "--test-configuration-file",
@@ -154,19 +158,43 @@ def get_logging_options() -> LogOptions:
     default=True,
     help="default, test results are only displayed in the console",
 )
+@click.option(
+    "--variant",
+    multiple=True,
+    type=str,
+    default=None,
+    help="allow the user to execute a subset of tests based on variants",
+)
+@click.option(
+    "--branch-level",
+    multiple=True,
+    type=str,
+    default=None,
+    help="allow the user to execute a subset of tests based on branch levels",
+)
+@click.argument("pattern", required=False)
 @click.version_option(__version__)
 def main(
     test_configuration_file: PathType,
     log_path: PathType = None,
     log_level: str = "INFO",
     report_type: str = "text",
+    variant: Optional[tuple] = None,
+    branch_level: Optional[tuple] = None,
+    pattern: Optional[str] = None,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
+    PATTERN: overwrite the test filter pattern from the YAML file (optional)
+
+    \f
     :param test_configuration_file: path to the YAML config file
     :param log_path: path to directory or file to write logs to
     :param log_level: any of DEBUG, INFO, WARNING, ERROR
     :param report_type: if "test", the standard report, if "junit", a junit report is generated
+    :param variant: allow the user to execute a subset of tests based on variants
+    :param branch_level: allow the user to execute a subset of tests based on branch levels
+    :param pattern: overwrite the pattern from the YAML file for easier testdevelopment
     """
     # Set the logging
     logger = initialize_logging(log_path, log_level, report_type)
@@ -177,6 +205,8 @@ def main(
 
     ConfigRegistry.register_aux_con(cfg_dict)
 
-    exit_code = test_execution.execute(cfg_dict, report_type)
+    exit_code = test_execution.execute(
+        cfg_dict, report_type, variant, branch_level, pattern
+    )
     ConfigRegistry.delete_aux_con()
     sys.exit(exit_code)

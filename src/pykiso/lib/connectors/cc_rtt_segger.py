@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -49,6 +49,7 @@ class CCRttSegger(connector.CChannel):
         rx_buffer_idx: int = 0,
         rtt_log_path: Optional[str] = None,
         rtt_log_buffer_idx: int = 0,
+        rtt_log_speed: float = 1000,
         connection_timeout: int = 5,
         **kwargs,
     ):
@@ -63,10 +64,12 @@ class CCRttSegger(connector.CChannel):
         :param verbose: boolean indicating if J-Link connection should be verbose in logging
         :param rtt_log_path: path to the folder where the RTT log file should be stored
         :param rtt_log_buffer_idx: buffer index used for RTT logging
+        :param rtt_log_speed: number of log per second to be pulled (manage the CPU load for logging)
+            None value fetch log at the CPU's speed. Default 1000 logs/s
         :param connection_timeout: available time (in seconds) to open the connection
         """
         super().__init__(**kwargs)
-        self.serial_number = serial_number
+        self.serial_number = serial_number if isinstance(serial_number, int) else None
         self.chip_name = chip_name
         self.speed = speed
         self.block_address = block_address
@@ -76,8 +79,10 @@ class CCRttSegger(connector.CChannel):
         self.jlink = None
         self.connection_timeout = connection_timeout
         self.rtt_log_buffer_idx = rtt_log_buffer_idx
+        self.rx_buffer_size = None
         # initialize rtt logging specific parameters
         self._is_running = False
+        self.rtt_log_refresh_time = round(1 / rtt_log_speed, 6) if rtt_log_speed else 0
         self.rtt_log_thread = threading.Thread(target=self.receive_log)
         self.rtt_log_path = rtt_log_path
         if self.rtt_log_path is not None:
@@ -88,6 +93,36 @@ class CCRttSegger(connector.CChannel):
             self.rtt_log = logging.getLogger(f"{__name__}.RTT")
             self.rtt_log.setLevel(logging.DEBUG)
             self.rtt_log.addHandler(rtt_fh)
+
+    def read_target_memory(
+        self, addr: int, num_units: int, zone: str = None, nbits: int = 32
+    ) -> Optional[list]:
+        """Read the given target's memory units and the given address.
+
+        .. note:: The optional ``zone`` specifies a memory zone to
+            access to read from, e.g. ``IDATA``, ``DDATA``, or ``CODE``.
+
+        .. warning:: The given number of bits, if provided, must be
+            either ``8``, ``16``, or ``32``.  If not provided, always
+            reads 32 bits.
+
+        :param addr: start address to read from
+        :param num_units: number of units to read
+        :param zone: optional memory zone name to access
+        :param nbits: number of bits to use for each unit
+
+        :return: List of units read from the target.
+        """
+        mem_vals = None
+
+        try:
+            mem_vals = self.jlink.memory_read(addr, num_units, zone, nbits)
+        except pylink.errors.JLinkException:
+            log.exception(f"encountered error while reading memory at {hex(addr)}")
+        except ValueError:
+            log.exception("wrong number of bits given : must be 8, 16 or 32 bits")
+
+        return mem_vals
 
     def _cc_open(self) -> None:
         """Connect debugger/microcontroller.
@@ -117,8 +152,15 @@ class CCRttSegger(connector.CChannel):
             chip_name=self.chip_name, speed=self.speed, verbose=self.verbose
         )
         log.debug(
-            f"connection to chip {self.chip_name} performed at speed {self.speed} Hz"
+            f"connection to chip {self.chip_name} performed at speed {self.speed}Hz"
         )
+        # reset debugger if halted
+        if self.jlink.halted():
+            log.info(
+                f"J-Link is halted, reset target and wait for {self.connection_timeout}s"
+            )
+            self.jlink.reset(halt=False)
+            time.sleep(self.connection_timeout)
         # start rtt at the specified address
         self.jlink.rtt_start(self.block_address)
         log.info(f"RTT communication started at address {self.block_address}")
@@ -128,9 +170,14 @@ class CCRttSegger(connector.CChannel):
             try:
                 num_up = self.jlink.rtt_get_num_up_buffers()
                 num_down = self.jlink.rtt_get_num_down_buffers()
-
                 log.debug(
                     f"RTT started. Found {num_up} up and {num_down} down channels."
+                )
+                # get rx buffer size
+                rx_buffer = self.jlink.rtt_get_buf_descriptor(self.rx_buffer_idx, True)
+                self.rx_buffer_size = rx_buffer.SizeOfBuffer
+                log.debug(
+                    f"Maximum size for a received message set to {self.rx_buffer_size}"
                 )
                 break
             except pylink.errors.JLinkRTTException:
@@ -184,11 +231,14 @@ class CCRttSegger(connector.CChannel):
             msg = list(msg)
             bytes_written = self.jlink.rtt_write(self.tx_buffer_idx, msg)
             log.debug(
-                f"===> message sent (RTT): on buffer {self.tx_buffer_idx}:{msg}, number of bytes written : {bytes_written}"
+                "===> message sent (RTT) on buffer %d: %s, number of bytes written: %d",
+                self.tx_buffer_idx,
+                msg,
+                bytes_written,
             )
         except Exception:
             log.exception(
-                f"ERROR occurred while sending {len(msg)} bytes on buffer number {self.tx_buffer_idx}"
+                f"ERROR occurred while sending {len(msg)} bytes on buffer {self.tx_buffer_idx}"
             )
 
     def _cc_receive(
@@ -202,29 +252,31 @@ class CCRttSegger(connector.CChannel):
         :return: Message or raw bytes if successful, otherwise None
         """
         is_timeout = False
+        # maximum amount of bytes to read out
+        size = self.rx_buffer_size if raw else Message().header_size
         t_start = time.perf_counter()
 
         # rtt_read is not a blocking method due to this fact a while loop is used
         # to act like a blocking ones.
         while not is_timeout:
             try:
-                # Read the message header
-                msg_received = self.jlink.rtt_read(
-                    self.rx_buffer_idx, Message().header_size
-                )
-
+                # Read the message header or all of the buffer
+                msg_received = self.jlink.rtt_read(self.rx_buffer_idx, size)
                 # if a message is received
                 if msg_received:
-                    # Read the payload and CRC
-                    msg_received += self.jlink.rtt_read(
-                        self.rx_buffer_idx,
-                        msg_received[-1] + Message().crc_byte_size,
-                    )
-
+                    if not raw:
+                        # Read the payload and CRC
+                        msg_received += self.jlink.rtt_read(
+                            self.rx_buffer_idx,
+                            msg_received[-1] + Message().crc_byte_size,
+                        )
                     # Parse the bytes list into bytes string
                     msg_received = bytes(msg_received)
                     log.debug(
-                        f"<=== message received (RTT) on buffer {self.rx_buffer_idx}:{msg_received}, number of bytes read : {len(msg_received)}"
+                        "<=== message received (RTT) on buffer %d: %s, number of bytes read: %d",
+                        self.rx_buffer_idx,
+                        msg_received,
+                        len(msg_received),
                     )
                     if not raw:
                         msg_received = Message.parse_packet(msg_received)
@@ -251,3 +303,4 @@ class CCRttSegger(connector.CChannel):
             )
             if log_msg:
                 self.rtt_log.debug(bytes(log_msg).decode())
+            time.sleep(self.rtt_log_refresh_time)  # reduce resource consumption

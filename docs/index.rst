@@ -14,8 +14,11 @@ Welcome to pykiso's documentation!
     connectors
     auxiliaries
     robot_framework
+    multiprocessing
     api
     instrument_control
+    acroname_control
+    record
 
 Indices and tables
 ==================

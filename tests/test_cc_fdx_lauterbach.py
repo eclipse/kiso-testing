@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -9,6 +9,8 @@
 
 """ Test module for CCLauterbach.py
 """
+import logging
+
 from pykiso.lib.connectors.cc_fdx_lauterbach import CCFdxLauterbach
 from pykiso.message import Message
 
@@ -78,8 +80,8 @@ def test_open_success(mocker):
     """Test the open function"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -102,8 +104,8 @@ def test_open_fail_to_init(mocker):
     """Test the open function with failed init from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -130,8 +132,8 @@ def test_open_fail_to_ping(mocker):
     """Test the open function with failed ping from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -157,8 +159,8 @@ def test_open_fail_to_load_script(mocker):
     """Test the open function with failed loading a script from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -184,8 +186,8 @@ def test_open_fail_to_open_fdx_communication(mocker):
     """Test the open function with failed fdx communication from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -211,8 +213,8 @@ def test_load_script_success(mocker):
     """Test the load script function"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -230,12 +232,43 @@ def test_load_script_success(mocker):
     assert load_script_err == 0
 
 
+def test_load_response_fail(caplog, mocker):
+    """Test the load script function"""
+
+    lauterbach_inst = CCFdxLauterbach(
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
+        "C:/PATH_OF_fdx.cmm",
+        "C:/PATH_OF_reset.cmm",
+        "C:/PATH_OF_fdx_clear.cmm",
+        "C:/PATH_OF_inTest_reset.cmm",
+        "C:/T32/demo/api/capi/dll/t32api.dll",
+        "20000",
+        "localhost",
+        "1024",
+        1,
+    )
+
+    mocker.patch("time.sleep", return_value=None)
+    lauterbach_inst.t32_api = Mock_t32_api()
+    lauterbach_inst.t32_api.t32_PracticeState_error = -1  # Error
+    lauterbach_inst.t32_api.t32_PracticeState = 1  # Running
+
+    with caplog.at_level(
+        logging.ERROR, logger="pykiso.lib.connectors.cc_fdx_lauterbach.py.log"
+    ):
+        load_script_err = lauterbach_inst.load_script("script.cmm")
+
+    assert load_script_err == -1
+    assert "Abort execution" in caplog.text
+
+
 def test_load_script_fail_cmd(mocker):
     """Test the load script function with failed sending a command from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -260,8 +293,8 @@ def test_load_script_fail_T32_GetPracticeState(mocker):
     """Test the load script function with failing while getting practice state from t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -285,8 +318,8 @@ def test_load_script_fail_T32_GetPracticeState(mocker):
 def test_send_raw_bytes():
     """Test send raw bytes using t32 api"""
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -311,8 +344,8 @@ def test_send_raw_bytes():
 def test_send_message():
     """Test send a Message using t32 api"""
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -339,8 +372,8 @@ def test_receive():
     """Test receive message using t32 api"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",
@@ -366,8 +399,8 @@ def test_reset_board_success(mocker):
     """Test the open function"""
 
     lauterbach_inst = CCFdxLauterbach(
-        "C:/T32/bin/windows64/t32mppc.exe",
-        "C:/PATH_OF_config_mc.t32",
+        "PATH/TO/T32_EXE.exe",
+        "C:/PATH_OF_T32_CONFIG.t32",
         "C:/PATH_OF_fdx.cmm",
         "C:/PATH_OF_reset.cmm",
         "C:/PATH_OF_fdx_clear.cmm",

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -70,7 +70,15 @@ def _communication_send_check(serial_port, baud):
     ch.close()
 
 
-def _communication_receive_check(serial_port, baud):
+@pytest.mark.parametrize(
+    "timeout, expected_timeout",
+    [
+        (5, 5),
+        (0, 1e-6),
+        (None, 1e-6),
+    ],
+)
+def _communication_receive_check(timeout, expected_timeout, serial_port, baud):
     """Test to do with HW connected or UART emulator"""
     message_sent = message.Message(
         msg_type=message.MessageType.COMMAND,
@@ -86,7 +94,7 @@ def _communication_receive_check(serial_port, baud):
     ch.open()
     # Wait for a message to be sent: it is C0 78 5E 60 01 00 00 01 02 03 00 C0
     print(f"waiting to receive test message from {serial_port}")
-    ack_message_received = ch._cc_receive(timeout=5)
+    ack_message_received = ch._cc_receive(timeout=timeout)
     # manually set msg token so it matches the sent token
     ack_message_received.msg_token = 0
     print(f"received: {ack_message_received}")
@@ -94,6 +102,7 @@ def _communication_receive_check(serial_port, baud):
     result = message_sent.check_if_ack_message_is_matching(ack_message_received)
     print("Test 2 result: {}".format(result))
     assert result
+    assert ch.serial.timeout == expected_timeout
     # Close uart
     ch.close()
 

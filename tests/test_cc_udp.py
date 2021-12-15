@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -76,6 +76,7 @@ def test_constructor_valid(mock_udp_socket):
     assert udp_inst.dest_ip == "120.0.0.7"
     assert udp_inst.dest_port == 5005
     assert udp_inst.max_msg_size == 256
+    assert udp_inst.timeout == 1e-6
 
 
 def test_udp_close(mock_udp_socket):
@@ -146,6 +147,8 @@ def test_udp_recv_invalid(mocker, mock_udp_socket, raw_state):
             Message,
         ),
         ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (10, True), bytes),
+        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (0, True), bytes),
+        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (None, True), bytes),
     ],
 )
 def test_udp_recv_valid(
@@ -165,5 +168,7 @@ def test_udp_recv_valid(
 
     assert isinstance(msg_received, expected_type) == True
     assert udp_inst.source_addr == raw_data[1]
-    mock_udp_socket.socket.settimeout.assert_called_once()
+    mock_udp_socket.socket.settimeout.assert_called_once_with(
+        cc_receive_param[0] or 1e-6
+    )
     mock_udp_socket.socket.recvfrom.assert_called_once()

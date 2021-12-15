@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -9,7 +9,6 @@
 
 from itertools import cycle
 from pathlib import Path
-from time import sleep
 
 import pylink
 import pytest
@@ -86,16 +85,16 @@ def mock_pylink_square_socket(mocker):
         rtt_get_num_up_buffers = mocker.stub(name="rtt_get_num_up_buffers")
         rtt_get_num_down_buffers = mocker.stub(name="rtt_get_num_down_buffers")
         rtt_get_buf_descriptor = mocker.stub(name="rtt_get_buf_descriptor")
+        halted = mocker.patch("pylink.JLink.halted", return_value=False)
+        reset = mocker.stub(name="reset")
+        memory_read = mocker.stub(name="memory_read")
 
     mocker.patch.object(pylink, "JLink", new=MockPylinkSquare)
     return pylink
 
 
 def test_rtt_segger_already_open(mocker, mock_pylink_square_socket):
-    mocker.patch(
-        "pylink.JLink.opened",
-        return_value=True,
-    )
+    mocker.patch("pylink.JLink.opened", return_value=True)
 
     with CCRttSegger() as cc_rtt_inst:
         pass
@@ -103,16 +102,15 @@ def test_rtt_segger_already_open(mocker, mock_pylink_square_socket):
     mock_pylink_square_socket.JLink.open.assert_not_called()
     mock_pylink_square_socket.JLink.set_tif.assert_called_once()
     mock_pylink_square_socket.JLink.connect.assert_called_once()
+    mock_pylink_square_socket.JLink.halted.assert_called_once()
     mock_pylink_square_socket.JLink.rtt_start.assert_called_once()
+    mock_pylink_square_socket.JLink.rtt_get_buf_descriptor.assert_called_once()
     mock_pylink_square_socket.JLink.rtt_stop.assert_called_once()
     mock_pylink_square_socket.JLink.close.assert_called_once()
 
 
 def test_rtt_segger_open(mocker, mock_pylink_square_socket):
-    mocker.patch(
-        "pylink.JLink.opened",
-        return_value=False,
-    )
+    mocker.patch("pylink.JLink.opened", return_value=False)
 
     with CCRttSegger() as cc_rtt_inst:
         pass
@@ -120,7 +118,9 @@ def test_rtt_segger_open(mocker, mock_pylink_square_socket):
     mock_pylink_square_socket.JLink.open.assert_called_once()
     mock_pylink_square_socket.JLink.set_tif.assert_called_once()
     mock_pylink_square_socket.JLink.connect.assert_called_once()
+    mock_pylink_square_socket.JLink.halted.assert_called_once()
     mock_pylink_square_socket.JLink.rtt_start.assert_called_once()
+    mock_pylink_square_socket.JLink.rtt_get_buf_descriptor.assert_called_once()
     mock_pylink_square_socket.JLink.rtt_stop.assert_called_once()
     mock_pylink_square_socket.JLink.close.assert_called_once()
 
@@ -173,28 +173,25 @@ def test_rtt_segger_rtt_logger_running(
     tmpdir,
 ):
 
-    mocker_buffer = mocker.patch(
+    mock_buffer = mocker.patch(
         "pykiso.lib.connectors.cc_rtt_segger.pylink.JLink.rtt_get_buf_descriptor",
         return_value=pylink.jlink.structs.JLinkRTTerminalBufDesc(
             SizeOfBuffer=size_of_buffer
         ),
     )
-    mocker_rtt_read = mocker.patch("pylink.JLink.rtt_read", return_value=bytes_to_read)
+    mock_rtt_read = mocker.patch("pylink.JLink.rtt_read", return_value=bytes_to_read)
 
     cc_rtt_inst = CCRttSegger(rtt_log_path=tmpdir)
     cc_rtt_inst._cc_open()
 
-    # Let 1ms to the log thread
-    sleep(1e-3)
-
-    mocker_buffer.assert_called_once()
-    mocker_rtt_read.assert_called()
-    assert cc_rtt_inst._is_running is True
+    assert mock_buffer.call_count == 2
+    mock_rtt_read.assert_called()
+    assert cc_rtt_inst._is_running == True
     assert cc_rtt_inst.rtt_log_buffer_size == expected_size_of_buffer
     assert (Path(tmpdir) / "rtt.log").is_file()
 
     cc_rtt_inst._cc_close()
-    assert cc_rtt_inst._is_running is False
+    assert cc_rtt_inst._is_running == False
     assert rtt_log in (Path(tmpdir) / "rtt.log").read_text()
 
 
@@ -237,3 +234,76 @@ def test_rtt_segger_timeout(mocker, mock_pylink_square_socket):
         response = cc_rtt_inst._cc_receive(timeout=0.010, raw=True)
 
     assert response == None
+
+
+@pytest.mark.parametrize(
+    "addr, num_units, zone, nbits",
+    [
+        (0x200F202, 3, None, 32),
+        (0x200F203, 1, "IDATA", 16),
+        (0x200F204, 42, "DDATA", 8),
+    ],
+)
+def test_read_target_memory(
+    mocker, mock_pylink_square_socket, addr, num_units, zone, nbits
+):
+    mocker.patch("pylink.JLink.memory_read", return_value=[0x01, 0x02])
+
+    with CCRttSegger() as cc_rtt_inst:
+        res = cc_rtt_inst.read_target_memory(addr, num_units, zone, nbits)
+
+    assert res == [0x01, 0x02]
+
+
+def test_read_target_memory_exception(mocker, mock_pylink_square_socket):
+    mocker.patch("pylink.JLink.memory_read", side_effect=ValueError)
+
+    with CCRttSegger() as cc_rtt_inst:
+        res = cc_rtt_inst.read_target_memory(0x200F202, 3, None, 32)
+
+    assert res is None
+
+
+@pytest.mark.parametrize(
+    "log_return, rtt_log_speed, expected_sleep",
+    [
+        (b"rtt_log", "null", 0),
+        (b"rtt_log", 1000, 0.001),
+        (None, 1, 1),
+    ],
+)
+def test_receive_log(
+    log_return, rtt_log_speed, expected_sleep, mocker, mock_pylink_square_socket
+):
+    mocker_sleep = mocker.patch("pykiso.lib.connectors.cc_rtt_segger.time.sleep")
+
+    if rtt_log_speed:
+        # rtt_log_speed explicit
+        rtt_log_speed = None if rtt_log_speed == "null" else rtt_log_speed
+        cc_rtt_inst = CCRttSegger(rtt_log_speed=rtt_log_speed)
+    else:
+        # rtt_log_speed not passed
+        cc_rtt_inst = CCRttSegger()
+
+    def mock_jlink_rtt_read(rtt_log_buffer_idx, rtt_log_buffer_size):
+        """Check input, stop while loop and return mock log value"""
+        assert rtt_log_buffer_idx == "log_buffer_idx"
+        assert rtt_log_buffer_size == "log_buffer_size"
+
+        cc_rtt_inst._is_running = False
+        return log_return
+
+    jlink_mock = mocker.Mock()
+    jlink_mock.rtt_read = mock_jlink_rtt_read
+    cc_rtt_inst.jlink = jlink_mock
+    mock_rtt_log = cc_rtt_inst.rtt_log = mocker.Mock()
+
+    cc_rtt_inst.rtt_log_buffer_idx = "log_buffer_idx"
+    cc_rtt_inst.rtt_log_buffer_size = "log_buffer_size"
+    cc_rtt_inst._is_running = True
+
+    cc_rtt_inst.receive_log()
+
+    mocker_sleep.assert_called_once_with(expected_sleep)
+    if log_return:
+        mock_rtt_log.debug.assert_called_once_with("rtt_log")

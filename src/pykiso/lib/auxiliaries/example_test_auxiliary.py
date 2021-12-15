@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -24,12 +24,12 @@ Example Auxiliary
 import logging
 
 # Import the framework modules
-from pykiso import auxiliary, message
+from pykiso import AuxiliaryInterface, message
 
 log = logging.getLogger(__name__)
 
 
-class ExampleAuxiliary(auxiliary.AuxiliaryInterface):
+class ExampleAuxiliary(AuxiliaryInterface):
     """Example of an auxiliary implementation."""
 
     def __init__(

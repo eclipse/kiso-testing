@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -72,7 +72,7 @@ class IntegrationTestSuite(unittest.TestCase):
         self.assertEqual(len(result.failures), 1)
         self.assertEqual(
             result.failures[0][0].id(),
-            "pykiso.test_coordinator.test_case.FakeTestCase-1-0.test_fake_2",
+            "fake_suite_1.FakeTestCase-1-0.test_fake_2",
         )
         self.assertEqual(len(result.skipped), 0)
         self.assertEqual(result.testsRun, 3)

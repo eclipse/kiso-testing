@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -21,7 +21,6 @@ from pykiso.lib.connectors.cc_visa import VISAChannel
 
 @pytest.fixture
 def aux_inst(mocker, cchannel_inst):
-    mocker.patch.object(InstrumentControlAuxiliary, "run", return_value=None)
     return InstrumentControlAuxiliary(cchannel_inst, "Elektro-Automatik")
 
 
@@ -44,49 +43,33 @@ def test_instrument_constructor(aux_inst):
 
     assert aux_inst.instrument == "Elektro-Automatik"
     assert aux_inst.write_termination == "\n"
-    assert aux_inst.is_pausable == True
 
 
 def test_write(mocker, aux_inst):
-    run_cmd_mock = mocker.patch.object(
-        InstrumentControlAuxiliary, "run_command", return_value=None
+    handle_write_mock = mocker.patch.object(
+        InstrumentControlAuxiliary, "handle_write", return_value=None
     )
     aux_inst.write("fake_command")
 
-    run_cmd_mock.assert_called_with(
-        cmd_message="write",
-        cmd_data=("fake_command", None),
-        blocking=True,
-        timeout_in_s=5,
-    )
+    handle_write_mock.assert_called_with("fake_command", None)
 
 
 def test_read(mocker, aux_inst):
-    run_cmd_mock = mocker.patch.object(
-        InstrumentControlAuxiliary, "run_command", return_value=None
+    handle_read_mock = mocker.patch.object(
+        InstrumentControlAuxiliary, "handle_read", return_value=None
     )
     aux_inst.read()
 
-    run_cmd_mock.assert_called_with(
-        cmd_message="read", cmd_data=None, blocking=True, timeout_in_s=5
-    )
+    handle_read_mock.assert_called_once()
 
 
 def test_query(mocker, aux_inst):
-    run_cmd_mock = mocker.patch.object(
-        InstrumentControlAuxiliary, "run_command", return_value=None
+    handle_query_mock = mocker.patch.object(
+        InstrumentControlAuxiliary, "handle_query", return_value=None
     )
     aux_inst.query("fake_command")
 
-    run_cmd_mock.assert_called_with(
-        cmd_message="query", cmd_data="fake_command", blocking=True, timeout_in_s=5
-    )
-
-
-def test_stop(mocker, aux_inst):
-    aux_inst.stop()
-    assert aux_inst.wait_event.is_set()
-    assert aux_inst.stop_event.is_set()
+    handle_query_mock.assert_called_with("fake_command")
 
 
 def test_create_auxiliary_instance(mocker, aux_inst, cchannel_inst):
@@ -125,51 +108,6 @@ def test_delete_auxiliary_instance(aux_inst, cchannel_inst):
     cchannel_inst._cc_close.assert_called_once()
 
     assert state
-
-
-def test__run_command_write(mocker, aux_inst):
-    handle_write_mock = mocker.patch.object(
-        InstrumentControlAuxiliary, "handle_write", return_value=True
-    )
-
-    response = aux_inst._run_command(
-        cmd_message="write", cmd_data=("SYST:LOCK:OWN?", None)
-    )
-
-    handle_write_mock.assert_called_with("SYST:LOCK:OWN?", None)
-    assert response
-
-
-def test__run_command_query(mocker, aux_inst):
-    handle_query_mock = mocker.patch.object(
-        InstrumentControlAuxiliary, "handle_query", return_value=True
-    )
-
-    response = aux_inst._run_command(cmd_message="query", cmd_data="SYST:LOCK:OWN?")
-
-    handle_query_mock.assert_called_with(query_command="SYST:LOCK:OWN?")
-    assert response
-
-
-def test__run_command_read(mocker, aux_inst):
-    handle_read_mock = mocker.patch.object(
-        InstrumentControlAuxiliary, "handle_read", return_value=True
-    )
-
-    response = aux_inst._run_command(cmd_message="read", cmd_data=None)
-
-    handle_read_mock.assert_called_once()
-    assert response
-
-
-def test__run_command_read(mocker, aux_inst):
-    handle_read_mock = mocker.patch.object(
-        InstrumentControlAuxiliary, "handle_read", side_effect=ValueError
-    )
-
-    response = aux_inst._run_command(cmd_message="read", cmd_data=None)
-
-    assert not response
 
 
 def test_handle_write_without_validation(aux_inst, cchannel_inst):
@@ -277,28 +215,3 @@ def test_handle_query_with_visa_cc(mocker, aux_inst, cc_visa_inst):
     aux_inst.handle_query(query)
 
     cc_visa_inst.query.assert_called_with(f"{query}{aux_inst.write_termination}")
-
-
-def test_run_command(mocker, aux_inst, cc_visa_inst):
-    mock_set = mocker.patch("threading.Event.set", return_value=None)
-    mock_clear = mocker.patch("threading.Event.clear", return_value=None)
-
-    response = aux_inst.run_command("read", None, False, 0)
-
-    mock_set.assert_called_once()
-    mock_clear.assert_called_once()
-    assert response is None
-
-
-def test_suspend(aux_inst, caplog):
-    with caplog.at_level(logging.ERROR):
-        aux_inst.suspend()
-
-    assert "suspend method is not implemented " in caplog.text
-
-
-def test_resume(aux_inst, caplog):
-    with caplog.at_level(logging.ERROR):
-        aux_inst.resume()
-
-    assert "resume method is not implemented " in caplog.text

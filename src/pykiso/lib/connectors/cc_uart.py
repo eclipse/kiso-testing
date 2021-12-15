@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -59,6 +59,9 @@ class CCUart(connector.CChannel):
         self.serial.port = serialPort
         self.serial.baudrate = baudrate
         self.serial.paritiy = serial.PARITY_NONE
+        # Set a timeout to send the signal to the GIL to change thread.
+        # In case of a multi-threading system, all tasks will be called one after the other.
+        self.timeout = 1e-6
 
     def _cc_open(self):
         self.serial.open()
@@ -76,7 +79,7 @@ class CCUart(connector.CChannel):
     def _cc_receive(self, timeout=0.00001, raw=False):
         if raw:
             raise NotImplementedError()
-        self.serial.timeout = timeout
+        self.serial.timeout = timeout or self.timeout
 
         receivingState = self.WAITING_FOR_START
         bytesToRead = 10

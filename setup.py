@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -11,9 +11,12 @@
 # -*- encoding: utf-8 -*-
 
 import io
-import re
+import logging
+import platform
+import sys
 from glob import glob
 from os.path import basename, dirname, join, splitext
+from pathlib import Path
 
 from setuptools import find_packages, setup
 
@@ -27,13 +30,13 @@ def read(*names, **kwargs):
 
 setup(
     name="pykiso",
-    version="0.9.4",
+    version="0.14.0",
     license="Eclipse Public License - v 2.0",
     description="Embedded integration testing framework.",
     long_description=read("README.md"),
     author="Sebastian Fischer",
     author_email="sebastian.fischer@de.bosch.com",
-    url="https://github.com/ionelmc/python-nameless",
+    url="https://github.com/eclipse/kiso-testing",
     packages=find_packages("src"),
     package_dir={"": "src"},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],

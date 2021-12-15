@@ -24,13 +24,6 @@ from pykiso.message import (
     TlvKnownTags,
 )
 
-try:
-    # Try to import the dll
-    PCANBasic.PCANBasic()
-except:
-    pytestmark = pytest.mark.skip(reason="Peak driver is not installed: DLL not found")
-
-
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",
     TlvKnownTags.FAILURE_REASON: b"\x12\x34\x56",
@@ -194,6 +187,7 @@ def test_constructor(constructor_params, expected_config):
     assert can_inst.is_extended_id == expected_config["is_extended_id"]
     assert can_inst.can_filters == expected_config["can_filters"]
     assert can_inst.logging_activated == expected_config["logging_activated"]
+    assert can_inst.timeout == 1e-6
 
 
 @pytest.mark.parametrize(
@@ -415,12 +409,13 @@ def test_cc_send(mock_can_bus, parameters):
             Message,
         ),
         (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, (10, True), bytearray),
+        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, (0, True), bytearray),
     ],
 )
 def test_can_recv(
     mocker, mock_can_bus, raw_data, can_id, cc_receive_param, expected_type
 ):
-    mocker.patch(
+    mock_bus_recv = mocker.patch(
         "can.interface.Bus.recv",
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
@@ -429,7 +424,7 @@ def test_can_recv(
 
     assert isinstance(msg_received, expected_type) == True
     assert id_received == can_id
-    mock_can_bus.Bus.recv.assert_called_once()
+    mock_can_bus.Bus.recv.assert_called_once_with(timeout=cc_receive_param[0] or 1e-6)
     mock_can_bus.Bus.shutdown.assert_called_once()
 
 
@@ -463,3 +458,21 @@ def test_can_recv_exception(caplog, mocker, mock_can_bus):
     assert msg_received == None
     assert id_received == None
     assert "Exception" in caplog.text
+
+
+def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus):
+
+    mocker.patch(
+        "can.interface.Bus.recv", side_effect=python_can.CanError("Invalid Message")
+    )
+
+    logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
+
+    with caplog.at_level(logging.DEBUG):
+
+        with CCPCanCan() as can:
+            msg_received, id_received = can._cc_receive(timeout=0.0001)
+
+    assert msg_received == None
+    assert id_received == None
+    assert "ecountered can error: Invalid Message" in caplog.text

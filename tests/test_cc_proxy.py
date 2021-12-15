@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -7,17 +7,18 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import multiprocessing
 import queue
 
 import pytest
 
-from pykiso.lib.connectors.cc_proxy import CCProxy
+from pykiso.lib.connectors.cc_proxy import CCProxy, Queue
 
 
 def test_cc_open():
     with CCProxy() as proxy_inst:
-        assert isinstance(proxy_inst.queue_in, queue.Queue)
-        assert isinstance(proxy_inst.queue_out, queue.Queue)
+        assert isinstance(proxy_inst.queue_in, type(Queue()))
+        assert isinstance(proxy_inst.queue_out, type(Queue()))
         assert proxy_inst.timeout == 1
 
 
@@ -28,8 +29,8 @@ def test_cc_close():
     proxy_inst.queue_out.put(b"\x01\x02")
     proxy_inst._cc_close()
 
-    assert isinstance(proxy_inst.queue_in, queue.Queue)
-    assert isinstance(proxy_inst.queue_out, queue.Queue)
+    assert isinstance(proxy_inst.queue_in, type(Queue()))
+    assert isinstance(proxy_inst.queue_out, type(Queue()))
     assert proxy_inst.queue_in.qsize() == 0
     assert proxy_inst.queue_out.qsize() == 0
 

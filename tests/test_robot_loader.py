@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from pykiso.auxiliary import AuxiliaryInterface
+from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.robot_framework.loader import RobotLoader, parse_config
 
 
@@ -147,11 +147,11 @@ def test_uninstall(mocker, loader_instance, robot_config):
         return_value=None,
     )
     loader_instance.auxiliaries["pytest_fake_aux"] = None
-    sys.modules["pykiso.auxiliarie.pytest_fake_aux"] = None
+    sys.modules["pykiso.auxiliaries.pytest_fake_aux"] = None
 
     loader_instance.uninstall()
 
-    assert "pykiso.auxiliarie.pytest_fake_aux" not in sys.modules.keys()
+    assert "pykiso.auxiliaries.pytest_fake_aux" not in sys.modules.keys()
 
 
 def test_uninstall_exception(mocker, loader_instance):

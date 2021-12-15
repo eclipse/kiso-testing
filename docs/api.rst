@@ -22,6 +22,14 @@ Auxiliary Interface
 .. automodule:: pykiso.auxiliary
     :members:
 
+.. automodule:: pykiso.interfaces.mp_auxiliary
+    :members:
+
+.. automodule:: pykiso.interfaces.thread_auxiliary
+    :members:
+
+.. automodule:: pykiso.interfaces.simple_auxiliary
+    :members:
 
 Message Protocol
 ----------------

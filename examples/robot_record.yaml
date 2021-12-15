@@ -1,0 +1,25 @@
+auxiliaries:
+  record_aux:
+    connectors:
+      com: rtt_channel
+    config:
+      # When is_active is set, it actively polls the connector. It demands if
+      # the used connector needs to be polled actively.
+      is_active: False # False because rtt_channel has its own receive thread
+    type: pykiso.lib.auxiliaries.record_auxiliary:RecordAuxiliary
+
+connectors:
+  rtt_channel:
+    config:
+      chip_name: "STMXXXXXXXX"
+      speed: 4000
+      block_address: 0x12345678
+      verbose: True
+      tx_buffer_idx: 1
+      rx_buffer_idx: 1
+      # Path relative to this yaml where the RTT logs should be written to.
+      # Creates a file named rtt.log
+      rtt_log_path: ./
+      # RTT channel from where the RTT logs should be read
+      rtt_log_buffer_idx: 0
+    type: pykiso.lib.connectors.cc_rtt_segger:CCRttSegger
