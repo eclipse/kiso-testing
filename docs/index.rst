@@ -11,6 +11,8 @@ Welcome to pykiso's documentation!
     getting_started_dev
     integration_test
     config_file
+    how_to_auxiliary
+    how_to_connector
     connectors
     auxiliaries
     robot_framework

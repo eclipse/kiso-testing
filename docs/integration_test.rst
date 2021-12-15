@@ -114,8 +114,8 @@ When writing your testcases, the auxiliary will then be available under its defi
 The `pykiso.auxiliaries` is a magic package that only exists in the `pykiso` package after the `TestCoordinator` has processed the config file.
 It will include all *instances* of the defined auxiliares, available at their defined alias.
 
-Message Protocol ( If in used )
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Message Protocol (if used)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The message protocol is used (but not only) between the *device under
 test* HW and its **test-auxiliary**. The communication pattern is as
