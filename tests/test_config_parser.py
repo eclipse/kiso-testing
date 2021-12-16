@@ -137,7 +137,6 @@ auxiliaries:
         com:   chan1
         flash: chan2
     config: null
-      request_source : "battery.singleGateway"
     type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
 connectors:
   chan1:
