@@ -9,7 +9,7 @@
 
 """
 Virtual Communication channel for tests
-****************************************
+***************************************
 
 :module: cc_example
 
