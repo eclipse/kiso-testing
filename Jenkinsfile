@@ -85,7 +85,19 @@ pipeline
                     {
                         script
                         {
-                            echo "Release documentation on pypi.org: TODO"
+                            sh "pipenv run pip install twine"
+                            sh "pipenv run invoke clean"
+                            sh "pipenv run invoke dist"
+                            // withCredentials([usernamePassword(
+                            //     credentialsId: 'ID_PLACEHOLDER',
+                            //     passwordVariable: 'token')]) {
+
+                            //         sh "pipenv run twine upload\
+                            //                 --verbose \
+                            //                 --username __token__\
+                            //                 --password ${token}\
+                            //                 dist/*"
+                            //     }
                         }
                     }
                 }
