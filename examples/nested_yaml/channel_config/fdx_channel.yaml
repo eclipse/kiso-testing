@@ -1,7 +1,7 @@
 config:
-  t32_exc_path: 'path/to/Trace32.exe'
+  t32_exc_path: 'Path/to/Trace32.exe'
   t32_config: '../path/to/config.t32'
-  t32_main_script_path: '../path/to/TAPP_Demo.cmm'
+  t32_main_script_path: '../path/to/main_script.cmm'
   t32_reset_script_path: '../path/to/reset.cmm'
   t32_api_path: 'path/to/trace32.dll'
   port: '20000'

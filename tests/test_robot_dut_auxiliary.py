@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -16,7 +16,9 @@ from pykiso.message import MessageReportType, MessageType
 
 @pytest.fixture
 def dut_aux_instance(mocker):
-    mocker.patch("pykiso.auxiliary.AuxiliaryInterface.run", return_value=None)
+    mocker.patch(
+        "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run", return_value=None
+    )
     mocker.patch(
         "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
         return_value={"itf_com_aux": DutAux("channel")},

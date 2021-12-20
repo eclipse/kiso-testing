@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -25,14 +25,14 @@ import re
 import time
 from typing import List, Tuple, Union
 
-from pykiso import AuxiliaryInterface, CChannel
+from pykiso import CChannel, SimpleAuxiliaryInterface
 
 from .lib_scpi_commands import LibSCPI
 
 log = logging.getLogger(__name__)
 
 
-class InstrumentControlAuxiliary(AuxiliaryInterface):
+class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
     """Auxiliary used to communicate via a VISA connector using the SCPI
     protocol.
     """
@@ -54,7 +54,7 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
         :param output_channel: output channel to use on the instrument
             currently in use (if more than one)
         """
-        super().__init__(is_pausable=True, **kwargs)
+        super().__init__(**kwargs)
         self.channel = com
         self.instrument = instrument
         self.write_termination = write_termination
@@ -71,12 +71,7 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
             response
         """
         log.debug(f"Sending a write request in {self} for {write_command}")
-        return self.run_command(
-            cmd_message="write",
-            cmd_data=(write_command, validation),
-            blocking=True,
-            timeout_in_s=5,
-        )
+        return self.handle_write(write_command, validation)
 
     def handle_write(
         self, write_command: str, validation: Tuple[str, Union[str, List[str]]] = None
@@ -156,9 +151,7 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
             string
         """
         log.debug(f"Sending a read request in {self}")
-        return self.run_command(
-            cmd_message="read", cmd_data=None, blocking=True, timeout_in_s=5
-        )
+        return self.handle_read()
 
     def handle_read(self) -> str:
         """Handle read command by calling associated connector
@@ -179,9 +172,7 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
             timeout.
         """
         log.debug(f"Sending a query request in {self}) for {query_command}")
-        return self.run_command(
-            cmd_message="query", cmd_data=query_command, blocking=True, timeout_in_s=5
-        )
+        return self.handle_query(query_command)
 
     def handle_query(self, query_command: str) -> str:
         """Send a query request to the instrument. Uses the 'query' method of the
@@ -198,11 +189,6 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
             self.channel.cc_send(msg=query_command + self.write_termination, raw=False)
             time.sleep(0.05)
             return self.channel.cc_receive(raw=False)
-
-    def stop(self) -> None:
-        """Stop the auxiliary thread"""
-        self.wait_event.set()
-        self.stop_event.set()
 
     def _create_auxiliary_instance(self) -> bool:
         """Open the connector.
@@ -253,80 +239,3 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
         except Exception:
             log.exception("Unable to close the instrument.")
         return True
-
-    def run_command(
-        self,
-        cmd_message: str,
-        cmd_data: str = None,
-        blocking: bool = True,
-        timeout_in_s: int = 0,
-    ) -> Union[str, bool]:
-        """Put a command to execute in thread queue in.
-
-        :param cmd_message: command request to the auxiliary
-        :param cmd_data: payload to send over associated connector.
-        :param blocking: If you want the command request to be blocking
-            or not
-        :param timeout_in_s: Number of time (in s) you want to wait for
-            an answer
-
-        :return: received response from connected instrument or False
-            if an error occurred.
-        """
-        response_received = None
-
-        if self.lock.acquire():
-            self.wait_event.set()
-            # Trigger the internal requests
-            self.queue_in.put(("command", cmd_message, cmd_data))
-            # Wait until the test request was received
-            try:
-                log.debug(f"message to encode '{cmd_data}' in {self}")
-                response_received = self.queue_out.get(blocking, timeout_in_s)
-            except queue.Empty:
-                log.error("no reply received or command not executed within time")
-            # Release the above lock
-            self.wait_event.clear()
-            self.lock.release()
-        return response_received
-
-    def _run_command(
-        self, cmd_message: str, cmd_data: Union[tuple, str, None]
-    ) -> Union[str, bool]:
-        """Run a command on thread level and return the results using
-        queue out.
-
-        :param cmd_message: type of command to execute (read, write,
-            or query)
-        :param cmd_data: data to send using the associated connector.
-
-        :return: received response from connected instrument or False
-            if an error occurred.
-        """
-        try:
-            if cmd_message == "write":
-                write_req, validation = cmd_data
-                return self.handle_write(write_req, validation)
-            elif cmd_message == "query":
-                return self.handle_query(query_command=cmd_data)
-            else:
-                return self.handle_read()
-        except Exception:
-            log.exception("An error occurred during command run")
-            return False
-
-    def resume(self) -> None:
-        """Not used."""
-        log.error(f"resume method is not implemented for {self}")
-
-    def suspend(self) -> None:
-        """Not used."""
-        log.error(f"suspend method is not implemented for {self}")
-
-    def _abort_command(self) -> None:
-        """Not used"""
-        pass
-
-    def _receive_message(self, timeout_in_s: float) -> None:
-        """Not used"""
-        pass

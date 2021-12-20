@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -48,6 +48,9 @@ class CCUdp(connector.CChannel):
         self.source_addr = None
         # Define the max length
         self.max_msg_size = 256
+        # Set a timeout to send the signal to the GIL to change thread.
+        # In case of a multi-threading system, all tasks will be called one after the other.
+        self.timeout = 1e-6
 
     def _cc_open(self) -> None:
         """Open the udp socket."""
@@ -78,7 +81,7 @@ class CCUdp(connector.CChannel):
 
         :return: Message or raw bytes if successful, otherwise None
         """
-        self.udp_socket.settimeout(timeout)
+        self.udp_socket.settimeout(timeout or self.timeout)
 
         try:
             msg_received, self.source_addr = self.udp_socket.recvfrom(self.max_msg_size)

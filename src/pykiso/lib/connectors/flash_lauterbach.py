@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -77,13 +77,14 @@ class LauterbachFlasher(connector.Flasher):
         self.t32_script_path = t32_script_path
         self.t32_api_path = t32_api_path
         self.t32_start_args = [t32_exc_path, "-c", t32_config]
-        self.node = node
-        self.port = port
-        self.packlen = packlen
+        self.port = str(port)
+        self.node = str(node)
+        self.packlen = str(packlen)
         self.device = device
         self.t32_process = None
         self.t32_api = None
         self.loadup_wait_time = 5
+        self.allowed_t32_errors = 10
         super().__init__(self.t32_script_path, **kwargs)
 
     def open(self) -> None:
@@ -133,8 +134,8 @@ class LauterbachFlasher(connector.Flasher):
             self.t32_api.T32_Attach(self.device)
             log.info(f"ITF connected on {self.node}:{self.port}")
         else:
-            log.fatal(f"Unable to connect on port :{self.port}")
-            raise Exception(f"Unable to connect on port :{self.port}")
+            log.fatal(f"Unable to connect on port : {self.port}")
+            raise Exception(f"Unable to connect on port : {self.port}")
 
     def flash(self) -> None:
         """Flash software using configured .cmm script.
@@ -155,6 +156,7 @@ class LauterbachFlasher(connector.Flasher):
 
         # run flash script
         cmd = f"CD.DO {self.t32_script_path}"
+        log.info(f"Call T32_Cmd {cmd}")
         request_state = self.t32_api.T32_Cmd(cmd.encode("utf-8"))
 
         if request_state < 0:
@@ -164,15 +166,27 @@ class LauterbachFlasher(connector.Flasher):
             # wait until script's end
             script_state = ctypes.c_int(ScriptState.UNKWON)
             request_state = 0
-            while (
-                request_state == 0 and not script_state.value == ScriptState.NOT_RUNNING
-            ):
+            error_count = 0
+            while not script_state.value == ScriptState.NOT_RUNNING:
                 request_state = self.t32_api.T32_GetPracticeState(
                     ctypes.byref(script_state)
                 )
+                log.debug(
+                    f"Called T32_GetPracticeState. request_state: {request_state} "
+                    f"script_state: {script_state.value} request error: {error_count}"
+                )
+                if request_state != 0:
+                    error_count += 1
+                if error_count >= self.allowed_t32_errors:
+                    raise RuntimeError(
+                        f"Error during lauterbach script run. Script: {self.t32_script_path}\n"
+                        f"Abort execution because lauterbach was unresponsive for {error_count} times"
+                    )
+                time.sleep(1)
 
         # reset target
         cmd = "SYStem.RESet"
+        log.info(f"Call T32_Cmd {cmd}")
         request_state = self.t32_api.T32_Cmd(cmd.encode("utf-8"))
 
         # get script execution verdict
@@ -183,7 +197,6 @@ class LauterbachFlasher(connector.Flasher):
         )
 
         msg = message.value.decode("utf-8")
-
         if (
             request_state == 0
             and not script_state.value == MessageLineState.ERROR
@@ -211,5 +224,5 @@ class LauterbachFlasher(connector.Flasher):
         # Otherwise lauterbach needs a power reset to rerun t32mppc.
         try:
             self.t32_process.wait(timeout=5)
-        except:
+        except Exception:
             log.warning("Trace32 failed to exit properly")

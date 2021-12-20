@@ -1,9 +1,114 @@
 ### Current Version
 
+### Version 0.14.0
+
+Features:
+- add test name on failure (print: test name, description and reason)
+- manage RTT connector resource consumption using rtt_log_speed parameter
+- repeat testCases upon failure (x run, 1 successful -> ok & go)
+- repeat testCases for stability test (x run, 1 failure -> not ok & go)
+
+Changes:
+- move error messages from python-can 4.0.0 into log level debug
+- add timeout in the receive method in order to to send the signal to the GIL to change thread
+- add Repeat test upon failure examples and documentation
+
+Bugfix:
+- Empty multiprocessing queue in instance deletion to avoid auxiliary hanging issues(workaround)
+
+### Version 0.13.1 (internal release)
+
+Bugfix:
+- correct junit reporting instability by flushing StreamHandler at each test cases start
+
+Features:
+- *BREAKING CHANGE*: Improve test fixture labeling by introducing branch_level params
+
+### Version 0.13.0 (internal release)
+
+Changes:
+- set message reception size to buffer size in CCRttSegger if raw is set
+- Change pykiso import order for new vsc intellisense approach
+
+Bugfix:
+- fix wrong exit code return when an exception is raised at suite collection level
+
+Features:
+- add BannerTestResult to show test execution results in a banner
+
+### Version 0.12.1 (internal release)
+
+Bugfix:
+- Variant skipped but case_setup and case_teardown kept executed
+
+Features:
+- add capability to read target memory to jlink connector
+
+### Version 0.12.0 (internal release)
+
+Features:
+- add PATTERN argument in CLI to overwrite the test_filter_pattern
+
+
+### Version 0.11.1 (internal release)
+
+Changes:
+- remove brainstem libs because of installations conflicts
+
+### Version 0.11.0 (internal release)
+
+Changes:
+- Add external brainstem package for local installation
+
+Features:
+- add record auxiliary
+- add acroname robot auxiliary
+- add auxiliary to control acroname usb hubs
+- add multiprocessing based auxiliary interface
+- add multiprocessing proxy auxiliary version
+- add multiprocessing proxy channel version
+- add simple auxiliary interface
+
+Changes:
+- put thread and multiprocessing based auxiliary interface in a dedicated folder
+- make acroname auxiliary inherit from SimpleAuxiliaryInterface
+- make instrument auxiliary inherit from SimpleAuxiliaryInterface
+
+### Version 0.10.3 (internal release)
+
+Changes:
+- Move back to threading RLock instead of multiprocessing one for CChannel interface
+
+### Version 0.10.2 (internal release)
+
+Features:
+- add variant option to pykiso command
+- add package requirements into the yaml file (version check)
+
+Bugfix:
+- improve proxy auxiliary stability
+- fix sporadic issue seen when CTRL+C is pressed(UnboundLocalError)
+
+
+### Version 0.10.1 (internal release)
+
+Features:
+- add reset in CCRttSegger if the debugger is halted
+
+Bugfix:
+- explicitly cast fdx connector and flasher params
+- set CCRttSegger serial_no to None if the given one is not an int
+- fix flash-lauterbach to wait properly till scripts are executed.
+
+
+### Version 0.10.0
+
 Features:
 - add capability to generate a trace file for proxy auxiliary
 - add PCAN connector
 - add Vector-CAN connector
+- Run proxy aux on a different process to improve cpu utilization.
+  E.g. cycle time of network status message has less jitter.
 
 Bugfix:
 - failing attempt to quit trace32 will not affect the pykiso test result
@@ -33,7 +138,7 @@ Changes:
 
 Bugfix:
 - fix connection issues when t32 is already running
-- fix connection issues when t32mppc is not able to start
+- fix connection issues when t32 executable is not able to start
 
 ### Version 0.9.2 (internal release)
 
@@ -139,6 +244,7 @@ Features:
 - add proxy connector
 - add proxy auxiliary
 - allow relative paths in yaml file
+- added automatic detection of Vector Boxes' serial number
 - add nested yaml capability (introduce !include tag)
 
 Changes:
@@ -155,8 +261,14 @@ Tests:
 
 ### Version 0.4.0 (internal release)
 
+Features:
+
+Changes:
+
 Bugfixes:
 - fixed bug when generating junit report and reports folder does not exist
+- fixed bug Vector serial number with leading zeros
+
 
 ### Version 0.3.0 (internal release)
 
@@ -193,6 +305,7 @@ Tests :
 
 Features:
 - add Device Under Test Auxiliary (DUT)
+- add PCAN connector
 - add Segger RTT connector (communication channel)
 - add dummy jenkins file
 

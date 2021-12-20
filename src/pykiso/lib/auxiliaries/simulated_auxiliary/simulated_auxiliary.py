@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -21,7 +21,7 @@ Simulated Auxiliary
 import itertools
 import logging
 
-from pykiso import auxiliary, message
+from pykiso import AuxiliaryInterface, message
 
 from .simulation import Simulation
 
@@ -32,7 +32,7 @@ PING = message.MessageCommandType.PING
 log = logging.getLogger(__name__)
 
 
-class SimulatedAuxiliary(auxiliary.AuxiliaryInterface):
+class SimulatedAuxiliary(AuxiliaryInterface):
     """Custom auxiliary use to simulate a virtual DUT."""
 
     def __init__(self, com=None, **kwargs):

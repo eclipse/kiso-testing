@@ -26,3 +26,9 @@ Included Auxiliaries
 
 .. automodule:: pykiso.lib.auxiliaries.proxy_auxiliary
     :members:
+
+.. automodule:: pykiso.lib.auxiliaries.mp_proxy_auxiliary
+    :members:
+
+.. automodule:: pykiso.lib.auxiliaries.acroname_auxiliary
+    :members:

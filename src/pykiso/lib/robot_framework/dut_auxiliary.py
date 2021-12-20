@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -25,7 +25,7 @@ from typing import List
 from robot.api import logger
 from robot.api.deco import keyword, library
 
-from pykiso.auxiliary import AuxiliaryInterface
+from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.message import MessageCommandType, MessageReportType, MessageType
 from pykiso.test_coordinator.test_message_handler import (
     handle_basic_interaction,

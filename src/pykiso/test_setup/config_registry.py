@@ -19,7 +19,7 @@ Config Registry
 
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from .dynamic_loader import DynamicImportLinker
 

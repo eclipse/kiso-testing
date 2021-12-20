@@ -36,13 +36,13 @@ connectors:
   flash_lauterbach:
     config:
       # path to Trace32 executable
-      t32_exc_path: 'C:/T32/bin/windows64/t32mppc.exe'
+      t32_exc_path: 'Path/to/Trace32.exe'
       # path to Trace32 configuration file
-      t32_config: './test_suite_fdx_lauterbach/config_mc.t32'
+      t32_config: '../path/to/config.t32'
       # path to flash script
-      t32_script_path: './test_suite_fdx_lauterbach/BES3_FlashApplication_TAPP_Demo.cmm'
+      t32_main_script_path: '../path/to/flash.cmm'
       # path to Trace32 remote API
-      t32_api_path: 'C:/T32/demo/api/capi/dll/t32api.dll'
+      t32_reset_script_path: '../path/to/reset.cmm'
       # port number
       port: '20000'
       # ip address
@@ -57,15 +57,15 @@ connectors:
   fdx_channel:
     config:
       # path to Trace32 executable
-      t32_exc_path: 'C:/T32/bin/windows64/t32mppc.exe'
+      t32_exc_path: 'Path/to/Trace32.exe'
       # path to Trace32 configuration file
-      t32_config: './test_suite_fdx_lauterbach/config_mc.t32'
+      t32_config: '../path/to/config.t32'
       # path to the main cmm script to execute
-      t32_main_script_path: './test_suite_fdx_lauterbach/fdx_TAPP_Demo.cmm'
+      t32_main_script_path: '../path/to/script.cmm'
       # path to the reset cmm script to execute
-      t32_reset_script_path: './test_suite_fdx_lauterbach/reset.cmm'
+      t32_reset_script_path: '../path/to/reset.cmm'
       # path to Trace32 remote API
-      t32_api_path: 'C:/T32/demo/api/capi/dll/t32api.dll'
+      t32_api_path: 'path/to/trace32.dll'
       # port number
       port: '20000'
       # ip address
@@ -216,7 +216,7 @@ connectors:
       # destination ip address
       dest_ip: '127.0.0.1'
       # destination port
-      dest_port: 5025
+      dest_port: 3000
       # the maximum amount of data to be received at once
       max_msg_size: 256
     type: pykiso.lib.connectors.cc_tcp_ip:CCTcpip
@@ -229,7 +229,7 @@ connectors:
       # destination ip address
       dest_ip: '127.0.0.1'
       # destination port
-      dest_port: 5005
+      dest_port: 3000
     type: pykiso.lib.connectors.cc_udp:CCUdp
 
   # UDP server communication channel configuration example
@@ -238,7 +238,7 @@ connectors:
       # destination ip address
       dest_ip : '127.0.0.1'
       # destination port
-      dest_port: 5005
+      dest_port: 3000
     type: pykiso.lib.connectors.cc_udp_server:CCUdpServer
 ########################################################################
 #                 ****** VISA HARDWARE ******

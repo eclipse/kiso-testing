@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -24,12 +24,83 @@ import io
 import logging
 import os
 import re
+import sys
 import typing
+from distutils.version import LooseVersion
 from pathlib import Path
 
+import pkg_resources
 import yaml
 
 from .types import PathType
+
+
+def check_requirements(requirements: list):
+    """Check the environment before running the tests
+
+    :param requirements: requirements to be checked
+    """
+    requirement_satisfied = True
+    for req in requirements:
+        for package, expected_version in req.items():
+            try:
+                logging.debug(f"Check YAML requirements: {package}")
+                current_version = pkg_resources.get_distribution(package).version
+                logging.debug(f"current_version: {current_version}")
+
+                # check if condition provided
+                pattern = r"([<>=!]{1,2})"
+                match = re.split(pattern, expected_version)
+                if len(match) > 1:
+                    # pattern found eg: match = ['', '>=', '0.1.2']
+                    condition = match[1]
+                    exp_version = match[2].strip()
+                    check = (
+                        LooseVersion(current_version) < LooseVersion(exp_version)
+                        if condition == "<"
+                        else LooseVersion(current_version) <= LooseVersion(exp_version)
+                        if condition == "<="
+                        else LooseVersion(current_version) > LooseVersion(exp_version)
+                        if condition == ">"
+                        else LooseVersion(current_version) >= LooseVersion(exp_version)
+                        if condition == ">="
+                        else LooseVersion(current_version) == LooseVersion(exp_version)
+                        if condition == "=="
+                        else LooseVersion(current_version) != LooseVersion(exp_version)
+                        if condition == "!="
+                        else None
+                    )
+
+                    if check is False:
+                        # Version not satisfied
+                        logging.error(
+                            f"Requirement issue: found {package} with version '{current_version}' but '{expected_version}' given"
+                        )
+                    elif check is None:
+                        # comparator invalid
+                        logging.error(
+                            f"Requirement issue: comparator '{condition}' not among [<, <=, >, >=, ==, !=]"
+                        )
+                        check = False
+
+                    requirement_satisfied &= check
+
+                elif current_version != expected_version and expected_version != "any":
+                    if LooseVersion(current_version) < LooseVersion(expected_version):
+                        # Version not satisfied: current_version < expected_version
+                        requirement_satisfied = False
+                        logging.error(
+                            f"Requirement issue: found {package} with version '{current_version}' instead of '{expected_version}' (minimum)"
+                        )
+
+            except pkg_resources.DistributionNotFound:
+                # package not installed or misspelled
+                requirement_satisfied = False
+                logging.error(f"Dependency issue: {package} not found")
+
+    if not requirement_satisfied:
+        logging.error("At least one requirement is not satisfied")
+        sys.exit(1)
 
 
 def parse_config(fname: PathType) -> typing.Dict:
@@ -50,7 +121,7 @@ def parse_config(fname: PathType) -> typing.Dict:
 
             :param stream: current stream in use
             """
-            self._root = Path(fname).parent
+            self._root = Path(fname).resolve().parent
             super().__init__(stream)
 
         def include(self, node: yaml.nodes.ScalarNode) -> dict:
@@ -61,7 +132,7 @@ def parse_config(fname: PathType) -> typing.Dict:
 
             :return: yaml file content
             """
-            filename = self._root / Path(node.value).resolve()
+            filename = (self._root / Path(node.value)).resolve()
             with open(filename, "r") as f:
                 return yaml.load(f, Loader=YamlLoader)
 
@@ -180,5 +251,10 @@ def parse_config(fname: PathType) -> typing.Dict:
     cfg["connectors"] = {n: _fix_types_loc(s) for n, s in cfg["connectors"].items()}
     cfg["auxiliaries"] = {n: _fix_types_loc(s) for n, s in cfg["auxiliaries"].items()}
     cfg = _resolve_config_paths(cfg)
+
+    # Check requirements
+    requirements = cfg.get("requirements")
+    if requirements:
+        check_requirements(requirements)
 
     return cfg

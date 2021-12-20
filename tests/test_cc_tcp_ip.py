@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -69,6 +69,7 @@ def test_constructor(constructor_params):
     assert socket_connector.dest_port == constructor_params["port"]
     assert socket_connector.max_msg_size == constructor_params["max_msg_size"]
     assert isinstance(socket_connector.socket, socket.socket)
+    assert socket_connector.timeout == 1e-6
 
 
 @pytest.mark.parametrize(
@@ -120,18 +121,25 @@ def test__cc_send(
 
 
 @pytest.mark.parametrize(
-    "constructor_params, expected_response, is_raw",
+    "constructor_params, expected_response, timeout, is_raw",
     [
-        (constructor_params, example_response, False),
-        (constructor_params, example_response.encode(), True),
+        (constructor_params, example_response, 5, False),
+        (constructor_params, example_response.encode(), 5, True),
+        (constructor_params, example_response.encode(), 0, True),
+        (constructor_params, example_response.encode(), None, True),
     ],
 )
-def test__cc_receive(mock_socket, constructor_params, expected_response, is_raw):
+def test__cc_receive(
+    mock_socket, constructor_params, expected_response, timeout, is_raw
+):
     """Test _cc_receive"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
 
-    assert expected_response == socket_connector._cc_receive(raw=is_raw)
+    assert expected_response == socket_connector._cc_receive(
+        timeout=timeout, raw=is_raw
+    )
+    socket_connector.socket.settimeout.assert_called_once_with(timeout or 1e-6)
 
 
 @pytest.mark.parametrize(
