@@ -1,8 +1,8 @@
 config:
-  t32_exc_path: 'C:/T32/bin/windows64/t32mppc.exe'
-  t32_config: '../test_suite_fdx_lauterbach/config_mc.t32'
-  t32_script_path: '../test_suite_fdx_lauterbach/BES3_FlashApplication_TAPP_Demo.cmm'
-  t32_api_path: 'C:/T32/demo/api/capi/dll/t32api.dll'
+  t32_exc_path: 'Path/to/Trace32.exe'
+  t32_config: '../path/to/config.t32'
+  t32_main_script_path: '../path/to/flash_script.cmm'
+  t32_reset_script_path: '../test_suite_fdx_lauterbach/reset.cmm'
   port: '20000'
   node: 'localhost'
   packlen: '1024'

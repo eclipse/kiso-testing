@@ -61,7 +61,7 @@ connectors:
       # path to Trace32 configuration file
       t32_config: '../path/to/config.t32'
       # path to the main cmm script to execute
-      t32_main_script_path: '../path/to/TAPP_Demo.cmm'
+      t32_main_script_path: '../path/to/script.cmm'
       # path to the reset cmm script to execute
       t32_reset_script_path: '../path/to/reset.cmm'
       # path to Trace32 remote API
@@ -166,7 +166,7 @@ connectors:
       # id used for transmission
       remote_id: 0x123
       # iterable used to filter can id on reception
-      can_filters: [{"can_id": 0x600, "can_mask": 0xFFF, "extended": False}]
+      can_filters: [{"can_id": 0x123, "can_mask": 0xFFF, "extended": False}]
       # boolean used to disable/enable logfile creation
       logging_activated: True
     type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
@@ -197,7 +197,7 @@ connectors:
       # channel should be a global channel index
       app_name:
       # iterable used to filter can id on reception
-      can_filters: [{"can_id": 0x600, "can_mask": 0xFFF, "extended": False}]
+      can_filters: [{"can_id": 0x123, "can_mask": 0xFFF, "extended": False}]
       # this flag controls the size of the arbitration_id field
       is_extended_id: False
     type: pykiso.lib.connectors.cc_vector_can:CCVectorCan
@@ -214,9 +214,9 @@ connectors:
   tcp_ip_channel:
     config:
       # destination ip address
-      dest_ip: 10.83.131.246
+      dest_ip: '127.0.0.1'
       # destination port
-      dest_port: 5025
+      dest_port: 3000
       # the maximum amount of data to be received at once
       max_msg_size: 256
     type: pykiso.lib.connectors.cc_tcp_ip:CCTcpip
@@ -229,7 +229,7 @@ connectors:
       # destination ip address
       dest_ip: '127.0.0.1'
       # destination port
-      dest_port: 5005
+      dest_port: 3000
     type: pykiso.lib.connectors.cc_udp:CCUdp
 
   # UDP server communication channel configuration example
@@ -238,7 +238,7 @@ connectors:
       # destination ip address
       dest_ip : '127.0.0.1'
       # destination port
-      dest_port: 5005
+      dest_port: 3000
     type: pykiso.lib.connectors.cc_udp_server:CCUdpServer
 ########################################################################
 #                 ****** VISA HARDWARE ******
@@ -254,7 +254,7 @@ connectors:
   visa_tcp_ip_channel:
     config:
       # serial communication port in use
-      ip_address: 127.0.0.1
+      ip_address: '127.0.0.1'
       # serial communication baud rate
       protocol: "INSTR"
     type: pykiso.lib.connectors.cc_visa:VISATcpip

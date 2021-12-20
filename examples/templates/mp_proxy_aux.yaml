@@ -27,22 +27,22 @@ auxiliaries:
 connectors:
   proxy_com1:
     config:
-      # when using mulitprocessing auxiliary flag processing has to True
+      # when using mulitprocessing auxiliary flag processing has to be True
       processing : True
     type: pykiso.lib.connectors.cc_mp_proxy:CCMpProxy
   proxy_com2:
     config:
-      # when using mulitprocessing auxiliary flag processing has to True
+      # when using mulitprocessing auxiliary flag processing has to be True
       processing : True
     type: pykiso.lib.connectors.cc_mp_proxy:CCMpProxy
   can_channel:
     config:
-      # when using mulitprocessing auxiliary flag processing has to True
+      # when using mulitprocessing auxiliary flag processing has to be True
       processing : True
       interface : 'pcan'
       channel: 'PCAN_USBBUS1'
       state: 'ACTIVE'
-      remote_id : 0x300
+      remote_id : 0x123
     type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
 #__________________________ Test Suite section _________________________
 test_suite_list:
