@@ -20,6 +20,7 @@ Interface Definition for Connectors, CChannels and Flasher
 
 """
 import abc
+import multiprocessing
 import pathlib
 import threading
 
@@ -30,8 +31,7 @@ class Connector(abc.ABC):
     """Abstract interface for all connectors to inherit from.
 
     Defines hooks for opening and closing the connector and
-    also defines a contextmanager interface.
-    """
+    also defines a contextmanager interface."""
 
     def __init__(self, name: str = None):
         """Constructor.
@@ -71,10 +71,13 @@ class Connector(abc.ABC):
 class CChannel(Connector):
     """Abstract class for coordination channel."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, processing=False, **kwargs):
         """constructor"""
         super().__init__(**kwargs)
-        self._lock = threading.RLock()
+        if processing:
+            self._lock = multiprocessing.RLock()
+        else:
+            self._lock = threading.RLock()
 
     def open(self) -> None:
         """Open a thread-safe channel.
@@ -82,7 +85,7 @@ class CChannel(Connector):
         :raise ConnectionRefusedError: when lock acquire failed
         """
         # If we successfully lock the channel, open it
-        if self._lock.acquire(blocking=False):
+        if self._lock.acquire(False):
             self._cc_open()
         else:
             raise ConnectionRefusedError
@@ -100,8 +103,8 @@ class CChannel(Connector):
 
         :raise ConnectionRefusedError: when lock acquire failed
         """
-        # TODO should blocking be a parameter?
-        if self._lock.acquire(blocking=False):
+        # TODO should block be a parameter?
+        if self._lock.acquire(False):
             self._cc_send(msg=msg, raw=raw, **kwargs)
         else:
             raise ConnectionRefusedError
@@ -119,7 +122,7 @@ class CChannel(Connector):
         :raise ConnectionRefusedError: when lock acquire failed
         """
         received_message = None
-        if self._lock.acquire(blocking=False):
+        if self._lock.acquire(False):
             # Store received message
             received_message = self._cc_receive(timeout=timeout, raw=raw)
         else:

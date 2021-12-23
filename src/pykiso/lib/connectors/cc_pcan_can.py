@@ -109,6 +109,9 @@ class CCPCanCan(CChannel):
         self.logging_activated = logging_activated
         self.raw_pcan_interface = None
         self.logging_path = None
+        # Set a timeout to send the signal to the GIL to change thread.
+        # In case of a multi-threading system, all tasks will be called one after the other.
+        self.timeout = 1e-6
         """
         Extract the base logging directory from the logging module, so we can
         create our logging folder in the correct place.
@@ -290,7 +293,7 @@ class CCPCanCan(CChannel):
         :return: tuple containing the received data and the source can id
         """
         try:  # Catch bus errors & rcv.data errors when no messages where received
-            received_msg = self.bus.recv(timeout=timeout)
+            received_msg = self.bus.recv(timeout=timeout or self.timeout)
             if received_msg is not None:
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data

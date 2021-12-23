@@ -3,6 +3,7 @@
 ![Optional Text](./docs/images/pykiso_logo.png)
 
 ## Introduction ##
+
 **pykiso** is an integration test framework. With it, it is possible to write
 * Whitebox integration tests directly on my target device
 * Graybox integration tests to make sure the communication-link with my target device is working as expected
@@ -11,7 +12,7 @@
 The project will contain:
 * The core python framework (this repository)
 * Framework plugins that are generic enough to be integrated as "native" (this repository)
-* Additional "testApps" for different targets platforms (e.g. stm32, ...) or languages (C, C++, ...) . It could be pure SW or also HW (other repositories)
+* Additional "testApps" for different targets platforms (e.g. stm32, ...) or languages (C, C++, ...) . It could be pure SW or also HW (other repositories)
 
 ## Requirements ##
 
@@ -60,15 +61,16 @@ Start using the hooks with
 ```bash
 pre-commit install
 ```
-
 ## Usage ##
 
 Once installed the application is bound to `pykiso`, it can be called with the following arguments:
 
 ```bash
-Usage: pykiso [OPTIONS]
+Usage: pykiso [OPTIONS] [PATTERN]
 
-  Embedded Integration Test Framework
+  Embedded Integration Test Framework - CLI Entry Point.
+
+  PATTERN: overwrite the test filter pattern from the YAML file (optional)
 
 Options:
   -c, --test-configuration-file FILE
@@ -81,7 +83,14 @@ Options:
   --log-level [DEBUG|INFO|WARNING|ERROR]
                                   set the verbosity of the logging
   --version                       Show the version and exit.
-  --help                          Show this message and exit.
+  -h, --help                          Show this message and exit.
+  --variant                       allow the user to execute a subset of tests
+                                  based on variants
+  --branch-level                  allow the user to execute a subset of tests
+                                  based on branch levels
+  --junit                         enables the generation of a junit report
+  --text                          default, test results are only displayed in
+                                  the console
 ```
 
 Suitable config files are available in the `examples` folder.
@@ -107,11 +116,11 @@ pytest
 ## List of limitations / todos for the python side
 
 * [ ] **When the auxiliary does not answer (ping or else), GenericTest.BasicTest.cleanup_and_skip() call will result in a lock and break the framework.**
-* [x] No test-setion will be executed, needs to be removed later.
+* [ ] No test-section will be executed, needs to be removed later.
 * [x] test configuration files need to be reworked
 * [x] Names & configurations in the *cfg file json* are character precise class names & associated parameters.
 * [ ] Spelling mistakes need to be fixed!  _*ongoing*_
-* [x] Add verbosity parameters to pass to the unittest framework to get more details about the test.
-* [ ] **Add result parsing for Jenkins (see: https://stackoverflow.com/questions/11241781/python-unittests-in-jenkins).**
+* [ ] Add verbosity parameters to pass to the unittest framework to get more details about the test.
+* [x] **Add result parsing for Jenkins (see: https://stackoverflow.com/questions/11241781/python-unittests-in-jenkins).**
 * [x] Create a python package
 * [ ] and host it on pip.

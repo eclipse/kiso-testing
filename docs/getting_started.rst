@@ -74,7 +74,7 @@ List of limitations / todos for the python side
 -  ☐ Spelling mistakes need to be fixed! *ongoing*
 -  ☐ Add verbosity parameters to pass to the unittest framework to get
    more details about the test.
--  ☐ **Add result parsing for Jenkins (see:
+-  ☒ **Add result parsing for Jenkins (see:
    https://stackoverflow.com/questions/11241781/python-unittests-in-jenkins).**
 -  ☒ Create a python package
-   -  ☐ and host it on pip.
+-  ☐ and host it on pip.

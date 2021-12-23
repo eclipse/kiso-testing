@@ -104,6 +104,7 @@ def test_constructor(constructor_params, expected_config):
     assert can_inst.remote_id == None
     assert can_inst.is_extended_id == expected_config["is_extended_id"]
     assert can_inst.can_filters == expected_config["can_filters"]
+    assert can_inst.timeout == 1e-6
 
 
 def test_cc_open(mock_can_bus):
@@ -157,6 +158,7 @@ def test_cc_send(mock_can_bus, parameters):
             Message,
         ),
         (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, (10, True), bytearray),
+        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, (0, True), bytearray),
     ],
 )
 def test_can_recv(
@@ -171,7 +173,7 @@ def test_can_recv(
 
     assert isinstance(msg_received, expected_type) == True
     assert id_received == can_id
-    mock_can_bus.Bus.recv.assert_called_once()
+    mock_can_bus.Bus.recv.assert_called_once_with(timeout=cc_receive_param[0] or 1e-6)
     mock_can_bus.Bus.shutdown.assert_called_once()
 
 

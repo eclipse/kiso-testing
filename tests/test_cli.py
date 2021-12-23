@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -9,7 +9,6 @@
 
 import logging
 import os
-from pathlib import Path
 
 import pytest
 
@@ -28,9 +27,12 @@ def test_initialize_logging(mocker, path, level, expected_level, report_type):
 
     mocker.patch("logging.Logger.addHandler")
     mocker.patch("logging.FileHandler.__init__", return_value=None)
+    flush_mock = mocker.patch("logging.StreamHandler.flush", return_value=None)
 
     logger = cli.initialize_logging(path, level, report_type)
 
+    if report_type == "junit":
+        flush_mock.assert_called()
     assert isinstance(logger, logging.Logger)
     assert logger.isEnabledFor(expected_level)
     assert cli.log_options.log_path == path

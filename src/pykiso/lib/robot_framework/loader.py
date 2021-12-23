@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -75,12 +75,12 @@ class RobotLoader:
             for alias in auxes_alias:
                 if alias not in proxy_auxes:
                     self.auxiliaries[alias] = importlib.import_module(
-                        f".{alias}", f"{PACKAGE}.auxiliarie"
+                        f".{alias}", f"{PACKAGE}.auxiliaries"
                     )
             # finally install proxy auxiliaries
             for alias in proxy_auxes:
                 self.auxiliaries[alias] = importlib.import_module(
-                    f".{alias}", f"{PACKAGE}.auxiliarie"
+                    f".{alias}", f"{PACKAGE}.auxiliaries"
                 )
             logger.info(f"auxiliaries {self.auxiliaries} installed")
         except Exception as error:
@@ -98,7 +98,7 @@ class RobotLoader:
         try:
             ConfigRegistry.delete_aux_con()
             for alias in self.auxiliaries:
-                sys.modules.pop(f"{PACKAGE}.auxiliarie.{alias}")
+                sys.modules.pop(f"{PACKAGE}.auxiliaries.{alias}")
             logger.info(f"auxiliaries {self.auxiliaries} uninstalled")
         except Exception as error:
             logger.error(

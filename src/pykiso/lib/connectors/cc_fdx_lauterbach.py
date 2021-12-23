@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -79,9 +79,9 @@ class CCFdxLauterbach(connector.CChannel):
         self.t32_in_test_reset_script_path = t32_in_test_reset_script_path
         self.t32_api_path = t32_api_path
         self.t32_start_args = [t32_exc_path, "-c", t32_config]
-        self.node = node
-        self.port = port
-        self.packlen = packlen
+        self.port = str(port)
+        self.node = str(node)
+        self.packlen = str(packlen)
         self.device = device
         self.t32_process = None
         self.t32_api = None
@@ -90,7 +90,7 @@ class CCFdxLauterbach(connector.CChannel):
         self.fdxout = -1
         self.reset_flag = False
         self.safe_reset_flag = False
-
+        self.allowed_t32_errors = 10
         # Initialize the super class
         super().__init__(**kwargs)
 
@@ -106,19 +106,26 @@ class CCFdxLauterbach(connector.CChannel):
         # Run the script
         err = self.t32_api.T32_Cmd(f"DO {script_path}".encode())
         if err != 0:
-            log.exception(f"Error '{err}' while loading the cmm file: {script_path}")
+            log.error(f"Error '{err}' while loading the cmm file: {script_path}")
             return err
         log.info(f"Loading the cmm file: {script_path}")
 
         # Check whether the scrip we just launched has completed or not.
         state = ctypes.c_int(PracticeState.UNKNOWN)
-        while err == 0 and not state.value == PracticeState.NOT_RUNNING:
-            time.sleep(0.05)  # 50 ms pause in each loop
+        error_count = 0
+        while not state.value == PracticeState.NOT_RUNNING:
             err = self.t32_api.T32_GetPracticeState(ctypes.byref(state))
-        time.sleep(1)  # ensure that the cmm is correctly loaded
+            if err != 0:
+                error_count += 1
+            if error_count >= self.allowed_t32_errors:
+                log.error(
+                    f"Abort execution because lauterbach was unresponsive for {error_count} times"
+                )
+                break
+            time.sleep(0.05)  # 50 ms pause in each loop
 
         if err != 0:
-            log.exception("Error occurred while checking the script state")
+            log.error("Error occurred while checking the script state")
 
         return err
 

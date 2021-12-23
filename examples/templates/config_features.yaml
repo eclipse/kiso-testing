@@ -47,3 +47,19 @@ test_suite_list:
 - suite_dir: ENV{TEST_SUITE_DIR}
   test_filter_pattern: '*.py'
   test_suite_id: 1
+
+#__________________________ Requirements section ________________________
+# FEATURE: Check the environment before running the tests
+#
+# The version can be:
+#   - specified alone (minimum version accepted)
+#   - conditioned using <, <=, >, >=, == or !=
+#   - no specified using 'any' (accept any version)
+#
+# /!\: If the check fail, the tests will not start and the mismatch
+#      displayed
+#_______________________________________________________________________
+requirements:
+  - pykiso : '>=0.10.1'
+  - robotframework : 3.2.2
+  - pyyaml: any

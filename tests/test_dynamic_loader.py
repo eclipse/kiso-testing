@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -7,9 +7,11 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import sys
+
 import pytest
 
-from pykiso.test_setup.dynamic_loader import DynamicImportLinker
+from pykiso.test_setup.dynamic_loader import DynamicFinder, DynamicImportLinker
 
 
 @pytest.fixture(scope="module")
@@ -61,6 +63,7 @@ def linker(example_module):
             aux_cons=aux_details["connectors"],
             **cfg,
         )
+
     linker.install()
     return linker
 
@@ -104,6 +107,14 @@ def test_bad_type_spec(linker):
 def test_module_not_found(linker):
     with pytest.raises(ImportError):
         from pykiso.auxiliaries import aux_no_file
+
+
+def test_meta_path_order(linker):
+    assert [
+        index
+        for index, finder in enumerate(sys.meta_path)
+        if isinstance(finder, DynamicFinder)
+    ][0] == 0
 
 
 def test_import_aux_instanciated(linker):

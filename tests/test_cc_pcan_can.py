@@ -285,7 +285,12 @@ def test_pcan_configure_trace(
         (PCANBasic.PCAN_ERROR_OK, RuntimeError("Test Exception 1"), True),
     ],
 )
-def test_pcan_set_value(return_value, side_effect, RuntimeError_raised):
+def test_pcan_set_value(
+    return_value,
+    side_effect,
+    RuntimeError_raised,
+    mock_PCANBasic,
+):
     can_inst = CCPCanCan()
     can_inst.raw_pcan_interface = PCANBasic.PCANBasic()
     with mock.patch.object(
@@ -389,7 +394,7 @@ def test_cc_close_with_exception(
         (message_with_no_tlv, 36),
     ],
 )
-def test_cc_send(mock_can_bus, parameters):
+def test_cc_send(mock_can_bus, parameters, mock_PCANBasic):
 
     with CCPCanCan(remote_id=0x0A) as can:
         can._cc_send(*parameters)
@@ -413,7 +418,13 @@ def test_cc_send(mock_can_bus, parameters):
     ],
 )
 def test_can_recv(
-    mocker, mock_can_bus, raw_data, can_id, cc_receive_param, expected_type
+    mocker,
+    mock_can_bus,
+    raw_data,
+    can_id,
+    cc_receive_param,
+    expected_type,
+    mock_PCANBasic,
 ):
     mock_bus_recv = mocker.patch(
         "can.interface.Bus.recv",
@@ -435,7 +446,7 @@ def test_can_recv(
         False,
     ],
 )
-def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
+def test_can_recv_invalid(mocker, mock_can_bus, raw_state, mock_PCANBasic):
 
     mocker.patch("can.interface.Bus.recv", return_value=None)
 
@@ -446,7 +457,7 @@ def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
     assert id_received == None
 
 
-def test_can_recv_exception(caplog, mocker, mock_can_bus):
+def test_can_recv_exception(caplog, mocker, mock_can_bus, mock_PCANBasic):
 
     mocker.patch("can.interface.Bus.recv", side_effect=Exception())
 
@@ -460,7 +471,7 @@ def test_can_recv_exception(caplog, mocker, mock_can_bus):
     assert "Exception" in caplog.text
 
 
-def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus):
+def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBasic):
 
     mocker.patch(
         "can.interface.Bus.recv", side_effect=python_can.CanError("Invalid Message")

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -25,6 +25,7 @@ has to be used with a so called proxy auxiliary.
 
 import logging
 import queue
+from multiprocessing import Queue
 from typing import Tuple, Union
 
 from pykiso import Message
@@ -49,14 +50,14 @@ class CCProxy(CChannel):
 
     def _cc_open(self) -> None:
         """Open proxy channel."""
-        self.queue_in = queue.Queue()
-        self.queue_out = queue.Queue()
+        self.queue_in = Queue()
+        self.queue_out = Queue()
         log.debug("Open proxy channel")
 
     def _cc_close(self) -> None:
         """Close proxy channel."""
-        self.queue_in = queue.Queue()
-        self.queue_out = queue.Queue()
+        self.queue_in = Queue()
+        self.queue_out = Queue()
         log.debug("Close proxy channel")
 
     def _cc_send(self, *args: tuple, **kwargs: dict) -> None:

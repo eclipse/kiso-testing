@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -21,12 +21,12 @@ Device Under Test Auxiliary
 """
 import logging
 
-from pykiso import CChannel, Flasher, auxiliary, message
+from pykiso import AuxiliaryInterface, CChannel, Flasher, message
 
 log = logging.getLogger(__name__)
 
 
-class DUTAuxiliary(auxiliary.AuxiliaryInterface):
+class DUTAuxiliary(AuxiliaryInterface):
     """Device Under Test(DUT) auxiliary implementation."""
 
     def __init__(
@@ -42,7 +42,6 @@ class DUTAuxiliary(auxiliary.AuxiliaryInterface):
         :param com: Communication connector
         :param flash: flash connector
         """
-
         super().__init__(name=name, **kwargs)
         self.channel = com
         self.flash = flash

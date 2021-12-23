@@ -1,0 +1,11 @@
+auxiliaries:
+  acroname_aux:
+    config:
+      # Serial number to connect to. Example: "0x1234ABCD"
+      serial_number : null # null = auto detection.
+    type: pykiso.lib.auxiliaries.acroname_auxiliary:AcronameAuxiliary
+# to avoid parsing error just define a dummy connector
+connectors:
+  chan1:
+    config: null
+    type: ext_lib/cc_example.py:CCExample

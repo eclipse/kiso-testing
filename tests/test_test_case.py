@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -7,12 +7,12 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import sys
 import unittest
+from functools import partial
 
 import pytest
 
-from pykiso import cli
+from pykiso import cli, retry_test_case
 from pykiso.test_coordinator import test_case
 
 
@@ -54,13 +54,12 @@ class IntegrationTestCase(unittest.TestCase):
 
 
 @pytest.mark.parametrize(
-    "suite_id, case_id, aux_list, setup_timeout, run_timeout, teardown_timeout, test_ids",
+    "suite_id, case_id, aux_list, setup_timeout, run_timeout, teardown_timeout, test_ids, variant",
     [
-        (1, 1, None, 1, 2, 3, {"Component1": ["Req1", "Req2"]}),
-        (1, 2, ["aux2"], None, 2, 3, {"Component1": ["Req1", "Req2"]}),
-        (1, 3, ["aux3"], 1, None, 3, {"Component1": ["Req1", "Req2"]}),
-        (1, 4, ["aux4"], 1, 2, None, {"Component1": ["Req1", "Req2"]}),
-        (1, 5, ["aux5", "aux6"], None, None, None, {"Component1": ["Req1", "Req2"]}),
+        (1, 1, None, 1, 2, 3, {"Component1": ["Req1", "Req2"]}, None),
+        (1, 2, ["aux2"], None, 2, 3, {"Component1": ["Req1", "Req2"]}, None),
+        (1, 3, ["aux3"], 1, None, 3, {"Component1": ["Req1", "Req2"]}, None),
+        (1, 4, ["aux4"], 1, 2, None, {"Component1": ["Req1", "Req2"]}, None),
         (
             1,
             5,
@@ -68,12 +67,31 @@ class IntegrationTestCase(unittest.TestCase):
             None,
             None,
             None,
+            {"Component1": ["Req1", "Req2"]},
             None,
+        ),
+        (1, 5, ["aux1"], None, None, None, None, None),
+        (
+            1,
+            5,
+            ["aux1"],
+            1,
+            2,
+            3,
+            {"Component1": ["Req1"]},
+            {"variant": ["variant1"]},
         ),
     ],
 )
 def test_define_test_parameters_on_tc(
-    suite_id, case_id, aux_list, setup_timeout, run_timeout, teardown_timeout, test_ids
+    suite_id,
+    case_id,
+    aux_list,
+    setup_timeout,
+    run_timeout,
+    teardown_timeout,
+    test_ids,
+    variant,
 ):
     @test_case.define_test_parameters(
         suite_id=suite_id,
@@ -83,6 +101,7 @@ def test_define_test_parameters_on_tc(
         run_timeout=run_timeout,
         teardown_timeout=teardown_timeout,
         test_ids=test_ids,
+        variant=variant,
     )
     class MyClass(test_case.BasicTest):
         pass
@@ -100,6 +119,7 @@ def test_define_test_parameters_on_tc(
     timeout_value = teardown_timeout or tc_inst.response_timeout
     assert tc_inst.teardown_timeout == timeout_value
     assert tc_inst.test_ids == test_ids
+    assert tc_inst.variant == variant
 
 
 def test_setUpClass(mocker):
@@ -111,3 +131,132 @@ def test_setUpClass(mocker):
     mock_init_log = mocker.patch.object(test_case, "initialize_logging")
     test_case.BasicTest.setUpClass()
     mock_init_log.assert_called_with(None, "ERROR", "junit")
+
+
+@pytest.mark.parametrize(
+    "max_try, rerun_setup, rerun_teardown, stability_test, expected_exception, expected_run_count, expected_setup_count, expected_teardown_count",
+    [
+        (
+            5,
+            True,
+            True,
+            False,
+            None,
+            3,
+            2,
+            2,
+        ),
+        (
+            3,
+            True,
+            True,
+            False,
+            None,
+            3,
+            2,
+            2,
+        ),
+        (
+            3,
+            True,
+            False,
+            False,
+            None,
+            3,
+            2,
+            0,
+        ),
+        (
+            3,
+            False,
+            False,
+            False,
+            None,
+            3,
+            0,
+            0,
+        ),
+        (
+            2,
+            True,
+            True,
+            False,
+            Exception,
+            2,
+            1,
+            1,
+        ),
+        (
+            2,
+            True,
+            False,
+            False,
+            Exception,
+            2,
+            1,
+            0,
+        ),
+        (
+            5,
+            True,
+            True,
+            True,
+            None,
+            5,
+            4,
+            4,
+        ),
+        (
+            10,
+            True,
+            True,
+            True,
+            Exception,
+            6,
+            5,
+            5,
+        ),
+    ],
+)
+def test_retry_on_failure_decorator(
+    max_try,
+    rerun_setup,
+    rerun_teardown,
+    stability_test,
+    expected_exception,
+    expected_run_count,
+    expected_setup_count,
+    expected_teardown_count,
+    mocker,
+    caplog,
+):
+    mock_test_case_class = mocker.Mock()
+
+    if not stability_test:
+        mock_test_case_class.test_run.side_effect = [
+            Exception("try again"),
+            Exception("try harder"),
+            "bingo",
+        ]
+    else:
+        mock_test_case_class.test_run.side_effect = list(range(5)) + [
+            Exception("Exception")
+        ]
+    # fix __name__ for the mock.test_run
+    mock_test_case_class.test_run.__name__ = "test_run"
+
+    partial_test_run = partial(
+        retry_test_case(max_try, rerun_setup, rerun_teardown, stability_test)(
+            mock_test_case_class.test_run
+        )
+    )
+    if expected_exception:
+        with pytest.raises(expected_exception):
+            assert partial_test_run(mock_test_case_class)
+            assert "Mock.test_run failed with exception: try again" in caplog.text
+    else:
+        partial_test_run(mock_test_case_class)
+
+    assert mock_test_case_class.setUp.call_count == expected_setup_count
+    assert mock_test_case_class.test_run.call_count == expected_run_count
+    assert mock_test_case_class.tearDown.call_count == expected_teardown_count

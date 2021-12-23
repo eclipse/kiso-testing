@@ -8,7 +8,7 @@ connectors:
   uart:
     config:
       serialPort: COM3
-      type: pykiso.lib.auxiliaries.cc_uart:CCUart
+    type: pykiso.lib.connectors.cc_uart:CCUart
 test_suite_list:
 - suite_dir: test_suite_1
   test_filter_pattern: '*.py'

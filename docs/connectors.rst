@@ -54,6 +54,9 @@ CChannels
 .. automodule:: pykiso.lib.connectors.cc_proxy
     :members:
 
+.. automodule:: pykiso.lib.connectors.cc_mp_proxy
+    :members:
+
 .. automodule:: pykiso.lib.connectors.cc_visa
     :members:
 

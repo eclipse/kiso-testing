@@ -80,9 +80,32 @@ The test suite definition is a list of key-value pairs.
 
 .. literalinclude:: ../examples/dummy.yaml
     :language: yaml
-    :lines: 22-
+    :lines: 22-34
 
 Each test suite consists of a `test_suite_id`, a `suite_dir` and a `test_filter_pattern`.
+
+For fast test development, the `test_filter_pattern` can be overwritten from the command line
+in order to e.g. execute a single test file inside the `suite_dir` using the CLI argument `PATTERN`:
+
+..code:: bash
+
+    pykiso -c dummy.yaml test_suite_1.py
+
+
+Requirements specification
+--------------------------
+
+[optional] - Any package specified will be checked.
+
+Use cases:
+
+- A new feature is introduced and used in the test
+- Breaking change introduced with a new release
+- Specific package used in a test that does not belong to pykiso
+
+.. literalinclude:: ../examples/templates/config_features.yaml
+    :language: yaml
+    :lines: 51-65
 
 
 Real-World Configuration File

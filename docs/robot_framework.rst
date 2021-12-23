@@ -269,6 +269,51 @@ To run the available example:
 .. note:: A script demo with all available keywords is under examples/robot_test_suite/test_instrument
     and yaml see robot_inst_aux.yaml!
 
+Acroname Auxiliary
+~~~~~~~~~~~~~~~~~~
+
+This plugin can be used to control a acroname usb hub.
+
+Find below an example with all available features:
+
+.. literalinclude:: ../examples/robot_test_suite/test_acroname/acroname_demo.robot
+    :language: robotframework
+    :linenos:
+
+To run the available example:
+
+.. code-block:: bash
+
+    cd examples
+    robot robot_test_suite/test_instrument
+
+Record Auxiliary
+~~~~~~~~~~~~~~~~
+
+Auxiliary used to record a connectors receive channel which are configured
+in the yaml config. The library needs then only to be loaded.
+See example below:
+
+config.yaml:
+
+.. literalinclude:: ../examples/robot_record_rtt_segger.yaml
+    :language: yaml
+    :linenos:
+
+Robot file:
+
+.. literalinclude:: ../examples/robot_test_suite/test_record/record_demo.robot
+    :language: robotframework
+    :linenos:
+
+
+To run the available example:
+
+.. code-block:: bash
+
+    cd examples
+    robot robot_test_suite/test_record/
+
 Library Documentation
 ---------------------
 
@@ -288,4 +333,7 @@ Library Documentation
     :members:
 
 .. automodule:: pykiso.lib.robot_framework.instrument_control_auxiliary
+    :members:
+
+.. automodule:: pykiso.lib.robot_framework.acroname_auxiliary
     :members:

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -8,7 +8,7 @@
 ##########################################################################
 
 import logging
-import queue
+import multiprocessing
 import sys
 import time
 import unittest.mock as mock
@@ -31,8 +31,8 @@ AUX_LIST_INCOMPATIBLE = ["MockAux3"]
 def mock_cc_proxy():
     class MockProxyCChannel(CChannel):
         def __init__(self, *args, **kwargs):
-            self.queue_in = queue.Queue()
-            self.queue_out = queue.Queue()
+            self.queue_in = multiprocessing.Queue()
+            self.queue_out = multiprocessing.Queue()
             super(MockProxyCChannel, self).__init__(*args, **kwargs)
 
         def _cc_open(self):
@@ -67,9 +67,9 @@ def mock_auxiliaries():
             self.channel = mock_cc_proxy()
             self.is_proxy_capable = False
 
-    sys.modules["pykiso.auxiliarie.MockAux1"] = MockAux1()
-    sys.modules["pykiso.auxiliarie.MockAux2"] = MockAux2()
-    sys.modules["pykiso.auxiliarie.MockAux3"] = MockAux3()
+    sys.modules["pykiso.auxiliaries.MockAux1"] = MockAux1()
+    sys.modules["pykiso.auxiliaries.MockAux2"] = MockAux2()
+    sys.modules["pykiso.auxiliaries.MockAux3"] = MockAux3()
 
 
 def test_constructor(mocker, cchannel_inst):
@@ -182,8 +182,8 @@ def test_create_auxiliary_instance_valid(mocker, cchannel_inst):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     state = proxy_inst._create_auxiliary_instance()
 
-    assert state == True
-    assert proxy_inst.stop_event.is_set() == False
+    assert state is True
+    assert proxy_inst.stop_event.is_set() is False
 
 
 def test_create_auxiliary_instance_exception(mocker, cchannel_inst):
@@ -197,8 +197,8 @@ def test_create_auxiliary_instance_exception(mocker, cchannel_inst):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     state = proxy_inst._create_auxiliary_instance()
 
-    assert state == False
-    assert proxy_inst.stop_event.is_set() == True
+    assert state is False
+    assert proxy_inst.stop_event.is_set() is True
 
 
 def test_delete_auxiliary_instance_valid(mocker, caplog, cchannel_inst):
@@ -212,7 +212,7 @@ def test_delete_auxiliary_instance_valid(mocker, caplog, cchannel_inst):
         state = proxy_inst._delete_auxiliary_instance()
 
     assert "Delete auxiliary instance" in caplog.text
-    assert state == True
+    assert state is True
 
 
 def test_delete_auxiliary_instance_exception(mocker, caplog, cchannel_inst):
@@ -228,7 +228,7 @@ def test_delete_auxiliary_instance_exception(mocker, caplog, cchannel_inst):
         state = proxy_inst._delete_auxiliary_instance()
 
     assert "Error encouting during channel closure" in caplog.text
-    assert state == True
+    assert state is True
 
 
 def test_abort_command(mocker, cchannel_inst):
@@ -237,7 +237,7 @@ def test_abort_command(mocker, cchannel_inst):
     )
     proxy_inst = ProxyAuxiliary(cchannel_inst, [])
     ret_state = proxy_inst._abort_command()
-    assert ret_state == True
+    assert ret_state is True
 
 
 @pytest.mark.parametrize(
@@ -258,8 +258,8 @@ def test_receive_message_valid(
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     proxy_inst._receive_message()
 
-    link_aux_1 = sys.modules["pykiso.auxiliarie.MockAux1"]
-    link_aux_2 = sys.modules["pykiso.auxiliarie.MockAux2"]
+    link_aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
+    link_aux_2 = sys.modules["pykiso.auxiliaries.MockAux2"]
 
     recv_aux1 = link_aux_1.channel.queue_out.get()
     recv_aux2 = link_aux_2.channel.queue_out.get()
@@ -293,8 +293,8 @@ def test_receive_message_no_message(
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     proxy_inst._receive_message()
 
-    link_aux_1 = sys.modules["pykiso.auxiliarie.MockAux1"]
-    link_aux_2 = sys.modules["pykiso.auxiliarie.MockAux2"]
+    link_aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
+    link_aux_2 = sys.modules["pykiso.auxiliaries.MockAux2"]
 
     assert link_aux_1.channel.queue_out.qsize() == 0
     assert link_aux_2.channel.queue_out.qsize() == 0
@@ -332,8 +332,8 @@ def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, message, remo
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
 
-    conn_use = sys.modules["pykiso.auxiliarie.MockAux1"].channel
-    conn_not_use = sys.modules["pykiso.auxiliarie.MockAux2"].channel
+    conn_use = sys.modules["pykiso.auxiliaries.MockAux1"].channel
+    conn_not_use = sys.modules["pykiso.auxiliaries.MockAux2"].channel
 
     proxy_inst._dispatch_command(message, conn_use, remote_id)
 
@@ -351,8 +351,8 @@ def test_run_command(mocker, cchannel_inst, mock_auxiliaries):
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
 
-    conn_1 = sys.modules["pykiso.auxiliarie.MockAux2"].channel
-    conn_2 = sys.modules["pykiso.auxiliarie.MockAux1"].channel
+    conn_1 = sys.modules["pykiso.auxiliaries.MockAux2"].channel
+    conn_2 = sys.modules["pykiso.auxiliaries.MockAux1"].channel
 
     command_1 = ((), {"msg": b"\x12\x34\x56", "remote_id": 0x512})
     command_2 = ((), {"msg": b"\x12", "remote_id": None})
@@ -362,6 +362,7 @@ def test_run_command(mocker, cchannel_inst, mock_auxiliaries):
     conn_1.queue_in.put(command_2)
     conn_2.queue_in.put(command_3)
 
+    proxy_inst._run_command()
     proxy_inst._run_command()
 
     assert conn_1.queue_in.qsize() == 0
@@ -375,7 +376,7 @@ def test_run_command(mocker, cchannel_inst, mock_auxiliaries):
 
     msg, r_id = conn_2.queue_out.get()
     assert msg == b"\x12"
-    assert r_id == None
+    assert r_id is None
 
     msg, r_id = conn_1.queue_out.get()
     assert msg == b"\x12\x34\x56\x78"
@@ -395,21 +396,27 @@ def test_run(mocker, cchannel_inst, mock_auxiliaries):
         "pykiso.connector.CChannel.cc_receive", return_value=(b"\x12\x34\x56", None)
     )
 
+    # Start the Proxy's thread
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+
     proxy_inst.queue_in.put("create_auxiliary_instance")
-    time.sleep(0.015)
-    assert proxy_inst.is_instance == True
+    # Wait for the thread to run the command create_auxiliary_instance
+    time.sleep(0.1)
+    assert proxy_inst.is_instance is True
+
     proxy_inst.queue_in.put("delete_auxiliary_instance")
-    time.sleep(0.015)
-    assert proxy_inst.is_instance == False
+    # Wait for the thread to run the command delete_auxiliary_instance
+    time.sleep(0.1)
+    assert proxy_inst.is_instance is False
+
     proxy_inst.stop()
 
-    conn_1 = sys.modules["pykiso.auxiliarie.MockAux2"].channel
-    conn_2 = sys.modules["pykiso.auxiliarie.MockAux1"].channel
+    conn_1 = sys.modules["pykiso.auxiliaries.MockAux2"].channel
+    conn_2 = sys.modules["pykiso.auxiliaries.MockAux1"].channel
 
     msg, r_id = conn_1.queue_out.get()
     assert msg == b"\x12\x34\x56"
-    assert r_id == None
+    assert r_id is None
     msg, r_id = conn_2.queue_out.get()
     assert msg == b"\x12\x34\x56"
-    assert r_id == None
+    assert r_id is None

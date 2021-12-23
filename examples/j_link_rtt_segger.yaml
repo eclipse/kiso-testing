@@ -18,7 +18,7 @@ connectors:
       verbose: True
       # Adapt this parameter depending on your target
       start_addr: 0x12345678
-      xml_path: "PATH_TO_THE_DEVICE_CONFIG"
+      xml_path: "PATH/TO/JLinkDevices.xml"
     type: pykiso.lib.connectors.flash_jlink:JLinkFlasher
 
   rtt_channel:
@@ -29,11 +29,14 @@ connectors:
       verbose: True
       tx_buffer_idx: 1
       rx_buffer_idx: 1
-      # Path to the folder where the RTT logs should be written to
-      # (Optional) creates a file named rtt.log
+      # Path to the folder where the RTT logs should be written to (Optional)
+      # Creates a file named rtt.log
       rtt_log_path: ./
       # RTT channel from where the RTT logs should be read
       rtt_log_buffer_idx: 0
+      # Manage RTT log CPU impact by setting logger speed. eg: 2000 lines/s
+      # Default: 1000 lines/s
+      rtt_log_speed: 2000
     type: pykiso.lib.connectors.cc_rtt_segger:CCRttSegger
 
 test_suite_list:

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -26,7 +26,7 @@ from collections.abc import Iterable
 from typing import Callable, List, Union
 
 from .. import message
-from ..auxiliary import AuxiliaryInterface
+from ..interfaces.thread_auxiliary import AuxiliaryInterface
 from .test_message_handler import TestSuiteMsgHandler, handle_basic_interaction
 
 __all__ = [
@@ -53,6 +53,7 @@ class BaseTestSuite(unittest.TestCase):
         run_timeout: Union[int, None],
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
+        variant: Union[list, None],
         args: tuple,
         kwargs: dict,
     ):
@@ -69,6 +70,7 @@ class BaseTestSuite(unittest.TestCase):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2 ["Req3"]}
+        :param variant: string that allows the user to execute a subset of tests
         """
         # Initialize base class
         super().__init__(*args, **kwargs)
@@ -80,6 +82,7 @@ class BaseTestSuite(unittest.TestCase):
         self.run_timeout = run_timeout or BaseTestSuite.response_timeout
         self.teardown_timeout = teardown_timeout or BaseTestSuite.response_timeout
         self.test_ids = test_ids
+        self.variant = variant
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str):
         """Cleanup auxiliary and log reasons.
@@ -157,6 +160,7 @@ class BasicTestSuiteSetup(BaseTestSuite):
         run_timeout: Union[int, None],
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
+        variant: Union[list, None],
         args: tuple,
         kwargs: dict,
     ):
@@ -173,6 +177,7 @@ class BasicTestSuiteSetup(BaseTestSuite):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
+        :param variant: string that allows the user to execute a subset of tests
         """
         # Initialize base class
         super().__init__(
@@ -183,6 +188,7 @@ class BasicTestSuiteSetup(BaseTestSuite):
             run_timeout,
             teardown_timeout,
             test_ids,
+            variant,
             args,
             kwargs,
         )
@@ -209,6 +215,7 @@ class BasicTestSuiteTeardown(BaseTestSuite):
         run_timeout: Union[int, None],
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
+        variant: Union[list, None],
         args: tuple,
         kwargs: dict,
     ):
@@ -225,7 +232,7 @@ class BasicTestSuiteTeardown(BaseTestSuite):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
-
+        :param variant: string that allows the user to execute a subset of tests
         """
         # Initialize base class
         super().__init__(
@@ -236,6 +243,7 @@ class BasicTestSuiteTeardown(BaseTestSuite):
             run_timeout,
             teardown_timeout,
             test_ids,
+            variant,
             args,
             kwargs,
         )

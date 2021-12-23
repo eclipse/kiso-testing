@@ -85,6 +85,9 @@ class CCVectorCan(CChannel):
         self.can_filters = can_filters
         self.remote_id = None
         self.bus = None
+        # Set a timeout to send the signal to the GIL to change thread.
+        # In case of a multi-threading system, all tasks will be called one after the other.
+        self.timeout = 1e-6
 
     def _cc_open(self) -> None:
         """Open a can bus channel and set filters for reception."""
@@ -152,7 +155,7 @@ class CCVectorCan(CChannel):
         :return: tuple containing the received data and the source can id
         """
         try:  # Catch bus errors & rcv.data errors when no messages where received
-            received_msg = self.bus.recv(timeout=timeout)
+            received_msg = self.bus.recv(timeout=timeout or self.timeout)
 
             if received_msg is not None:
                 frame_id = received_msg.arbitration_id

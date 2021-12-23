@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -43,6 +43,9 @@ class CCTcpip(CChannel):
         self.dest_port = int(dest_port)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.max_msg_size = max_msg_size
+        # Set a timeout to send the signal to the GIL to change thread.
+        # In case of a multi-threading system, all tasks will be called one after the other.
+        self.timeout = 1e-6
 
     def _cc_open(self) -> None:
         """Connect to socket with configured port and IP address."""
@@ -80,7 +83,7 @@ class CCTcpip(CChannel):
 
         :return: Message if successful, otherwise none
         """
-        self.socket.settimeout(timeout)
+        self.socket.settimeout(timeout or self.timeout)
 
         msg_received = ""
         try:

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -81,7 +81,7 @@ class AuxLinkLoader(importlib.abc.Loader):
         # create a dummy module to return when Python attempts to import
         # myapp and myapp.virtual, the :-1 removes the last "." for
         # aesthetic reasons :)
-        self._dummy_module = types.ModuleType(self._COMMON_PREFIX[:-1])
+        self._dummy_module = types.ModuleType(self._COMMON_PREFIX.rstrip("."))
         # set __path__ so Python believes our dummy module is a package
         # this is important, since otherwise Python will believe our
         # dummy module can have no submodules
@@ -139,7 +139,7 @@ class AuxLinkLoader(importlib.abc.Loader):
 
         Convenience method when checking if a service is provided.
         """
-        return fullname[len(self._COMMON_PREFIX) :]
+        return fullname[len(self._COMMON_PREFIX) + 1 :]
 
 
 class ModuleCache:
@@ -274,7 +274,7 @@ class DynamicImportLinker:
     def install(self):
         """Install the import hooks with the system."""
         log.debug(f"installed the {self.__class__.__name__}")
-        sys.meta_path.extend(self._finders)
+        sys.meta_path.insert(0, *self._finders)
 
     def provide_connector(self, name: str, module: str, **config_params):
         """Provide a connector.

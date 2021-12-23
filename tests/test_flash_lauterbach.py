@@ -1,3 +1,11 @@
+##########################################################################
+# Copyright (c) 2010-2021 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
 import ctypes
 import logging
 import pathlib
@@ -117,6 +125,11 @@ def lauterbach_flasher(tmp_script_file):
     )
 
 
+class CtypeTypeMock:
+    def __init__(self, value) -> None:
+        self.value = value
+
+
 def test_constructor(lauterbach_flasher, tmp_script_file):
     assert lauterbach_flasher.device == 1
     assert lauterbach_flasher.packlen == "1024"
@@ -185,13 +198,30 @@ def test_close_wait_raise_except(
 
 
 def test_flash(
-    caplog, lauterbach_flasher, mock_psutil, mock_subprocess, mock_remote_api
+    caplog, lauterbach_flasher, mock_psutil, mock_subprocess, mock_remote_api, mocker
 ):
-
     lauterbach_flasher.loadup_wait_time = 0
     lauterbach_flasher.open()
+    mocker.patch.object(ctypes, "byref", return_value=CtypeTypeMock(0))
+    mocker.patch.object(ctypes, "c_int", return_value=CtypeTypeMock(0))
+    mocker.patch("time.sleep", return_value=None)
 
     with caplog.at_level(logging.INFO):
         lauterbach_flasher.flash()
 
     assert "flash procedure successful" in caplog.text
+
+
+def test_script_execution_error(
+    caplog, lauterbach_flasher, mock_psutil, mock_subprocess, mock_remote_api, mocker
+):
+    lauterbach_flasher.loadup_wait_time = 0
+    lauterbach_flasher.open()
+    mocker.patch.object(ctypes, "byref", return_value=CtypeTypeMock(1))
+    mocker.patch.object(ctypes, "c_int", return_value=CtypeTypeMock(1))
+    mocker.patch("time.sleep", return_value=None)
+
+    with pytest.raises(RuntimeError) as execinfo:
+        lauterbach_flasher.flash()
+
+    assert "Error during lauterbach" in str(execinfo.value)

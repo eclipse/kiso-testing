@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -26,11 +26,87 @@ import unittest
 from typing import List, Optional, Type, Union
 
 from .. import message
-from ..auxiliary import AuxiliaryInterface
 from ..cli import get_logging_options, initialize_logging
+from ..interfaces.thread_auxiliary import AuxiliaryInterface
 from .test_message_handler import TestCaseMsgHandler
 
 log = logging.getLogger(__name__)
+
+
+def retry_test_case(
+    max_try: int = 2,
+    rerun_setup: bool = False,
+    rerun_teardown: bool = False,
+    stability_test: bool = False,
+):
+    """Decorator: retry mechanism for testCase.
+
+    The aim is to cover the 2 following cases:
+
+        - Unstable test : get the test pass within the {max_try} attempt
+
+        - Stability test : run {max_try} time the test expecting no error
+
+    The **retry_test_case** comes with the possibility to re-run the setUp and
+    tearDown methods automatically.
+
+    :param max_try: maximum number of try to get the test pass.
+    :param rerun_setup: call the "setUp" method of the test.
+    :param rerun_teardown: call the "tearDown" method of the test.
+    :param stability_test: run {max_try} time the test and raise an exception if an error occurs.
+
+    :return: None, a testCase is not supposed to return anything.
+    :raise Exception: if stability_test, the exception that occurred during the execution; if
+        not stability_test, the exception that occurred at the last try.
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def func_wrapper(self) -> None:
+            # track the current execution for logging
+            current_execution = None
+
+            for retry_nb in range(1, max_try + 1):
+                try:
+                    # by the 2nd attempt, end the test with the teardown and start with setUp
+                    if retry_nb > 1:
+                        if rerun_teardown:
+                            current_execution = self.tearDown
+                            self.tearDown()
+                        if rerun_setup:
+                            current_execution = self.setUp
+                            self.setUp()
+
+                    # run the method (eg: test_run(self))
+                    current_execution = func
+                    func(self)
+                    if not stability_test:
+                        break
+                    else:
+                        # Clearly separate tests
+                        log.info(
+                            f">>>>>>>>>> Stability test {retry_nb}/{max_try} succeed <<<<<<<<<<"
+                        )
+
+                except Exception as e:
+                    # log: test_name (class), method (setUp, test_run, tearDown) and the error.
+                    log.warning(
+                        f"{self.__class__.__name__}.{current_execution.__name__} failed with exception: {e}."
+                    )
+
+                    # raise the exception that occurred during the latest attempt
+                    if retry_nb == max_try or stability_test:
+                        log.error(
+                            f">>>>>>>>>> Test {retry_nb}/{max_try} failed <<<<<<<<<<"
+                        )
+                        raise e
+
+                    # print counter only after failing test to avoid spamming the console
+                    log.info(f">>>>>>>>>> Attempt: {retry_nb +1}/{max_try} <<<<<<<<<<")
+
+        return func_wrapper
+
+    return decorator
 
 
 class BasicTest(unittest.TestCase):
@@ -48,6 +124,7 @@ class BasicTest(unittest.TestCase):
         run_timeout: Union[int, None],
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
+        variant: Union[list, None],
         args: tuple,
         kwargs: dict,
     ):
@@ -64,6 +141,7 @@ class BasicTest(unittest.TestCase):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
+        :param variant: string that allows the user to execute a subset of tests
         """
         # Initialize base class
         super().__init__(*args, **kwargs)
@@ -76,6 +154,7 @@ class BasicTest(unittest.TestCase):
         self.run_timeout = run_timeout or BasicTest.response_timeout
         self.teardown_timeout = teardown_timeout or BasicTest.response_timeout
         self.test_ids = test_ids
+        self.variant = variant
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
@@ -221,6 +300,7 @@ def define_test_parameters(
     run_timeout: Optional[int] = None,
     teardown_timeout: Optional[int] = None,
     test_ids: Optional[dict] = None,
+    variant: Optional[dict] = None,
 ):
     """Decorator to fill out test parameters of the BasicTest automatically."""
 
@@ -240,6 +320,7 @@ def define_test_parameters(
             run_timeout: {run_timeout}
             teardown_timeout: {teardown_timeout}
             test_ids: {test_ids}
+            variant: {variant}
             """
 
             @functools.wraps(DecoratedClass.__init__)
@@ -252,6 +333,7 @@ def define_test_parameters(
                     run_timeout,
                     teardown_timeout,
                     test_ids,
+                    variant,
                     args,
                     kwargs,
                 )
@@ -265,7 +347,10 @@ def define_test_parameters(
             run_timeout=run_timeout,
             teardown_timeout=teardown_timeout,
             test_ids=test_ids,
+            variant=variant,
         )
+        # Used to display the current test module in the test result
+        NewClass.__module__ = DecoratedClass.__module__
         # Passing the name of the decorated class to the new returned class
         # in order to get the test case name and references, i.e. suite_id and case_id
         # in the test results in the console and in the report.

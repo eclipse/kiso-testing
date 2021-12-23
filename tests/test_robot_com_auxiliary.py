@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2020 Robert Bosch GmbH
+# Copyright (c) 2010-2021 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from pykiso.auxiliary import AuxiliaryInterface
+from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.robot_framework.communication_auxiliary import (
     ComAux,
     CommunicationAuxiliary,
@@ -22,7 +22,9 @@ from pykiso.test_setup.config_registry import ConfigRegistry
 
 @pytest.fixture
 def communication_aux_instance(mocker):
-    mocker.patch("pykiso.auxiliary.AuxiliaryInterface.run", return_value=None)
+    mocker.patch(
+        "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run", return_value=None
+    )
     mocker.patch(
         "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
         return_value={"itf_com_aux": ComAux("channel")},
