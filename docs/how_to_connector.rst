@@ -86,6 +86,7 @@ Completing the code above:
 
 .. code:: python
 
+    from my_connection_module import Connection
     import pykiso
 
     MyCommunicationChannel(pykiso.CChannel):
@@ -99,3 +100,17 @@ Completing the code above:
 
         def _cc_close(self):
             self.my_connection.close()
+
+        def _cc_send(self, data: Union[Data, bytes], raw = False):
+            if raw:
+                data_bytes = data
+            else:
+                data_bytes = data.serialize()
+            self.my_connection.send(data_bytes)
+
+        def _cc_receive(self, timeout, raw = False):
+            received_data = self.my_connection.receive(timeout=timeout)
+            if received_data:
+                if not raw:
+                    data = Data.deserialize(received_data)
+                return data
