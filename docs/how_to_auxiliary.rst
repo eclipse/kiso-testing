@@ -1,10 +1,13 @@
 How to create an auxiliary
 --------------------------
 
-Auxiliary Workflow during test execution
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This tutorial aims to explain the working principle of an Auxiliary by
+providing information on the different Auxiliary interfaces, their purpose
+and the implementation of new auxiliaries.
 
-
+To provide hints on the implementation of an Auxiliary, an example that
+implements a generic auxiliary is provided, that is not usable but shall
+explain the different concepts and implementation steps.
 
 Different Auxiliary interfaces for different use-cases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
