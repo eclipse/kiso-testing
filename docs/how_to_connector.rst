@@ -15,7 +15,7 @@ Both can be used as context managers as they inherit the common interface
 :py:class:`~pykiso.connector.Connector`.
 
 .. note::
-  Many already implemented connector are available under :py:mod:`pykiso.lib.connectors`.
+  Many already implemented connectors are available under :py:mod:`pykiso.lib.connectors`.
   and can easily be adapted for new implementations.
 
 Communication Channel
@@ -137,9 +137,10 @@ that aims to be as simple as possible.
 It only consists of 3 methods to implement:
 
 - :py:meth:`~pykiso.connector.Flasher.open`: open the communication with the flashing hardware
-  if any (for e.g. UART flashing) and perform any preliminaly action
+  if any (for e.g. JTAG flashing) and perform any preliminaly action
 - :py:meth:`~pykiso.connector.Flasher.flash`: perform all actions to flash the target device
 - :py:meth:`~pykiso.connector.Flasher.close`: close the communication with the flashing hardware.
 
 .. note::
-    To ensure that a Flasher is closed after being opened, it can be used as a context manager.
+    To ensure that a Flasher is closed after being opened, it should be used as a context manager
+    (see :ref:`aux-tutorial-example`).

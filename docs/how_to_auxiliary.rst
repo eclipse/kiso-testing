@@ -53,7 +53,7 @@ Each time the execution is entered, the following actions are performed:
 1. Verify if a request is available in the input queue
 
   #. If the command message is "create_auxiliary_instance" and the auxiliary is not created yet,
-     call the ``_create_auxiliary_instance`` method and put a boolean corresponding the success
+     call the ``_create_auxiliary_instance`` method and put a boolean corresponding to the success
      of the command processing in the output queue. This command message is put in the queue
      at test setup.
 
@@ -103,6 +103,9 @@ the following methods to be implemented:
 - ``_receive_message``: implement the reception of data. This method should at least call the CChannel's
   ``cc_receive`` method. The received data can then be decoded according to a particular protocol, matched
   against a previously sent request, or trigger any kind of further processing.
+
+
+.. _aux-tutorial-example:
 
 Auxiliary implementation example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
