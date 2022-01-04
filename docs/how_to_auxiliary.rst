@@ -13,47 +13,68 @@ Pykiso provides three different auxiliary interfaces, used as basis for
 any implemented auxiliary. These different interfaces aim to cover every
 possible usage of an auxiliary:
 
-- The ``AuxiliaryInterface``(:py:class:`pykiso.interfaces.thread_auxiliary.AuxiliaryInterface`)
+- The :py:class:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface`
   is a `Thread <https://docs.python.org/3.7/library/threading.html#threading.Thread>`_-based auxiliary.
   It is suited for IO-bound tasks where the reception of data cannot be expected.
-- The ``MpAuxiliaryInterface``(:py:class:`pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface`)
+- The :py:class:`~pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface`
   is a `Process <https://docs.python.org/3.7/library/multiprocessing.html#multiprocessing.Process>`_-based auxiliary.
   It is suited for CPU-bound tasks where the reception of data cannot be expected and its processing can be CPU-intensive.
-- The ``SimpleAuxiliaryInterface``(:py:class:`pykiso.interfaces.simple_auxiliary.SimpleAuxiliaryInterface`)
-  does not implement any concurrent execution. It is suited for host-based applications where the auxiliary
+- The :py:class:`~pykiso.interfaces.simple_auxiliary.SimpleAuxiliaryInterface`
+  does not implement any kind of concurrent execution. It is suited for host-based applications where the auxiliary
   initiates every possible action, i.e. the reception of data can always be expected.
 
 Execution of an Auxiliary
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The execution of concurrent auxiliaries (i.e. inheriting from ``AuxiliaryInterface`` or
-``MpAuxiliaryInterface``) is handled by the interfaces' methods
-``run``(:py:meth:`pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run`).
+Auxiliary creation and deletion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Any auxiliary is **created** at test setup by calling :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance`
+and **deleted** at test teardown by calling :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.delete_instance`.
+
+These methods set the :py:attr:`is_instance attribute <pykiso.auxiliary.AuxiliaryCommon.is_instance>` that
+indicated if the auxiliary is running correctly.
+
+Concurrent auxiliary execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The execution of concurrent auxiliaries (i.e. inheriting from :py:class:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface`
+or :py:class:`~pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface`) is
+handled by the interfaces' :py:meth:`run method <pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run>`.
 
 Each command execution is handled in a thread-safe way by getting values from an input queue and
 returning the command result in an output queue.
 
 Each time the execution is entered, the following actions are performed:
 
-#. Verify if a request is available in the input queue
-  #. If the command message is "create_auxiliary_instance" and the auxiliary is not created yet, call
-  ``_create_auxiliary_instance``(:py:meth:`pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._create_auxiliary_instance`)
-  and put a boolean corresponding the success of the command processing in the output queue
+1. Verify if a request is available in the input queue
+
+  #. If the command message is "create_auxiliary_instance" and the auxiliary is not created yet,
+     call the ``_create_auxiliary_instance`` method and put a boolean corresponding the success
+     of the command processing in the output queue. This command message is put in the queue
+     at test setup.
+
   #. If the command message is "delete_auxiliary_instance" and the auxiliary is created, call
-  ``_delete_auxiliary_instance``(:py:meth:`pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._delete_auxiliary_instance`)
-  and put a boolean corresponding the success of the command processing in the output queue
-  #. If the command message is a tuple with 3 elements starting with "command", then a custom command has to
-  be executed. This custom command has to be implemented in the ``_run_command``(:py:meth:`pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._run_command`)
-  command.
-  #. If the command message is "abort" and the auxiliary is created, call
-  ``_abort_command``(:py:meth:`pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._abort_command`)
-  and put a boolean corresponding the success of the command processing in the output queue
-#. Verify if a Message is available for reception
-  #. Call the method ``_receive_message``(:py:meth:`pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._receive_message`)
+     the ``_delete_auxiliary_instance`` method and put a boolean corresponding the success of the
+     command processing in the output queue. This command message is put in the queue
+     at test teardown.
+
+  #. If the command message is a tuple of 3 elements starting with "command", then a custom command has to
+     be executed. This custom command has to be implemented in the ``_run_command`` method.
+
+  #. If the command message is "abort" and the auxiliary is created, call the ``_abort_command``
+     method and put a boolean corresponding the success of the command processing in the output queue.
+
+2. Verify if a Message is available for reception
+
+  #. Call the auxiliarie's ``_receive_message`` method
   #. If something is returned, put it in the output queue, otherwise repeat this execution cycle.
 
 Implement an Auxiliary
 ~~~~~~~~~~~~~~~~~~~~~~
+
+Common auxiliary methods
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 All of the above described Auxiliary interfaces require the same abstract methods
 to be implemented:
@@ -64,17 +85,24 @@ to be implemented:
 - ``_delete_auxiliary_instance``: handle the auxiliary deletion. This method is the counterpart of
   ``_create_auxiliary_instance`` and should at least close the opened ``CChannel``.
 
+Concurrent auxiliary methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Additionally, the concurrent Auxiliary interfaces ``AuxiliaryInterface``(:py:class:`pykiso.interfaces.thread_auxiliary.AuxiliaryInterface`)
-and ``MpAuxiliaryInterface``(:py:class:`pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface`) require the following
-methods to be implemented:
+In addition to the previously described methods, the concurrent Auxiliary
+interfaces :py:class:`AuxiliaryInterface <pykiso.interfaces.thread_auxiliary.AuxiliaryInterface>`
+and :py:class:`MpAuxiliaryInterface <pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface>` require
+the following methods to be implemented:
 
 - ``_run_command``: implement the different commands that should be performed by the Auxiliary.
-- ``_abort_command``
+- ``_abort_command``: implement the command abortion mechanism. This mechanism **must also be implemented
+  on the target device**. A valid implementation for the TestApp protocol can be found in
+  :py:meth:`pykiso.lib.auxiliaries.dut_auxiliary.DUTAuxiliary._abort_command`.
 - ``_receive_message``: implement the reception of data. This method should at least call the CChannel's
-  `cc_receive` method. The received data can then be decoded according to a particular protocol, matched
-  against a previously sent request, and trigger any kind of further processing.
+  ``cc_receive`` method. The received data can then be decoded according to a particular protocol, matched
+  against a previously sent request, or trigger any kind of further processing.
 
+Auxiliary implementation example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 See below an example implementing the basic functionalities of a Thread Auxiliary:
 
@@ -83,18 +111,21 @@ See below an example implementing the basic functionalities of a Thread Auxiliar
     import logging
     from pykiso import AuxiliaryInterface, MpAuxiliaryInterface, CChannel, Flasher
 
+    # this auxiliary is thread-based, so it must inherit AuxiliaryInterface
     class MyAuxiliary(AuxiliaryInterface):
 
-        def __init__(
-            self,
-            name: str,
-            channel: CChannel,
-            flasher: Flasher,
-            arg: int,
-            kwarg = "default_value",
-            **kwargs
-        ):
-            super().__init__(name=name, **kwargs)
+        def __init__(self, channel: CChannel, flasher: Flasher, **kwargs):
+            """Initialize Auxiliary attributes.
+
+            Any auxiliary must at least be initialised with a CChannel.
+            If needed, a Flasher can also be attached.
+
+            Any additional parameter can be added depending on the implementation.
+
+            The additional kwargs contain the auxiliarie's alias and logger
+            names to keep activated, all defined in the configuration file.
+            """
+            super().__init__(**kwargs)
             self.channel = channel
             self.flasher = flasher
 
@@ -127,27 +158,60 @@ See below an example implementing the basic functionalities of a Thread Auxiliar
 
         def send(self, to_send):
             """Send data without waiting for any response."""
+
             # self._run_command(("command", "send", to_send)) will be called internally
             return self.run_command("send", to_send, timeout_in_s=0)
 
+        def send_raw_bytes(self, to_send):
+            """Send raw data without waiting for any response."""
+
+            # self._run_command(("command", "send", to_send)) will be called internally
+            return self.run_command("send raw", to_send, timeout_in_s=0)
+
         def send_and_wait_for_response(self, to_send, timeout = 1):
-            """Send data and wait for a response during timeout seconds."""
-            command_sent = self.run_command("send", to_send, timeout_in_s=0)
+            """Send data and wait for a response during `timeout` seconds."""
+
             # returns True if the command was successfully executed
+            command_sent = self.run_command("send", to_send, timeout_in_s=0)
+
             if command_sent:
                 # method of AuxiliaryCommon that tries to get an element from queue_out
+                # queue_out is populated by self._receive_message()
                 return self.wait_and_get_report(timeout_in_s=timeout)
 
         def _run_command(self, cmd_message, cmd_data):
             """Command execution method that is called internally by the
             AuxiliaryInterface Thread.
 
+            Each public API method should call this method with a command message
+            and the data corresponding to the command.
+
+            The command message is then matched against every possible implemented
+            message and the corresponding action is performed in a thread-safe way.
+
+            In this example, only a "send" command is implemented that will simply
+            send the command data over the attached communication channel.
             """
             if cmd_message == "send":
+                # in the CChannel implementation raw is set to False by default
+                # the data to send is then pre-serialized according to the specified protocol
                 return self.channel.send(cmd_data)
+            elif cmd_message == "send raw":
+                # set raw to True to send raw bytes through the CChannel
+                return self.channel.send(cmd_data, raw=True)
 
         def _abort_command(self):
+            """Command abortion method that is called by the AuxiliaryInterface Thread
+            when calling `my_aux.abort_command()`.
 
+            Assume that the device under test aborts the running command when receiving
+            the data b'abort'.
+
+            For the sake of simplicity, no further check will be performed on the successful
+            reception of the data by the DUT (e.g. wait for an acknowledgement).
+            """
+            command_sent = self.send_raw_bytes(b'abort')
+            return command_sent
 
         def _receive_message(self):
             """Reception method that is called internally by the AuxiliaryInterface Thread.
@@ -161,7 +225,7 @@ See below an example implementing the basic functionalities of a Thread Auxiliar
             except Exception:
                 logging.exception(f"Channel {self.channel} failed to receive data")
 
-More examples are available under ``pykiso.lib.auxiliaries``(:py:mod:`pykiso.lib.auxiliaries`).
+More examples are available under :py:mod:`pykiso.lib.auxiliaries`.
 
 .. note::
     If the created auxiliary should be based on multiprocessing instead

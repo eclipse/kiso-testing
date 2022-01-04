@@ -12,25 +12,31 @@ sending and reception of data on the lower level protocol layers
 (e.g. CAN, UART, UDP).
 
 Both can be used as context managers as they inherit the common interface
-Connector (:py:class:`pykiso.connector.Connector`).
+:py:class:`~pykiso.connector.Connector`.
+
+.. note::
+  Many already implemented connector are available under :py:mod:`pykiso.lib.connectors`.
+  and can easily be adapted for new implementations.
 
 Communication Channel
 ~~~~~~~~~~~~~~~~~~~~~
 
 In order to facilitate the implementation of a communication channel and to ensure
 the compatibility with different auxiliaries, pykiso provides a common
-interface CChannel (:py:class:`pykiso.connector.CChannel`).
+interface :py:class:`~pykiso.connector.CChannel`.
 
 This interface enforces the implementation of the following methods:
 
-- ``_cc_open`` (:py:meth:`pykiso.connector.CChannel._cc_open`): open the communication.
+- :py:meth:`~pykiso.connector.CChannel._cc_open`: open the communication.
   Does not take any argument.
-- ``_cc_close`` (:py:meth:`pykiso.connector.CChannel._cc_close`): close the communication.
+- :py:meth:`~pykiso.connector.CChannel._cc_close`: close the communication.
   Does not take any argument.
-- ``_cc_send`` (:py:meth:`pykiso.connector.CChannel._cc_send`): send data if the communication is open.
-  Requires one positional argument ``msg`` and one keyword argument ``raw``.
-- ``_cc_receive`` (:py:meth:`pykiso.connector.CChannel._cc_receive`): receive data if the communication is open.
-  Requires one positional argument ``timeout`` and one keyword argument ``raw``.
+- :py:meth:`~pykiso.connector.CChannel._cc_send`: send data if the communication is open.
+  Requires one positional argument ``msg`` and one keyword argument ``raw``, used to serialize the data
+  before sending it.
+- :py:meth:`~pykiso.connector.CChannel._cc_receive`: receive data if the communication is open.
+  Requires one positional argument ``timeout`` and one keyword argument ``raw``, used to deserialize
+  the data when receiving it.
 
 
 Class definition and instanciation
@@ -39,7 +45,7 @@ Class definition and instanciation
 To create a new communication channel, the first step is to define its class
 and constructor.
 
-Let's admin that, the following code is added to a file called **my_connector.py**:
+Let's admin that the following code is added to a file called **my_connector.py**:
 
 .. code:: python
 
@@ -82,7 +88,10 @@ the communication channel's abstract methods aren't implemented.
 Therefore, all four methods ``_cc_open``, ``_cc_close``, ``_cc_send`` and
 ``_cc_receive`` need to be implemented.
 
-Completing the code above:
+In order to complete the code above, let's assume that a module *my_connection_module*
+implements the communication logic.
+
+The connector then becomes:
 
 .. code:: python
 
@@ -92,7 +101,7 @@ Completing the code above:
     MyCommunicationChannel(pykiso.CChannel):
 
         def __init__(self, arg1, arg2, kwarg1 = "default"):
-            # Connection can be anything, like serial.Serial or
+            # Connection class could be anything, like serial.Serial or socket.socket
             self.my_connection = Connection(arg1, arg2)
 
         def _cc_open(self):
@@ -114,3 +123,23 @@ Completing the code above:
                 if not raw:
                     data = Data.deserialize(received_data)
                 return data
+
+.. note::
+    The API used in this example for the fictive *my_connection* module
+    entirely depends on the used module.
+
+Flasher
+~~~~~~~
+
+pykiso provides a common interface for flashers :py:class:`~pykiso.connector.Flasher`
+that aims to be as simple as possible.
+
+It only consists of 3 methods to implement:
+
+- :py:meth:`~pykiso.connector.Flasher.open`: open the communication with the flashing hardware
+  if any (for e.g. UART flashing) and perform any preliminaly action
+- :py:meth:`~pykiso.connector.Flasher.flash`: perform all actions to flash the target device
+- :py:meth:`~pykiso.connector.Flasher.close`: close the communication with the flashing hardware.
+
+.. note::
+    To ensure that a Flasher is closed after being opened, it can be used as a context manager.

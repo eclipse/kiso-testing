@@ -17,6 +17,7 @@ test_result
 wrapped in banners.
 
 .. currentmodule:: test_result
+
 """
 
 import textwrap

@@ -296,7 +296,7 @@ See example below:
 
 config.yaml:
 
-.. literalinclude:: ../examples/robot_record_rtt_segger.yaml
+.. literalinclude:: ../examples/robot_record.yaml
     :language: yaml
     :linenos:
 

@@ -61,7 +61,7 @@ class VISAChannel(CChannel):
         :param request_data: command payload (for write and query requests only)
 
         :return: response message from the instrument (read and query requests)
-        or an empty string for write requests and if read or query request failed.
+            or an empty string for write requests and if read or query request failed.
         """
         request_response = ""
         try:
@@ -108,7 +108,7 @@ class VISAChannel(CChannel):
             pykiso.Message?
 
         :return: the received response message, or an empty string if the request
-        expired with a timeout.
+            expired with a timeout.
         """
         if raw:
             return self._process_request("read").encode()

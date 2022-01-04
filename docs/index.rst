@@ -13,8 +13,8 @@ Welcome to pykiso's documentation!
     config_file
     how_to_auxiliary
     how_to_connector
-    connectors
     auxiliaries
+    connectors
     robot_framework
     multiprocessing
     api
