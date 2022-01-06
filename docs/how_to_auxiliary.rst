@@ -48,6 +48,9 @@ handled by the interfaces' :py:meth:`run method <pykiso.interfaces.thread_auxili
 Each command execution is handled in a thread-safe way by getting values from an input queue and
 returning the command result in an output queue.
 
+Auxiliary run
+^^^^^^^^^^^^^
+
 Each time the execution is entered, the following actions are performed:
 
 1. Verify if a request is available in the input queue
