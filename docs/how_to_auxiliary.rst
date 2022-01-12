@@ -22,6 +22,7 @@ possible usage of an auxiliary:
 - The :py:class:`~pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface`
   is a `Process <https://docs.python.org/3.7/library/multiprocessing.html#multiprocessing.Process>`_-based auxiliary.
   It is suited for CPU-bound tasks where the reception of data cannot be expected and its processing can be CPU-intensive.
+  In contrary to the Thread-based auxiliary, this interface is not limited by the GIL and runs on all available CPU cores.
 - The :py:class:`~pykiso.interfaces.simple_auxiliary.SimpleAuxiliaryInterface`
   does not implement any kind of concurrent execution. It is suited for host-based applications where the auxiliary
   initiates every possible action, i.e. the reception of data can always be expected.
@@ -32,8 +33,8 @@ Execution of an Auxiliary
 Auxiliary creation and deletion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Any auxiliary is **created** at test setup by calling :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance`
-and **deleted** at test teardown by calling :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.delete_instance`.
+Any auxiliary is **created** at test setup (before any test case is executed) by calling :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance`
+and **deleted** at test teardown (after all test cases have been executed) by calling :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.delete_instance`.
 
 These methods set the :py:attr:`is_instance attribute <pykiso.auxiliary.AuxiliaryCommon.is_instance>` that
 indicated if the auxiliary is running correctly.
@@ -43,7 +44,7 @@ Concurrent auxiliary execution
 
 The execution of concurrent auxiliaries (i.e. inheriting from :py:class:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface`
 or :py:class:`~pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface`) is
-handled by the interfaces' :py:meth:`run method <pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run>`.
+handled by the interfaces' :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run>` method.
 
 Each command execution is handled in a thread-safe way by getting values from an input queue and
 returning the command result in an output queue.
@@ -56,24 +57,24 @@ Each time the execution is entered, the following actions are performed:
 1. Verify if a request is available in the input queue
 
   #. If the command message is "create_auxiliary_instance" and the auxiliary is not created yet,
-     call the ``_create_auxiliary_instance`` method and put a boolean corresponding to the success
-     of the command processing in the output queue. This command message is put in the queue
-     at test setup.
+     call the :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._create_auxiliary_instance`
+     method and put a boolean corresponding to the success of the command processing in the output queue.
+     This command message is put in the queue at test setup.
 
   #. If the command message is "delete_auxiliary_instance" and the auxiliary is created, call
-     the ``_delete_auxiliary_instance`` method and put a boolean corresponding the success of the
-     command processing in the output queue. This command message is put in the queue
-     at test teardown.
+     the :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._delete_auxiliary_instance`
+     method and put a boolean corresponding the success of the command processing in the output queue.
+     This command message is put in the queue at test teardown.
 
   #. If the command message is a tuple of 3 elements starting with "command", then a custom command has to
-     be executed. This custom command has to be implemented in the ``_run_command`` method.
+     be executed. This custom command has to be implemented in the :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._run_command` method.
 
-  #. If the command message is "abort" and the auxiliary is created, call the ``_abort_command``
+  #. If the command message is "abort" and the auxiliary is created, call the :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._abort_command`
      method and put a boolean corresponding the success of the command processing in the output queue.
 
 2. Verify if a Message is available for reception
 
-  #. Call the auxiliarie's ``_receive_message`` method
+  #. Call the auxiliarie's :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._receive_message` method
   #. If something is returned, put it in the output queue, otherwise repeat this execution cycle.
 
 Implement an Auxiliary
@@ -85,26 +86,31 @@ Common auxiliary methods
 All of the above described Auxiliary interfaces require the same abstract methods
 to be implemented:
 
-- ``_create_auxiliary_instance``: handle the auxiliary creation. Minimal actions to perform are
-  opening the attached ``CChannel``, to which can be added actions such as flashing the device under test,
+- :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._create_auxiliary_instance`:
+  handle the auxiliary creation. Minimal actions to perform are
+  opening the attached :py:class:`~pykiso.connector.CChannel`, to which can be added actions such as flashing the device under test,
   perform security related operations to allow the communication, etc.
-- ``_delete_auxiliary_instance``: handle the auxiliary deletion. This method is the counterpart of
-  ``_create_auxiliary_instance`` and should at least close the opened ``CChannel``.
+- :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._delete_auxiliary_instance`:
+  handle the auxiliary deletion. This method is the counterpart of
+  ``_create_auxiliary_instance``, so it needs to be implemented in a way that ``_create_auxiliary_instance``
+  can be called again without side effects. In the most basic case, it should at least close the opened :py:class:`~pykiso.connector.CChannel`.
 
 Concurrent auxiliary methods
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In addition to the previously described methods, the concurrent Auxiliary
-interfaces :py:class:`AuxiliaryInterface <pykiso.interfaces.thread_auxiliary.AuxiliaryInterface>`
-and :py:class:`MpAuxiliaryInterface <pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface>` require
+interfaces :py:class:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface`
+and :py:class:`~pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface` require
 the following methods to be implemented:
 
-- ``_run_command``: implement the different commands that should be performed by the Auxiliary.
-- ``_abort_command``: implement the command abortion mechanism. This mechanism **must also be implemented
+- :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._run_command`: implement the different commands that should be performed by the Auxiliary.
+  The public API methods of an auxiliary should always call the thread-safe :py:meth:`~pykiso.auxiliary.AuxiliaryCommon.run_command`
+  method with arguments corresponding to the command to run, which will in turn call this private method.
+- :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._abort_command`: implement the command abortion mechanism. This mechanism **must also be implemented
   on the target device**. A valid implementation for the TestApp protocol can be found in
   :py:meth:`pykiso.lib.auxiliaries.dut_auxiliary.DUTAuxiliary._abort_command`.
-- ``_receive_message``: implement the reception of data. This method should at least call the CChannel's
-  ``cc_receive`` method. The received data can then be decoded according to a particular protocol, matched
+- :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._receive_message`: implement the reception of data. This method should at least call the CChannel's
+  :py:meth:`~pykiso.connector.CChannel.cc_receive` method. The received data can then be decoded according to a particular protocol, matched
   against a previously sent request, or trigger any kind of further processing.
 
 
@@ -118,7 +124,7 @@ See below an example implementing the basic functionalities of a Thread Auxiliar
 .. code:: python
 
     import logging
-    from pykiso import AuxiliaryInterface, MpAuxiliaryInterface, CChannel, Flasher
+    from pykiso import AuxiliaryInterface, CChannel, Flasher
 
     # this auxiliary is thread-based, so it must inherit AuxiliaryInterface
     class MyAuxiliary(AuxiliaryInterface):
