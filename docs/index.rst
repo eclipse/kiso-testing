@@ -11,8 +11,10 @@ Welcome to pykiso's documentation!
     getting_started_dev
     integration_test
     config_file
-    connectors
+    how_to_auxiliary
+    how_to_connector
     auxiliaries
+    connectors
     robot_framework
     multiprocessing
     api

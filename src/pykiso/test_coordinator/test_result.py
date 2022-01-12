@@ -8,8 +8,8 @@
 ##########################################################################
 
 """
-test_result
-***********
+Text Test Result with banners
+*****************************
 
 :module: test_result
 
@@ -17,6 +17,7 @@ test_result
 wrapped in banners.
 
 .. currentmodule:: test_result
+
 """
 
 import textwrap

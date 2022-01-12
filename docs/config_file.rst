@@ -119,10 +119,11 @@ Real-World Configuration File
 Deactivation of specific loggers
 --------------------------------
 
-By default, every logger that does not belong to the `pykiso` package or that is not an `auxiliary` logger will see its level set to WARNING even if you have in the command line `pykiso --log-level DEBUG`.
+By default, every logger that does not belong to the `pykiso` package or that is not an `auxiliary` logger will see its level set
+to WARNING even if you have in the command line `pykiso --log-level DEBUG`.
 This aims to reduce redundant logs from additional modules during the test execution.
 For keeping specific loggers to the set log-level, it is possible to set the `activate_log` parameter in the `auxiliary` config.
-The following example deactivates the `jlink` logger from the `pylink` package, imported in `cc_rtt_segger.py`:
+The following example activates the `jlink` logger from the `pylink` package, imported in `cc_rtt_segger.py`:
 
 .. code:: yaml
 
