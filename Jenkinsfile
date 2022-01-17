@@ -88,16 +88,16 @@ pipeline
                             sh "pipenv run pip install twine"
                             sh "pipenv run invoke clean"
                             sh "pipenv run invoke dist"
-                            // withCredentials([usernamePassword(
-                            //     credentialsId: 'ID_PLACEHOLDER',
-                            //     passwordVariable: 'token')]) {
+                            withCredentials([string(
+                                credentialsId: 'pypi-bot-token',
+                                variable: 'token')]) {
 
-                            //         sh "pipenv run twine upload\
-                            //                 --verbose \
-                            //                 --username __token__\
-                            //                 --password ${token}\
-                            //                 dist/*"
-                            //     }
+                                    sh "pipenv run twine upload\
+                                            --verbose \
+                                            --username __token__\
+                                            --password ${token}\
+                                            dist/*"
+                                }
                         }
                     }
                 }
