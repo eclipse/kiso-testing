@@ -34,6 +34,7 @@ setup(
     license="Eclipse Public License - v 2.0",
     description="Embedded integration testing framework.",
     long_description=read("README.md"),
+    long_description_content_type="text/markdown",
     author="Sebastian Fischer",
     author_email="sebastian.fischer@de.bosch.com",
     url="https://github.com/eclipse/kiso-testing",
