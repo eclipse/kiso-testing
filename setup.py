@@ -42,6 +42,12 @@ setup(
     package_dir={"": "src"},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
+    package_data={
+        "": [
+            "*.j2",
+            "*.css",
+        ]
+    },
     zip_safe=False,
     classifiers=[
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -76,6 +82,7 @@ setup(
         "robotframework==3.2.2",
         "pyvisa",
         "pyvisa-py",
+        "Jinja2",
     ],
     tests_require=["pytest", "pytest-mock", "coverage"],
     extras_require={},

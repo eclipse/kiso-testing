@@ -122,7 +122,7 @@ class MyTest1(pykiso.BasicTest):
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
-        self.assertTrue(next(side_effect))
+        self.assertTrue(next(side_effect), "Retry demo")
         logging.info(f"I HAVE RUN 0.1.1 for variant {self.variant}!")
 
     @pykiso.retry_test_case(max_try=3)
@@ -224,3 +224,51 @@ class MyTest3(pykiso.BasicTest):
     """
 
     pass
+
+
+@pykiso.define_test_parameters(suite_id=1, case_id=4, aux_list=[aux1])
+class MyTest4(pykiso.BasicTest):
+    """This test is used for the step report example.
+
+    To generate it, add --junit --step-report flags:
+        pykiso -c ./examples/dummy.yaml --junit --step-report
+    """
+
+    def setUp(self):
+        """Hook method from unittest in order to execute code before test
+        case run. In this case the default setUp method is overridden.
+        """
+        logging.info(
+            f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------"
+        )
+        device_on = True
+        self.assertTrue(device_on, msg="Check my device is ready")
+        voltage = 3.8
+        self.assertAlmostEqual(voltage, 4, delta=1, msg="Check voltage device")
+        # additional data can be shown in the step-report
+        self.step_report_header["Version_device"] = "2022-1234"
+
+    def test_run(self):
+        """Here is my test description which will be showed in the step-report"""
+        logging.info(
+            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
+        )
+        kiso_is_great = True
+        self.assertTrue(kiso_is_great, "Some verification")
+        wrong_placement = "123"
+        self.assertEqual(
+            "123",
+            wrong_placement,
+            "Variable name not found because data_in/data_expected order inverted",
+        )
+        logging.info(f"I HAVE RUN 0.1.1 for variant {self.variant}!")
+
+    def tearDown(self):
+        """Hook method from unittest in order to execute code after the test case ran.
+        In this case the default tearDown method is overridden.
+        """
+        logging.info(
+            f"--------------- TEARDOWN: {self.test_suite_id}, {self.test_case_id} ---------------"
+        )
+        teardown_has_started = True
+        self.assertTrue(teardown_has_started, "Another Example")

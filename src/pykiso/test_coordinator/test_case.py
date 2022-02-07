@@ -156,6 +156,10 @@ class BasicTest(unittest.TestCase):
         self.test_ids = test_ids
         self.variant = variant
 
+        # Store additional data fetched during test for
+        # the step-report (even if not activated)
+        self.step_report_header = {}
+
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
 

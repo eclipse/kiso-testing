@@ -28,12 +28,16 @@ import itertools
 import logging
 import time
 import unittest
+from collections import OrderedDict
 from pathlib import Path
 from typing import Dict, Optional
 
 import xmlrunner
 
+import pykiso
+
 from . import test_suite
+from .assert_step_report import assert_decorator, generate_step_report
 from .test_result import BannerTestResult
 from .test_xml_result import XmlTestResult
 
@@ -162,11 +166,39 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
     return exit_code
 
 
+def enable_step_report(all_tests_to_run: unittest.suite.TestSuite) -> None:
+    """Decorate all assert method from Test-Case
+
+        This will allow to save the assert inputs in
+        order to generate the step-report
+
+    :param all_tests_to_run: a dict containing all testsuites and testcases
+    """
+    # Step report header fed during test
+    base_suite = test_suite.flatten(all_tests_to_run)
+    for tc in base_suite:
+        # for any test, show ITF version
+        tc.step_report_header = OrderedDict({"ITF version": pykiso.__version__})
+
+        # Decorate All assert method
+        assert_method_list = [
+            method for method in dir(tc) if method.startswith("assert") is True
+        ]
+        for method_name in assert_method_list:
+            # Get method from name
+            method = getattr(tc, method_name)
+            # Add decorator to the existing method
+            setattr(tc, method_name, assert_decorator(method))
+        tc.generate_step_report = generate_step_report
+
+
 def execute(
     config: Dict,
     report_type: str = "text",
     variants: Optional[tuple] = None,
     branch_levels: Optional[tuple] = None,
+    step_report: bool = False,
+    step_report_output: str = "step_report.html",
     pattern_inject: Optional[str] = None,
 ) -> int:
     """create test environment base on config
@@ -176,6 +208,8 @@ def execute(
         or junit
     :param variants: encapsulate user's variant choices
     :param branch_levels: encapsulate user's branch level choices
+    :param step_report: generate the step report
+    :param step_report_output: file path for the output step report
     :param pattern_inject: optional pattern that will override
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
@@ -198,6 +232,11 @@ def execute(
         all_tests_to_run = unittest.TestSuite(list_of_test_suites)
         if variants or branch_levels:
             apply_variant_filter(all_tests_to_run, variants, branch_levels)
+
+        # Enable step report
+        if step_report:
+            enable_step_report(all_tests_to_run)
+
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
         if report_type == "junit":
             junit_report_name = time.strftime("TEST-pykiso-%Y-%m-%d_%H-%M-%S.xml")
@@ -213,6 +252,10 @@ def execute(
         else:
             test_runner = unittest.TextTestRunner(resultclass=BannerTestResult)
             result = test_runner.run(all_tests_to_run)
+
+        # Generate the html step report
+        if step_report:
+            generate_step_report(result, step_report_output)
 
         # if an exception is raised during test suite collections at least
         # return exit code ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION

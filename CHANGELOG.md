@@ -1,5 +1,8 @@
 ### Current Version
 
+Features:
+- add step-report
+
 ### Version 0.14.0
 
 Features:
