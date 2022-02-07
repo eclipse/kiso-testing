@@ -19,7 +19,7 @@ pykiso - extensible framework for (embedded) integration testing.
 
 """
 
-__version__ = "0.14.0"
+__version__ = "0.15.0"
 
 
 from . import auxiliary, cli, config_parser, connector, message, types

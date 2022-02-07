@@ -81,6 +81,17 @@ class ConfigRegistry:
         }
 
     @classmethod
+    def get_aux_config(cls, name: str) -> dict:
+        """Return the registered auxiliary configuration based on his
+        name.
+
+        :param name: auxiliary alias
+
+        :return: auxiliary's configuration (yaml content)
+        """
+        return ConfigRegistry._linker._aux_cache.configs[name]
+
+    @classmethod
     def get_auxes_alias(cls) -> list:
         """return all created auxiliaries alias.
 

@@ -11,11 +11,11 @@
 Record auxiliary test
 *********************
 
-:module: test_record_auxiliary
+:module: test_record
 
 :synopsis: Example test that shows how to record a connector
 
-.. currentmodule:: test_record_auxiliary
+.. currentmodule:: test_record
 
 """
 

@@ -5,17 +5,26 @@ auxiliaries:
         com: can_channel
     config:
       aux_list : [aux1, aux2]
-      activate_trace : True
+      activate_trace : False
       trace_dir: ./suite_proxy
       trace_name: can_trace
+      # if False create the auxiliary instance but don't start it, an
+      # additional call of start method has to be performed.
+      # By default, auto_start flag is set to True and "normal" ITF aux
+      # creation mechanism is used.
+      auto_start: False
     type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
   aux1:
     connectors:
         com: proxy_com1
+    config:
+      auto_start: False
     type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
   aux2:
     connectors:
         com: proxy_com2
+    config:
+      auto_start: False
     type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
 
 #__________________________ Connectors section _________________________

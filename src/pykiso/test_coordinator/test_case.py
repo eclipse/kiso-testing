@@ -28,7 +28,7 @@ from typing import List, Optional, Type, Union
 from .. import message
 from ..cli import get_logging_options, initialize_logging
 from ..interfaces.thread_auxiliary import AuxiliaryInterface
-from .test_message_handler import TestCaseMsgHandler
+from .test_message_handler import test_app_interaction
 
 log = logging.getLogger(__name__)
 
@@ -112,7 +112,6 @@ def retry_test_case(
 class BasicTest(unittest.TestCase):
     """Base for test-cases."""
 
-    msg_handler: Type[TestCaseMsgHandler] = TestCaseMsgHandler
     response_timeout: int = 10
 
     def __init__(
@@ -184,112 +183,27 @@ class BasicTest(unittest.TestCase):
         if options.report_type == "junit":
             initialize_logging(None, options.log_level, options.report_type)
 
+    @test_app_interaction(
+        message_type=message.MessageCommandType.TEST_CASE_SETUP, timeout_cmd=5
+    )
     def setUp(self) -> None:
         """Hook method for constructing the test fixture."""
-        log.info(
-            f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
-        # lock auxiliaries
-        for aux in self.test_auxiliary_list:
-            locked = aux.lock_it(1)
-            if not locked:
-                self.cleanup_and_skip(aux, f"{aux} could not be locked!")
-
-        # send TEST_CASE_RUN command wait for report and log it
-        with self.msg_handler.setup(
-            test_entity=self,
-            timeout_cmd=5,
-            timeout_resp=self.setup_timeout,
-        ) as report_infos:
-
-            # Unlock all auxiliaries
-            for aux in self.test_auxiliary_list:
-                aux.unlock_it()
-
-            for aux, report_msg, log_level_func, log_msg in report_infos:
-                log_level_func(log_msg)
-
-                is_test_on_dut_implemented = (
-                    report_msg.sub_type
-                    != message.MessageReportType.TEST_NOT_IMPLEMENTED
-                )
-                is_report = report_msg.get_message_type() == message.MessageType.REPORT
-                if is_test_on_dut_implemented and is_report:
-                    self.assertEqual(
-                        report_msg.sub_type, message.MessageReportType.TEST_PASS
-                    )
+        pass
 
     # @timeout_decorator.timeout(5) # Timeout of 10 second as generic test-case # TODO: Only working on linux
+    @test_app_interaction(
+        message_type=message.MessageCommandType.TEST_CASE_RUN, timeout_cmd=5
+    )
     def test_run(self) -> None:
         """Hook method from unittest in order to execute test case."""
-        log.info(
-            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
+        pass
 
-        # lock auxiliaries
-        for aux in self.test_auxiliary_list:
-            locked = aux.lock_it(1)
-            if not locked:
-                self.cleanup_and_skip(aux, f"{aux} could not be locked!")
-
-        # send TEST_CASE_RUN command wait for report and log it
-        with self.msg_handler.run(
-            test_entity=self,
-            timeout_cmd=5,
-            timeout_resp=self.run_timeout,
-        ) as report_infos:
-
-            # Unlock all auxiliaries
-            for aux in self.test_auxiliary_list:
-                aux.unlock_it()
-
-            for aux, report_msg, log_level_func, log_msg in report_infos:
-                log_level_func(log_msg)
-                is_test_on_dut_implemented = (
-                    report_msg.sub_type
-                    != message.MessageReportType.TEST_NOT_IMPLEMENTED
-                )
-                is_report = report_msg.get_message_type() == message.MessageType.REPORT
-                if is_test_on_dut_implemented and is_report:
-                    self.assertEqual(
-                        report_msg.sub_type, message.MessageReportType.TEST_PASS
-                    )
-
+    @test_app_interaction(
+        message_type=message.MessageCommandType.TEST_CASE_TEARDOWN, timeout_cmd=5
+    )
     def tearDown(self) -> None:
         """Hook method for deconstructing the test fixture after testing it."""
-        log.info(
-            f"--------------- TEARDOWN: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
-
-        # lock auxiliaries
-        for aux in self.test_auxiliary_list:
-            locked = aux.lock_it(1)
-            if not locked:
-                self.cleanup_and_skip(aux, f"{aux} could not be locked!")
-
-        # send TEST_CASE_TEARDOWN command wait for report and log it
-        with self.msg_handler.teardown(
-            test_entity=self,
-            timeout_cmd=5,
-            timeout_resp=self.teardown_timeout,
-        ) as report_infos:
-
-            # Unlock all auxiliaries
-            for aux in self.test_auxiliary_list:
-                aux.unlock_it()
-
-            for aux, report_msg, log_level_func, log_msg in report_infos:
-                log_level_func(log_msg)
-
-                is_test_on_dut_implemented = (
-                    report_msg.sub_type
-                    != message.MessageReportType.TEST_NOT_IMPLEMENTED
-                )
-                is_report = report_msg.get_message_type() == message.MessageType.REPORT
-                if is_test_on_dut_implemented and is_report:
-                    self.assertEqual(
-                        report_msg.sub_type, message.MessageReportType.TEST_PASS
-                    )
+        pass
 
 
 def define_test_parameters(

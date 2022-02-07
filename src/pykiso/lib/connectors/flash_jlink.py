@@ -113,17 +113,14 @@ class JLinkFlasher(Flasher):
         self.jlink.close()
 
     def flash(self) -> None:
-        """¨Perform firmware delivery."""
-        log.debug("flashing device")
-        try:
-            self.jlink.flash_file(
-                str(self.binary), addr=self.start_addr, power_on=self.power_on
-            )
-            self.jlink.reset()
+        """¨Perform firmware delivery.
 
-        except pylink.JLinkException as e:
-            log.exception(
-                f"flashing of device has failed with error: {e}", exc_info=True
-            )
-        else:
-            log.debug("flashing device successful")
+        :raises pylink.JLinkException: if any hardware related error occurred
+            during flashing.
+        """
+        log.debug("flashing device")
+        self.jlink.flash_file(
+            str(self.binary), addr=self.start_addr, power_on=self.power_on
+        )
+        self.jlink.reset()
+        log.debug("flashing device successful")

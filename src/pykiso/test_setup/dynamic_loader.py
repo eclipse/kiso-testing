@@ -245,7 +245,16 @@ class AuxiliaryCache(ModuleCache):
             # add connector-instances as configs
             self.configs[name][cn] = self.con_cache.get_instance(con)
         inst = super().get_instance(name)
-        if not inst.is_instance:
+        # if auto start is needed start the auxiliary otherwise store
+        # the created instance
+        auto_start = getattr(inst, "auto_start", True)
+        # due to the simple aux interface test if start method is part
+        # of the current auxiliary
+        start_method = getattr(inst, "start", None)
+        if not inst.is_instance and auto_start:
+            # if auxiliary is type of thread
+            if start_method is not None:
+                inst.start()
             inst.create_instance()
             log.debug(f"called create_instance on {name}")
         self.instances[name] = inst

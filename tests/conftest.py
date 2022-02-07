@@ -148,6 +148,7 @@ def CustomTestCaseAndSuite(request):
             for _ in range(max_com):
                 self.connectors.append(self.channel_in_use())
                 self.auxiliaries.append(self.auxiliary_in_use(com=self.connectors[-1]))
+                self.auxiliaries[-1].start()
                 self.auxiliaries[-1].create_instance()
 
         def prepare_default_test_cases(self, param):

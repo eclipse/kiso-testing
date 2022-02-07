@@ -31,8 +31,8 @@ provide shorthands for the specialised communication from
 .. currentmodule:: test_message_handler
 
 """
-
 import collections
+import functools
 import logging
 from contextlib import contextmanager
 from typing import Callable, List
@@ -42,8 +42,7 @@ from pykiso import message
 __all__ = [
     "report_analysis",
     "handle_basic_interaction",
-    "TestCaseMsgHandler",
-    "TestSuiteMsgHandler",
+    "test_app_interaction",
 ]
 
 report_analysis = collections.namedtuple(
@@ -199,6 +198,8 @@ class Command:
 
 
 class Report:
+    """Manage Test App report."""
+
     @classmethod
     @contextmanager
     def wait(cls, auxiliaries, timeout: int):
@@ -253,127 +254,97 @@ class Report:
         return report_analysis(aux, report_msg, log_fun, log_msg)
 
 
-class TestCaseMsgHandler:
-    """Encapsulate all test case communication mechanism."""
+def test_app_interaction(
+    message_type: message.MessageCommandType, timeout_cmd: int = 5
+) -> Callable:
+    """Handle test app basic interaction depending on the decorated
+    method.
 
-    @classmethod
-    @contextmanager
-    def setup(cls, test_entity: Callable, timeout_cmd: int, timeout_resp: int):
-        """Handle communication mechanism during test case setup.
-        Based on actual implementation, this context manager call handle_basic_interaction.
+    :param message_type: message command sub-type (test case/suite
+        run, setup, teardown....)
+    :param timeout_cmd: timeout in seconds for auxiliary run_command
 
-        :param test_entity: test instance in use (BaseTestSuite, BasicTest,...)
-        :param timeout_cmd: timeout in second apply on auxiliary run_command
-        :param timeout_resp: timeout in second apply on auxiliary wait_and_get_report
-
-        :return: namedtuple containing current auxiliary, reported message, logging method to use,
-            and pre-defined log message.
-        """
-        with handle_basic_interaction(
-            test_entity,
-            message.MessageCommandType.TEST_CASE_SETUP,
-            timeout_cmd,
-            timeout_resp,
-        ) as received_messages:
-
-            yield received_messages
-
-    @classmethod
-    @contextmanager
-    def teardown(cls, test_entity: Callable, timeout_cmd: int, timeout_resp: int):
-        """Handle communication mechanism during test case teardown.
-        Based on actual implementation, this context manager call handle_basic_interaction.
-
-        :param test_entity: test instance in use (BaseTestSuite, BasicTest,...)
-        :param timeout_cmd: timeout in second apply on auxiliary run_command
-        :param timeout_resp: timeout in second apply on auxiliary wait_and_get_report
-
-        :return: namedtuple containing current auxiliary, reported message, logging method to use,
-            and pre-defined log message.
-        """
-
-        with handle_basic_interaction(
-            test_entity,
-            message.MessageCommandType.TEST_CASE_TEARDOWN,
-            timeout_cmd,
-            timeout_resp,
-        ) as received_messages:
-
-            yield received_messages
-
-    @classmethod
-    @contextmanager
-    def run(cls, test_entity: Callable, timeout_cmd: int, timeout_resp: int):
-        """Handle communication mechanism during test case run.
-        Based on actual implementation, this context manager call handle_basic_interaction.
-
-        :param test_entity: test instance in use (BaseTestSuite, BasicTest,...)
-        :param timeout_cmd: timeout in second apply on auxiliary run_command
-        :param timeout_resp: timeout in second apply on auxiliary wait_and_get_report
-
-        :return: namedtuple containing current auxiliary, reported message, logging method to use,
-            and pre-defined log message.
-        """
-
-        with handle_basic_interaction(
-            test_entity,
-            message.MessageCommandType.TEST_CASE_RUN,
-            timeout_cmd,
-            timeout_resp,
-        ) as received_messages:
-
-            yield received_messages
-
-
-class TestSuiteMsgHandler:
-    """Encapsulate all test suite communication mechanisms.
-
-    .. warning:: This class is speculative code and not currently used.
-        it should eventually replace the handle_basic_interaction call
-        in the BaseTestSuite
+    :return: inner decorator function
     """
 
-    @classmethod
-    @contextmanager
-    def setup(cls, test_entity: Callable, timeout_cmd: int, timeout_resp: int):
-        """Handle communication mechanism during test suite setup.
-        Based on actual implementation, this context manager calls handle_basic_interaction.
+    def inner_interaction(func: Callable) -> Callable:
+        """Inner decorator function.
 
-        :param test_entity: test instance in use (BaseTestSuite, BasicTest,...)
-        :param timeout_cmd: timeout in second apply on auxiliary run_command
-        :param timeout_resp: timeout in second apply on auxiliary wait_and_get_report
+        :param func: decorated method
 
-        :return: namedtuple containing current auxiliary, reported message, logging method to use,
-            and pre-defined log message.
+        :return: decorator inner function
         """
 
-        with handle_basic_interaction(
-            test_entity,
-            message.MessageCommandType.TEST_SUITE_SETUP,
-            timeout_cmd,
-            timeout_resp,
-        ) as received_messages:
+        @functools.wraps(func)
+        def handle_interaction(self, *args: tuple, **kwargs: dict) -> None:
+            """Handle Test App communication mechanism during for all
+            available fixtures(setup, run, teardown,...)
 
-            yield received_messages
+            :param args: positional arguments
+            :param kwargs: named arguments
 
-    @classmethod
-    @contextmanager
-    def teardown(cls, test_entity: Callable, timeout_cmd: int, timeout_resp: int):
-        """Handle communication mechanism during test suite teardown.
-        Based on actual implementation, this context manager call handle_basic_interaction.
+            :return: decorated method return (actual case None)
+            """
 
-        :param test_entity: test instance in use (BaseTestSuite, BasicTest,...)
-        :param timeout_cmd: timeout in second apply on auxiliary run_command
-        :param timeout_resp: timeout in second apply on auxiliary wait_and_get_report
+            fixture = func.__name__.lower()
 
-        :return: namedtuple containing current auxiliary, reported message, logging method to use,
-            and pre-defined log message.
-        """
-        with handle_basic_interaction(
-            test_entity,
-            message.MessageCommandType.TEST_SUITE_TEARDOWN,
-            timeout_cmd,
-            timeout_resp,
-        ) as received_messages:
+            if "setup" in fixture and "suite" in fixture:
+                log.info(
+                    f"--------------- SUITE SETUP: {self.test_suite_id} ---------------"
+                )
+                timeout_resp = self.setup_timeout
+            elif "setup" in fixture:
+                log.info(
+                    f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------"
+                )
+                timeout_resp = self.setup_timeout
+            elif "run" in fixture:
+                log.info(
+                    f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
+                )
+                timeout_resp = self.run_timeout
+            elif "teardown" in fixture and "suite" in fixture:
+                log.info(
+                    f"--------------- SUITE TEARDOWN: {self.test_suite_id} ---------------"
+                )
+                timeout_resp = self.teardown_timeout
+            elif "teardown" in fixture:
+                log.info(
+                    f"--------------- TEARDOWN: {self.test_suite_id}, {self.test_case_id} ---------------"
+                )
+                timeout_resp = self.teardown_timeout
 
-            yield received_messages
+            # lock auxiliaries
+            for aux in self.test_auxiliary_list:
+                locked = aux.lock_it(1)
+                if not locked:
+                    self.cleanup_and_skip(aux, f"{aux} could not be locked!")
+
+            with handle_basic_interaction(
+                self, message_type, timeout_cmd, timeout_resp
+            ) as report_infos:
+
+                # Unlock all auxiliaries
+                for aux in self.test_auxiliary_list:
+                    aux.unlock_it()
+
+                for aux, report_msg, log_level_func, log_msg in report_infos:
+                    log_level_func(log_msg)
+
+                    is_test_on_dut_implemented = (
+                        report_msg.sub_type
+                        != message.MessageReportType.TEST_NOT_IMPLEMENTED
+                    )
+                    is_report = (
+                        report_msg.get_message_type() == message.MessageType.REPORT
+                    )
+                    if is_test_on_dut_implemented and is_report:
+                        self.assertEqual(
+                            report_msg.sub_type, message.MessageReportType.TEST_PASS
+                        )
+
+            return func(self, *args, **kwargs)
+
+        return handle_interaction
+
+    return inner_interaction

@@ -45,6 +45,7 @@ class CCVectorCan(CChannel):
         bitrate: int = 500000,
         data_bitrate: int = 2000000,
         fd: bool = True,
+        enable_brs: bool = False,
         app_name: str = None,
         can_filters: list = None,
         is_extended_id: bool = False,
@@ -63,6 +64,7 @@ class CCVectorCan(CChannel):
             If set to None, the channel should be a global channel index.
         :param data_bitrate: Which bitrate to use for data phase in CAN FD.
         :param fd: If CAN-FD frames should be supported.
+        :param enable_brs: sets the bitrate_switch flag to use higher transmission speed
         :param can_filters: A iterable of dictionaries each containing
             a “can_id”, a “can_mask”, and an optional “extended” key.
         :param is_extended_id: This flag controls the size of the arbitration_id field.
@@ -82,12 +84,18 @@ class CCVectorCan(CChannel):
         self.data_bitrate = data_bitrate
         self.is_extended_id = is_extended_id
         self.fd = fd
+        self.enable_brs = enable_brs
         self.can_filters = can_filters
         self.remote_id = None
         self.bus = None
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
+
+        if self.enable_brs and not self.fd:
+            log.warning(
+                "Bitrate switch will have no effect because option is_fd is set to false."
+            )
 
     def _cc_open(self) -> None:
         """Open a can bus channel and set filters for reception."""
@@ -102,6 +110,7 @@ class CCVectorCan(CChannel):
             bitrate=self.bitrate,
             data_bitrate=self.data_bitrate,
             fd=self.fd,
+            bitrate_switch=self.enable_brs,
             can_filters=self.can_filters,
         )
 
@@ -136,6 +145,7 @@ class CCVectorCan(CChannel):
             data=_data,
             is_extended_id=self.is_extended_id,
             is_fd=self.fd,
+            bitrate_switch=self.enable_brs,
         )
         self.bus.send(can_msg)
 

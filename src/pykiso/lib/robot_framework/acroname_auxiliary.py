@@ -49,7 +49,7 @@ class AcronameAuxiliary(RobotAuxInterface):
         aux = self._get_aux(aux_alias)
         return aux.set_port_enable(port)
 
-    @keyword(name="Set Port disable")
+    @keyword(name="Set port disable")
     def set_port_disable(self, aux_alias: str, port: int) -> int:
         """Disable power and data lines for a USB port.
 

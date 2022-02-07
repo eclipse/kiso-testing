@@ -60,14 +60,12 @@ class DUTAuxiliary(AuxiliaryInterface):
         # Flash the device if flash connector provided
         if self.flash is not None and not self._is_suspend:
             log.info("Flash target")
-
             try:
                 with self.flash as flasher:
                     flasher.flash()
-
-            # Catch if the flash is successful else stop the thread
             except Exception as e:
-                log.exception(f"Error raise during flashing : {e}")
+                # stop the thread if the flashing failed
+                log.exception(f"Error occurred during flashing : {e}")
                 log.fatal("Stopping the auxiliary")
                 self.stop()
                 return False  # Prevent to open channels by returning error state

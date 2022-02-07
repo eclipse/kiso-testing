@@ -20,7 +20,7 @@ Communication Channel Via segger j-link
 .. currentmodule:: cc_rtt_segger
 
 """
-
+import functools
 import logging
 import threading
 import time
@@ -33,6 +33,41 @@ from pykiso import connector
 from pykiso.message import Message
 
 log = logging.getLogger(__name__)
+
+
+def _need_connection(f):
+    """Decorator to check the JLink is connected and raises an error otherwise"""
+
+    @functools.wraps(f)
+    def check_before_execution(self, *args, **kwargs):
+        """Check if Jlink is opened, else raise error
+
+        :raises pylink.JLinkException: if Jlink not available
+        """
+        if not self.jlink.opened():
+            raise pylink.JLinkException("You need to connect to a JLink first")
+        return f(self, *args, **kwargs)
+
+    return check_before_execution
+
+
+def _need_rtt(f):
+    """Decorator to check that a RTT connection has been configured and raises an error otherwise"""
+
+    @functools.wraps(f)
+    def check_before_execution(self, *args, **kwargs):
+        """Check if Jlink is opened and RTT configured, else raise errors
+
+        :raises pylink.JLinkException: if RTT config not done or Jlink not available
+        """
+
+        if not self.jlink.opened():
+            raise pylink.JLinkException("You need to connect to a JLink first")
+        if not self.rtt_configured:
+            raise pylink.JLinkException("You need to configure RTT first")
+        return f(self, *args, **kwargs)
+
+    return check_before_execution
 
 
 class CCRttSegger(connector.CChannel):
@@ -81,16 +116,17 @@ class CCRttSegger(connector.CChannel):
         self.rtt_log_buffer_idx = rtt_log_buffer_idx
         self.rx_buffer_size = None
         # initialize rtt logging specific parameters
+        self.rtt_configured = False
         self._is_running = False
         self.rtt_log_refresh_time = round(1 / rtt_log_speed, 6) if rtt_log_speed else 0
         self.rtt_log_thread = threading.Thread(target=self.receive_log)
         self.rtt_log_path = rtt_log_path
+        self.rtt_log = logging.getLogger(f"{__name__}.RTT")
         if self.rtt_log_path is not None:
             self.rtt_log_buffer_size = 0
             self.rtt_log_path = Path(rtt_log_path)
             rtt_fh = logging.FileHandler(self.rtt_log_path / "rtt.log")
             rtt_fh.setLevel(logging.DEBUG)
-            self.rtt_log = logging.getLogger(f"{__name__}.RTT")
             self.rtt_log.setLevel(logging.DEBUG)
             self.rtt_log.addHandler(rtt_fh)
 
@@ -179,6 +215,7 @@ class CCRttSegger(connector.CChannel):
                 log.debug(
                     f"Maximum size for a received message set to {self.rx_buffer_size}"
                 )
+                self.rtt_configured = True
                 break
             except pylink.errors.JLinkRTTException:
                 time.sleep(0.1)
@@ -294,6 +331,7 @@ class CCRttSegger(connector.CChannel):
 
         return msg_received
 
+    @_need_rtt
     def receive_log(self) -> None:
         """Receive RTT log messages from the corresponding RTT buffer."""
         while self._is_running:
@@ -304,3 +342,14 @@ class CCRttSegger(connector.CChannel):
             if log_msg:
                 self.rtt_log.debug(bytes(log_msg).decode())
             time.sleep(self.rtt_log_refresh_time)  # reduce resource consumption
+
+    @_need_connection
+    def reset_target(self, wait_time: int = 100, halt: bool = False) -> None:
+        """Reset target via JLink.
+
+        :param wait_time: Amount of milliseconds to delay after reset
+        :param halt: if the CPU should halt after reset
+        """
+        logging.info("Reset Target")
+        self.jlink.enable_reset_pulls_reset()
+        self.jlink.reset(wait_time, halt)

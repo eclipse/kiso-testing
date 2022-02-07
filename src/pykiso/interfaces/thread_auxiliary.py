@@ -49,6 +49,7 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         is_proxy_capable: bool = False,
         is_pausable: bool = False,
         activate_log: List[str] = None,
+        auto_start: bool = True,
     ) -> None:
         """Auxiliary initialization.
 
@@ -58,6 +59,8 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         :param is_pausable: notify if the current auxiliary could be
             (or not) paused
         :param activate_log: loggers to deactivate
+        :param auto_start: determine if the auxiliayry is automatically
+             started (magic import) or manually (by user)
         """
         # Initialize thread class
         super().__init__()

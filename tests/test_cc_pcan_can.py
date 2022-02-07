@@ -101,6 +101,7 @@ def mock_PCANBasic(mocker):
                 "state": "ACTIVE",
                 "bitrate": 500000,
                 "is_fd": True,
+                "enable_brs": False,
                 "f_clock_mhz": 80,
                 "nom_brp": 2,
                 "nom_tseg1": 63,
@@ -123,6 +124,7 @@ def mock_PCANBasic(mocker):
                 "state": "ACTIVE",
                 "bitrate": 500000,
                 "is_fd": False,
+                "enable_brs": True,
                 "f_clock_mhz": 50,
                 "nom_brp": 1,
                 "nom_tseg1": 60,
@@ -145,6 +147,7 @@ def mock_PCANBasic(mocker):
                 "state": "ACTIVE",
                 "bitrate": 500000,
                 "is_fd": False,
+                "enable_brs": True,
                 "f_clock_mhz": 50,
                 "nom_brp": 1,
                 "nom_tseg1": 60,
@@ -164,10 +167,11 @@ def mock_PCANBasic(mocker):
         ),
     ],
 )
-def test_constructor(constructor_params, expected_config):
+def test_constructor(constructor_params, expected_config, caplog):
 
     param = constructor_params.values()
-    can_inst = CCPCanCan(*param)
+    with caplog.at_level(logging.WARNING):
+        can_inst = CCPCanCan(*param)
 
     assert can_inst.interface == expected_config["interface"]
     assert can_inst.channel == expected_config["channel"]
@@ -175,6 +179,7 @@ def test_constructor(constructor_params, expected_config):
     assert can_inst.remote_id == expected_config["remote_id"]
     assert can_inst.f_clock_mhz == expected_config["f_clock_mhz"]
     assert can_inst.is_fd == expected_config["is_fd"]
+    assert can_inst.enable_brs == expected_config["enable_brs"]
     assert can_inst.nom_brp == expected_config["nom_brp"]
     assert can_inst.nom_tseg1 == expected_config["nom_tseg1"]
     assert can_inst.nom_tseg2 == expected_config["nom_tseg2"]
@@ -188,6 +193,9 @@ def test_constructor(constructor_params, expected_config):
     assert can_inst.can_filters == expected_config["can_filters"]
     assert can_inst.logging_activated == expected_config["logging_activated"]
     assert can_inst.timeout == 1e-6
+
+    if not can_inst.is_fd and can_inst.enable_brs:
+        assert "Bitrate switch will have no effect" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -486,4 +494,4 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
 
     assert msg_received == None
     assert id_received == None
-    assert "ecountered can error: Invalid Message" in caplog.text
+    assert "encountered can error: Invalid Message" in caplog.text

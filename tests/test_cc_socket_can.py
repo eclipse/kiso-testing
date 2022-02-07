@@ -8,22 +8,14 @@
 ##########################################################################
 
 import logging
+from unittest import mock
 
 import can as python_can
 import pytest
 
 from pykiso import Message
-from pykiso.lib.connectors.cc_vector_can import (
-    CCVectorCan,
-    can,
-    detect_serial_number,
-)
-from pykiso.message import (
-    MessageAckType,
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.lib.connectors.cc_socket_can.cc_socket_can import CCSocketCan, can
+from pykiso.message import MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",
@@ -64,6 +56,10 @@ def mock_can_bus(mocker):
         send = mocker.stub(name="send")
         recv = mocker.stub(name="recv")
 
+    mocker.patch(
+        "pykiso.lib.connectors.cc_socket_can.cc_socket_can.os_name",
+        return_value="Linux",
+    )
     mocker.patch.object(can.interface, "Bus", new=MockCan)
     return can.interface
 
@@ -74,48 +70,40 @@ def mock_can_bus(mocker):
         (
             {},
             {
-                "bustype": "vector",
-                "poll_interval": 0.01,
-                "rx_queue_size": 524288,
-                "serial": None,
-                "channel": 3,
-                "bitrate": 500000,
-                "data_bitrate": 2000000,
-                "fd": True,
+                "channel": "vcan0",
+                "remote_id": None,
+                "is_fd": True,
                 "enable_brs": False,
-                "app_name": None,
-                "can_filters": None,
-                "is_extended_id": False,
+                "can_filters": [],
+                "is_extended_id": True,
+                "receive_own_messages": False,
+                "logging_activated": False,
             },
         ),
         (
             {
-                "bustype": "vector",
-                "poll_interval": 0.01,
-                "rx_queue_size": 524288,
-                "serial": None,
-                "channel": 3,
-                "bitrate": 500000,
-                "data_bitrate": 2000000,
-                "fd": False,
+                "channel": "vcan0",
+                "remote_id": 0x666,
+                "is_fd": False,
                 "enable_brs": True,
-                "app_name": None,
-                "can_filters": None,
+                "can_filters": [
+                    {"can_id": 0x507, "can_mask": 0x7FF, "extended": False}
+                ],
                 "is_extended_id": False,
+                "receive_own_messages": True,
+                "logging_activated": True,
             },
             {
-                "bustype": "vector",
-                "poll_interval": 0.01,
-                "rx_queue_size": 524288,
-                "serial": None,
-                "channel": 3,
-                "bitrate": 500000,
-                "data_bitrate": 2000000,
-                "fd": False,
+                "channel": "vcan0",
+                "remote_id": 0x666,
+                "is_fd": False,
                 "enable_brs": True,
-                "app_name": None,
-                "can_filters": None,
+                "can_filters": [
+                    {"can_id": 0x507, "can_mask": 0x7FF, "extended": False}
+                ],
                 "is_extended_id": False,
+                "receive_own_messages": True,
+                "logging_activated": True,
             },
         ),
     ],
@@ -124,42 +112,82 @@ def test_constructor(constructor_params, expected_config, caplog):
     param = constructor_params.values()
 
     with caplog.at_level(logging.WARNING):
-        can_inst = CCVectorCan(*param)
+        can_inst = CCSocketCan(*param)
 
-    assert can_inst.bustype == expected_config["bustype"]
     assert can_inst.channel == expected_config["channel"]
-    assert can_inst.rx_queue_size == expected_config["rx_queue_size"]
-    assert can_inst.poll_interval == expected_config["poll_interval"]
-    assert can_inst.data_bitrate == expected_config["data_bitrate"]
-    assert can_inst.bitrate == expected_config["bitrate"]
-    assert can_inst.app_name == expected_config["app_name"]
-    assert can_inst.serial == expected_config["serial"]
-    assert can_inst.fd == expected_config["fd"]
-    assert can_inst.bus == None
-    assert can_inst.remote_id == None
-    assert can_inst.is_extended_id == expected_config["is_extended_id"]
+    assert can_inst.remote_id == expected_config["remote_id"]
+    assert can_inst.is_fd == expected_config["is_fd"]
+    assert can_inst.enable_brs == expected_config["enable_brs"]
     assert can_inst.can_filters == expected_config["can_filters"]
-    assert can_inst.timeout == 1e-6
+    assert can_inst.receive_own_messages == expected_config["receive_own_messages"]
+    assert can_inst.logging_activated == expected_config["logging_activated"]
 
-    if not can_inst.fd and can_inst.enable_brs:
+    if not can_inst.is_fd and can_inst.enable_brs:
         assert "Bitrate switch will have no effect" in caplog.text
 
 
-def test_cc_open(mock_can_bus):
-    can_inst = CCVectorCan()
+@pytest.mark.parametrize(
+    "logging_requested",
+    [
+        (True),
+        (False),
+    ],
+)
+def test_cc_open(logging_requested, mock_can_bus, mocker):
+
+    mock_logger = mocker.patch(
+        "pykiso.lib.connectors.cc_socket_can.cc_socket_can.SocketCan2Trc"
+    )
+
+    can_inst = CCSocketCan(logging_activated=logging_requested)
     can_inst._cc_open()
 
     assert isinstance(can_inst.bus, mock_can_bus.Bus) == True
     assert can_inst.bus != None
 
+    if logging_requested:
+        assert isinstance(can_inst.logger, mocker.MagicMock)
+        assert mock_logger.mock_calls[1] == mock.call().start()
+        mock_logger.assert_called_once()
 
-def test_cc_close(mock_can_bus):
 
-    with CCVectorCan() as can_inst:
-        pass
+def test_cc_open_wrong_os(mocker):
+
+    mocker.patch(
+        "pykiso.lib.connectors.cc_socket_can.cc_socket_can.os_name",
+        return_value="Windows",
+    )
+    mock_logger = mocker.patch(
+        "pykiso.lib.connectors.cc_socket_can.cc_socket_can.SocketCan2Trc"
+    )
+
+    can_inst = CCSocketCan()
+    with pytest.raises(OSError, match=r"socketCAN is only available under linux"):
+        can_inst._cc_open()
+
+
+@pytest.mark.parametrize(
+    "logging_requested",
+    [
+        (True),
+        (False),
+    ],
+)
+def test_cc_close(logging_requested, mock_can_bus, mocker):
+
+    mock_logger = mocker.patch(
+        "pykiso.lib.connectors.cc_socket_can.cc_socket_can.SocketCan2Trc"
+    )
+
+    can_inst = CCSocketCan(logging_activated=True)
+    can_inst._cc_open()
+
+    can_inst._cc_close()
 
     mock_can_bus.Bus.shutdown.assert_called_once()
     assert can_inst.bus == None
+
+    assert can_inst.logger == None
 
 
 @pytest.mark.parametrize(
@@ -177,8 +205,7 @@ def test_cc_close(mock_can_bus):
 )
 def test_cc_send(mock_can_bus, parameters):
 
-    with CCVectorCan() as can:
-        can.remote_id = 0x500
+    with CCSocketCan(remote_id=0x0A) as can:
         can._cc_send(*parameters)
 
     mock_can_bus.Bus.send.assert_called_once()
@@ -202,11 +229,11 @@ def test_cc_send(mock_can_bus, parameters):
 def test_can_recv(
     mocker, mock_can_bus, raw_data, can_id, cc_receive_param, expected_type
 ):
-    mocker.patch(
+    mock_bus_recv = mocker.patch(
         "can.interface.Bus.recv",
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
-    with CCVectorCan() as can:
+    with CCSocketCan() as can:
         msg_received, id_received = can._cc_receive(*cc_receive_param)
 
     assert isinstance(msg_received, expected_type) == True
@@ -226,53 +253,40 @@ def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
 
     mocker.patch("can.interface.Bus.recv", return_value=None)
 
-    with CCVectorCan() as can:
+    with CCSocketCan() as can:
         msg_received, id_received = can._cc_receive(timeout=0.0001, raw=raw_state)
 
     assert msg_received == None
     assert id_received == None
 
 
-@pytest.mark.parametrize(
-    "serial_number_list, serial_number_list_empty",
-    [
-        (
-            [1111, 2222],
-            [0],
-        ),
-    ],
-)
-def test_detect_serial_number(mocker, serial_number_list, serial_number_list_empty):
-    class MockXLchannelConfig:
-        """Class used to stub vector.vxlapi.XLchannelConfig() class"""
+def test_can_recv_exception(caplog, mocker, mock_can_bus):
 
-        def __init__(
-            self,
-            serial: int = 0,
-            **kwargs,
-        ):
-            """
-            :param serial: serial number of the channel configuration
-            """
-            self.serialNumber = serial
+    mocker.patch("can.interface.Bus.recv", side_effect=Exception())
 
-    # 1) Detection of the lowest serial number in the channels list:
+    logging.getLogger("pykiso.lib.connectors.cc_socket_can.cc_socket_can.log")
+
+    with CCSocketCan() as can:
+        msg_received, id_received = can._cc_receive(timeout=0.0001)
+
+    assert msg_received == None
+    assert id_received == None
+    assert "Exception" in caplog.text
+
+
+def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus):
+
     mocker.patch(
-        "pykiso.lib.connectors.cc_vector_can.get_channel_configs",
-        return_value=[
-            MockXLchannelConfig(serial=serial) for serial in serial_number_list
-        ],
+        "can.interface.Bus.recv", side_effect=python_can.CanError("Invalid Message")
     )
-    can_inst = CCVectorCan(serial="AUTO")
-    assert min(serial_number_list) == can_inst.serial
 
-    # 2) Raise an error if no Vector Box:
-    mocker.patch(
-        "pykiso.lib.connectors.cc_vector_can.get_channel_configs",
-        return_value=[
-            MockXLchannelConfig(serial=serial) for serial in serial_number_list_empty
-        ],
-    )
-    with pytest.raises(ConnectionRefusedError) as e:
-        detect_serial_number()
-    assert str(e.value) == "No Vector box is currently available"
+    logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
+
+    with caplog.at_level(logging.DEBUG):
+
+        with CCSocketCan() as can:
+            msg_received, id_received = can._cc_receive(timeout=0.0001)
+
+    assert msg_received == None
+    assert id_received == None
+    assert "encountered can error: Invalid Message" in caplog.text

@@ -44,6 +44,7 @@ class CCPCanCan(CChannel):
         state: str = "ACTIVE",
         bitrate: int = 500000,
         is_fd: bool = True,
+        enable_brs: bool = False,
         f_clock_mhz: int = 80,
         nom_brp: int = 2,
         nom_tseg1: int = 63,
@@ -66,6 +67,7 @@ class CCPCanCan(CChannel):
         :param state: BusState of the channel
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
+        :param enable_brs: sets the bitrate_switch flag to use higher transmission speed
         :param f_clock_mhz:  Clock rate in MHz
         :param nom_brp: Clock prescaler for nominal time quantum
         :param nom_tseg1: Time segment 1 for nominal bit rate, that is,
@@ -93,6 +95,7 @@ class CCPCanCan(CChannel):
         self.state = can.bus.BusState[state.upper()]
         self.bitrate = bitrate
         self.is_fd = is_fd
+        self.enable_brs = enable_brs
         self.f_clock_mhz = f_clock_mhz
         self.nom_brp = nom_brp
         self.nom_tseg1 = nom_tseg1
@@ -135,6 +138,11 @@ class CCPCanCan(CChannel):
                 log.warning("Logging path of the logging module not set to file")
 
         log.info(f"Logging path for PCAN set to {self.logging_path}")
+
+        if self.enable_brs and not self.is_fd:
+            log.warning(
+                "Bitrate switch will have no effect because option is_fd is set to false."
+            )
 
     def _cc_open(self) -> None:
         """Open a can bus channel, set filters for reception and activate PCAN log."""
@@ -274,6 +282,7 @@ class CCPCanCan(CChannel):
             data=_data,
             is_extended_id=self.is_extended_id,
             is_fd=self.is_fd,
+            bitrate_switch=self.enable_brs,
         )
         self.bus.send(can_msg)
 
@@ -305,7 +314,7 @@ class CCPCanCan(CChannel):
             else:
                 return None, None
         except can.CanError as can_error:
-            log.debug(f"ecountered can error: {can_error}")
+            log.debug(f"encountered can error: {can_error}")
             return None, None
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")

@@ -1,5 +1,21 @@
 ### Current Version
 
+### Version 0.15.0
+
+Features:
+- add capability to not automatically start an auxiliary and let the user do it (auto_start parameter for threaded auxiliaries only)
+- add socket can connector with trc file logger
+- add bitrate switch to every can bus connector
+- add copycat capability (beta feature) for "threaded" auxiliaries
+- Add multiprocessing and proxy capability to the recorder auxiliary
+
+Bugfix:
+- correct random fail issue from proxy auxiliary unit test
+- remove error handling during flashing in flash_jlink (handled by auxiliary)
+
+Changes:
+- refactor test_case, test_suite, test_message_handler module
+
 ### Version 0.14.0
 
 Features:
@@ -7,6 +23,8 @@ Features:
 - manage RTT connector resource consumption using rtt_log_speed parameter
 - repeat testCases upon failure (x run, 1 successful -> ok & go)
 - repeat testCases for stability test (x run, 1 failure -> not ok & go)
+- add reset function and decorator to RTT connector
+- add functionalities to recorder auxiliary
 
 Changes:
 - move error messages from python-can 4.0.0 into log level debug

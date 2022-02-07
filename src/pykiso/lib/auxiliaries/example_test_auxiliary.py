@@ -38,7 +38,7 @@ class ExampleAuxiliary(AuxiliaryInterface):
         com=None,
         flash=None,
         **kwargs,
-    ):
+    ) -> None:
         """Constructor.
 
         :param name: Alias of the auxiliary instance

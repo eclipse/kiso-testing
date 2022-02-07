@@ -28,9 +28,22 @@ def read(*names, **kwargs):
         return fh.read()
 
 
+install_requires = [
+    "pyserial",
+    "timeout-decorator",
+    "click",
+    "pyyaml",
+    "pylink-square",
+    "python-can",
+    "unittest-xml-reporting",
+    "robotframework==3.2.2",
+    "pyvisa",
+    "pyvisa-py",
+]
+
 setup(
     name="pykiso",
-    version="0.14.0",
+    version="0.15.0",
     license="Eclipse Public License - v 2.0",
     description="Embedded integration testing framework.",
     long_description=read("README.md"),
@@ -65,18 +78,7 @@ setup(
         "testing framework",
     ],
     python_requires=">=3.6",
-    install_requires=[
-        "pyserial",
-        "timeout-decorator",
-        "click",
-        "pyyaml",
-        "pylink-square",
-        "python-can",
-        "unittest-xml-reporting",
-        "robotframework==3.2.2",
-        "pyvisa",
-        "pyvisa-py",
-    ],
+    install_requires=install_requires,
     tests_require=["pytest", "pytest-mock", "coverage"],
     extras_require={},
     setup_requires=[],
