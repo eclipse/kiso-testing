@@ -118,5 +118,5 @@ associated connectors (except proxy channels) will be present in junit report.
 logging on stdout
 ~~~~~~~~~~~~~~~~~
 
-All logs comming from proxy's associated connectors (except proxy channels)
+All logs coming from proxy's associated connectors (except proxy channels)
 won't be displayed on the console.

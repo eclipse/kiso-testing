@@ -1,10 +1,10 @@
-Integration Test Framework Developer’s Guide
-============================================
+Pykiso
+======
 
 Introduction
 ------------
 
-The Integration Test Framework provides the possibility to write and run
+The Integration Test Framework (Pykiso) provides the possibility to write and run
 tests on a HW target. It is built to orchestrate the entities and
 services involved in the tests. The framework can be used for both
 white-box and black-box testing as well as in the integration and system
@@ -13,7 +13,7 @@ testing.
 Design Overview
 ---------------
 
-.. figure:: images/pykiso_context_overview.png
+.. figure:: ../images/pykiso_context_overview.png
    :alt: Figure 1: Integration Test Framework Context
 
    Figure 1: Integration Test Framework Context
@@ -114,8 +114,8 @@ When writing your testcases, the auxiliary will then be available under its defi
 The `pykiso.auxiliaries` is a magic package that only exists in the `pykiso` package after the `TestCoordinator` has processed the config file.
 It will include all *instances* of the defined auxiliares, available at their defined alias.
 
-Message Protocol (if used)
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Message Protocol ( If in used )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The message protocol is used (but not only) between the *device under
 test* HW and its **test-auxiliary**. The communication pattern is as
@@ -661,11 +661,11 @@ Implementation of Advanced Tests - Repeat testCases
 Add Config File
 ~~~~~~~~~~~~~~~
 
-For details see :ref:`config_file`.
+For details see :ref:`../getting_started/config_file`.
 
 Example:
 
-.. literalinclude:: ../examples/dummy.yaml
+.. literalinclude:: ../../examples/dummy.yaml
     :language: yaml
     :linenos:
 
