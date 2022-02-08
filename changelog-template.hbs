@@ -1,0 +1,82 @@
+### Changelog
+
+All notable changes to this project will be documented in this file.
+
+## Keywords
+Commits are sorted into three categories based on keywords that can occur at any position as part of the commit message.
+[Category] Keywords1, Keywords2
+* [BREAKING CHANGES] BREAKING CHANGE
+* [Features] feat:
+* [Fixes] fix:
+* [Docs] docs:
+* [Styles] style:
+* [Refactors] Refactors:
+* [Performances] perf:
+* [Tests] test:
+* [Build] build:
+* [Ci] ci:
+
+* [Commits] (All commits that are not part of one of the other categories)
+Each commit is considered only once according to the order of the categories listed above. Merge commits are ignored.
+
+Generator command: `npm run change`
+Commit helper: `cz c`
+
+
+{{#each releases}}
+    {{#if href}}
+        ## [{{title}}]({{href}})
+    {{else}}
+        ## {{title}}
+    {{/if}}
+    {{#if tag}}
+        > {{isoDate}}
+    {{/if}}
+
+    {{! List commits with `Breaking change: ` somewhere in the message }}
+    {{#commit-list commits heading='### BREAKING CHANGES' message='BREAKING CHANGE' exclude='Merge pull request'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits that add new features, but not those already listed above }}
+    {{#commit-list commits heading='#### Features' message='feat:' exclude='Merge pull request|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits that fix bugs, but not those already listed above }}
+    {{#commit-list commits heading='#### Fixes' message='fix:' exclude='Merge pull request|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits that for documentation only changes, but not those already listed above }}
+    {{#commit-list commits heading='#### Docs' message='docs:' exclude='Merge pull request|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits to changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc), but not those already listed above }}
+    {{#commit-list commits heading='#### Styles' message='style:' exclude='Merge pull request|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits to changes that that neither fixes a bug nor adds a feature, but not those already listed above }}
+    {{#commit-list commits heading='#### Refactors' message='refactor:' exclude='Merge pull request|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits to changes that improves performance, but not those already listed above }}
+    {{#commit-list commits heading='#### Performances' message='perf:' exclude='Merge pull request|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits to changes that adds missing or correcting existing tests, but not those already listed above }}
+    {{#commit-list commits heading='#### Tests' message='test:' exclude='Merge pull request|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits to changes that affect the build system or external dependencies (example scopes: pip, docker, npm), but not those already listed above }}
+    {{#commit-list commits heading='#### Build' message='build:' exclude='Merge pull request|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits to changes to our CI configuration files and scripts (example scopes: GitLabCI), but not those already listed above }}
+    {{#commit-list commits heading='#### Ci' message='ci:' exclude='Merge pull request|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+    {{! List commits that fix bugs, but not those already listed above }}
+    {{#commit-list commits heading='#### Commits' message='.*' exclude='Merge pull request|[Ff]ix|[Ff]eature|BREAKING CHANGE'}}
+        - {{subject}}{{#if href}} [`{{shorthash}}`]({{href}}){{/if}}
+    {{/commit-list}}
+
+---
+{{/each}}
