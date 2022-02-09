@@ -32,3 +32,6 @@ Included Auxiliaries
 
 .. automodule:: pykiso.lib.auxiliaries.acroname_auxiliary
     :members:
+
+.. automodule:: pykiso.lib.auxiliaries.record_auxiliary
+    :members:

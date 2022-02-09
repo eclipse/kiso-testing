@@ -1,20 +1,20 @@
-Getting Started with pykiso for contributors
-============================================
+Contributor Setup
+-----------------
 
 
 Requirements
-------------
+~~~~~~~~~~~~
 
 -  Python 3.6+
 -  pipenv (used to get the rest of the requirements)
 
 Install
--------
+~~~~~~~
 
 .. code:: bash
 
-   git clone https://github.com/eclipse/kiso-testing.git
-   cd kiso-testing
+   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
+   cd integration-test-framework
    pipenv install --dev
    pipenv shell
 

@@ -7,20 +7,12 @@ Welcome to pykiso's documentation!
     :maxdepth: 2
     :caption: Contents:
 
-    getting_started
-    getting_started_dev
-    integration_test
-    config_file
-    how_to_auxiliary
-    how_to_connector
-    auxiliaries
-    connectors
-    robot_framework
-    multiprocessing
+    introduction/integration_test
+    getting_started/index
     api
-    instrument_control
-    acroname_control
-    record
+    examples/index
+    advanced_features/index
+    robot_framework/robot_framework
 
 Indices and tables
 ==================

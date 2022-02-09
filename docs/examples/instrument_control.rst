@@ -1,3 +1,5 @@
+.. _instrument_control_aux:
+
 Controlling an Instrument
 =========================
 
@@ -39,18 +41,18 @@ Example of a test configuration file using instrument-control auxiliary:
 
 Examples:
 
-.. literalinclude:: ../examples/power_supply_control_EA_PSI9000.yaml
+.. literalinclude:: ../../examples/power_supply_control_EA_PSI9000.yaml
     :language: yaml
     :linenos:
 
-.. literalinclude:: ../examples/power_supply_control_RS_remote.yaml
+.. literalinclude:: ../../examples/power_supply_control_RS_remote.yaml
     :language: yaml
     :linenos:
 
 .. _instrument_control_integration_test:
 
 Implementation of Instrument Tests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using the instrument auxiliary (`instr_aux`) inside integration tests is useful to control the instrument (e.g. a power supply) the device under test is connected to. There are two different ways to interface with an instrument:
 
