@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -24,7 +24,7 @@ import logging
 import queue
 import threading
 import time
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from pykiso.auxiliary import AuxiliaryCommon
 from pykiso.test_setup.dynamic_loader import PACKAGE
@@ -77,8 +77,17 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         self.is_pausable = is_pausable
         # Create state
         self.is_instance = False
-        # Start thread
-        self.start()
+        self.auto_start = auto_start
+        self._aux_copy = None
+
+    def start(self) -> None:
+        """Start the thread and create the auxiliary only if auto_start
+        flag is False.
+        """
+        if not self.is_alive():
+            super().start()
+            if not self.auto_start:
+                self.create_instance()
 
     @staticmethod
     def initialize_loggers(loggers: Optional[List[str]]) -> None:
