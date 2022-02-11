@@ -1,11 +1,13 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
+
+import logging
 
 import can as python_can
 import pytest
@@ -80,6 +82,37 @@ def mock_can_bus(mocker):
                 "bitrate": 500000,
                 "data_bitrate": 2000000,
                 "fd": True,
+                "enable_brs": False,
+                "app_name": None,
+                "can_filters": None,
+                "is_extended_id": False,
+            },
+        ),
+        (
+            {
+                "bustype": "vector",
+                "poll_interval": 0.01,
+                "rx_queue_size": 524288,
+                "serial": None,
+                "channel": 3,
+                "bitrate": 500000,
+                "data_bitrate": 2000000,
+                "fd": False,
+                "enable_brs": True,
+                "app_name": None,
+                "can_filters": None,
+                "is_extended_id": False,
+            },
+            {
+                "bustype": "vector",
+                "poll_interval": 0.01,
+                "rx_queue_size": 524288,
+                "serial": None,
+                "channel": 3,
+                "bitrate": 500000,
+                "data_bitrate": 2000000,
+                "fd": False,
+                "enable_brs": True,
                 "app_name": None,
                 "can_filters": None,
                 "is_extended_id": False,
@@ -87,9 +120,11 @@ def mock_can_bus(mocker):
         ),
     ],
 )
-def test_constructor(constructor_params, expected_config):
+def test_constructor(constructor_params, expected_config, caplog):
     param = constructor_params.values()
-    can_inst = CCVectorCan(*param)
+
+    with caplog.at_level(logging.WARNING):
+        can_inst = CCVectorCan(*param)
 
     assert can_inst.bustype == expected_config["bustype"]
     assert can_inst.channel == expected_config["channel"]
@@ -105,6 +140,9 @@ def test_constructor(constructor_params, expected_config):
     assert can_inst.is_extended_id == expected_config["is_extended_id"]
     assert can_inst.can_filters == expected_config["can_filters"]
     assert can_inst.timeout == 1e-6
+
+    if not can_inst.fd and can_inst.enable_brs:
+        assert "Bitrate switch will have no effect" in caplog.text
 
 
 def test_cc_open(mock_can_bus):

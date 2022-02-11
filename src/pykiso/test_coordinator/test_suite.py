@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -27,14 +27,13 @@ from typing import Callable, List, Union
 
 from .. import message
 from ..interfaces.thread_auxiliary import AuxiliaryInterface
-from .test_message_handler import TestSuiteMsgHandler, handle_basic_interaction
+from .test_message_handler import test_app_interaction
 
 __all__ = [
     "BaseTestSuite",
     "BasicTestSuiteSetup",
     "BasicTestSuiteTeardown",
     "BasicTestSuite",
-    "TestSuiteMsgHandler",
 ]
 
 log = logging.getLogger(__name__)
@@ -99,54 +98,6 @@ class BaseTestSuite(unittest.TestCase):
 
         self.fail(info_to_print)
 
-    def base_function(
-        self,
-        current_fixture: Callable,
-        step_name: str,
-        test_command: message.Message,
-        timeout_resp: int,
-    ):
-        """Base function used for test suite setup and teardown.
-
-        :param current_fixture: fixture instance teardown or setup
-        :param step_name: name of the current step
-        :param test_command: A message you want to print while cleaning up the test
-        :param timeout_resp: maximum amount of time in seconds to wait
-            for a response
-        """
-        log.info(f"--------------- {step_name}: {self.test_suite_id} ---------------")
-
-        # lock auxiliaries
-        for aux in self.test_auxiliary_list:
-            locked = aux.lock_it(1)
-            if not locked:
-                self.cleanup_and_skip(aux, f"{aux} could not be locked!")
-
-        # send TEST_SUITE_SETUP or TEST_SUITE_TEARDOWN command wait for report and log it
-        with handle_basic_interaction(
-            test_entity=current_fixture,
-            cmd_sub_type=test_command,
-            timeout_cmd=5,
-            timeout_resp=timeout_resp,
-        ) as report_infos:
-
-            # Unlock all auxiliaries
-            for aux in self.test_auxiliary_list:
-                aux.unlock_it()
-
-            for aux, report_msg, log_level_func, log_msg in report_infos:
-                log_level_func(log_msg)
-
-                is_test_on_dut_implemented = (
-                    report_msg.sub_type
-                    != message.MessageReportType.TEST_NOT_IMPLEMENTED
-                )
-                is_report = report_msg.get_message_type() == message.MessageType.REPORT
-                if is_test_on_dut_implemented and is_report:
-                    self.assertEqual(
-                        report_msg.sub_type, message.MessageReportType.TEST_PASS
-                    )
-
 
 class BasicTestSuiteSetup(BaseTestSuite):
     """Inherit from unittest testCase and represent setup fixture."""
@@ -193,14 +144,12 @@ class BasicTestSuiteSetup(BaseTestSuite):
             kwargs,
         )
 
+    @test_app_interaction(
+        message_type=message.MessageCommandType.TEST_SUITE_SETUP, timeout_cmd=5
+    )
     def test_suite_setUp(self):
         """Test method for constructing the actual test suite."""
-        self.base_function(
-            self,
-            "SUITE SETUP",
-            message.MessageCommandType.TEST_SUITE_SETUP,
-            self.setup_timeout,
-        )
+        pass
 
 
 class BasicTestSuiteTeardown(BaseTestSuite):
@@ -248,14 +197,12 @@ class BasicTestSuiteTeardown(BaseTestSuite):
             kwargs,
         )
 
+    @test_app_interaction(
+        message_type=message.MessageCommandType.TEST_SUITE_TEARDOWN, timeout_cmd=5
+    )
     def test_suite_tearDown(self):
         """Test method for deconstructing the actual test suite after testing it."""
-        self.base_function(
-            self,
-            "SUITE TEARDOWN",
-            message.MessageCommandType.TEST_SUITE_TEARDOWN,
-            self.teardown_timeout,
-        )
+        pass
 
 
 class BasicTestSuite(unittest.TestSuite):

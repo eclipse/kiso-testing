@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -11,11 +11,11 @@
 Record auxiliary test
 *********************
 
-:module: test_record_auxiliary
+:module: test_record
 
 :synopsis: Example test that shows how to record a connector
 
-.. currentmodule:: test_record_auxiliary
+.. currentmodule:: test_record
 
 """
 

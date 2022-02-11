@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -52,7 +52,7 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from pykiso import AuxiliaryInterface, CChannel
 from pykiso.test_setup.config_registry import ConfigRegistry
@@ -132,7 +132,9 @@ class ProxyAuxiliary(AuxiliaryInterface):
 
         return logger
 
-    def get_proxy_con(self, aux_list: List[str]) -> Tuple[AuxiliaryInterface]:
+    def get_proxy_con(
+        self, aux_list: List[Union[str, AuxiliaryInterface]]
+    ) -> Tuple[AuxiliaryInterface]:
         """Retrieve all connector associated to all given existing Auxiliaries.
 
         If auxiliary alias exists but auxiliary instance was not created
@@ -145,25 +147,33 @@ class ProxyAuxiliary(AuxiliaryInterface):
         """
         channel_inst = []
 
-        for aux_name in aux_list:
-            aux_inst = sys.modules.get(f"{PACKAGE}.auxiliaries.{aux_name}")
+        for aux in aux_list:
+            # aux_list can contain a auxiliary instance just grab the
+            # channel
+            if isinstance(aux, AuxiliaryInterface):
+                self._check_compatibility(aux)
+                channel_inst.append(aux.channel)
+                continue
+            # check the system module in order to get the auxiliary
+            # instance
+            aux_inst = sys.modules.get(f"{PACKAGE}.auxiliaries.{aux}")
             if aux_inst is not None:
                 self._check_compatibility(aux_inst)
                 channel_inst.append(aux_inst.channel)
             # check if the given aux_name is in the available aux
             # alias list
-            elif aux_name in ConfigRegistry.get_auxes_alias():
+            elif aux in ConfigRegistry.get_auxes_alias():
                 log.warning(
-                    f"Auxiliary : {aux_name} is not using import magic mechanism (pre-loaded)"
+                    f"Auxiliary : {aux} is not using import magic mechanism (pre-loaded)"
                 )
                 # load it using ConfigRegistry _aux_cache
-                aux_inst = ConfigRegistry._linker._aux_cache.get_instance(aux_name)
+                aux_inst = ConfigRegistry._linker._aux_cache.get_instance(aux)
                 self._check_compatibility(aux_inst)
                 channel_inst.append(aux_inst.channel)
             # the given auxiliary alias doesn't exist or refer to a
             # invalid one
             else:
-                log.error(f"Auxiliary : {aux_name} doesn't exist")
+                log.error(f"Auxiliary : {aux} doesn't exist")
 
         return tuple(channel_inst)
 

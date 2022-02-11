@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -32,7 +32,7 @@ PYTHON_DIRS = [str(d) for d in [SOURCE_DIR, TEST_DIR]]
 
 COPYRIGHT = """\
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -157,7 +157,7 @@ def update_copyright(c):
     cp_com_pat = re.compile(pat, re.MULTILINE + re.DOTALL)
 
     for pyf in files:
-        with open(pyf, "r+") as f:
+        with open(pyf, "r+", encoding="utf8") as f:
             text = f.read()
             text = cp_doc_pat.sub("", text, count=1)
             text = cp_com_pat.sub("", text, count=1)

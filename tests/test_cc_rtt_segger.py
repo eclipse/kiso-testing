@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -301,9 +301,22 @@ def test_receive_log(
     cc_rtt_inst.rtt_log_buffer_idx = "log_buffer_idx"
     cc_rtt_inst.rtt_log_buffer_size = "log_buffer_size"
     cc_rtt_inst._is_running = True
+    cc_rtt_inst.rtt_configured = True
 
     cc_rtt_inst.receive_log()
 
     mocker_sleep.assert_called_once_with(expected_sleep)
     if log_return:
         mock_rtt_log.debug.assert_called_once_with("rtt_log")
+
+
+def test_reset_jlink(mocker):
+
+    cc_rtt_inst = CCRttSegger()
+    mock_jlink = mocker.Mock()
+    cc_rtt_inst.jlink = mock_jlink
+
+    cc_rtt_inst.reset_target()
+
+    cc_rtt_inst.jlink.reset.assert_called_once()
+    cc_rtt_inst.jlink.enable_reset_pulls_reset.assert_called_once()

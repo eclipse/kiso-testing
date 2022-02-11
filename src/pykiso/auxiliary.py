@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -18,15 +18,15 @@ Auxiliary common Interface Definition
 .. currentmodule:: pykiso
 
 """
+from __future__ import annotations
+
 import abc
 import logging
 import queue
-import threading
 import time
-from typing import Any, List, Optional
+from typing import Any
 
-from pykiso.test_setup.dynamic_loader import PACKAGE
-
+from .test_setup.config_registry import ConfigRegistry
 from .types import MsgType
 
 log = logging.getLogger(__name__)
@@ -45,6 +45,7 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         self.queue_out = None
         self.is_instance = False
         self.stop_event = None
+        self._aux_copy = None
 
     def __repr__(self) -> str:
         name = self.name
@@ -65,6 +66,78 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
     def unlock_it(self) -> None:
         """Unlock exclusivity"""
         self.lock.release()
+
+    def create_copy(self, *args, **config: dict) -> AuxiliaryCommon:
+        """Create a copy of the actual auxiliary instance with the
+        new desired configuration.
+
+        .. note:: only named arguments have to be used
+
+        .. warning:: the call of create_copy will automatically suspend
+            the current auxiliary until the it copy is destroyed
+
+        :param config: new desired auxiliary configuration
+
+        :return: a brand new auxiliary instance
+
+        :raises Exception: if positional parameters is given or unknown
+            named parameters are given
+        """
+        # only named parameters are allowed
+        if args:
+            raise Exception("Only use named parameters when invoking create_copy")
+        # if a copy already exist return the actual one
+        if self._aux_copy is not None:
+            log.warning(
+                f"A copy of {self} already exists, destroy it before creating a new one"
+            )
+            return self._aux_copy
+        # get modified parameters based on the yaml one
+        base_conf = modified_conf = ConfigRegistry.get_aux_config(self.name)
+        modified_params = list(set(config) & set(base_conf))
+        added_params = list(set(config) - set(base_conf))
+        if self.is_alive():
+            self.suspend()
+            # add this timeout if cc_proxy connectors are used (avoid
+            # possible ConnectionRefusedError)
+            time.sleep(1.100)
+        # apply new configuration parameters values based on yaml config
+        for name, val in base_conf.items():
+            if name in modified_params:
+                modified_conf[name] = config[name]
+        # add new parameters values (not explicitly mention in yaml)
+        for name in added_params:
+            modified_conf[name] = config[name]
+        try:
+            # create a brand new auxiliary instance
+            self._aux_copy = self.__class__(**modified_conf)
+        except TypeError:
+            raise Exception(
+                f"Unknown parameter(s) given to {self.name} see {added_params}"
+            )
+        self._aux_copy.name = self.name
+        auto_start = getattr(self._aux_copy, "auto_start", None)
+        if auto_start:
+            self._aux_copy.start()
+            self._aux_copy.create_instance()
+        return self._aux_copy
+
+    def destroy_copy(self) -> None:
+        """Stop the current auxiliary copy and resume the original.
+
+        .. warning:: stop the copy auxiliary will automatically start
+            the base/original one
+        """
+        if self._aux_copy is not None:
+            # delete and stop the thread properly
+            self._aux_copy.delete_instance()
+            self._aux_copy.stop()
+            self._aux_copy.join()
+            self._aux_copy = None
+        if not self.is_alive():
+            self.start()
+        if not self.is_instance:
+            self.resume()
 
     def run_command(
         self,
@@ -147,6 +220,13 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
 
     def stop(self) -> None:
         """Force the thread to stop itself."""
+        if self._aux_copy is not None:
+            # if an auxiliary copy remains just stop it before the
+            # original one
+            self._aux_copy.delete_instance()
+            self._aux_copy.stop()
+            self._aux_copy.join()
+            self._aux_copy = None
         self.stop_event.set()
 
     def resume(self) -> None:

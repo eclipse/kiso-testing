@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -113,17 +113,14 @@ class JLinkFlasher(Flasher):
         self.jlink.close()
 
     def flash(self) -> None:
-        """¨Perform firmware delivery."""
-        log.debug("flashing device")
-        try:
-            self.jlink.flash_file(
-                str(self.binary), addr=self.start_addr, power_on=self.power_on
-            )
-            self.jlink.reset()
+        """¨Perform firmware delivery.
 
-        except pylink.JLinkException as e:
-            log.exception(
-                f"flashing of device has failed with error: {e}", exc_info=True
-            )
-        else:
-            log.debug("flashing device successful")
+        :raises pylink.JLinkException: if any hardware related error occurred
+            during flashing.
+        """
+        log.debug("flashing device")
+        self.jlink.flash_file(
+            str(self.binary), addr=self.start_addr, power_on=self.power_on
+        )
+        self.jlink.reset()
+        log.debug("flashing device successful")

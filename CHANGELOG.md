@@ -56,6 +56,22 @@ Commit helper: `cz c`
 
 <!-- auto-changelog-above -->
 
+### Version 0.15.0
+
+Features:
+- add capability to not automatically start an auxiliary and let the user do it (auto_start parameter for threaded auxiliaries only)
+- add socket can connector with trc file logger
+- add bitrate switch to every can bus connector
+- add copycat capability (beta feature) for "threaded" auxiliaries
+- Add multiprocessing and proxy capability to the recorder auxiliary
+
+Bugfix:
+- correct random fail issue from proxy auxiliary unit test
+- remove error handling during flashing in flash_jlink (handled by auxiliary)
+
+Changes:
+- refactor test_case, test_suite, test_message_handler module
+
 ### Version 0.14.0
 
 Features:

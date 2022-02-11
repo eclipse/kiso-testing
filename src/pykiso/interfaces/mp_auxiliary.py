@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -70,8 +70,8 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         # store the logging information
         self._activate_log = activate_log
         self._log_level = pykiso.cli.get_logging_options().log_level
+        self._aux_copy = None
         super().__init__()
-        self.start()
 
     def create_instance(self) -> bool:
         """Create an auxiliary instance and ensure the communication to it.

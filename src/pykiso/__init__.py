@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -19,7 +19,7 @@ pykiso - extensible framework for (embedded) integration testing.
 
 """
 
-__version__ = "0.14.0"
+__version__ = "0.15.0"
 
 
 from . import auxiliary, cli, config_parser, connector, message, types

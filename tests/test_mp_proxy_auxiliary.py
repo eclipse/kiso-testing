@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -20,7 +20,6 @@ from pykiso.lib.auxiliaries.mp_proxy_auxiliary import (
 
 
 def test_constructor(mocker, cchannel_inst):
-    mock_start = mocker.patch.object(MpProxyAuxiliary, "start", return_value=None)
 
     proxy_inst = MpProxyAuxiliary(
         name="mp_aux",
@@ -38,7 +37,6 @@ def test_constructor(mocker, cchannel_inst):
     assert proxy_inst.logger is None
     assert isinstance(proxy_inst.proxy_channels, tuple)
     assert len(proxy_inst.proxy_channels) == 0
-    mock_start.assert_called_once()
 
 
 def test_run(mocker, cchannel_inst):

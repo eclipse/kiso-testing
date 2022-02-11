@@ -1,0 +1,20 @@
+auxiliaries:
+  record_aux:
+    connectors:
+      com: example_channel
+    config:
+      com: CChannel
+      is_active: True
+      timeout: 0
+      log_folder_path: "examples/test_record"
+    type: pykiso.lib.auxiliaries.record_auxiliary:RecordAuxiliary
+
+connectors:
+  example_channel:
+    config: null
+    type: pykiso.lib.connectors.cc_raw_loopback:CCLoopback
+
+test_suite_list:
+- suite_dir: test_record
+  test_filter_pattern: test_recorder_example.py
+  test_suite_id: 1
