@@ -61,6 +61,53 @@ Start using the hooks with
 ```bash
 pre-commit install
 ```
+
+---
+**NOTE**
+
+If you want to create auto changelogs you have to install Nodejs v14.17+. -> https://nodejs.org/en/download/
+
+For initialization you have to call following command after cloning this repo only once.
+
+```bash
+npm install # on root folder level
+```
+
+pre-commit will then take care of auto generating changelogs.
+To run it manually call:
+
+```bash
+gen_changelog.bat # on windwos
+gen_changelog.sh  # on unix or if you have shell.exe in your windows environment
+```
+
+---
+
+## Commit message convention
+
+Commits are sorted into multiple categories based on keywords that can occur at any position as part of the commit message.
+[Category] Keywords
+* [BREAKING CHANGES] BREAKING CHANGE
+* [Features] feat:
+* [Fixes] fix:
+* [Docs] docs:
+* [Styles] style:
+* [Refactors] Refactors:
+* [Performances] perf:
+* [Tests] test:
+* [Build] build:
+* [Ci] ci:
+Each commit is considered only once according to the order of the categories listed above. Merge commits are ignored.
+
+The tool commitizen can help you to create commits which follows these standards.
+```bash
+# if not yet installed:
+pip install -U commitizen==2.20.4
+# helps you to create a commit:
+cz commit
+# or use equivalent short variant:
+cz c
+```
 ## Usage ##
 
 Once installed the application is bound to `pykiso`, it can be called with the following arguments:

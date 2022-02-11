@@ -30,3 +30,14 @@ repos:
           - "--select=B,C,E,F,W,T4,B9"
           - "--ignore=E203,E266,E501,W503,F401,E402"
         files: ^src/pykiso
+-   repo: https://github.com/commitizen-tools/commitizen
+    rev: v2.20.4
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+-   repo: local
+    hooks:
+      - id: auto-changelog
+        name : auto-changelog
+        language : script
+        entry: ./gen_changelog.bat
