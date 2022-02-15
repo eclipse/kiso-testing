@@ -49,11 +49,11 @@ The **auxiliary** provides to the **test-coordinator** an interface to
 interact with the physical or digital auxiliary target. It is composed
 by 2 blocks:
 
--  physical or digital instance creation / deletion (e.g. flash the
-   *device under test* with the testing software, e.g. Start a docker
+-  physical or digital instance creation / deletion (e.g. flash the
+   *device under test* with the testing software, e.g. Start a docker
    container)
 -  connectors to facilitate interaction and communication with the
-   device (e.g. flashing via *JTAG*, messaging with *UART*)
+   device (e.g. flashing via *JTAG*, messaging with *UART*)
 
 In case of the specific *device under test* auxiliary, we have:
 
@@ -64,6 +64,10 @@ For other auxiliaries like the one interacting with cloud services,
 maybe we just have:
 
 -  A communication channel (**channel**) like *REST*
+
+Create an Auxiliary
+^^^^^^^^^^^^^^^^^^^^^
+Detailed information can be found here :ref:`how_to_create_aux`.
 
 Connector
 ~~~~~~~~~
@@ -81,6 +85,10 @@ Flashing
 ^^^^^^^^
 
 The Flasher Connectors usually provide only one method, :py:meth:`Flasher.flash`, which will transfer the configured binary file to the target.
+
+Create a Connector
+^^^^^^^^^^^^^^^^^^
+Detailed information can be found here :ref:`how_to_create_connector`.
 
 Dynamic Import Linking
 ~~~~~~~~~~~~~~~~~~~~~~

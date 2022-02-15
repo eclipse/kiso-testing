@@ -1,3 +1,5 @@
+.. _how_to_create_aux:
+
 How to create an auxiliary
 ==========================
 

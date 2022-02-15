@@ -1,3 +1,5 @@
+.. _how_to_create_connector:
+
 How to create a connector
 =========================
 
