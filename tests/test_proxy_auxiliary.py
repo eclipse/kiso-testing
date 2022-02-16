@@ -8,18 +8,14 @@
 ##########################################################################
 
 import logging
-import multiprocessing
+import queue
 import sys
 import threading
-import time
-import unittest.mock as mock
 
 import pytest
 
-import pykiso
 from pykiso.connector import CChannel
 from pykiso.lib.auxiliaries.proxy_auxiliary import (
-    AuxiliaryInterface,
     ConfigRegistry,
     ProxyAuxiliary,
     log,
@@ -34,8 +30,8 @@ def mock_auxiliaries(mocker):
     class MockProxyCChannel(CChannel):
         def __init__(self, name=None, *args, **kwargs):
             self.name = name
-            self.queue_in = multiprocessing.Queue()
-            self.queue_out = multiprocessing.Queue()
+            self.queue_in = queue.Queue()
+            self.queue_out = queue.Queue()
             super(MockProxyCChannel, self).__init__(*args, **kwargs)
 
         _cc_open = mocker.stub(name="_cc_open")
