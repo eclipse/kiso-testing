@@ -66,7 +66,7 @@ maybe we just have:
 -  A communication channel (**channel**) like *REST*
 
 Create an Auxiliary
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 Detailed information can be found here :ref:`how_to_create_aux`.
 
 Connector

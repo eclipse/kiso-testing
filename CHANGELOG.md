@@ -27,41 +27,14 @@ Commit helper: `cz c`
 
 #### Docs
 
-- docs: add links for how to create an auxiliary and connector [`ab88f22`](https://github.com/eclipse/kiso-testing/commit/ab88f2274c1e1818032c831455bb7f86606b2cbc)
-#### Commits
-
-- docs: add links for how to create an auxiliary and connector [`ab88f22`](https://github.com/eclipse/kiso-testing/commit/ab88f2274c1e1818032c831455bb7f86606b2cbc)
+- docs: add links for how to create an auxiliary and connector [`6da8315`](https://github.com/eclipse/kiso-testing/commit/6da83154c6c8d0653d87ae69cceb85d4694d2449)
+- docs(gen_changelog): change starting version for changelog [`c941738`](https://github.com/eclipse/kiso-testing/commit/c941738fb821324ed64745772297d3b17550ae72)
+- docs(changelog-template.hbs): Fix regex to include and exclude commits [`199f889`](https://github.com/eclipse/kiso-testing/commit/199f889016b1e6c888c17674bb0ee9f2ea1d19bc)
 
 ---
 ## [0.15.0](https://github.com/eclipse/kiso-testing/compare/0.0.0-alpha...0.15.0)
 > 2022-02-11
 
-
----
-## 0.0.0-alpha
-> 2022-01-20
-
-#### Commits
-
-- Initial code drop of pykiso [`924e3eb`](https://github.com/eclipse/kiso-testing/commit/924e3eb1e2468f09112bc03c3197785e09f6eb64)
-- Add Jenkinsfile for python-tests [`a2007f8`](https://github.com/eclipse/kiso-testing/commit/a2007f81c4b738f18061ceeb6b6a99d2d6f82f24)
-- Second contribution - one year later [`150eaf9`](https://github.com/eclipse/kiso-testing/commit/150eaf94be18bf563edc4628a56be774500ff028)
-- - clean up the whole kiso-testing (except jenkins file) [`37050f7`](https://github.com/eclipse/kiso-testing/commit/37050f7117deb7926eb95e10098b8474107b90ee)
-- - remove pytest related to python-can [`c74492a`](https://github.com/eclipse/kiso-testing/commit/c74492ad83f22d09d585e14b72f935bff12cc51b)
-- - just erase useless config in pytest test_config_parser [`bbb7b41`](https://github.com/eclipse/kiso-testing/commit/bbb7b41c72591ed3a92c409d298ca3f30e996cd1)
-- add read the doc yaml file [`cc32047`](https://github.com/eclipse/kiso-testing/commit/cc32047946501647693b3532638e6d14561cbc5a)
-- - python version update  from readthedoc config file [`f614576`](https://github.com/eclipse/kiso-testing/commit/f6145762ad21b10f067cd2e728d1fa1964f58e83)
-- add sphinx doc reauirement txt [`9de5361`](https://github.com/eclipse/kiso-testing/commit/9de53612a71f5bb12282ad46b8f95384c031a5f9)
-- add logo to README.md [`63b3a57`](https://github.com/eclipse/kiso-testing/commit/63b3a57680cdd2fdacd1d1d54de4c33855d94a87)
-- Add auxiliary and connector implementation tutorials [`a7eb94a`](https://github.com/eclipse/kiso-testing/commit/a7eb94acd1bc058e32d9793be86305fdf424374d)
-- Update CCPcanCan tests [`6c8b1c9`](https://github.com/eclipse/kiso-testing/commit/6c8b1c95e97ffcaccefaa766921d57f59c2fbb60)
-- prepare twine upload with jenkins [`a6fc89a`](https://github.com/eclipse/kiso-testing/commit/a6fc89a6b358fd742a1daa787aa10b9f2db4876d)
-- Finish implementation examples [`fe9fc77`](https://github.com/eclipse/kiso-testing/commit/fe9fc772c2b214cbf780f0c7ae07172329515d39)
-- Add library to API ref and finish cookbooks [`4a0c643`](https://github.com/eclipse/kiso-testing/commit/4a0c64306d52eb1bc8dd2b5bd2e33410876c315c)
-- Add preface for auxiliary implementation tutorial [`5ff4350`](https://github.com/eclipse/kiso-testing/commit/5ff43502d643d16255867f27e0f964c095f426db)
-- Split auxiliary execution paragraph [`47d4a93`](https://github.com/eclipse/kiso-testing/commit/47d4a93815af7369f229c70f4de41e41648af1d5)
-- Rework auxiliary tutorial [`2dbb7fc`](https://github.com/eclipse/kiso-testing/commit/2dbb7fc69a280982ac0e1816fb79c5427346c79e)
-- add upload stage to pypi [`cefdc33`](https://github.com/eclipse/kiso-testing/commit/cefdc3352ef864a05d6be716226fae60e6b901dd)
 
 ---
 
