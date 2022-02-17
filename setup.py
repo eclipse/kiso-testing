@@ -43,7 +43,7 @@ install_requires = [
 
 setup(
     name="pykiso",
-    version="0.15.0",
+    version="0.15.1",
     license="Eclipse Public License - v 2.0",
     description="Embedded integration testing framework.",
     long_description=read("README.md"),
