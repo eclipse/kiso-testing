@@ -23,7 +23,7 @@ Generator command: `npm run change`
 Commit helper: `cz c`
 
 
-## [0.15.0](https://github.com/eclipse/kiso-testing/compare/0.15.0...0.15.0)
+## [0.15.1](https://github.com/eclipse/kiso-testing/compare/0.15.0...0.15.1)
 
 #### Docs
 
