@@ -25,6 +25,11 @@ Commit helper: `cz c`
 
 ## [0.15.0](https://github.com/eclipse/kiso-testing/compare/0.15.0...0.15.0)
 
+#### Docs
+
+- docs: add links for how to create an auxiliary and connector [`6da8315`](https://github.com/eclipse/kiso-testing/commit/6da83154c6c8d0653d87ae69cceb85d4694d2449)
+- docs(gen_changelog): change starting version for changelog [`c941738`](https://github.com/eclipse/kiso-testing/commit/c941738fb821324ed64745772297d3b17550ae72)
+- docs(changelog-template.hbs): Fix regex to include and exclude commits [`199f889`](https://github.com/eclipse/kiso-testing/commit/199f889016b1e6c888c17674bb0ee9f2ea1d19bc)
 
 ---
 ## [0.15.0](https://github.com/eclipse/kiso-testing/compare/0.0.0-alpha...0.15.0)
