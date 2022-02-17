@@ -114,6 +114,8 @@ pipeline
         always
         {
             junit 'reports/*.xml'
+            // Coverage report
+            archiveArtifacts artifacts: 'tests/unit/coverage_report.html', followSymlinks: false
         }
         success
         {
