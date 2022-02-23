@@ -162,7 +162,8 @@ def parse_config(fname: PathType) -> typing.Dict:
         return thing
 
     def _parse_env_var(config_element: str) -> str:
-        """Search for an environment variable and replace it with the associated value.
+        """Search for an environment variable and replace it with the associated value if it find one.
+        Otherwise use the default value if one is specified.
 
         Additionally, cast the value if it matches an integer.
 
@@ -170,12 +171,26 @@ def parse_config(fname: PathType) -> typing.Dict:
 
         :return: config sub-dict value with replaced environment variable if needed
         """
+        has_default_value = False
+        # Handle default value
+        if all(element in config_element for element in ["ENV", "="]):
+            default_value = re.search("=(.*)}", config_element).group(1)
+            config_element = config_element[: config_element.find("=")] + "}"
+            has_default_value = True
         # Check for regular expression "ENV{word}"
         match = re.compile(r"ENV{(\w+)}").findall(str(config_element))
         if match:
             # Parse detected environment variable
             match = str(match[0])
-            env = os.environ[match]
+            try:
+                env = os.environ[match]
+            except KeyError:
+                if has_default_value:
+                    env = default_value
+                else:
+                    logging.error(
+                        f"Environment variable {match} not found and no default value specified"
+                    )
             is_numeric = re.fullmatch(r"\d+", env)
             is_hex = re.fullmatch(r"0x[0-9a-fA-F]+", env)
             is_bool = env.lower() in ["true", "false"]
