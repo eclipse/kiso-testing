@@ -27,7 +27,9 @@ jobs:
 
       # Pre requisite installation
       - name: Prerequisite installation
-        run: sudo apt install -y python3.8 pipenv
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
           
       # Runs the preparation
       - name: Prepare working environement
