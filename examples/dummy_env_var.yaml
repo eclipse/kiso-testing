@@ -23,6 +23,6 @@ test_suite_list:
 - suite_dir: ENV{TEST_SUITE_1}
   test_filter_pattern: '*.py'
   test_suite_id: 1
-- suite_dir: ENV{TEST_SUITE_2=/usr/src/python-lbach/kiso-testing/kiso-testing/examples/test_suite_2}
+- suite_dir: ENV{TEST_SUITE_2=./test_suite_2}
   test_filter_pattern: '*.py'
   test_suite_id: 2

@@ -155,8 +155,8 @@ In the following example, an environment variable called `TEST_SUITE_1` contains
     :language: yaml
     :lines: 22-25
 
-It is also possible to set default value in case the environment variable in not found, the following format should be respected: `ENV{my-env-var=my_default_value}`.
-In the following example, an environment variable called `TEST_SUITE_2` contains the path to the test suite 2 directory and if it is not set the default value ../examples/test_suite_2 will be taken.
+It is also possible to set a default value in case the environment variable is not found. The following format should be used: `ENV{my-env-var=my_default_value}`.
+In the following example, an environment variable called `TEST_SUITE_2` would contain the path to the test_suite_2 directory. If the variable is not set, the default value will be taken instead.
 
 .. literalinclude:: ../../examples/dummy_env_var.yaml
     :language: yaml
