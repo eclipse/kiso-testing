@@ -29,7 +29,6 @@ import typing
 from distutils.version import LooseVersion
 from pathlib import Path
 
-import elementpath
 import pkg_resources
 import yaml
 
