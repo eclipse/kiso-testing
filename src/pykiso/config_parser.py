@@ -182,16 +182,15 @@ def parse_config(fname: PathType) -> typing.Dict:
             # Parse detected environment variable
             match_single_env = str(match[0][0])
             match_env_with_val = str(match[0][2])
-            try:
+
+            if match_single_env in os.environ:
                 env = os.environ[match_single_env]
-            except KeyError:
-                # Environment variable not found, use the default value if one have been set
-                if match_env_with_val != "":
-                    env = match_env_with_val
-                else:
-                    raise ValueError(
+            elif match_env_with_val:
+                env = match_env_with_val
+            else:
+                raise ValueError(
                         f"Environment variable {match_single_env} not found and no default value specified"
-                    )
+                )   
             is_numeric = re.fullmatch(r"\d+", env)
             is_hex = re.fullmatch(r"0x[0-9a-fA-F]+", env)
             is_bool = env.lower() in ["true", "false"]
