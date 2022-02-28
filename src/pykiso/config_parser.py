@@ -162,20 +162,34 @@ def parse_config(fname: PathType) -> typing.Dict:
         return thing
 
     def _parse_env_var(config_element: str) -> str:
-        """Search for an environment variable and replace it with the associated value.
+        """Search for an environment variable pattern in the yaml file and
+        (1) try to replace it with the value of an environment variable of the same name
+        (2) Assign the default value if the environment variable was not found
+        (3) raise an error if 1. and 2. failed
 
         Additionally, cast the value if it matches an integer.
 
         :param config_element: config sub-dict value
 
         :return: config sub-dict value with replaced environment variable if needed
+
+        :raise: ValueError if the environment variable not found and no default value specified
         """
-        # Check for regular expression "ENV{word}"
-        match = re.compile(r"ENV{(\w+)}").findall(str(config_element))
+        # Check for regular expression "ENV{word=.}"
+        match = re.compile(r"ENV{(\w+)(=(.+))?}").findall(str(config_element))
         if match:
             # Parse detected environment variable
-            match = str(match[0])
-            env = os.environ[match]
+            match_single_env = str(match[0][0])
+            match_env_with_val = str(match[0][2])
+
+            if match_single_env in os.environ:
+                env = os.environ[match_single_env]
+            elif match_env_with_val:
+                env = match_env_with_val
+            else:
+                raise ValueError(
+                    f"Environment variable {match_single_env} not found and no default value specified"
+                )
             is_numeric = re.fullmatch(r"\d+", env)
             is_hex = re.fullmatch(r"0x[0-9a-fA-F]+", env)
             is_bool = env.lower() in ["true", "false"]
@@ -188,7 +202,7 @@ def parse_config(fname: PathType) -> typing.Dict:
             else:
                 config_element = env
             logging.debug(
-                f"Replaced environment variable {match} with {config_element}"
+                f"Replaced environment variable {match_single_env} with {config_element}"
             )
         return config_element
 

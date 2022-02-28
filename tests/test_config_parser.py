@@ -229,6 +229,9 @@ connectors:
       some_integer: 'ENV{int_env_var}'
       some_integer_as_hex:  "ENV{int_env_var_as_hex}"
       some_path: 'ENV{path_env_var}'
+      some_path_default_value: 'ENV{path_env_var_set=/examples/path}'
+      some_path_env_variable_not_set: 'ENV{path_env_var_not_set=/examples/path2}'
+      some_path_env_error: 'ENV{path_env_var_not_set}'
     type: pykiso.lib.connectors.cc_example::CCExample
     """
     return cfg
@@ -319,17 +322,29 @@ def test_parse_config_env_var(tmp_cfg_env_var, mocker, tmp_path):
             "int_env_var": "1234567890",
             "int_env_var_as_hex": "0x0123456789aBcDef",
             "path_env_var": f"{tmp_path}",
+            "path_env_var_set": f"{tmp_path}",
         },
     )
-    cfg = parse_config(tmp_cfg_env_var)
-    assert cfg["connectors"]["chan1"]["config"]["some_bool"] == True
-    assert cfg["connectors"]["chan1"]["config"]["some_string"] == "this is a string"
-    assert cfg["connectors"]["chan1"]["config"]["some_integer"] == 1234567890
-    assert (
-        cfg["connectors"]["chan1"]["config"]["some_integer_as_hex"]
-        == 0x0123456789ABCDEF
-    )
-    assert cfg["connectors"]["chan1"]["config"]["some_path"] == str(tmp_path)
+
+    # some_path_env_error should raise a ValueError
+    with pytest.raises(ValueError):
+        cfg = parse_config(tmp_cfg_env_var)
+
+        assert cfg["connectors"]["chan1"]["config"]["some_bool"] == True
+        assert cfg["connectors"]["chan1"]["config"]["some_string"] == "this is a string"
+        assert cfg["connectors"]["chan1"]["config"]["some_integer"] == 1234567890
+        assert (
+            cfg["connectors"]["chan1"]["config"]["some_integer_as_hex"]
+            == 0x0123456789ABCDEF
+        )
+        assert cfg["connectors"]["chan1"]["config"]["some_path"] == str(tmp_path)
+        assert cfg["connectors"]["chan1"]["config"]["some_path_default_value"] == str(
+            tmp_path
+        )
+        assert (
+            cfg["connectors"]["chan1"]["config"]["some_path_env_variable_not_set"]
+            == "/examples/path2"
+        )
 
 
 def test_parse_config_folder_name_eq_entity_name(tmp_cfg_mod, mocker, caplog):
