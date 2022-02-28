@@ -28,8 +28,8 @@ import sys
 import typing
 from distutils.version import LooseVersion
 from pathlib import Path
-import elementpath
 
+import elementpath
 import pkg_resources
 import yaml
 
@@ -163,9 +163,9 @@ def parse_config(fname: PathType) -> typing.Dict:
         return thing
 
     def _parse_env_var(config_element: str) -> str:
-        """Search for an environment variable pattern in the yaml file and 
-        (1) try to replace it with the value of an environment variable of the same name 
-        (2) Assign the default value if the environment variable was not found 
+        """Search for an environment variable pattern in the yaml file and
+        (1) try to replace it with the value of an environment variable of the same name
+        (2) Assign the default value if the environment variable was not found
         (3) raise an error if 1. and 2. failed
 
         Additionally, cast the value if it matches an integer.
@@ -174,22 +174,24 @@ def parse_config(fname: PathType) -> typing.Dict:
 
         :return: config sub-dict value with replaced environment variable if needed
 
-        :raise: ValueError if the environment variable not found and no default value specified 
+        :raise: ValueError if the environment variable not found and no default value specified
         """
         # Check for regular expression "ENV{word=.}"
         match = re.compile(r"ENV{(\w+)(=(.+))?}").findall(str(config_element))
         if match:
             # Parse detected environment variable
             match_single_env = str(match[0][0])
-            match_env_with_val  = str(match[0][2])
+            match_env_with_val = str(match[0][2])
             try:
                 env = os.environ[match_single_env]
             except KeyError:
                 # Environment variable not found, use the default value if one have been set
-                if match_env_with_val != '':
+                if match_env_with_val != "":
                     env = match_env_with_val
                 else:
-                    raise ValueError(f"Environment variable {match_single_env} not found and no default value specified")
+                    raise ValueError(
+                        f"Environment variable {match_single_env} not found and no default value specified"
+                    )
             is_numeric = re.fullmatch(r"\d+", env)
             is_hex = re.fullmatch(r"0x[0-9a-fA-F]+", env)
             is_bool = env.lower() in ["true", "false"]
