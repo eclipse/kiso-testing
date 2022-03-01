@@ -34,7 +34,7 @@ install_requires = [
     "click",
     "pyyaml",
     "pylink-square",
-    "python-can",
+    "python-can[pcan]",
     "unittest-xml-reporting",
     "robotframework==3.2.2",
     "pyvisa",
