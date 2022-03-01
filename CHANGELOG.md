@@ -13,7 +13,7 @@ invoke changelog
 
 #### Fixes
 
-* wait for logger thread to quit gracefully before closing segger channel
+* wait for logger thread to quit gracefully before closing segger channel ([#28](https://github.com/eclipse/kiso-testing/issues/28))
 #### Docs
 
 * Change auto changelog tool ([#30](https://github.com/eclipse/kiso-testing/issues/30))
@@ -24,7 +24,7 @@ invoke changelog
 
 * github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
 
-Full set of changes: [`0.15.1...674a222`](https://github.com/eclipse/kiso-testing/compare/0.15.1...674a222)
+Full set of changes: [`0.15.1...542647d`](https://github.com/eclipse/kiso-testing/compare/0.15.1...542647d)
 
 ## Version 0.15.1 (2022-02-17)
 
