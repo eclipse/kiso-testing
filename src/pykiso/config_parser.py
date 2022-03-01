@@ -20,6 +20,7 @@ Configuration File Parser
 
 """
 
+import ast
 import io
 import logging
 import os
@@ -28,6 +29,7 @@ import sys
 import typing
 from distutils.version import LooseVersion
 from pathlib import Path
+from typing import Callable, TextIO, Union
 
 import pkg_resources
 import yaml
@@ -270,5 +272,137 @@ def parse_config(fname: PathType) -> typing.Dict:
     requirements = cfg.get("requirements")
     if requirements:
         check_requirements(requirements)
+
+    return cfg
+
+
+def _parse_config(fname: PathType) -> typing.Dict:
+    """Parse YAML config file.
+
+    :param fname: path to the config file
+
+    :return: config dict with resolved paths where needed
+    """
+
+    class YamlLoader(yaml.SafeLoader):
+        """Extension of default yaml.SafeLoader that integrates
+        custom !include tag management and performs config parsing
+        at load time.
+        """
+
+        type_pattern = re.compile(r".*:.*")
+        env_var_pattern = re.compile(r"ENV{(\w+)}")
+        rel_path_pattern = re.compile(r'[^\n"?:*<>|]')
+
+        def __init__(self, stream: TextIO):
+            """Initialize attributes.
+
+            :param stream: current stream in use
+            """
+            self._root = Path(fname).parent
+            super().__init__(stream)
+
+        @staticmethod
+        def add_implicit_constructor(
+            tag: str, pattern: re.Pattern, constructor: Callable
+        ) -> None:
+            """Combination of add_implicit_resolver and add_constructor.
+
+            :param tag: explicit tag that can be specified in the YAML file
+            :param pattern: pattern to match to implicitly set the tag
+            :param constructor: function to call when the tag is set
+            """
+            YamlLoader.add_implicit_resolver(tag, pattern, first=None)
+            YamlLoader.add_constructor(tag, constructor)
+
+        def include(self, node: yaml.nodes.ScalarNode) -> dict:
+            """Return the content of an yaml file identify by !include
+            tag.
+
+            :param node: ScalarNode currently in use
+
+            :return: yaml file content
+            """
+            filename = self._root / Path(node.value).resolve()
+            with open(filename, "r") as f:
+                return yaml.load(f, Loader=YamlLoader)
+
+        def resolve_path(self, node: yaml.nodes.ScalarNode) -> str:
+            """Resolve a path relative to the config file's location.
+
+            :param node: ScalarNode currently in use
+
+            :return: the resolved config path if needed
+            """
+            value = node.value
+            config_path_unresolved = Path(value)
+            if not config_path_unresolved.is_absolute():
+                config_path = (self._root / config_path_unresolved).resolve()
+                if config_path.exists():
+                    value = config_path
+                    logging.debug(
+                        f"Resolved relative path {config_path_unresolved} to {value}"
+                    )
+            return str(value)
+
+        def fix_types_loc(self, node: yaml.nodes.ScalarNode) -> str:
+            """Parse the type field in the config file and resolves it if necessary.
+
+            :param node: ScalarNode currently in use
+
+            :return: config sub-dict containing the resolved type if needed
+            """
+            thing = node.value
+            loc, _class = thing.rsplit(":", 1)
+            if not loc.endswith(".py"):
+                return thing
+            path = Path(loc)
+            if not path.is_absolute():
+                path = (self._root / path).resolve()
+                thing = str(path) + ":" + _class
+                logging.debug(f"Resolved path : {thing}")
+            return thing
+
+        def parse_env_var(self, node: yaml.nodes.ScalarNode) -> Union[str, int]:
+            """Search for an environment variable and replace it with the associated value.
+
+            Additionally, cast the value if it matches a python type supported by ast.literal_eval().
+
+            :param node: ScalarNode currently in use
+
+            :return: config sub-dict value with replaced environment variable if needed
+            """
+            match = re.search(self.env_var_pattern, node.value)
+            # no match means the node is just a string
+            if match is None:
+                return str(node.value)
+            env_name = match.group(1)
+            env = os.environ[env_name]
+            # cast the env var's value
+            try:
+                config_element = ast.literal_eval(env)
+            except Exception:
+                config_element = env
+            logging.debug(
+                f"Replaced environment variable {env_name} with {config_element}"
+            )
+            return config_element
+
+    YamlLoader.add_constructor("!include", YamlLoader.include)
+    # parse quoted environment variables
+    YamlLoader.add_constructor(YamlLoader.DEFAULT_SCALAR_TAG, YamlLoader.parse_env_var)
+    # parse unquoted environment variables
+    YamlLoader.add_implicit_constructor(
+        "!env", YamlLoader.env_var_pattern, YamlLoader.parse_env_var
+    )
+    YamlLoader.add_implicit_constructor(
+        "!type", YamlLoader.type_pattern, YamlLoader.fix_types_loc
+    )
+    YamlLoader.add_implicit_constructor(
+        "!resolve", YamlLoader.rel_path_pattern, YamlLoader.resolve_path
+    )
+
+    with open(fname) as f:
+        cfg = yaml.load(f.read(), Loader=YamlLoader)
 
     return cfg
