@@ -156,21 +156,23 @@ class YamlLoader(yaml.SafeLoader):
         """
         if YamlLoader.is_key(node):
             return str(node.value)
-        if node.tag == self.DEFAULT_SCALAR_TAG:
-            logging.warning(
-                "YAML warning: environment variables should not be put in quotes"
-            )
+
         match = re.findall(self.env_var_pattern, node.value)
         # no match means the node is just a string
         if not match:
             return str(node.value)
+
         # Parse detected environment variable
         env_name, _, env_default = match[0]
 
         if env_name in os.environ:
             env = os.environ[env_name]
-        elif env_default is not None:
+        elif env_default:
             env = env_default
+            # handle default env var value when being a relative path
+            if env.startswith("."):
+                node.value = env
+                env = self.resolve_path(node)
         else:
             raise ValueError(
                 f"Environment variable {env_name} not found and no default value specified"
@@ -187,9 +189,6 @@ class YamlLoader(yaml.SafeLoader):
         else:
             config_element = env
         logging.debug(f"Replaced environment variable {env_name} with {config_element}")
-        # handle default env var value when being a relative path
-        node.value = config_element
-        config_element = self.resolve_path(node)
         return config_element
 
 
@@ -198,7 +197,7 @@ def check_requirements(requirements: List[dict]):
 
     :param requirements: requirements to be checked
     """
-    condition_to_operator = {
+    conditionals = {
         "<": operator.lt,
         "<=": operator.le,
         ">": operator.gt,
@@ -219,17 +218,29 @@ def check_requirements(requirements: List[dict]):
                 continue
 
             # check if condition provided
-            pattern = r"([<>=!]{1,2})"
-            match = re.split(pattern, expected_version)
-            if len(match) > 1:
-                # pattern found eg: match = ['', '>=', '0.1.2']
-                condition = match[1]
-                exp_version = match[2].strip()
+            req_pattern = re.compile(r"([<>=!]{1,2})([^,]+)")
+            match = req_pattern.findall(expected_version)
 
+            # no conditional version requirement, expected is the minimum
+            if (
+                not match
+                and current_version != expected_version
+                and LooseVersion(current_version) < LooseVersion(expected_version)
+            ):
+                # Version not satisfied: current_version < expected_version
+                requirement_satisfied = False
+                logging.error(
+                    f"Requirement issue: found {package} with version '{current_version}' "
+                    f"instead of '{expected_version}' (minimum)"
+                )
+
+            for condition, required_version in match:
+                # pattern found eg: match = ['>=', '0.1.2', '<', '1.0.0']
+                required_version = required_version.strip()
                 try:
-                    compare_operation = condition_to_operator[condition]
+                    compare_operation = conditionals[condition]
                     check = compare_operation(
-                        LooseVersion(current_version), LooseVersion(exp_version)
+                        LooseVersion(current_version), LooseVersion(required_version)
                     )
                     if check is False:
                         # Version not satisfied
@@ -240,21 +251,11 @@ def check_requirements(requirements: List[dict]):
                 except KeyError as e:
                     # comparator invalid
                     logging.error(
-                        f"Requirement issue: comparator '{e}' not among {list(condition_to_operator.keys())}"
+                        f"Requirement issue: comparator {e} not among {list(conditionals.keys())}"
                     )
                     check = False
 
                 requirement_satisfied &= check
-
-            elif current_version != expected_version and LooseVersion(
-                current_version
-            ) < LooseVersion(expected_version):
-                # Version not satisfied: current_version < expected_version
-                requirement_satisfied = False
-                logging.error(
-                    f"Requirement issue: found {package} with version '{current_version}' "
-                    f"instead of '{expected_version}' (minimum)"
-                )
 
         except pkg_resources.DistributionNotFound:
             # package not installed or misspelled
@@ -267,11 +268,15 @@ def check_requirements(requirements: List[dict]):
 
 
 def parse_config(file_name: PathType) -> Dict:
-    """Parse YAML config file.
+    """Parse the YAML configuration file and verify the dependencie's
+    version requirement if encountered.
 
     .. note::
         The parsing includes:
-
+        * Replacing values enclosed in `ENV{}` by their environment variable
+          or their default value, with additional casting (bool or int)
+        * Making all the relative paths absolute (relative to the YAML file)
+        * Including the sub-YAML files marked by the !include tag.
 
     :param file_name: path to the config file
 

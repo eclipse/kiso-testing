@@ -32,7 +32,6 @@ def tmp_cfg(tmp_path):
         │   aux1.yaml
         │
         │── test_suite_aux1
-        │── test_suite_aux1
         │
         └── suite_config
             │   suite_conf.yaml
@@ -95,7 +94,6 @@ def tmp_cfg_mod(tmp_cfg):
         │   aux1.yaml
         │
         │── test_suite_aux1
-        │── test_suite_aux1
         │
         └── suite_config
             │   suite_conf.yaml
@@ -147,6 +145,7 @@ connectors:
 
 
 def create_config(paths):
+    # create base config file located in tests/aux1.yaml
     cfg = (
         """
 auxiliaries:
@@ -193,6 +192,7 @@ test_suite_list: !include """
 
 
 def create_suite_config(paths):
+    # create nested config file located in tests/suite_config/suite_conf.yaml
     cfg = (
         """
 - suite_dir: """
@@ -200,9 +200,7 @@ def create_suite_config(paths):
         + """
   test_filter_pattern: '*.py'
   test_suite_id: 1
-- suite_dir: """
-        + str(Path("./test_suite_aux1"))
-        + """
+- suite_dir: ../test_suite_aux1
   test_filter_pattern: '*.py'
   test_suite_id: 2
 - suite_dir: ENV{TEST_SUITE_1}
@@ -242,7 +240,7 @@ def create_config_folder_conflict():
 auxiliaries:
   aux1:
     absPath: ./aux1
-    config: aux1
+    config: 'aux1'
     type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
 connectors:
   chan1:
@@ -258,13 +256,17 @@ def test_parse_config(tmp_cfg, tmp_path, mocker, caplog):
     mocker.patch.dict(
         os.environ,
         {
-            "TEST_SUITE_1": str(tmp_path / "tests" / "test_suite_aux1"),
-            "CC_CONFIG": str(tmp_path / "cc_config" / "cc_config.elf"),
+            "TEST_SUITE_1": str(tmp_path / "tests/test_suite_aux1"),
+            "CC_CONFIG": str(tmp_path / "cc_config/cc_config.elf"),
         },
     )
 
     with caplog.at_level(logging.DEBUG):
         cfg = parse_config(tmp_cfg)
+
+    import json
+
+    print(json.dumps(cfg, indent=2))
 
     # Test _fix_types_loc
     assert "Resolved path :" in caplog.text
@@ -330,6 +332,10 @@ def test_parse_config_env_var(tmp_cfg_env_var, mocker, tmp_path):
     with pytest.raises(ValueError):
         cfg = parse_config(tmp_cfg_env_var)
 
+        import json
+
+        print(json.dumps(cfg, indent=2))
+
         assert cfg["connectors"]["chan1"]["config"]["some_bool"] == True
         assert cfg["connectors"]["chan1"]["config"]["some_string"] == "this is a string"
         assert cfg["connectors"]["chan1"]["config"]["some_integer"] == 1234567890
@@ -347,17 +353,17 @@ def test_parse_config_env_var(tmp_cfg_env_var, mocker, tmp_path):
         )
 
 
-def test_parse_config_folder_name_eq_entity_name(tmp_cfg_mod, mocker, caplog):
+def test_parse_config_folder_name_eq_entity_name(tmp_cfg_mod):
 
     cfg = parse_config(tmp_cfg_mod)
 
     assert not cfg["auxiliaries"]["aux1"]["config"]
 
 
-def test_parse_config_folder_conflict(
-    tmp_cfg_folder_conflict, tmp_path, mocker, caplog
-):
-    # test foldername conflict when key or value in cfg matches existing folder
+def test_parse_config_folder_conflict(tmp_cfg_folder_conflict, tmp_path, caplog):
+    # test foldername conflict when key in cfg matches an existing folder
+    # separating a cfg value from an existing matching folder is impossible
+    # without enforcing ./ notation or putting the value in single quotes
     old_cwd = Path.cwd()
     os.chdir(tmp_path)
     with caplog.at_level(logging.DEBUG):
@@ -373,49 +379,111 @@ def test_parse_config_folder_conflict(
     "requirements, mock_installed_versions, exit_reason",
     [
         # test simple specification
-        ([{"pykiso": "0.9.4"}], {"pykiso": "0.9.4"}, None),
-        (
+        pytest.param(
+            [{"pykiso": "0.9.4"}],
+            {"pykiso": "0.9.4"},
+            None,
+            id="static version: minimum version installed",
+        ),
+        pytest.param(
             [{"pykiso": "0.9.4"}],
             {"pykiso": "0.9.3"},
             "'0.9.3' instead of '0.9.4' (minimum)",
+            id="static version: lower version installed",
         ),
-        ([{"pykiso": "0.9.4"}], {"pykiso": "0.9.5"}, None),
-        ([{"pykiso": "any"}], {"pykiso": "0.9.5"}, None),
+        pytest.param(
+            [{"pykiso": "0.9.4"}],
+            {"pykiso": "0.9.5"},
+            None,
+            id="static version: higher version installed",
+        ),
+        pytest.param(
+            [{"pykiso": "any"}], {"pykiso": "0.9.5"}, None, id="static version: any"
+        ),
         # test condition
-        ([{"pykiso": "==0.9.4"}], {"pykiso": "0.9.5"}, "'0.9.5' but '==0.9.4' given"),
+        pytest.param(
+            [{"pykiso": "==0.9.4"}],
+            {"pykiso": "0.9.5"},
+            "'0.9.5' but '==0.9.4' given",
+            id="single condition strict: installed version too high",
+        ),
         ([{"pykiso": "==0.9.4"}], {"pykiso": "0.9.4"}, None),
-        ([{"pykiso": "<=0.9.4"}], {"pykiso": "0.9.5"}, "'0.9.5' but '<=0.9.4' given"),
-        ([{"pykiso": "<=0.9.4"}], {"pykiso": "0.9.4"}, None),
-        ([{"pykiso": ">=0.9.6"}], {"pykiso": "0.9.5"}, "'0.9.5' but '>=0.9.6' given"),
-        ([{"pykiso": ">=0.9.5"}], {"pykiso": "0.9.5"}, None),
+        pytest.param(
+            [{"pykiso": "<=0.9.4"}],
+            {"pykiso": "0.9.5"},
+            "'0.9.5' but '<=0.9.4' given",
+            id="single condition lower-equal: installed is too high",
+        ),
+        pytest.param([{"pykiso": "<=0.9.4"}], {"pykiso": "0.9.4"}, None),
+        pytest.param(
+            [{"pykiso": ">=0.9.6"}],
+            {"pykiso": "0.9.5"},
+            "'0.9.5' but '>=0.9.6' given",
+            id="single condition higher-equal: installed is too low",
+        ),
+        pytest.param([{"pykiso": ">=0.9.5"}], {"pykiso": "0.9.5"}, None),
         ([{"pykiso": ">0.9.5"}], {"pykiso": "0.9.5"}, "'0.9.5' but '>0.9.5' given"),
-        ([{"pykiso": ">0.9.5"}], {"pykiso": "0.9.6"}, None),
-        ([{"pykiso": "<0.9.5"}], {"pykiso": "0.9.5"}, "'0.9.5' but '<0.9.5' given"),
-        ([{"pykiso": "<0.9.5"}], {"pykiso": "0.9.4"}, None),
-        (
+        pytest.param([{"pykiso": ">0.9.5"}], {"pykiso": "0.9.6"}, None),
+        pytest.param(
+            [{"pykiso": "<0.9.5"}],
+            {"pykiso": "0.9.5"},
+            "'0.9.5' but '<0.9.5' given",
+            id="single condition lower: installed is equal",
+        ),
+        pytest.param(
+            [{"pykiso": "<0.9.5"}],
+            {"pykiso": "0.9.4"},
+            None,
+            id="single condition lower: installed is lower",
+        ),
+        pytest.param(
             [{"pykiso": "<<0.9.5"}],
             {"pykiso": "0.9.4"},
-            "comparator '<<' not among [<, <=, >, >=, ==, !=]",
+            "comparator '<<' not among ['<', '<=', '>', '>=', '==', '!=']",
+            id="single condition equal: invalid comparator",
         ),
-        ([{"pykiso": "== 0.9.5"}], {"pykiso": "0.9.4"}, "'0.9.4' but '== 0.9.5' given"),
-        ([{"pykiso": "== 0.9.5"}], {"pykiso": "0.9.5"}, None),
-        ([{"pykiso": "!= 0.9.5"}], {"pykiso": "0.9.5"}, "'0.9.5' but '!= 0.9.5' given"),
-        # test multi requirements
-        (
-            [{"pykiso": ">=0.9.5"}, {"pykiso": "<0.10.1"}],
+        pytest.param(
+            [{"pykiso": "== 0.9.5"}],
             {"pykiso": "0.9.4"},
-            "'0.9.4' but '>=0.9.5' given",
+            "'0.9.4' but '== 0.9.5' given",
+            id="single condition strict (stripped): installed is lower",
         ),
-        (
-            [{"pykiso": ">=0.9.5"}, {"pykiso": "<0.10.1"}],
+        pytest.param(
+            [{"pykiso": "== 0.9.5"}],
+            {"pykiso": "0.9.5"},
+            None,
+            id="single condition equal (stripped): installed is equal",
+        ),
+        pytest.param(
+            [{"pykiso": "!= 0.9.5"}],
+            {"pykiso": "0.9.5"},
+            "'0.9.5' but '!= 0.9.5' given",
+            id="single condition different (stripped): installed is equal",
+        ),
+        # test multi requirements
+        pytest.param(
+            [{"pykiso": ">=0.9.5,<0.10.1"}],
+            {"pykiso": "0.9.4"},
+            "'0.9.4' but '>=0.9.5,<0.10.1' given",
+            id="multi condition: installed not in range (too low)",
+        ),
+        pytest.param(
+            [{"pykiso": ">=0.9.5, <0.10.1"}],
             {"pykiso": "0.10.1"},
-            "'0.10.1' but '<0.10.1' given",
+            "'0.10.1' but '>=0.9.5, <0.10.1' given",
+            id="multi condition: installed not in range (too high)",
         ),
-        ([{"pykiso": ">=0.9.5"}, {"pykiso": "<0.10.1"}], {"pykiso": "0.10.0"}, None),
-        (
+        pytest.param(
+            [{"pykiso": ">=0.9.5,<0.10.1"}],
+            {"pykiso": "0.10.0"},
+            None,
+            id="multi condition: installed in range",
+        ),
+        pytest.param(
             [{"package_a": ">=1.a"}, {"package_b": "1.2.3"}],
             {"package_a": "1.b", "package_b": "1.2.3"},
             None,
+            id="multi package: installed ok",
         ),
     ],
 )
