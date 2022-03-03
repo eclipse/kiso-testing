@@ -5,6 +5,7 @@ verify_ssl = true
 
 
 [dev-packages]
+auto-changelog = "0.5.3"
 pdbpp = "*"
 pytest = "*"
 sphinx = "*"
