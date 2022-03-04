@@ -35,9 +35,7 @@ def tmp_cfg(tmp_path):
         │
         └── suite_config
             │   suite_conf.yaml
-
     """
-
     # create tests folder at root
     test_folder = tmp_path / "tests"
     test_folder.mkdir()
@@ -186,6 +184,8 @@ connectors:
 test_suite_list: !include """
         + str(paths["suite_config"] / "suite_conf.yaml")
         + """
+requirements:
+  - pykiso: ">=0.0.0"
     """
     )
     return cfg
@@ -228,6 +228,7 @@ connectors:
       some_integer_as_hex:  "ENV{int_env_var_as_hex}"
       some_path: 'ENV{path_env_var}'
       some_path_default_value: 'ENV{path_env_var_set=/examples/path}'
+      some_path_default_value_relative: 'ENV{path_env_var_not_set=./test_suite_aux1}'
       some_path_env_variable_not_set: 'ENV{path_env_var_not_set=/examples/path2}'
       some_path_env_error: 'ENV{path_env_var_not_set}'
     type: pykiso.lib.connectors.cc_example::CCExample
@@ -241,6 +242,7 @@ auxiliaries:
   aux1:
     absPath: ./aux1
     config: 'aux1'
+    ENV{config}: config
     type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
 connectors:
   chan1:
@@ -260,9 +262,12 @@ def test_parse_config(tmp_cfg, tmp_path, mocker, caplog):
             "CC_CONFIG": str(tmp_path / "cc_config/cc_config.elf"),
         },
     )
+    mock_check_req = mocker.patch("pykiso.config_parser.check_requirements")
 
     with caplog.at_level(logging.DEBUG):
         cfg = parse_config(tmp_cfg)
+
+    mock_check_req.assert_called_once_with([{"pykiso": ">=0.0.0"}])
 
     # Test _fix_types_loc
     assert "Resolved path :" in caplog.text
@@ -336,9 +341,12 @@ def test_parse_config_env_var(tmp_cfg_env_var, mocker, tmp_path):
             == 0x0123456789ABCDEF
         )
         assert cfg["connectors"]["chan1"]["config"]["some_path"] == str(tmp_path)
-        assert cfg["connectors"]["chan1"]["config"]["some_path_default_value"] == str(
-            tmp_path
-        )
+        assert Path(
+            cfg["connectors"]["chan1"]["config"]["some_path_default_value"]
+        ).is_absolute()
+        assert cfg["connectors"]["chan1"]["config"][
+            "some_path_default_value_relative"
+        ] == str(tmp_path)
         assert (
             cfg["connectors"]["chan1"]["config"]["some_path_env_variable_not_set"]
             == "/examples/path2"
@@ -361,8 +369,13 @@ def test_parse_config_folder_conflict(tmp_cfg_folder_conflict, tmp_path, caplog)
     with caplog.at_level(logging.DEBUG):
         cfg = parse_config(tmp_cfg_folder_conflict)
 
+    # key should not be parsed if it matches a folder/file
     assert "aux1" in cfg["auxiliaries"]
+    # value should not be parsed if it is enclosed in single quotes
     assert "aux1" == cfg["auxiliaries"]["aux1"]["config"]
+    # key should not be parsed if it matches the env var pattern
+    assert "ENV{config}" in cfg["auxiliaries"]["aux1"]
+    # value should be parsed
     assert Path(cfg["auxiliaries"]["aux1"]["absPath"]).is_absolute()
     os.chdir(old_cwd)
 
