@@ -9,11 +9,14 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version Unreleased (2022-03-03)
+## Version Unreleased (2022-03-04)
 
+#### Fixes
+
+* wait for logger thread to quit gracefully before closing segger channel
 #### Docs
 
-* Change auto changelog tool
+* Change auto changelog tool ([#30](https://github.com/eclipse/kiso-testing/issues/30))
 #### Continous integration
 
 * github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
@@ -21,7 +24,7 @@ invoke changelog
 
 * github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
 
-Full set of changes: [`0.15.1...820fe21`](https://github.com/eclipse/kiso-testing/compare/0.15.1...820fe21)
+Full set of changes: [`0.15.1...674a222`](https://github.com/eclipse/kiso-testing/compare/0.15.1...674a222)
 
 ## Version 0.15.1 (2022-02-17)
 

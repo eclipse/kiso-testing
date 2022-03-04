@@ -152,7 +152,7 @@ def test_rtt_segger_rtt_logger_not_running(mock_pylink_square_socket, mocker):
     cc_rtt_inst = CCRttSegger()
     cc_rtt_inst._cc_open()
 
-    assert cc_rtt_inst._is_running == False
+    assert cc_rtt_inst._log_thread_running == False
     mocker_thread_start.assert_not_called()
 
 
@@ -186,12 +186,13 @@ def test_rtt_segger_rtt_logger_running(
 
     assert mock_buffer.call_count == 2
     mock_rtt_read.assert_called()
-    assert cc_rtt_inst._is_running == True
+    assert cc_rtt_inst._log_thread_running == True
     assert cc_rtt_inst.rtt_log_buffer_size == expected_size_of_buffer
     assert (Path(tmpdir) / "rtt.log").is_file()
 
     cc_rtt_inst._cc_close()
-    assert cc_rtt_inst._is_running == False
+    assert cc_rtt_inst.rtt_log_thread.is_alive() == False
+    assert cc_rtt_inst._log_thread_running == False
     assert rtt_log in (Path(tmpdir) / "rtt.log").read_text()
 
 
@@ -290,7 +291,7 @@ def test_receive_log(
         assert rtt_log_buffer_idx == "log_buffer_idx"
         assert rtt_log_buffer_size == "log_buffer_size"
 
-        cc_rtt_inst._is_running = False
+        cc_rtt_inst._log_thread_running = False
         return log_return
 
     jlink_mock = mocker.Mock()
@@ -300,7 +301,7 @@ def test_receive_log(
 
     cc_rtt_inst.rtt_log_buffer_idx = "log_buffer_idx"
     cc_rtt_inst.rtt_log_buffer_size = "log_buffer_size"
-    cc_rtt_inst._is_running = True
+    cc_rtt_inst._log_thread_running = True
     cc_rtt_inst.rtt_configured = True
 
     cc_rtt_inst.receive_log()

@@ -117,7 +117,7 @@ class CCRttSegger(connector.CChannel):
         self.rx_buffer_size = None
         # initialize rtt logging specific parameters
         self.rtt_configured = False
-        self._is_running = False
+        self._log_thread_running = False
         self.rtt_log_refresh_time = round(1 / rtt_log_speed, 6) if rtt_log_speed else 0
         self.rtt_log_thread = threading.Thread(target=self.receive_log)
         self.rtt_log_path = rtt_log_path
@@ -243,7 +243,7 @@ class CCRttSegger(connector.CChannel):
                     self.rtt_log_buffer_idx = 0
                 self.rtt_log_buffer_size = 1024
             finally:
-                self._is_running = True
+                self._log_thread_running = True
                 self.rtt_log_thread.start()
                 log.info("RTT logging started")
 
@@ -251,7 +251,9 @@ class CCRttSegger(connector.CChannel):
         """Close current RTT communication in use."""
 
         if self.jlink is not None:
-            self._is_running = False
+            if self._log_thread_running:
+                self._log_thread_running = False
+                self.rtt_log_thread.join()
             self.jlink.rtt_stop()
             self.jlink.close()
             log.info("RTT communication closed")
@@ -334,7 +336,7 @@ class CCRttSegger(connector.CChannel):
     @_need_rtt
     def receive_log(self) -> None:
         """Receive RTT log messages from the corresponding RTT buffer."""
-        while self._is_running:
+        while self._log_thread_running:
             # receive at most rtt_log_buffer_size of RTT logs
             log_msg = self.jlink.rtt_read(
                 self.rtt_log_buffer_idx, self.rtt_log_buffer_size
