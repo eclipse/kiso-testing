@@ -119,7 +119,9 @@ Real-World Configuration File
 Activation of specific loggers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, every logger that does not belong to the `pykiso` package or that is not an `auxiliary` logger will see its level set to WARNING even if you have in the command line `pykiso --log-level DEBUG`.
+By default, every logger that does not belong to the `pykiso` package or that is not an `auxiliary`
+logger will see its level set to WARNING even if you have in the command line `pykiso --log-level DEBUG`.
+
 This aims to reduce redundant logs from additional modules during the test execution.
 For keeping specific loggers to the set log-level, it is possible to set the `activate_log` parameter in the `auxiliary` config.
 The following example activates the `jlink` logger from the `pylink` package, imported in `cc_rtt_segger.py`:
@@ -148,15 +150,19 @@ Based on this example, by specifying `my_pkg`, all child loggers will also be se
 Ability to use environment variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is possible to replace any value by an environment variable in the YAML files. When using environment variables, the following format should be respected: `ENV{my-env-var}`.
+It is possible to replace any value by an environment variable in the YAML files.
+When using environment variables, the following format should be respected: `ENV{my-env-var}`.
 In the following example, an environment variable called `TEST_SUITE_1` contains the path to the test suite 1 directory.
 
 .. literalinclude:: ../../examples/dummy_env_var.yaml
     :language: yaml
     :lines: 22-25
 
-It is also possible to set a default value in case the environment variable is not found. The following format should be used: `ENV{my-env-var=my_default_value}`.
-In the following example, an environment variable called `TEST_SUITE_2` would contain the path to the test_suite_2 directory. If the variable is not set, the default value will be taken instead.
+It is also possible to set a default value in case the environment variable is not found.
+The following format should be used: `ENV{my-env-var=my_default_value}`.
+
+In the following example, an environment variable called `TEST_SUITE_2` would contain the path to
+the test_suite_2 directory. If the variable is not set, the default value will be taken instead.
 
 .. literalinclude:: ../../examples/dummy_env_var.yaml
     :language: yaml
@@ -166,16 +172,37 @@ Specify files and folders
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To specify files and folders you can use absolute or relative paths.
-Relative paths are always given relative to the location of the yaml file.
+Relative paths are always given **relative to the location of the yaml file**.
 
-Relative path or file locations must always start with "./"
+According to the YAML specification, values enclosed in single quotes are enforced as strings,
+and **will not be parsed**.
 
 .. code:: yaml
 
     example_config:
-        rel_script_path: './script_folder/my_awesome_script.py'
-        abs_script_path_win: 'C:/script_folder/my_awesome_script.py'
-        abs_script_path_unix: '/home/usr/script_folder/my_awesome_script.py'
+        # this relative path will not be made absolute
+        rel_script_path_unresolved: './script_folder/my_awesome_script.py'
+        # this one will
+        rel_script_path: ./script_folder/my_awesome_script.py
+        abs_script_path_win: C:/script_folder/my_awesome_script.py
+        abs_script_path_unix: /home/usr/script_folder/my_awesome_script.py
+
+.. warning::
+  Relative path or file locations must always start with `./`.
+  If not, it will still be resolved but unexpected behaviour can result from it.
+
+Include sub-YAMLs
+~~~~~~~~~~~~~~~~~
+
+Frequently used configuration parts can be stored in a separate YAML file.
+To include this configuration file in the main one, the path to the sub-configuration file has to
+be provided, preceded with the `!include` tag.
+
+Relative paths in the sub-YAML file are then resolved **relative to the sub-YAML's location**.
+
+.. literalinclude:: ../../examples/templates/config_features.yaml
+    :language: yaml
+    :lines: 28-37
 
 Make a proxy auxiliary trace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

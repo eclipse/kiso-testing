@@ -27,8 +27,9 @@ import re
 import sys
 from collections import ChainMap
 from distutils.version import LooseVersion
+from io import TextIOWrapper
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, TextIO, Union
+from typing import Callable, Dict, List, TextIO, Union
 
 import pkg_resources
 import yaml
@@ -37,33 +38,56 @@ from pykiso.types import PathType
 
 
 class YamlLoader(yaml.SafeLoader):
-    """Extension of default yaml.SafeLoader that integrates
-    custom !include tag management and performs config parsing
-    at load time.
+    """Extension of default yaml.SafeLoader that integrates custom
+    !include tag management and performs config parsing at load time.
     """
 
     type_pattern = re.compile(r".*:.*")
     env_var_pattern = re.compile(r"ENV{(\w+)(=(.+))?}")
     rel_path_pattern = re.compile(r'[^\n"?:*<>|]')
 
-    def __init__(self, file_path: Union[TextIO, str]):
-        """Initialize attributes.
+    def __init__(self, file: Union[TextIO, PathType]):
+        """Initialize attributes and add the YAML constructors to parse it.
 
-        For usage with yaml.load, the passed stream must be an actual
-        stream, not its content.
+        For usage with yaml.load, the passed stream must be a path to the
+        YAML file or an actual stream, not its read content.
 
         :param stream: the stream to read or the stream's content.
         :param file: full path to the YAML file to load.
         """
-        yaml_file = Path(file_path).resolve()
+        if isinstance(file, TextIOWrapper):
+            file = file.name
+        yaml_file = Path(file).resolve()
         self._base_dir = yaml_file.parent
         super().__init__(yaml_file.read_text())
+
+        # load paths to sub-yamls on include tag
+        YamlLoader.add_constructor("!include", YamlLoader.include)
+        # parse quoted environment variables
+        YamlLoader.add_constructor(
+            YamlLoader.DEFAULT_SCALAR_TAG, YamlLoader.parse_env_var
+        )
+        # parse unquoted environment variables
+        YamlLoader.add_implicit_constructor(
+            "!env", YamlLoader.env_var_pattern, YamlLoader.parse_env_var
+        )
+        # parse auxiliary and connector types
+        YamlLoader.add_implicit_constructor(
+            "!type", YamlLoader.type_pattern, YamlLoader.fix_types_loc
+        )
+        # parse relative paths
+        YamlLoader.add_implicit_constructor(
+            "!resolve", YamlLoader.rel_path_pattern, YamlLoader.resolve_path
+        )
 
     @staticmethod
     def add_implicit_constructor(
         tag: str, pattern: re.Pattern, constructor: Callable
     ) -> None:
         """Combination of add_implicit_resolver and add_constructor.
+
+        This allows setting a tag on each value matching the pattern and
+        executing the function `constructor` when the tag is met.
 
         :param tag: explicit tag that can be specified in the YAML file
         :param pattern: pattern to match to implicitly set the tag
@@ -235,7 +259,7 @@ def check_requirements(requirements: List[dict]):
                 )
 
             for condition, required_version in match:
-                # pattern found eg: match = ['>=', '0.1.2', '<', '1.0.0']
+                # pattern found eg: match = [('>=', '0.1.2'), ('<', '1.0.0')]
                 required_version = required_version.strip()
                 try:
                     compare_operation = conditionals[condition]
@@ -282,24 +306,8 @@ def parse_config(file_name: PathType) -> Dict:
 
     :return: config dict with resolved paths where needed
     """
-    # allow loading paths to sub-yamls
-    YamlLoader.add_constructor("!include", YamlLoader.include)
-    # parse quoted environment variables
-    YamlLoader.add_constructor(YamlLoader.DEFAULT_SCALAR_TAG, YamlLoader.parse_env_var)
-    # parse unquoted environment variables
-    YamlLoader.add_implicit_constructor(
-        "!env", YamlLoader.env_var_pattern, YamlLoader.parse_env_var
-    )
-    # parse auxiliary and connector types
-    YamlLoader.add_implicit_constructor(
-        "!type", YamlLoader.type_pattern, YamlLoader.fix_types_loc
-    )
-    # parse relative paths
-    YamlLoader.add_implicit_constructor(
-        "!resolve", YamlLoader.rel_path_pattern, YamlLoader.resolve_path
-    )
-
-    cfg = yaml.load(file_name, Loader=YamlLoader)
+    with open(file_name, "r") as f:
+        cfg = yaml.load(f, Loader=YamlLoader)
 
     # Check requirements
     requirements = cfg.get("requirements")
@@ -307,12 +315,3 @@ def parse_config(file_name: PathType) -> Dict:
         check_requirements(requirements)
 
     return cfg
-
-
-if __name__ == "__main__":
-    import json
-
-    os.environ["TEST_SUITE_1"] = "test_suite_1"
-    f = Path(__file__).resolve().parent / "nested_yaml/test.yaml"
-
-    print(json.dumps(parse_config(f), indent=2))
