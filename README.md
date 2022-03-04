@@ -62,27 +62,6 @@ Start using the hooks with
 pre-commit install
 ```
 
----
-**NOTE**
-
-If you want to create auto changelogs you have to install Nodejs v14.17+. -> https://nodejs.org/en/download/
-
-For initialization you have to call following command after cloning this repo only once.
-
-```bash
-npm install # on root folder level
-```
-
-pre-commit will then take care of auto generating changelogs.
-To run it manually call:
-
-```bash
-gen_changelog.bat # on windwos
-gen_changelog.sh  # on unix or if you have shell.exe in your windows environment
-```
-
----
-
 ## Commit message convention
 
 Commits are sorted into multiple categories based on keywords that can occur at any position as part of the commit message.
@@ -108,6 +87,16 @@ cz commit
 # or use equivalent short variant:
 cz c
 ```
+
+## Generate Changelog
+
+After you installed the dev dependencies from the pipfile you are able to
+autogenerate the Changelog.
+
+```bash
+invoke changelog
+```
+
 ## Usage ##
 
 Once installed the application is bound to `pykiso`, it can be called with the following arguments:
