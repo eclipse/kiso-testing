@@ -264,10 +264,6 @@ def test_parse_config(tmp_cfg, tmp_path, mocker, caplog):
     with caplog.at_level(logging.DEBUG):
         cfg = parse_config(tmp_cfg)
 
-    import json
-
-    print(json.dumps(cfg, indent=2))
-
     # Test _fix_types_loc
     assert "Resolved path :" in caplog.text
     assert (
@@ -331,10 +327,6 @@ def test_parse_config_env_var(tmp_cfg_env_var, mocker, tmp_path):
     # some_path_env_error should raise a ValueError
     with pytest.raises(ValueError):
         cfg = parse_config(tmp_cfg_env_var)
-
-        import json
-
-        print(json.dumps(cfg, indent=2))
 
         assert cfg["connectors"]["chan1"]["config"]["some_bool"] == True
         assert cfg["connectors"]["chan1"]["config"]["some_string"] == "this is a string"
