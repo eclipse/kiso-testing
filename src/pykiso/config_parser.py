@@ -52,7 +52,6 @@ class YamlLoader(yaml.SafeLoader):
         For usage with yaml.load, the passed stream must be a path to the
         YAML file or an actual stream, not its read content.
 
-        :param stream: the stream to read or the stream's content.
         :param file: full path to the YAML file to load.
         """
         if isinstance(file, TextIOWrapper):
