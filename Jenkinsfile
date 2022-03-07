@@ -30,7 +30,7 @@ pipeline
                 // Clean workspace
                 cleanWs()
                 checkout scm
-                sh 'pipenv install --dev'
+                sh 'pipenv install --dev --skip-lock'
             }
         }
         stage('Format check')
