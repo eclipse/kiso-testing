@@ -32,6 +32,7 @@ from pathlib import Path
 import pkg_resources
 import yaml
 
+from .global_config import Grabber
 from .types import PathType
 
 
@@ -103,6 +104,7 @@ def check_requirements(requirements: list):
         sys.exit(1)
 
 
+@Grabber.grab_yaml_config
 def parse_config(fname: PathType) -> typing.Dict:
     """Parse YAML config file.
 
