@@ -218,7 +218,7 @@ class BasicTestSuite(unittest.TestSuite):
     ):
         """Initialize our custom unittest-test-suite.
 
-        .. note:
+        .. note::
             1. Will Load from the given path the integration test modules under test
             2. Sort the given test case list by test suite/case id
             3. Place Test suite setup and teardown respectively at top and bottom of test case list

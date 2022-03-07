@@ -60,6 +60,6 @@ test_suite_list:
 #      displayed
 #_______________________________________________________________________
 requirements:
-  - pykiso : '>=0.10.1'
-  - robotframework : 3.2.2
+  - pykiso: '>=0.10.1, <1.0.0'
+  - robotframework: 3.2.2
   - pyyaml: any
