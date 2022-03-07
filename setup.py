@@ -11,12 +11,8 @@
 # -*- encoding: utf-8 -*-
 
 import io
-import logging
-import platform
-import sys
 from glob import glob
 from os.path import basename, dirname, join, splitext
-from pathlib import Path
 
 from setuptools import find_packages, setup
 

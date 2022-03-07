@@ -20,251 +20,293 @@ Configuration File Parser
 
 """
 
-import io
 import logging
+import operator
 import os
 import re
 import sys
-import typing
+from collections import ChainMap
 from distutils.version import LooseVersion
+from io import TextIOWrapper
 from pathlib import Path
+from typing import Callable, Dict, List, TextIO, Union
 
 import pkg_resources
 import yaml
 
-from .types import PathType
+from pykiso.types import PathType
 
 
-def check_requirements(requirements: list):
+class YamlLoader(yaml.SafeLoader):
+    """Extension of default yaml.SafeLoader that integrates custom
+    !include tag management and performs config parsing at load time.
+    """
+
+    type_pattern = re.compile(r".*:.*")
+    env_var_pattern = re.compile(r"ENV{(\w+)(=(.+))?}")
+    rel_path_pattern = re.compile(r'[^\n"?:*<>|]')
+
+    def __init__(self, file: Union[TextIO, PathType]):
+        """Initialize attributes and add the YAML constructors to parse it.
+
+        For usage with yaml.load, the passed stream must be a path to the
+        YAML file or an actual stream, not its read content.
+
+        :param file: full path to the YAML file to load.
+        """
+        if isinstance(file, TextIOWrapper):
+            file = file.name
+        yaml_file = Path(file).resolve()
+        self._base_dir = yaml_file.parent
+        super().__init__(yaml_file.read_text())
+
+        # load paths to sub-yamls on include tag
+        YamlLoader.add_constructor("!include", YamlLoader.include)
+        # parse quoted environment variables
+        YamlLoader.add_constructor(
+            YamlLoader.DEFAULT_SCALAR_TAG, YamlLoader.parse_env_var
+        )
+        # parse unquoted environment variables
+        YamlLoader.add_implicit_constructor(
+            "!env", YamlLoader.env_var_pattern, YamlLoader.parse_env_var
+        )
+        # parse auxiliary and connector types
+        YamlLoader.add_implicit_constructor(
+            "!type", YamlLoader.type_pattern, YamlLoader.fix_types_loc
+        )
+        # parse relative paths
+        YamlLoader.add_implicit_constructor(
+            "!resolve", YamlLoader.rel_path_pattern, YamlLoader.resolve_path
+        )
+
+    @staticmethod
+    def add_implicit_constructor(
+        tag: str, pattern: re.Pattern, constructor: Callable
+    ) -> None:
+        """Combination of add_implicit_resolver and add_constructor.
+
+        This allows setting a tag on each value matching the pattern and
+        executing the function `constructor` when the tag is met.
+
+        :param tag: explicit tag that can be specified in the YAML file
+        :param pattern: pattern to match to implicitly set the tag
+        :param constructor: function to call when the tag is set
+        """
+        YamlLoader.add_implicit_resolver(tag, pattern, first=None)
+        YamlLoader.add_constructor(tag, constructor)
+
+    @staticmethod
+    def is_key(node: yaml.nodes.ScalarNode) -> bool:
+        """Detect if the provided ScalarNode is a key or a value.
+
+        :param node: ScalarNode instance in use.
+
+        :return: True if the node is a key otherwise False.
+        """
+        if node.end_mark.buffer is None:
+            # undetermined, buffer does not exist when file_path parameter is a stream
+            return True
+        return node.end_mark.buffer[node.end_mark.pointer] == ":"
+
+    def include(self, node: yaml.nodes.ScalarNode) -> dict:
+        """Return the content of a yaml file identified by !include tag.
+
+        :param node: ScalarNode currently in use
+
+        :return: included yaml file's content
+        """
+        nested_yaml = (self._base_dir / Path(node.value)).resolve()
+        nested_cfg = yaml.load(nested_yaml, Loader=YamlLoader)
+        return nested_cfg
+
+    def resolve_path(self, node: yaml.nodes.ScalarNode) -> str:
+        """Resolve a path relative to the config file's location.
+
+        :param node: ScalarNode currently in use
+
+        :return: the resolved config path if needed
+        """
+        if YamlLoader.is_key(node):
+            return str(node.value)
+
+        value = node.value
+        config_path_unresolved = Path(value)
+        if not config_path_unresolved.is_absolute():
+            config_path = (self._base_dir / config_path_unresolved).resolve()
+            if config_path.exists():
+                value = config_path
+                logging.debug(
+                    f"Resolved relative path {config_path_unresolved} to {value}"
+                )
+        return str(value)
+
+    def fix_types_loc(self, node: yaml.nodes.ScalarNode) -> str:
+        """Parse the type field in the config file and resolves it if necessary.
+
+        :param node: ScalarNode currently in use
+
+        :return: type value with resolved relative path
+        """
+        thing = node.value
+        loc, _class = thing.rsplit(":", 1)
+        if not loc.endswith(".py"):
+            return thing
+        path = Path(loc)
+        if not path.is_absolute():
+            path = (self._base_dir / path).resolve()
+            thing = str(path) + ":" + _class
+            logging.debug(f"Resolved path : {thing}")
+        return thing
+
+    def parse_env_var(self, node: yaml.nodes.ScalarNode) -> Union[str, int]:
+        """Parse an environment variable marked as `ENV{env_name=default}`
+        and cast its value if it matches an integer or a boolean.
+
+        .. note::
+            1. if found, the value is replaced with the value of the
+                environment variable of the same name
+            2. if no environment variable exists with this name, check
+                if a default value is provided
+            3. if yes, return the default value, otherwise raise.
+
+        :param node: ScalarNode currently in use.
+
+        :return: config value with replaced environment variable if
+            needed, otherwise the node's value as a string.
+
+        :raises ValueError: if the environment variable could not be
+            found and no default value was specified.
+        """
+        if YamlLoader.is_key(node):
+            return str(node.value)
+
+        match = re.findall(self.env_var_pattern, node.value)
+        # no match means the node is just a string
+        if not match:
+            return str(node.value)
+
+        # Parse detected environment variable
+        env_name, _, env_default = match[0]
+
+        if env_name in os.environ:
+            env = os.environ[env_name]
+        elif env_default:
+            env = env_default
+            # handle default env var value when being a relative path
+            if env.startswith("."):
+                node.value = env
+                env = self.resolve_path(node)
+        else:
+            raise ValueError(
+                f"Environment variable {env_name} not found and no default value specified"
+            )
+        is_numeric = re.fullmatch(r"\d+", env)
+        is_hex = re.fullmatch(r"0x[0-9a-fA-F]+", env)
+        is_bool = env.lower() in ["true", "false"]
+        if is_numeric is not None:
+            config_element = int(env)
+        elif is_hex is not None:
+            config_element = int(env, base=16)
+        elif is_bool:
+            config_element = env.lower() == "true"
+        else:
+            config_element = env
+        logging.debug(f"Replaced environment variable {env_name} with {config_element}")
+        return config_element
+
+
+def check_requirements(requirements: List[dict]):
     """Check the environment before running the tests
 
     :param requirements: requirements to be checked
     """
+    conditionals = {
+        "<": operator.lt,
+        "<=": operator.le,
+        ">": operator.gt,
+        ">=": operator.ge,
+        "==": operator.eq,
+        "!=": operator.ne,
+    }
     requirement_satisfied = True
-    for req in requirements:
-        for package, expected_version in req.items():
-            try:
-                logging.debug(f"Check YAML requirements: {package}")
-                current_version = pkg_resources.get_distribution(package).version
-                logging.debug(f"current_version: {current_version}")
+    requirements = dict(ChainMap(*requirements))
 
-                # check if condition provided
-                pattern = r"([<>=!]{1,2})"
-                match = re.split(pattern, expected_version)
-                if len(match) > 1:
-                    # pattern found eg: match = ['', '>=', '0.1.2']
-                    condition = match[1]
-                    exp_version = match[2].strip()
-                    check = (
-                        LooseVersion(current_version) < LooseVersion(exp_version)
-                        if condition == "<"
-                        else LooseVersion(current_version) <= LooseVersion(exp_version)
-                        if condition == "<="
-                        else LooseVersion(current_version) > LooseVersion(exp_version)
-                        if condition == ">"
-                        else LooseVersion(current_version) >= LooseVersion(exp_version)
-                        if condition == ">="
-                        else LooseVersion(current_version) == LooseVersion(exp_version)
-                        if condition == "=="
-                        else LooseVersion(current_version) != LooseVersion(exp_version)
-                        if condition == "!="
-                        else None
+    for package, expected_version in requirements.items():
+        try:
+            logging.debug(f"Check YAML requirements: {package}")
+            current_version = pkg_resources.get_distribution(package).version
+            logging.debug(f"current_version: {current_version}")
+
+            if expected_version == "any":
+                continue
+
+            # check if condition provided
+            req_pattern = re.compile(r"([<>=!]{1,2})([^,]+)")
+            match = req_pattern.findall(expected_version)
+
+            # no conditional version requirement, expected is the minimum
+            if (
+                not match
+                and current_version != expected_version
+                and LooseVersion(current_version) < LooseVersion(expected_version)
+            ):
+                # Version not satisfied: current_version < expected_version
+                requirement_satisfied = False
+                logging.error(
+                    f"Requirement issue: found {package} with version '{current_version}' "
+                    f"instead of '{expected_version}' (minimum)"
+                )
+
+            for condition, required_version in match:
+                # pattern found eg: match = [('>=', '0.1.2'), ('<', '1.0.0')]
+                required_version = required_version.strip()
+                try:
+                    compare_operation = conditionals[condition]
+                    check = compare_operation(
+                        LooseVersion(current_version), LooseVersion(required_version)
                     )
-
                     if check is False:
                         # Version not satisfied
                         logging.error(
-                            f"Requirement issue: found {package} with version '{current_version}' but '{expected_version}' given"
+                            f"Requirement issue: found {package} with version '{current_version}' "
+                            f"but '{expected_version}' given"
                         )
-                    elif check is None:
-                        # comparator invalid
-                        logging.error(
-                            f"Requirement issue: comparator '{condition}' not among [<, <=, >, >=, ==, !=]"
-                        )
-                        check = False
+                except KeyError as e:
+                    # comparator invalid
+                    logging.error(
+                        f"Requirement issue: comparator {e} not among {list(conditionals.keys())}"
+                    )
+                    check = False
 
-                    requirement_satisfied &= check
+                requirement_satisfied &= check
 
-                elif current_version != expected_version and expected_version != "any":
-                    if LooseVersion(current_version) < LooseVersion(expected_version):
-                        # Version not satisfied: current_version < expected_version
-                        requirement_satisfied = False
-                        logging.error(
-                            f"Requirement issue: found {package} with version '{current_version}' instead of '{expected_version}' (minimum)"
-                        )
-
-            except pkg_resources.DistributionNotFound:
-                # package not installed or misspelled
-                requirement_satisfied = False
-                logging.error(f"Dependency issue: {package} not found")
+        except pkg_resources.DistributionNotFound:
+            # package not installed or misspelled
+            requirement_satisfied = False
+            logging.error(f"Dependency issue: {package} not found")
 
     if not requirement_satisfied:
         logging.error("At least one requirement is not satisfied")
         sys.exit(1)
 
 
-def parse_config(fname: PathType) -> typing.Dict:
-    """Parse YAML config file.
+def parse_config(file_name: PathType) -> Dict:
+    """Parse the YAML configuration file and verify the dependencie's
+    version requirement if encountered.
 
-    :param fname: path to the config file
+    .. note::
+        The parsing includes:
+        * Replacing values enclosed in `ENV{}` by their environment variable
+          or their default value, with additional casting (bool or int)
+        * Making all the relative paths absolute (relative to the YAML file)
+        * Including the sub-YAML files marked by the !include tag.
+
+    :param file_name: path to the config file
 
     :return: config dict with resolved paths where needed
     """
-
-    class YamlLoader(yaml.SafeLoader):
-        """Extension of default yaml.SafeLoader who integrates
-        custom !include tag management.
-        """
-
-        def __init__(self, stream: io.TextIOWrapper):
-            """Initialize attributes.
-
-            :param stream: current stream in use
-            """
-            self._root = Path(fname).resolve().parent
-            super().__init__(stream)
-
-        def include(self, node: yaml.nodes.ScalarNode) -> dict:
-            """Return the content of an yaml file identify by !include
-            tag.
-
-            :param node: ScalarNode currently in use
-
-            :return: yaml file content
-            """
-            filename = (self._root / Path(node.value)).resolve()
-            with open(filename, "r") as f:
-                return yaml.load(f, Loader=YamlLoader)
-
-    YamlLoader.add_constructor("!include", YamlLoader.include)
-
-    with open(fname) as f:
-        cfg = yaml.load(f.read(), Loader=YamlLoader)
-
-    # fix suite-dirs
-    base_dir = Path(fname).resolve().parent
-
-    def _fix_types_loc(thing: dict) -> dict:
-        """Parse the type field in the config file and resolves it if necessary.
-
-        :param thing: config sub-dict containing the type
-
-        :return: config sub-dict containing the resolved type if needed
-        """
-        loc, _class = thing["type"].rsplit(":", 1)
-        if not loc.endswith(".py"):
-            return thing
-        path = Path(loc)
-        if not path.is_absolute():
-            path = (base_dir / path).resolve()
-            thing["type"] = str(path) + ":" + _class
-            logging.debug(f'Resolved path : {thing["type"]}')
-        return thing
-
-    def _parse_env_var(config_element: str) -> str:
-        """Search for an environment variable pattern in the yaml file and
-        (1) try to replace it with the value of an environment variable of the same name
-        (2) Assign the default value if the environment variable was not found
-        (3) raise an error if 1. and 2. failed
-
-        Additionally, cast the value if it matches an integer.
-
-        :param config_element: config sub-dict value
-
-        :return: config sub-dict value with replaced environment variable if needed
-
-        :raise: ValueError if the environment variable not found and no default value specified
-        """
-        # Check for regular expression "ENV{word=.}"
-        match = re.compile(r"ENV{(\w+)(=(.+))?}").findall(str(config_element))
-        if match:
-            # Parse detected environment variable
-            match_single_env = str(match[0][0])
-            match_env_with_val = str(match[0][2])
-
-            if match_single_env in os.environ:
-                env = os.environ[match_single_env]
-            elif match_env_with_val:
-                env = match_env_with_val
-            else:
-                raise ValueError(
-                    f"Environment variable {match_single_env} not found and no default value specified"
-                )
-            is_numeric = re.fullmatch(r"\d+", env)
-            is_hex = re.fullmatch(r"0x[0-9a-fA-F]+", env)
-            is_bool = env.lower() in ["true", "false"]
-            if is_numeric is not None:
-                config_element = int(env)
-            elif is_hex is not None:
-                config_element = int(env, base=16)
-            elif is_bool:
-                config_element = env.lower() == "true"
-            else:
-                config_element = env
-            logging.debug(
-                f"Replaced environment variable {match_single_env} with {config_element}"
-            )
-        return config_element
-
-    def _resolve_path(config_path: str) -> str:
-        """Resolve a path relative to the config file's location.
-
-        :param config_path: a config path
-
-        :return: the resolved config path if needed
-        """
-        config_path_unresolved = Path(config_path)
-        if not config_path_unresolved.is_absolute():
-            config_path = (base_dir / config_path_unresolved).resolve()
-            logging.debug(
-                f"Resolved relative path {config_path_unresolved} to {config_path}"
-            )
-        return str(config_path)
-
-    def _check_path(path: str) -> bool:
-        """Check if the argument is a valid path.
-
-        :param path: any string in the config file's values
-
-        :return: a boolean indicating if the string is a valid path
-        """
-        is_valid = False
-        if "./" in path.replace(".\\", "./"):
-            invalid_characters = (":", "*", "?", "<", ">", "|")
-            is_valid = (
-                False
-                if (any(c in invalid_characters for c in path))
-                else (Path(path).exists() or (base_dir / Path(path)).exists())
-            )
-        return is_valid
-
-    def _resolve_config_paths(config: dict) -> dict:
-        """Iterate over the config dict and resolve all of the config file paths.
-
-        :param config: config dict
-
-        :return: config dict with resolved paths
-        """
-        for key in config.keys():
-            if isinstance(config.get(key), dict):
-                _resolve_config_paths(config.get(key))
-            elif isinstance(config.get(key), str):
-                config[key] = _parse_env_var(config[key])
-                config[key] = (
-                    _resolve_path(config[key])
-                    if isinstance(config[key], str) and _check_path(config[key])
-                    else config[key]
-                )
-            elif isinstance(config.get(key), list) and key == "test_suite_list":
-                for test_suite in config[key]:
-                    test_suite["suite_dir"] = _resolve_path(
-                        _parse_env_var(test_suite["suite_dir"])
-                    )
-        return config
-
-    cfg["connectors"] = {n: _fix_types_loc(s) for n, s in cfg["connectors"].items()}
-    cfg["auxiliaries"] = {n: _fix_types_loc(s) for n, s in cfg["auxiliaries"].items()}
-    cfg = _resolve_config_paths(cfg)
+    with open(file_name, "r") as f:
+        cfg = yaml.load(f, Loader=YamlLoader)
 
     # Check requirements
     requirements = cfg.get("requirements")
