@@ -85,7 +85,6 @@ class YamlLoader(yaml.SafeLoader):
         tag: str, pattern: re.Pattern, constructor: Callable
     ) -> None:
         """Combination of add_implicit_resolver and add_constructor.
-@Grabber.grab_yaml_config
 
         This allows setting a tag on each value matching the pattern and
         executing the function `constructor` when the tag is met.
@@ -292,6 +291,7 @@ def check_requirements(requirements: List[dict]):
         sys.exit(1)
 
 
+@Grabber.grab_yaml_config
 def parse_config(file_name: PathType) -> Dict:
     """Parse the YAML configuration file and verify the dependencie's
     version requirement if encountered.
