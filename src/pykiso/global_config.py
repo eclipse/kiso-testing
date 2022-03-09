@@ -64,14 +64,14 @@ class ProtectedNamespace(SimpleNamespace):
         :param attr: attribute's name
         :param value: value to apply
 
-        :raises AttributeError:
+        :raises AttributeError: when value assignation is intended
         """
         raise AttributeError(f"Attribute {attr} is not writable")
 
 
 class GlobalConfig(metaclass=Singleton):
     """Container object used by the user to have access to all
-    configuration information coming from different level of the
+    configuration information coming from the different levels of the
     framework(yaml, cli...).
     """
 
@@ -85,7 +85,7 @@ class GlobalConfig(metaclass=Singleton):
 
 class Grabber:
     """Responsible to collect configuration information at different
-    level of the framework."""
+    levels of the framework."""
 
     @staticmethod
     def create_config_object(config: dict) -> ProtectedNamespace:
@@ -100,7 +100,7 @@ class Grabber:
         return json.loads(str_conf, object_hook=lambda x: ProtectedNamespace(**x))
 
     @staticmethod
-    def grab_yaml_config(func) -> Callable:
+    def grab_yaml_config(func: Callable) -> Callable:
         """Collect all parsed yaml information.
 
         :param func: decorated class
@@ -116,7 +116,7 @@ class Grabber:
             :param args: positonal arguments
             :param kwargs: named arguments
 
-            :return: parsed yam configuration information
+            :return: parsed yaml configuration information
             """
             dict_config = func(*args, **kwargs)
             object_config = Grabber.create_config_object(dict_config)
