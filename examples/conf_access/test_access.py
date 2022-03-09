@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -59,13 +59,7 @@ class MyTest1(pykiso.BasicTest):
         logging.info(f"pattern: {cli_config.pattern}")
 
     def test_run(self):
-        """In this case the default test_run method is overridden and
-        instead of calling test_run from BasicTest class the following
-        code is called.
-
-        Here, the test pass at the 3rd attempt out of 5. The setup and
-        tearDown methods are called for each attempt.
-        """
+        """Just verify some configuration values."""
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
