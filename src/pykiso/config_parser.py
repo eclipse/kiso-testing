@@ -34,7 +34,8 @@ from typing import Callable, Dict, List, TextIO, Union
 import pkg_resources
 import yaml
 
-from pykiso.types import PathType
+from .global_config import Grabber
+from .types import PathType
 
 
 class YamlLoader(yaml.SafeLoader):
@@ -290,6 +291,7 @@ def check_requirements(requirements: List[dict]):
         sys.exit(1)
 
 
+@Grabber.grab_yaml_config
 def parse_config(file_name: PathType) -> Dict:
     """Parse the YAML configuration file and verify the dependencie's
     version requirement if encountered.

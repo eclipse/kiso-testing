@@ -1,0 +1,32 @@
+auxiliaries:
+  aux1:
+    connectors:
+        com: chan1
+    config: null
+    type: ext_lib/example_test_auxiliary.py:ExampleAuxiliary
+  aux2:
+    connectors:
+        com:   chan2
+        flash: chan3
+    type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
+  aux3:
+    connectors:
+        com:   chan4
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+connectors:
+  chan1:
+    config: null
+    type: ext_lib/cc_example.py:CCExample
+  chan2:
+    type: ext_lib/cc_example.py:CCExample
+  chan4:
+    type: ext_lib/cc_example.py:CCExample
+  chan3:
+    config:
+        param_1: "value 1"
+        param_2: 2000
+    type: ext_lib/cc_example.py:CCExample
+test_suite_list:
+- suite_dir: conf_access
+  test_filter_pattern: '*.py'
+  test_suite_id: 1
