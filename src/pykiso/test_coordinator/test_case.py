@@ -190,7 +190,6 @@ class BasicTest(unittest.TestCase):
         """Hook method for constructing the test fixture."""
         pass
 
-    # @timeout_decorator.timeout(5) # Timeout of 10 second as generic test-case # TODO: Only working on linux
     @test_app_interaction(
         message_type=message.MessageCommandType.TEST_CASE_RUN, timeout_cmd=5
     )

@@ -29,6 +29,7 @@ from typing import List, Optional
 from pykiso.auxiliary import AuxiliaryCommon
 from pykiso.test_setup.dynamic_loader import PACKAGE
 
+from ..exceptions import AuxiliaryCreationError
 from ..types import MsgType
 
 log = logging.getLogger(__name__)
@@ -127,6 +128,8 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         """Create an auxiliary instance and ensure the communication to it.
 
         :return: message.Message() - Contain received message
+
+        :raises AuxiliaryCreationError: if instance creation failed
         """
         if self.lock.acquire():
             # Trigger the internal requests
@@ -135,6 +138,9 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
             report = self.queue_out.get()
             # Release the above lock
             self.lock.release()
+            # aux instance can't be created just exit
+            if not report:
+                raise AuxiliaryCreationError(self.name)
             # Return the report
             return report
 

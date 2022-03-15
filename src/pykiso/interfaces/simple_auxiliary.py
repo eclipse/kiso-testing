@@ -23,6 +23,7 @@ import abc
 import logging
 from typing import List, Optional
 
+from ..exceptions import AuxiliaryCreationError
 from .thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
@@ -62,8 +63,12 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         """Create an auxiliary instance and ensure the communication to it.
 
         :return: True if creation was successful otherwise False
+
+        :raises AuxiliaryCreationError: if instance creation failed
         """
         self.is_instance = self._create_auxiliary_instance()
+        if not self.is_instance:
+            raise AuxiliaryCreationError(self.name)
         return self.is_instance
 
     def delete_instance(self) -> bool:

@@ -28,6 +28,7 @@ from typing import List
 import pykiso
 from pykiso.auxiliary import AuxiliaryCommon
 
+from ..exceptions import AuxiliaryCreationError
 from ..types import MsgType
 
 log = logging.getLogger(__name__)
@@ -78,6 +79,8 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
 
         :return: verdict on instance creation, True if everything was
             fine otherwise False
+
+        :raises AuxiliaryCreationError: if instance creation failed
         """
         if self.lock.acquire():
             # Trigger the internal requests
@@ -86,6 +89,9 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
             self.is_instance = self.queue_out.get()
             # Release the above lock
             self.lock.release()
+            # aux instance can't be created just exit
+            if not self.is_instance:
+                raise AuxiliaryCreationError(self.name)
             # Return the report
             return self.is_instance
 
@@ -95,7 +101,7 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         :return: verdict on instance deletion, False if everything was
             fine otherwise True(instance was not deleted correctly)
         """
-        if self.lock.acquire():
+        if self.lock.acquire() and self.is_alive:
             # Trigger the internal requests
             self.queue_in.put("delete_auxiliary_instance")
             # Wait until the request was processed
