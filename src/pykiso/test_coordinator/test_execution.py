@@ -49,7 +49,7 @@ class ExitCode(enum.IntEnum):
     ONE_OR_MORE_TESTS_FAILED = 1
     ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION = 2
     ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTION = 3
-    FAILED_AT_AUXILIARY_CREATION = 4
+    AUXILIARY_CREATION_FAILED = 4
 
 
 def create_test_suite(test_suite_dict: Dict) -> test_suite.BasicTestSuite:
@@ -170,7 +170,7 @@ def execute(
     variants: Optional[tuple] = None,
     branch_levels: Optional[tuple] = None,
     pattern_inject: Optional[str] = None,
-    fail_fast: bool = False,
+    failfast: bool = False,
 ) -> int:
     """create test environment base on config
 
@@ -182,7 +182,7 @@ def execute(
     :param pattern_inject: optional pattern that will override
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
-    :param fail_fast: Stop the test run on the first error or failure
+    :param failfast: Stop the test run on the first error or failure
 
     :return: exit code corresponding to the actual tets exeuciton run
         state(tests failed, unexpected exception...)
@@ -216,12 +216,12 @@ def execute(
                 test_runner = xmlrunner.XMLTestRunner(
                     output=junit_output,
                     resultclass=XmlTestResult,
-                    failfast=fail_fast,
+                    failfast=failfast,
                 )
                 result = test_runner.run(all_tests_to_run)
         else:
             test_runner = unittest.TextTestRunner(
-                resultclass=BannerTestResult, failfast=fail_fast
+                resultclass=BannerTestResult, failfast=failfast
             )
             result = test_runner.run(all_tests_to_run)
 
@@ -232,7 +232,7 @@ def execute(
         else:
             exit_code = failure_and_error_handling(result)
     except AuxiliaryCreationError:
-        exit_code = ExitCode.FAILED_AT_AUXILIARY_CREATION
+        exit_code = ExitCode.AUXILIARY_CREATION_FAILED
     except KeyboardInterrupt:
         log.exception("Keyboard Interrupt detected")
         exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION

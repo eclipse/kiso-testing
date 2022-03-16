@@ -17,13 +17,14 @@
 
 
 class PykisoError(Exception):
-    """General XCP specific exception used as basis for all others."""
+    """Pykiso specific exception used as basis for all others."""
 
     def __str__(self):
         return self.message
 
+
 class AuxiliaryCreationError(PykisoError):
-    """Raised when an auxiliary instance creation failed,"""
+    """Raised when an auxiliary instance creation failed."""
 
     def __init__(self, aux_name: str) -> None:
         """Initialize attributes.
