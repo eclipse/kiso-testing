@@ -23,14 +23,16 @@ from enum import Enum
 
 
 class ListEnum(list, Enum):
-    """Base class for creating enumerated constants that are also 
+    """Base class for creating enumerated constants that are also
     subclasses of list.
     """
+
     pass
 
 
 class UDSCommands:
     """UDS mainstream command"""
+
     class ECUReset(ListEnum):
         """UDS requests to perform reset on components."""
 

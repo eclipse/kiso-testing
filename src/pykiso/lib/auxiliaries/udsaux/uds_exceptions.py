@@ -41,6 +41,7 @@ class UnexpectedResponseError(UDSError):
     def __init__(self, response):
         self.msg = f"Request expected to fail but succeed, got response: {response}"
 
+
 class InvalidResponseError(UDSError):
     """Raise if UDS response is not the expected one"""
 

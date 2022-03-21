@@ -18,8 +18,8 @@ uds_response
 .. currentmodule:: uds_response
 """
 import logging
-from enum import IntEnum
 from collections import UserList
+from enum import IntEnum
 
 log = logging.getLogger(__name__)
 

@@ -18,22 +18,21 @@ uds_auxiliary
 .. currentmodule:: uds_auxiliary
 
 """
-
+import configparser
 import logging
 import threading
 from pathlib import Path
 from typing import List, Optional, Union
 
 import can
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
+
 from pykiso.connector import CChannel
+from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
 from . import uds_exceptions
 from .uds_request import UDSCommands
 from .uds_response import UdsResponse
-from .uds_utils import (
-    get_uds_service,
-)
+from .uds_utils import get_uds_service
 
 log = logging.getLogger(__name__)
 
@@ -85,8 +84,11 @@ class UdsAuxiliary(AuxiliaryInterface):
             self.odx_file_path = Path(odx_file_path)
         self.config_ini_path = Path(config_ini_path)
 
-        self.req_id = #todo
-        self.res_id = #todo
+        config = configparser.ConfigParser()
+        config.read(self.config_ini_path)
+
+        self.req_id = int(config.get("can", "defaultReqId"), 16)
+        self.res_id = int(config.get("can", "defaultResId"), 16)
 
         self.uds_config_enable = False
         self.uds_config = None

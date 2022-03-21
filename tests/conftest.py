@@ -16,6 +16,8 @@ import pytest
 from pykiso import CChannel, Flasher, test_suite
 from pykiso.lib.auxiliaries import example_test_auxiliary
 from pykiso.lib.connectors import cc_example
+from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
+from pykiso.lib.connectors.cc_vector_can import CCVectorCan
 from pykiso.test_coordinator import test_case
 from pykiso.test_coordinator.test_case import define_test_parameters
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
@@ -174,3 +176,63 @@ def CustomTestCaseAndSuite(request):
                 aux.stop()
 
     request.cls.init = InitTestCaseAndSuite()
+
+
+@pytest.fixture
+def ccpcan_inst(mocker):
+    class TCChan(CCPCanCan):
+        def __init__(self, *args, **kwargs):
+            super(TCChan, self).__init__(*args, **kwargs)
+            self.remote_id = None
+
+        _cc_open = mocker.stub(name="_cc_open")
+        _cc_close = mocker.stub(name="_cc_close")
+        _cc_send = mocker.stub(name="_cc_send")
+        _cc_receive = mocker.stub(name="_cc_receive")
+
+        bus = mocker.stub(name="bus")
+
+    return TCChan(name="test-channel")
+
+
+@pytest.fixture
+def ccvector_inst(mocker):
+    class TCChan(CCVectorCan):
+        def __init__(self, *args, **kwargs):
+            super(TCChan, self).__init__(*args, **kwargs)
+            self.remote_id = None
+
+        _cc_open = mocker.stub(name="_cc_open")
+        _cc_close = mocker.stub(name="_cc_close")
+        _cc_send = mocker.stub(name="_cc_send")
+        _cc_receive = mocker.stub(name="_cc_receive")
+
+        bus = mocker.stub(name="bus")
+
+    return TCChan(name="test-channel")
+
+
+@pytest.fixture
+def mock_uds_config(mocker, mock_tp):
+    class MockUdsConfig:
+        def __init__(self):
+            pass
+
+        tp = mock_tp
+        send = mocker.stub(name="send")
+        rdbi = mocker.stub(name="rdbi")
+        disconnect = mocker.stub(name="disconnect")
+
+    return MockUdsConfig()
+
+
+@pytest.fixture
+def mock_tp(mocker):
+    class MockTp:
+        def __init__(self):
+            pass
+
+        encode_isotp = mocker.stub(name=[2, 16, 3, 0, 0, 0, 0, 0])
+        decode_isotp = lambda *args, **kwargs: [80, 1, 0, 100, 1, 244]
+
+    return MockTp()
