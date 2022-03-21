@@ -81,18 +81,23 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         return report
 
     def resume(self) -> None:
-        """Resume current auxiliary's run."""
+        """Resume current auxiliary's run, by running the
+        create_instance method in the background.
+
+        .. warning:: due to the usage of create_instance if an issue
+            occurred the exception AuxiliaryCreationError is raised.
+        """
         if not self.is_instance:
             self.create_instance()
         else:
-            log.error("Cannot resume auxiliary, error occurred during creation")
+            log.warning(f"Auxiliary '{self}' is already running")
 
     def suspend(self) -> None:
         """Suspend current auxiliary's run."""
         if self.is_instance:
             self.delete_instance()
         else:
-            log.error("Cannot suspend auxiliary, error occurred during creation")
+            log.warning(f"Auxiliary '{self}' is already stopped")
 
     def stop(self):
         """Stop the auxiliary"""
