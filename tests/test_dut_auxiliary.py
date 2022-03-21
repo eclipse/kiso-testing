@@ -366,7 +366,7 @@ def test_resume_with_error(mocker, caplog):
     auxiliary.is_instance = True
     auxiliary.resume()
 
-    assert "Cannot resume auxiliary" in caplog.text
+    assert "is already running" in caplog.text
 
 
 def test_suspend(mocker):
@@ -390,7 +390,7 @@ def test_suspend_with_error(mocker, caplog):
     auxiliary = DUTAuxiliary("channel", "flasher")
     auxiliary.suspend()
 
-    assert "Cannot suspend auxiliary" in caplog.text
+    assert "is already stopped" in caplog.text
 
 
 @pytest.mark.parametrize(
