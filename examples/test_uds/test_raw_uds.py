@@ -23,8 +23,6 @@ import logging
 import time
 import unittest
 
-from uds import IsoServices
-
 import pykiso
 from pykiso.auxiliaries import uds_aux
 
@@ -51,8 +49,8 @@ class ExampleUdsTest(pykiso.BasicTest):
         }
         diag_session_response = uds_aux.send_uds_config(extendedSession_req)
         """
-        diag_session_response = uds_aux.send_uds_raw([0x10, 0x01])
-        self.assertEqual(diag_session_response[:2], [0x50, 0x01])
+        diag_session_response = uds_aux.send_uds_raw([0x10, 0x03])
+        self.assertEqual(diag_session_response[:2], [0x50, 0x03])
 
     def tearDown(self):
         """Hook method from unittest in order to execute code after test case run."""
