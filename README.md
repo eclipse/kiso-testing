@@ -127,6 +127,8 @@ Options:
   --junit                         enables the generation of a junit report
   --text                          default, test results are only displayed in
                                   the console
+  --failfast                      stop the test run on the first error or
+                                  failure
 ```
 
 Suitable config files are available in the `examples` folder.

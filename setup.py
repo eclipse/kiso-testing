@@ -26,7 +26,6 @@ def read(*names, **kwargs):
 
 install_requires = [
     "pyserial",
-    "timeout-decorator",
     "click",
     "pyyaml",
     "pylink-square",

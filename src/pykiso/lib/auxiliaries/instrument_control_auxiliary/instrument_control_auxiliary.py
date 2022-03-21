@@ -226,6 +226,7 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
                 log.info("Using default output channel.")
         except Exception:
             log.exception("Unable to safely open the instrument.")
+            return False
         return True
 
     def _delete_auxiliary_instance(self) -> bool:

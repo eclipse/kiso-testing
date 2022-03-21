@@ -23,6 +23,7 @@ import abc
 import logging
 from typing import List, Optional
 
+from ..exceptions import AuxiliaryCreationError
 from .thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
@@ -62,8 +63,12 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         """Create an auxiliary instance and ensure the communication to it.
 
         :return: True if creation was successful otherwise False
+
+        :raises AuxiliaryCreationError: if instance creation failed
         """
         self.is_instance = self._create_auxiliary_instance()
+        if not self.is_instance:
+            raise AuxiliaryCreationError(self.name)
         return self.is_instance
 
     def delete_instance(self) -> bool:
@@ -76,18 +81,23 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         return report
 
     def resume(self) -> None:
-        """Resume current auxiliary's run."""
+        """Resume current auxiliary's run, by running the
+        create_instance method in the background.
+
+        .. warning:: due to the usage of create_instance if an issue
+            occurred the exception AuxiliaryCreationError is raised.
+        """
         if not self.is_instance:
             self.create_instance()
         else:
-            log.error("Cannot resume auxiliary, error occurred during creation")
+            log.warning(f"Auxiliary '{self}' is already running")
 
     def suspend(self) -> None:
         """Suspend current auxiliary's run."""
         if self.is_instance:
             self.delete_instance()
         else:
-            log.error("Cannot suspend auxiliary, error occurred during creation")
+            log.warning(f"Auxiliary '{self}' is already stopped")
 
     def stop(self):
         """Stop the auxiliary"""
