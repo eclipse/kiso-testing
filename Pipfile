@@ -19,6 +19,7 @@ pytest-cov = "*"
 coverage = "*"
 pylint = "*"
 black = "21.11b1"
+python-uds = "2.0.1"
 
 [packages]
 pyserial = "*"
