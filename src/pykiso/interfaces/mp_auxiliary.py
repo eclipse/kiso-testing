@@ -60,7 +60,6 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         self.queue_in = multiprocessing.Queue()
         self.queue_out = multiprocessing.Queue()
         self.stop_event = multiprocessing.Event()
-        self.wait_event = multiprocessing.Event()
         self.is_proxy_capable = is_proxy_capable
         self.logger = None
         self.is_instance = False

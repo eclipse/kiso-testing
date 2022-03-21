@@ -70,7 +70,6 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         self.queue_in = queue.Queue()
         self.queue_out = queue.Queue()
         self.stop_event = threading.Event()
-        self.wait_event = threading.Event()
         self.is_proxy_capable = is_proxy_capable
         # Create state
         self.is_instance = False
