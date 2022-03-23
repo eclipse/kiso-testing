@@ -31,8 +31,8 @@ def test_cc_close():
 
     assert isinstance(proxy_inst.queue_in, type(Queue()))
     assert isinstance(proxy_inst.queue_out, type(Queue()))
-    assert proxy_inst.queue_in.qsize() == 0
-    assert proxy_inst.queue_out.qsize() == 0
+    assert proxy_inst.queue_in.empty()
+    assert proxy_inst.queue_out.empty()
 
 
 def test_cc_send():
