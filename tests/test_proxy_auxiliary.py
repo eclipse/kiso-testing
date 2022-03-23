@@ -271,8 +271,8 @@ def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
     link_aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
     link_aux_2 = sys.modules["pykiso.auxiliaries.MockAux2"]
 
-    assert link_aux_1.channel.queue_out.qsize() == 0
-    assert link_aux_2.channel.queue_out.qsize() == 0
+    assert link_aux_1.channel.queue_out.empty()
+    assert link_aux_2.channel.queue_out.empty()
 
 
 def test_receive_message_exception(mocker, caplog, cchannel_inst):
@@ -306,7 +306,7 @@ def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, message, remo
 
     msg, r_id = conn_not_use.queue_out.get()
 
-    assert conn_use.queue_out.qsize() == 0
+    assert conn_use.queue_out.empty()
     assert msg == message
     assert r_id == remote_id
 
