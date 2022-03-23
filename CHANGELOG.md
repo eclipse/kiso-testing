@@ -32,6 +32,7 @@ invoke changelog
 * add skip lock for pipenv to prevent hangup
 * github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
 
+
 Full set of changes: [`0.15.1...57a70c7`](https://github.com/eclipse/kiso-testing/compare/0.15.1...57a70c7)
 
 ## Version 0.15.1 (2022-02-17)
