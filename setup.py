@@ -32,7 +32,7 @@ install_requires = [
     "python-can[pcan]",
     "unittest-xml-reporting",
     "robotframework==3.2.2",
-    "python-uds==2.0.2",
+    "python-uds @ git+https://github.com/BKaDamien/python-uds@2.0.2#egg=python-uds",
     "pyvisa",
     "pyvisa-py",
 ]
