@@ -58,9 +58,6 @@ def tmp_config_ini(tmp_path):
     uds_folder.mkdir()
     config_ini = uds_folder / "_config.ini"
     config_ini.write_text(create_config())
-    import logging
-
-    logging.error(config_ini)
     return config_ini
 
 
@@ -89,9 +86,6 @@ class TestUdsAuxiliary:
                 "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
                 return_value=None,
             )
-            # mocker.patch(
-            #     "pykiso.lib.auxiliaries.udsaux.uds_auxiliary.Path", side_effect=["odx", "config"]
-            # )
 
             TestUdsAuxiliary.uds_aux_instance_odx = UdsAuxiliary(
                 ccpcan_inst, "odx", tmp_config_ini
