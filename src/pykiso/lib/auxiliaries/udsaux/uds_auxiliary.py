@@ -62,9 +62,6 @@ class UdsAuxiliary(AuxiliaryInterface):
             Uds = Uds
             createUdsConnection = createUdsConnection
             IsoServices = IsoServices
-            print(Uds)
-            print(createUdsConnection)
-            print(IsoServices)
         except ImportError:
             log.exception("Could not import python-uds")
         return super(UdsAuxiliary, cls).__new__(cls)
