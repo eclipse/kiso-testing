@@ -230,27 +230,32 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         self.stop_event.set()
 
     def resume(self) -> None:
-        """Resume current auxiliary's run."""
+        """Resume current auxiliary's run, by running the
+        create_instance method in the background.
+
+        .. warning:: due to the usage of create_instance if an issue
+            occurred the exception AuxiliaryCreationError is raised.
+        """
         if not self.stop_event.is_set() and not self.is_instance:
             self.create_instance()
         else:
-            log.error("Cannot resume auxiliary, error occurred during creation")
+            log.warning(f"Auxiliary '{self}' is already running")
 
     def suspend(self) -> None:
         """Supend current auxiliary's run."""
         if self.is_instance:
             self.delete_instance()
         else:
-            log.error("Cannot suspend auxiliary, error occurred during creation")
+            log.warning(f"Auxiliary '{self}' is already stopped")
 
     @abc.abstractmethod
     def create_instance(self) -> bool:
-        """Run function of the auxiliary."""
+        """Handle auxiliary creation."""
         pass
 
     @abc.abstractmethod
     def delete_instance(self) -> bool:
-        """Run function of the auxiliary."""
+        """Handle auxiliary deletion."""
         pass
 
     @abc.abstractmethod

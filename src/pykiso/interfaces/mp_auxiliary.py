@@ -28,6 +28,7 @@ from typing import List
 import pykiso
 from pykiso.auxiliary import AuxiliaryCommon
 
+from ..exceptions import AuxiliaryCreationError
 from ..types import MsgType
 
 log = logging.getLogger(__name__)
@@ -44,7 +45,6 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         self,
         name: str = None,
         is_proxy_capable: bool = False,
-        is_pausable: bool = False,
         activate_log: List[str] = None,
     ) -> None:
         """Auxiliary initialization.
@@ -52,8 +52,6 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         :param name: alias of the auxiliary instance
         :param is_proxy_capable: notify if the current auxiliary could
             be (or not) associated to a proxy-auxiliary.
-        :param is_pausable: notify if the current auxiliary could be
-            (or not) paused
         :param activate_log: loggers to deactivate
         """
         self.name = name
@@ -62,9 +60,7 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         self.queue_in = multiprocessing.Queue()
         self.queue_out = multiprocessing.Queue()
         self.stop_event = multiprocessing.Event()
-        self.wait_event = multiprocessing.Event()
         self.is_proxy_capable = is_proxy_capable
-        self.is_pausable = is_pausable
         self.logger = None
         self.is_instance = False
         # store the logging information
@@ -78,6 +74,8 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
 
         :return: verdict on instance creation, True if everything was
             fine otherwise False
+
+        :raises AuxiliaryCreationError: if instance creation failed
         """
         if self.lock.acquire():
             # Trigger the internal requests
@@ -86,6 +84,9 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
             self.is_instance = self.queue_out.get()
             # Release the above lock
             self.lock.release()
+            # aux instance can't be created just exit
+            if not self.is_instance:
+                raise AuxiliaryCreationError(self.name)
             # Return the report
             return self.is_instance
 
@@ -95,7 +96,7 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         :return: verdict on instance deletion, False if everything was
             fine otherwise True(instance was not deleted correctly)
         """
-        if self.lock.acquire():
+        if self.lock.acquire() and self.is_alive:
             # Trigger the internal requests
             self.queue_in.put("delete_auxiliary_instance")
             # Wait until the request was processed
@@ -175,7 +176,7 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
                 self.logger.warning(f"Aux status: {self.__dict__}")
 
             # Step 2: Check if something was received from the aux instance if instance was created
-            if self.is_instance and not self.is_pausable:
+            if self.is_instance:
                 received_message = self._receive_message(timeout_in_s=0)
                 # If yes, send it via the out queue
                 if received_message is not None:
@@ -185,9 +186,6 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
             if not self.is_instance:
                 time.sleep(0.050)
 
-            # If auxiliary instance is created and is pausable
-            if self.is_instance and self.is_pausable:
-                self.wait_event.wait()
         # Thread stop command was set
         self.logger.info("{} was stopped".format(self))
         # Delete auxiliary external instance if not done

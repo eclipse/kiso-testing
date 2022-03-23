@@ -33,6 +33,7 @@ from typing import Dict, Optional
 
 import xmlrunner
 
+from ..exceptions import AuxiliaryCreationError
 from . import test_suite
 from .test_result import BannerTestResult
 from .test_xml_result import XmlTestResult
@@ -48,6 +49,7 @@ class ExitCode(enum.IntEnum):
     ONE_OR_MORE_TESTS_FAILED = 1
     ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION = 2
     ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTION = 3
+    AUXILIARY_CREATION_FAILED = 4
 
 
 def create_test_suite(test_suite_dict: Dict) -> test_suite.BasicTestSuite:
@@ -168,6 +170,7 @@ def execute(
     variants: Optional[tuple] = None,
     branch_levels: Optional[tuple] = None,
     pattern_inject: Optional[str] = None,
+    failfast: bool = False,
 ) -> int:
     """create test environment base on config
 
@@ -179,6 +182,10 @@ def execute(
     :param pattern_inject: optional pattern that will override
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
+    :param failfast: Stop the test run on the first error or failure
+
+    :return: exit code corresponding to the actual tets exeuciton run
+        state(tests failed, unexpected exception...)
     """
     exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
     is_raised = False
@@ -207,11 +214,15 @@ def execute(
             reports_path.mkdir(exist_ok=True)
             with open(junit_report_path, "wb") as junit_output:
                 test_runner = xmlrunner.XMLTestRunner(
-                    output=junit_output, resultclass=XmlTestResult
+                    output=junit_output,
+                    resultclass=XmlTestResult,
+                    failfast=failfast,
                 )
                 result = test_runner.run(all_tests_to_run)
         else:
-            test_runner = unittest.TextTestRunner(resultclass=BannerTestResult)
+            test_runner = unittest.TextTestRunner(
+                resultclass=BannerTestResult, failfast=failfast
+            )
             result = test_runner.run(all_tests_to_run)
 
         # if an exception is raised during test suite collections at least
@@ -220,7 +231,8 @@ def execute(
             exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
         else:
             exit_code = failure_and_error_handling(result)
-
+    except AuxiliaryCreationError:
+        exit_code = ExitCode.AUXILIARY_CREATION_FAILED
     except KeyboardInterrupt:
         log.exception("Keyboard Interrupt detected")
         exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION

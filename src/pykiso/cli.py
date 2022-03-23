@@ -173,6 +173,11 @@ def get_logging_options() -> LogOptions:
     default=None,
     help="allow the user to execute a subset of tests based on branch levels",
 )
+@click.option(
+    "--failfast",
+    is_flag=True,
+    help="stop the test run on the first error or failure",
+)
 @click.argument("pattern", required=False)
 @click.version_option(__version__)
 @Grabber.grab_cli_config
@@ -184,6 +189,7 @@ def main(
     variant: Optional[tuple] = None,
     branch_level: Optional[tuple] = None,
     pattern: Optional[str] = None,
+    failfast: bool = False,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -197,6 +203,7 @@ def main(
     :param variant: allow the user to execute a subset of tests based on variants
     :param branch_level: allow the user to execute a subset of tests based on branch levels
     :param pattern: overwrite the pattern from the YAML file for easier testdevelopment
+    :param failfast: stop the test run on the first error or failure
     """
     # Set the logging
     logger = initialize_logging(log_path, log_level, report_type)
@@ -208,7 +215,7 @@ def main(
     ConfigRegistry.register_aux_con(cfg_dict)
 
     exit_code = test_execution.execute(
-        cfg_dict, report_type, variant, branch_level, pattern
+        cfg_dict, report_type, variant, branch_level, pattern, failfast
     )
     ConfigRegistry.delete_aux_con()
     sys.exit(exit_code)

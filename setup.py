@@ -26,7 +26,6 @@ def read(*names, **kwargs):
 
 install_requires = [
     "pyserial",
-    "timeout-decorator",
     "click",
     "pyyaml",
     "pylink-square",
@@ -40,7 +39,7 @@ install_requires = [
 
 setup(
     name="pykiso",
-    version="0.15.1",
+    version="0.16.0",
     license="Eclipse Public License - v 2.0",
     description="Embedded integration testing framework.",
     long_description=read("README.md"),
