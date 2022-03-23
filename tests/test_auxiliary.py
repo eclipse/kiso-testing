@@ -15,8 +15,14 @@ from threading import Thread
 
 import pytest
 
-from pykiso import AuxiliaryInterface
+from pykiso import (
+    AuxiliaryInterface,
+    MpAuxiliaryInterface,
+    SimpleAuxiliaryInterface,
+    cli,
+)
 from pykiso.auxiliary import AuxiliaryCommon
+from pykiso.exceptions import AuxiliaryCreationError
 from pykiso.test_setup.config_registry import ConfigRegistry
 
 
@@ -43,6 +49,75 @@ def mock_aux(mocker):
     mocker.patch.object(time, "sleep")
 
     return MockAux()
+
+
+@pytest.fixture
+def mock_thread_aux(mocker):
+    class MockThreadAux(AuxiliaryInterface):
+        def __init__(self, param_1=None, param_2=None, **kwargs):
+            self.param_1 = param_1
+            self.param_2 = param_2
+            super().__init__(**kwargs)
+
+        _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
+        _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
+        _run_command = mocker.stub(name="_run_command")
+        _abort_command = mocker.stub(name="_abort_command")
+        _receive_message = mocker.stub(name="_receive_message")
+
+    return MockThreadAux()
+
+
+@pytest.fixture
+def mock_mp_aux(mocker):
+    class MockMpAux(MpAuxiliaryInterface):
+        def __init__(self, param_1=None, param_2=None, **kwargs):
+            cli.log_options = cli.LogOptions(None, "ERROR", None)
+            self.param_1 = param_1
+            self.param_2 = param_2
+            super().__init__(name="mp_aux", **kwargs)
+
+        _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
+        _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
+        _run_command = mocker.stub(name="_run_command")
+        _abort_command = mocker.stub(name="_abort_command")
+        _receive_message = mocker.stub(name="_receive_message")
+
+    return MockMpAux()
+
+
+@pytest.fixture
+def mock_simple_aux(mocker):
+    class MockSimpleAux(SimpleAuxiliaryInterface):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+        _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
+        _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
+
+    return MockSimpleAux()
+
+
+def test_thread_aux_raise_creation_error(mock_thread_aux):
+    mock_thread_aux.queue_out.put(False)
+    with pytest.raises(AuxiliaryCreationError):
+        mock_thread_aux.create_instance()
+
+
+def test_mp_aux_raise_creation_error(mock_mp_aux):
+
+    mock_mp_aux.queue_out.put(False)
+    with pytest.raises(AuxiliaryCreationError):
+        mock_mp_aux.create_instance()
+
+
+def test_simple_aux_raise_creation_error(mocker, mock_simple_aux):
+    mocker.patch.object(
+        mock_simple_aux, "_create_auxiliary_instance", return_value=False
+    )
+
+    with pytest.raises(AuxiliaryCreationError):
+        mock_simple_aux.create_instance()
 
 
 def test_lock_it(mock_aux):

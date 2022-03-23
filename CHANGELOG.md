@@ -9,8 +9,14 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version Unreleased (2022-03-04)
+## Version Unreleased (2022-03-22)
 
+#### New Features
+
+* raise an exception when auxiliary failed at instance creation ([#33](https://github.com/eclipse/kiso-testing/issues/33))
+* restore yaml loader in config parser ([#31](https://github.com/eclipse/kiso-testing/issues/31))
+* add uptime for pcan inside python-can
+* expose yaml and cli configuration to user test cases/suites
 #### Fixes
 
 * wait for logger thread to quit gracefully before closing segger channel ([#28](https://github.com/eclipse/kiso-testing/issues/28))
@@ -19,12 +25,15 @@ invoke changelog
 * Change auto changelog tool ([#30](https://github.com/eclipse/kiso-testing/issues/30))
 #### Continous integration
 
+* add skip lock for pipenv to prevent hangup
 * github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
 #### Others
 
+* add skip lock for pipenv to prevent hangup
 * github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
 
-Full set of changes: [`0.15.1...542647d`](https://github.com/eclipse/kiso-testing/compare/0.15.1...542647d)
+
+Full set of changes: [`0.15.1...57a70c7`](https://github.com/eclipse/kiso-testing/compare/0.15.1...57a70c7)
 
 ## Version 0.15.1 (2022-02-17)
 

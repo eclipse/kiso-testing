@@ -22,7 +22,6 @@ black = "21.11b1"
 
 [packages]
 pyserial = "*"
-timeout-decorator = "*"
 click = "*"
 pyyaml = "*"
 pykiso = {editable = true,path = "."}
