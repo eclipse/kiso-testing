@@ -314,6 +314,45 @@ To run the available example:
     cd examples
     robot robot_test_suite/test_record/
 
+UDS Auxiliary
+~~~~~~~~~~~~~
+
+To run the example:
+
+.. literalinclude:: ../../examples/robot_uds.yaml
+    :language: yaml
+    :linenos:
+
+
+As the "ITF" uds auxiliary, the robot version integrate exactly the same user's interface.
+
+.. note:: All return types between "ITF" and "Robot" auxiliary's version stay
+  identical! Only "Send uds raw" keywords return a list instead of bytes!
+
+Please find below a complete correlation table:
+
++--------------------------+--------------------------+--------------+-------------+-------------+-------------+
+| ITF method               | robot equivalent         | Parameter 1  | Parameter 2 | Parameter 3 | Parameter 4 |
++==========================+==========================+==============+=============+=============+=============+
+| send_uds_raw             | Send uds raw             | message      | aux alias   | timeout     |             |
++--------------------------+--------------------------+--------------+-------------+-------------+-------------+
+| send_uds_config          | Send uds config          | message      | aux alias   | timeout     |             |
++--------------------------+--------------------------+--------------+-------------+-------------+-------------+
+
+Robot file:
+
+.. literalinclude:: ../../examples/robot_test_suite/test_uds/demo_uds.robot
+    :language: robotframework
+    :linenos:
+
+To run the available example:
+
+.. code-block:: bash
+
+    cd examples
+    robot robot_test_suite/test_uds/
+
+
 Library Documentation
 ---------------------
 
@@ -336,4 +375,7 @@ Library Documentation
     :members:
 
 .. automodule:: pykiso.lib.robot_framework.acroname_auxiliary
+    :members:
+
+.. automodule:: pykiso.lib.robot_framework.uds_auxiliary
     :members:

@@ -3,7 +3,6 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
-
 [dev-packages]
 auto-changelog = "0.5.3"
 pdbpp = "*"
@@ -31,3 +30,4 @@ unittest-xml-reporting = "*" # to generate junit reports
 robotframework = "3.2.2"
 pyvisa = "*"
 pyvisa-py = "*"
+python-uds = {ref = "2.0.2", git = "https://github.com/BKaDamien/python-uds"}

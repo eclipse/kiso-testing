@@ -17,3 +17,4 @@ Included Auxiliaries
     proxy_auxiliary
     record_auxiliary
     simulated_auxiliary
+    uds_auxiliary

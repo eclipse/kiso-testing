@@ -9,3 +9,4 @@ Examples
     acroname_control
     instrument_control
     record
+    uds_auxiliary

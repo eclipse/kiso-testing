@@ -1,0 +1,22 @@
+auxiliaries:
+  uds_aux:
+    connectors:
+        com: can_channel
+    config:
+      # you can sepcify your odx file by using odx_file_path parameter
+      # and instead of using send_uds_raw method use the send_uds_config
+      # for a more human readable command
+      odx_file_path: null
+      config_ini_path: 'examples/test_uds/config.ini'
+    type: pykiso.lib.auxiliaries.udsaux.uds_auxiliary:UdsAuxiliary
+connectors:
+  can_channel:
+    config:
+      interface : 'pcan'
+      channel: 'PCAN_USBBUS1'
+      state: 'ACTIVE'
+    type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
+test_suite_list:
+- suite_dir: test_uds
+  test_filter_pattern: 'test_raw_uds*.py'
+  test_suite_id: 1
