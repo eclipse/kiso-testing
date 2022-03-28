@@ -52,7 +52,7 @@ def robot_uds_aux(mocker, tmp_config_ini):
     )
     mocker.patch(
         "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
-        return_value={"uds_aux": UdsAux("", "", tmp_config_ini)},
+        return_value={"uds_aux": UdsAux("", tmp_config_ini)},
     )
     return UdsAuxiliary()
 

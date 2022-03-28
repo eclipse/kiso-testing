@@ -7,15 +7,5 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-"""
-TODO
-*************************************
-
-:module: uds_auxiliary
-
-.. currentmodule:: TODO
-
-"""
-
 from . import uds_auxiliary
 from .uds_auxiliary import UdsAuxiliary

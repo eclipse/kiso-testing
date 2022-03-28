@@ -88,7 +88,7 @@ class TestUdsAuxiliary:
             )
 
             TestUdsAuxiliary.uds_aux_instance_odx = UdsAuxiliary(
-                ccpcan_inst, "odx", tmp_config_ini
+                ccpcan_inst, tmp_config_ini, "odx"
             )
         yield TestUdsAuxiliary.uds_aux_instance_odx
 
@@ -113,7 +113,7 @@ class TestUdsAuxiliary:
                 return_value=None,
             )
             TestUdsAuxiliary.uds_aux_instance_odx_v = UdsAuxiliary(
-                ccvector_inst, "odx", tmp_config_ini
+                ccvector_inst, tmp_config_ini, "odx"
             )
 
         yield TestUdsAuxiliary.uds_aux_instance_odx_v
@@ -139,7 +139,7 @@ class TestUdsAuxiliary:
                 return_value=None,
             )
             TestUdsAuxiliary.uds_aux_instance_raw = UdsAuxiliary(
-                ccpcan_inst, None, tmp_config_ini
+                ccpcan_inst, tmp_config_ini
             )
         yield TestUdsAuxiliary.uds_aux_instance_raw
 

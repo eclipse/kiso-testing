@@ -53,8 +53,10 @@ class UdsAuxiliary(AuxiliaryInterface):
 
         Import python-uds at instanciation to avoid warnings due to
         missing drivers.
-        """
 
+        :raises ImportError: If python-uds is not install on the current
+            computer.
+        """
         try:
             global Uds, createUdsConnection, IsoServices
             from uds import IsoServices, Uds, createUdsConnection
@@ -63,21 +65,21 @@ class UdsAuxiliary(AuxiliaryInterface):
             createUdsConnection = createUdsConnection
             IsoServices = IsoServices
         except ImportError:
-            log.exception("Could not import python-uds")
+            raise ImportError("python-uds package missing, could not import it!")
         return super(UdsAuxiliary, cls).__new__(cls)
 
     def __init__(
         self,
         com: CChannel,
-        odx_file_path: str,
         config_ini_path: str,
+        odx_file_path: str = None,
         **kwargs,
     ):
         """Initialize attributes.
 
         :param com: communication channel connector.
-        :param odx_file_path: ecu diagnostic definition file.
         :param config_ini_path: uds parameters file.
+        :param odx_file_path: ecu diagnostic definition file.
         """
         self.channel = com
         self.odx_file_path = odx_file_path
