@@ -150,15 +150,3 @@ or
 ```bash
 pytest
 ```
-
-## List of limitations / todos for the python side
-
-* [ ] **When the auxiliary does not answer (ping or else), GenericTest.BasicTest.cleanup_and_skip() call will result in a lock and break the framework.**
-* [ ] No test-section will be executed, needs to be removed later.
-* [x] test configuration files need to be reworked
-* [x] Names & configurations in the *cfg file json* are character precise class names & associated parameters.
-* [ ] Spelling mistakes need to be fixed!  _*ongoing*_
-* [ ] Add verbosity parameters to pass to the unittest framework to get more details about the test.
-* [x] **Add result parsing for Jenkins (see: https://stackoverflow.com/questions/11241781/python-unittests-in-jenkins).**
-* [x] Create a python package
-* [ ] and host it on pip.
