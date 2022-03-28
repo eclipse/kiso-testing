@@ -5,7 +5,7 @@ Using UDS protocol
 
 UdsAuxiliary class (:py:class:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary`) contained
 in uds_auxiliary.py is the main interface between user and all the behind implemented logic.
-This class defines usable keywords(methods) for scripters in order to send a uds request to the device under test (raw or configurable)...
+This class defines usable keywords(methods) for scripters in order to send uds requests to the device under test (raw or configurable)...
 
 Configuration
 =============
@@ -154,6 +154,8 @@ Send UDS Config Request
 | Send UDS request as a configurable data dictionary. This method can be more practical for UDS requests with long payloads and a multitude of parameters.
 | The method send_uds_config(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.send_uds_config`) takes one mandatory parameter msg_to_send and an optional one timeout_in_s.
 | The parameter msg_to_send is the UDS request defined as a configurable dictionary that always respects the below defined template:
+
+.. note:: this feature is only available if a valid ODX file is given at auxiliary configuration level
 
 .. code:: python
 
