@@ -44,7 +44,6 @@ IsoServices = None
 class UdsAuxiliary(AuxiliaryInterface):
     """Auxiliary used to handle UDS messages"""
 
-    NEGATIVE_RESPONSE = 0x7F
     POSITIVE_RESPONSE_OFFSET = 0x40
     errors = uds_exceptions
 
