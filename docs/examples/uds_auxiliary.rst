@@ -103,43 +103,51 @@ Send UDS Raw Request
   amount of time in second to wait for a response from the device under test. If this timeout is reached, the
   uds-auxiliary stop to acquire and log an error.
 
-If the corresponding response is received from entity under test, send_uds_raw method returns it also as a list of bytes.
-See example below:
+The method send_uds_raw method returns a :py:class:`~ebplugins.udsaux.uds_response.UdsResponse` object, which is a subclass of `UserList
+<https://docs.python.org/3/library/collections.html#collections.UserList>`.
+UserList allow to keep property of the list, meanwhile attributes can be set, for UdsResponse, defined attributes
+refer to the positivity of the response, and its NRC if negative.
 
 .. code:: python
 
-	import pykiso
-	from pykiso.auxiliaries import uds_aux
+    class UdsResponse(UserList):
+        NEGATIVE_RESPONSE_SID = 0x7F
+
+        def __init__(self, response_data) -> None:
+            super().__init__(response_data)
+            self.is_negative = False
+            self.nrc = None
+            if self.data and self.data[0] == self.NEGATIVE_RESPONSE_SID:
+                self.is_negative = True
+                self.nrc = NegativeResponseCode(self.data[2])
+
+Here is an example:
 
 
-	@pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=[uds_aux])
-	class ExampleUdsTest(pykiso.BasicTest):
-	    def setUp(self):
-	        """Hook method from unittest in order to execute code before test case run."""
-	        pass
+.. code:: python
 
-	    def test_run(self):
-	        logging.info(
-	            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
-	        )
+    import pykiso
+    from pykiso.auxiliaries import uds_aux
+    from collections import UserList
 
-	        """
-	        Simply go in extended session.
+    @pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=[uds_aux])
+    class ExampleUdsTest(pykiso.BasicTest):
+        def setUp(self):
+            """Hook method from unittest in order to execute code before test case run.
+            """
+            pass
 
-	        The equivalent command using an ODX file would be :
+        def test_run(self):
+            # Set extended session
+            diag_session_response = uds_aux.send_uds_raw([0x10, 0x03])
+            self.assertEqual(diag_session_response[:2], [0x50, 0x03])
+            self.assertEqual(type(diag_session_response), UserList)
+            self.assertFalse(diag_session_response.is_negative)
 
-	        extendedSession_req = {
-	            "service": IsoServices.DiagnosticSessionControl,
-	            "data": {"parameter": "Extended Diagnostic Session"},
-	        }
-	        diag_session_response = uds_aux.send_uds_config(extendedSession_req)
-	        """
-	        diag_session_response = uds_aux.send_uds_raw([0x10, 0x01])
-	        self.assertEqual(diag_session_response[:2], [0x50, 0x01])
-
-	    def tearDown(self):
-	        """Hook method from unittest in order to execute code after test case run."""
-	        pass
+        def tearDown(self):
+            """Hook method from unittest in order to execute code after test case run.
+            """
+            pass
 
 Send UDS Config Request
 -----------------------
@@ -150,8 +158,8 @@ Send UDS Config Request
 .. code:: python
 
     req = {
-        'service'   : %SERVICE_ID%,
-        'data'      : %DATA%
+        'service': %SERVICE_ID%,
+        'data': %DATA%
         }
 
 SERVICE_ID -> SID (Service Identifier) of the UDS request either defined as a byte or the corresponding enum label:
@@ -223,13 +231,15 @@ uds-auxiliary stops to acquire and log an error.
 
 | If the corresponding response is received from entity under test, send_uds_config method returns it also as a preconfigured dictionary.
 | In case of a UDS positive response and no data to be returned, None is returned by the send_uds_config method.
+| In case of a UDS negative response, a dictionary with the key 'NRC' is returned and the NRC value.
+| Optionally, 'NRC_Label' may be returned if it is defined in ODX for the called service, containing the uds negative response description.
 
 UDS Reset functions
 --------------------
 |Reset might be integrated in different tests.
 |The methods :  - soft_rest(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.soft_reset`)
 |               - hard_reset(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.hard_reset`)
-|               - key_off_on(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.key_off_on_reset`)
+|               - force_ecu_reset(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.force_ecu_reset`)
 |do not take any argument, and regarding the config (with our without odx file) will send either raw message, or
 |uds config (except for the key_off_on methods, but can remain acceptable for odx uds config)
 
@@ -251,3 +261,35 @@ UDS check functions
 
     #Check raw response is negative
     uds_aux.check_raw_response_negative(resp)
+
+UDS read & write data
+---------------------
+|Read data(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.read_data`) and write(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.write_data`)
+|are two helper API that use send_uds_config with specific ISO services (:py:meth:`udsaux.uds_utils.UdsAuxiliary.read_data`)
+
+.. code:: python
+
+    ReadDataByIdentifier = 0x22
+
+    WriteDataByIdentifier = 0x2E
+
+|Using write_data takes two arguments : parameter, and value.
+|Parameter is simply a string that refer to the name of the data you want to modify, and value
+|is simply the value you want to assign to the chosen parameters
+|API must return None in case of positive response, and dictionary with NRC in it (for further information,
+|check in send_uds_config documentation).
+|Using this API is similar to do this :
+
+.. code:: python
+
+    req = {
+            'service': IsoServices.WriteDataByIdentifier,
+            'data': {'parameter': 'MyProduct', 'dataRecord': [('SuperProduct', '12345')]}
+          }
+
+    resp = uds_aux.send_uds_config(writeProductCode_req)
+    return resp
+
+|In the same way, read_data takes one argument : parameter.
+|Parameter is a string that contain the name of the data that is to be read. API must return dictionary with either
+|data associated to the read parameter, or NRC.
