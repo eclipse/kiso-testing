@@ -3,14 +3,6 @@
 omit = */tests/*
        */examples/*
        */setup.py
-       */src/pykiso/__init__.py
-       */src/pykiso/lib/connectors/__init__.py
-       */src/pykiso/lib/auxiliaries/__init__.py
-       */src/pykiso/lib/auxiliaries/simulated_auxiliary/__init__.py
-       */src/pykiso/lib/auxiliaries/instrument_control_auxiliary/__init__.py
-       */src/pykiso/lib/__init__.py
        */tasks.py
        */src/pykiso/__main__.py
-       */src/pykiso/test_coordinator/__init__.py
-       */src/pykiso/test_setup/__init__.py
-       */src/pykiso/lib/robot_framework/__init__.py
+       *__init__.py
