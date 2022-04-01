@@ -59,10 +59,14 @@ class ExampleAuxiliary(AuxiliaryInterface):
             answered return True otherwise False
         """
         log.info("Create auxiliary instance")
+
+        # Define callback
+        def thread_aux_callback():
+            self.notifyer.release()
         # Create an instance (e.g. flash it) -> Placeholder
         # Enable the communication with it
         log.info("Enable channel")
-        self.channel.open()
+        self.channel.open(thread_aux_callback)
         # Pingpong
         return_code = self._send_and_wait_ack(message.Message(), 0.5, 2)
         # Return output

@@ -46,6 +46,7 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         self.is_instance = False
         self.stop_event = None
         self._aux_copy = None
+        self.notifyer = None # OS resource used to pause the thread
 
     def __repr__(self) -> str:
         name = self.name
@@ -165,6 +166,8 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
             # Trigger the internal requests
             self.queue_in.put(("command", cmd_message, cmd_data))
             log.debug(f"sent command '{cmd_message}' in {self}")
+            # Notify
+            self.notifyer.release()
             # Wait until the test request was received
             try:
                 log.debug(f"waiting for reply to command '{cmd_message}' in {self}")
@@ -193,6 +196,8 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         if self.lock.acquire():
             # Trigger the internal requests
             self.queue_in.put("abort")
+            # Notify
+            self.notifyer.release()
             # Wait until the test request was received
             try:
                 return_code = self.queue_out.get(blocking, timeout_in_s)

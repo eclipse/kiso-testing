@@ -88,6 +88,12 @@ class CCExample(connector.CChannel):
 
         :return: Message if successful, otherwise None
         """
+        # It does not matter if we call it here or later, we should be in the right thread
+        if self.callback:
+            self.callback()
+        else:
+            log.warning("Receive was called but callback not set!")
+        
         if raw:
             raise NotImplementedError()
         if self.last_received_message is not None:

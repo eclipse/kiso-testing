@@ -70,6 +70,10 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         self.queue_in = queue.Queue()
         self.queue_out = queue.Queue()
         self.stop_event = threading.Event()
+        # Not handled yet, should be looked closely. If it reaches 50,
+        # it means more requests are comming in as what the thread can process.
+        semaphore_buffer=50 
+        self.notifyer = threading.Semaphore(semaphore_buffer)
         self.is_proxy_capable = is_proxy_capable
         # Create state
         self.is_instance = False
@@ -157,6 +161,8 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
     def run(self) -> None:
         """Run function of the auxiliary thread."""
         while not self.stop_event.is_set():
+            # Step 0: Wait for a User or Connector to publish something
+            self.notifyer.acquire(blocking=True, timeout=1) # So that we exit loop when needed
             # Step 1: Check if a request is available & process it
             request = ""
             # Check if a request was received
