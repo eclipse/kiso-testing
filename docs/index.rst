@@ -9,6 +9,7 @@ Welcome to pykiso's documentation!
 
     introduction/integration_test
     getting_started/index
+    whats_new/index
     api
     examples/index
     advanced_features/index
