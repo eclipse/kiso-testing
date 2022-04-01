@@ -25,15 +25,15 @@
                     <thead>
                         <tr>
                             <th scope="col" style="width: 3%">Step</th>
-                            {% for column_name in test_content[0].keys() %}
+                            {% set columns_name = test_content[0].keys() %}
+                            {% for column_name in columns_name if column_name != "succeed" %}
                                 <th scope="col">{{column_name}}</th>
                             {% endfor %}
                         </tr>
                     </thead>
                     <tbody>
-                        {% set last_test = loop.last %}
                         {% for row in test_content %}
-                            {% if last_test and loop.last and not class_content.get("succeed") %}
+                            {% if not row.pop("succeed") %}
                                 {% set color_cell = "background-color: rgb(236, 160, 160);" %}
                                 {% set color_empty_cell = "background-color: rgb(236, 160, 160);" %}
                             {% else %}
