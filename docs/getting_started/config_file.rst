@@ -191,6 +191,8 @@ and **will not be parsed**.
   Relative path or file locations must always start with `./`.
   If not, it will still be resolved but unexpected behaviour can result from it.
 
+.. _config_sub_yaml:
+
 Include sub-YAMLs
 ~~~~~~~~~~~~~~~~~
 
