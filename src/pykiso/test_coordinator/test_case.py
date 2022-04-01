@@ -159,6 +159,9 @@ class BasicTest(unittest.TestCase):
         # Store additional data fetched during test for
         # the step-report (even if not activated)
         self.step_report_header = {}
+        self.step_report_message = ""
+        self.step_report_succeed = True
+        self.step_report_continue_on_error = False
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
@@ -222,6 +225,7 @@ class BasicTest(unittest.TestCase):
                     self.assertEqual(
                         report_msg.sub_type, message.MessageReportType.TEST_PASS
                     )
+                    
 
     # @timeout_decorator.timeout(5) # Timeout of 10 second as generic test-case # TODO: Only working on linux
     def test_run(self) -> None:

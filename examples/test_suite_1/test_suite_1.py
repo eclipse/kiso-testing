@@ -168,9 +168,8 @@ class MyTest2(pykiso.BasicTest):
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.
     """
-
     @pykiso.retry_test_case(
-        max_try=3, rerun_setup=False, rerun_teardown=False, stability_test=True
+        max_try=1, rerun_setup=False, rerun_teardown=False, stability_test=True
     )
     def test_run(self):
         """In this case the default test_run method is called using the
@@ -242,11 +241,13 @@ class MyTest4(pykiso.BasicTest):
             f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
         device_on = True
+        self.step_report_message = "smth"
+        self.step_report_continue_on_error = True
         self.assertTrue(device_on, msg="Check my device is ready")
         voltage = 3.8
-        self.assertAlmostEqual(voltage, 4, delta=1, msg="Check voltage device")
+        self.assertAlmostEqual(voltage, 4, delta=1, msg="err")
         # additional data can be shown in the step-report
-        self.step_report_header["Version_device"] = "2022-1234"
+
 
     def test_run(self):
         """Here is my test description which will be showed in the step-report"""
@@ -254,7 +255,8 @@ class MyTest4(pykiso.BasicTest):
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
         kiso_is_great = True
-        self.assertTrue(kiso_is_great, "Some verification")
+        self.step_report_continue_on_error = True
+        self.assertTrue(False, "Some verification")
         wrong_placement = "123"
         self.assertEqual(
             "123",
