@@ -1,3 +1,5 @@
+.. _global_config:
+
 Access framework's configuration
 --------------------------------
 
