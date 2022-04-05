@@ -26,13 +26,13 @@ import os
 import re
 import sys
 from collections import ChainMap
-from distutils.version import LooseVersion
 from io import TextIOWrapper
 from pathlib import Path
 from typing import Callable, Dict, List, TextIO, Union
 
 import pkg_resources
 import yaml
+from packaging import version
 
 from .global_config import Grabber
 from .types import PathType
@@ -249,7 +249,7 @@ def check_requirements(requirements: List[dict]):
             if (
                 not match
                 and current_version != expected_version
-                and LooseVersion(current_version) < LooseVersion(expected_version)
+                and version.parse(current_version) < version.parse(expected_version)
             ):
                 # Version not satisfied: current_version < expected_version
                 requirement_satisfied = False
@@ -264,7 +264,7 @@ def check_requirements(requirements: List[dict]):
                 try:
                     compare_operation = conditionals[condition]
                     check = compare_operation(
-                        LooseVersion(current_version), LooseVersion(required_version)
+                        version.parse(current_version), version.parse(required_version)
                     )
                     if check is False:
                         # Version not satisfied

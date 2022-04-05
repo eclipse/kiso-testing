@@ -134,9 +134,6 @@ class Message:
         :param error_code: Error value
         :type error_code: integer
 
-        :param test_section: Section value
-        :type test_section: integer
-
         :param test_suite: Suite value
         :type test_suite: integer
 
