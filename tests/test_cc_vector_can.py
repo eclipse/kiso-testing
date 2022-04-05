@@ -19,7 +19,6 @@ from pykiso.lib.connectors.cc_vector_can import (
     detect_serial_number,
 )
 from pykiso.message import (
-    MessageAckType,
     MessageCommandType,
     MessageType,
     TlvKnownTags,
@@ -216,21 +215,27 @@ def test_can_recv(
 
 
 @pytest.mark.parametrize(
-    "raw_state",
+    "raw_state, side_effect_value, expected_log",
     [
-        True,
-        False,
+        (True, None, ""),
+        (False, BaseException, "encountered error while receiving message via"),
     ],
 )
-def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
+def test_can_recv_invalid(
+    mocker, mock_can_bus, raw_state, side_effect_value, caplog, expected_log
+):
 
-    mocker.patch("can.interface.Bus.recv", return_value=None)
+    mocker.patch(
+        "can.interface.Bus.recv", return_value=None, side_effect=side_effect_value
+    )
 
-    with CCVectorCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001, raw=raw_state)
+    with caplog.at_level(logging.ERROR):
+        with CCVectorCan() as can:
+            msg_received, id_received = can._cc_receive(timeout=0.0001, raw=raw_state)
 
-    assert msg_received == None
-    assert id_received == None
+    assert msg_received is None
+    assert id_received is None
+    assert expected_log in caplog.text
 
 
 @pytest.mark.parametrize(

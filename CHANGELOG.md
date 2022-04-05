@@ -9,14 +9,24 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version Unreleased (2022-03-22)
+## Version Unreleased (2022-03-29)
+
+#### Fixes
+
+* qsize() not available for macos x
+
+Full set of changes: [`0.16.0...d2083e7`](https://github.com/eclipse/kiso-testing/compare/0.16.0...d2083e7)
+
+## Version 0.16.0 (2022-03-22)
 
 #### New Features
 
+* update to new release 0.16.0 ([#34](https://github.com/eclipse/kiso-testing/issues/34))
 * raise an exception when auxiliary failed at instance creation ([#33](https://github.com/eclipse/kiso-testing/issues/33))
 * restore yaml loader in config parser ([#31](https://github.com/eclipse/kiso-testing/issues/31))
 * add uptime for pcan inside python-can
 * expose yaml and cli configuration to user test cases/suites
+* add uptime for pcan inside python-can
 #### Fixes
 
 * wait for logger thread to quit gracefully before closing segger channel ([#28](https://github.com/eclipse/kiso-testing/issues/28))
@@ -32,8 +42,7 @@ invoke changelog
 * add skip lock for pipenv to prevent hangup
 * github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
 
-
-Full set of changes: [`0.15.1...57a70c7`](https://github.com/eclipse/kiso-testing/compare/0.15.1...57a70c7)
+Full set of changes: [`0.15.1...0.16.0`](https://github.com/eclipse/kiso-testing/compare/0.15.1...0.16.0)
 
 ## Version 0.15.1 (2022-02-17)
 
