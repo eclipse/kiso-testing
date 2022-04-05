@@ -54,7 +54,6 @@ def _communication_send_check(serial_port, baud):
     message_to_send = message.Message(
         msg_type=message.MessageType.ACK,
         sub_type=message.MessageAckType.ACK,
-        test_section=1,
         test_suite=2,
         test_case=3,
     )
@@ -83,7 +82,6 @@ def _communication_receive_check(timeout, expected_timeout, serial_port, baud):
     message_sent = message.Message(
         msg_type=message.MessageType.COMMAND,
         sub_type=message.MessageCommandType.TEST_CASE_SETUP,
-        test_section=1,
         test_suite=2,
         test_case=3,
     )
