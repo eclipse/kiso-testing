@@ -17,7 +17,8 @@ sphinx-autodoc-typehints = "*"
 pytest-cov = "*"
 coverage = "*"
 pylint = "*"
-black = "21.11b1"
+black = "22.3.0"
+pre-commit = "*"
 
 [packages]
 pyserial = "*"
