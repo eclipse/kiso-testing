@@ -199,3 +199,41 @@ def test_on_message_received(caplog, mocker, tmp_file):
         assert "ER     0064 RX 8  01 02 03 04 05 06 0A FF" in txt
         assert "     10" in txt
         assert "      9" in txt
+
+
+@pytest.mark.parametrize(
+    "is_remote_frame_value, is_error_frame_value, is_fd_value,bitrate_switch_value,error_state_indicator_value, expected_return",
+    [
+        (True, True, True, True, True, "RR"),
+        (False, True, True, True, True, "ER"),
+        (False, False, False, True, True, "DT"),
+        (False, False, True, True, True, "BI"),
+        (False, False, True, True, False, "FB"),
+        (False, False, True, False, True, "FE"),
+        (False, False, True, False, False, "FD"),
+    ],
+)
+def test_get_type(
+    is_remote_frame_value,
+    is_error_frame_value,
+    is_fd_value,
+    bitrate_switch_value,
+    error_state_indicator_value,
+    expected_return,
+):
+    class access_static_method(SocketCan2Trc):
+        def __init__(self):
+            self.started = False
+
+        def get_type(self, can_frame):
+            return super().get_type(can_frame)
+
+    can_msg = can.Message(
+        is_remote_frame=is_remote_frame_value,
+        is_error_frame=is_error_frame_value,
+        is_fd=is_fd_value,
+        bitrate_switch=bitrate_switch_value,
+        error_state_indicator=error_state_indicator_value,
+    )
+
+    assert access_static_method().get_type(can_msg) == expected_return
