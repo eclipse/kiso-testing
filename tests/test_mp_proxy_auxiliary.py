@@ -132,13 +132,13 @@ def test_run(mocker, mp_proxy_auxiliary_inst):
     mock_init_trace = mocker.patch.object(
         MpProxyAuxiliary, "_init_trace", return_value=None
     )
-    with mocker.patch("pickle.dump"):
-        proxy_inst = mp_proxy_auxiliary_inst
-        proxy_inst.logger = logging.getLogger(__name__)
-        proxy_inst.stop()
-        proxy_inst.run()
-        mock_init_trace.assert_called_once()
-        mock_init_logger.assert_called_once()
+
+    proxy_inst = mp_proxy_auxiliary_inst
+    proxy_inst.logger = logging.getLogger(__name__)
+    proxy_inst.stop()
+    proxy_inst.run()
+    mock_init_trace.assert_called_once()
+    mock_init_logger.assert_called_once()
 
 
 def test_init_trace(mocker, mp_proxy_auxiliary_inst, caplog):
