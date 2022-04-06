@@ -9,7 +9,6 @@
 import logging
 import queue
 import sys
-import time
 from pathlib import Path
 
 import pytest
@@ -66,7 +65,7 @@ def mock_auxiliaries(mocker):
 
 
 @pytest.fixture
-def Mp_Proxy_auxiliary_init(mock_auxiliaries):
+def mp_proxy_auxiliary_inst(mock_auxiliaries):
     proxy_inst = MpProxyAuxiliary(
         name="mp_aux",
         com=mock_auxiliaries[1],
@@ -80,7 +79,7 @@ def Mp_Proxy_auxiliary_init(mock_auxiliaries):
 
 
 @pytest.fixture
-def mock_proxy_aux(mocker, cchannel_inst):
+def mock_mp_proxy_aux(mocker, cchannel_inst):
     class access_static_method(MpProxyAuxiliary):
         def __init__(self, param_1=None, param_2=None, **kwargs):
             self.param_1 = param_1
@@ -110,17 +109,12 @@ def mock_proxy_aux(mocker, cchannel_inst):
         _run_command = mocker.stub(name="_run_command")
         _abort_command = mocker.stub(name="_abort_command")
         _receive_message = mocker.stub(name="_receive_message")
-        create_instance = mocker.stub(name="create_instance")
-        delete_instance = mocker.stub(name="delete_instance")
-        start = mocker.stub(name="start")
-        is_alive = mocker.stub(name="is_alive")
-        join = mocker.stub(name="join")
 
     return access_static_method()
 
 
-def test_constructor(mocker, Mp_Proxy_auxiliary_init):
-    proxy_inst = Mp_Proxy_auxiliary_init
+def test_constructor(mp_proxy_auxiliary_inst):
+    proxy_inst = mp_proxy_auxiliary_inst
     assert proxy_inst.trace_options.activate
     assert isinstance(proxy_inst.trace_options, TraceOptions)
     assert proxy_inst.trace_options.dir == Path()
@@ -130,7 +124,7 @@ def test_constructor(mocker, Mp_Proxy_auxiliary_init):
     assert len(proxy_inst.proxy_channels) == 0
 
 
-def test_run(mocker, Mp_Proxy_auxiliary_init):
+def test_run(mocker, mp_proxy_auxiliary_inst):
     mocker.patch.object(MpProxyAuxiliary, "start", return_value=None)
     mock_init_logger = mocker.patch.object(
         MpProxyAuxiliary, "initialize_loggers", return_value=None
@@ -139,7 +133,7 @@ def test_run(mocker, Mp_Proxy_auxiliary_init):
         MpProxyAuxiliary, "_init_trace", return_value=None
     )
     with mocker.patch("pickle.dump"):
-        proxy_inst = Mp_Proxy_auxiliary_init
+        proxy_inst = mp_proxy_auxiliary_inst
         proxy_inst.logger = logging.getLogger(__name__)
         proxy_inst.stop()
         proxy_inst.run()
@@ -147,29 +141,29 @@ def test_run(mocker, Mp_Proxy_auxiliary_init):
         mock_init_logger.assert_called_once()
 
 
-def test_init_trace(mocker, Mp_Proxy_auxiliary_init, caplog):
-    mocker.patch("logging.Formatter", return_value="Format_info")
+def test_init_trace(mocker, mp_proxy_auxiliary_inst, caplog):
+    mock_formatter = mocker.patch("logging.Formatter")
     log = logging.getLogger(__name__)
     with caplog.at_level(
         logging.INFO,
     ):
-        Mp_Proxy_auxiliary_init._init_trace(log, True)
-        log_path = time.strftime("%Y-%m-%d_%H-%M-%S_proxy_logging.log")
+        mp_proxy_auxiliary_inst._init_trace(log, True)
     assert "create proxy trace file at " in caplog.text
+    mock_formatter.assert_called()
 
 
-def test_init_trace_false(mocker, Mp_Proxy_auxiliary_init):
-    result = Mp_Proxy_auxiliary_init._init_trace(Mp_Proxy_auxiliary_init.logger, True)
+def test_init_trace_not_activated(mocker, mp_proxy_auxiliary_inst):
+    result = mp_proxy_auxiliary_inst._init_trace(mp_proxy_auxiliary_inst.logger, False)
     assert result is None
 
 
-def test_get_proxy_con_pre_load(mocker, Mp_Proxy_auxiliary_init, caplog):
+def test_get_proxy_con_pre_load(mocker, mp_proxy_auxiliary_inst, caplog):
     mock_check_comp = mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
 
     mock_get_alias = mocker.patch.object(
         ConfigRegistry, "get_auxes_alias", return_value="later_aux"
     )
-    Mp_Proxy_auxiliary_init.aux_list = ["later_aux"]
+    mp_proxy_auxiliary_inst.aux_list = ["later_aux"]
 
     class Linker:
         def __init__(self):
@@ -190,7 +184,7 @@ def test_get_proxy_con_pre_load(mocker, Mp_Proxy_auxiliary_init, caplog):
         logging.WARNING,
     ):
 
-        result_get_proxy = Mp_Proxy_auxiliary_init.get_proxy_con(["later_aux"])
+        result_get_proxy = mp_proxy_auxiliary_inst.get_proxy_con(["later_aux"])
     assert (
         "Auxiliary : later_aux is not using import magic mechanism (pre-loaded)"
         in caplog.text
@@ -201,24 +195,24 @@ def test_get_proxy_con_pre_load(mocker, Mp_Proxy_auxiliary_init, caplog):
     mock_get_alias.get_called()
 
 
-def test_get_proxy_con_valid_(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries):
+def test_get_proxy_con_valid_(mocker, mp_proxy_auxiliary_inst, mock_auxiliaries):
     mock_check_comp = mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
 
     AUX_LIST_NAMES = ["MockAux1", "MockAux2"]
-    result_get_proxy = Mp_Proxy_auxiliary_init.get_proxy_con(AUX_LIST_NAMES)
+    result_get_proxy = mp_proxy_auxiliary_inst.get_proxy_con(AUX_LIST_NAMES)
 
     assert len(result_get_proxy) == 2
     assert all(isinstance(items, CChannel) for items in result_get_proxy)
     mock_check_comp.assert_called()
 
 
-def test_get_proxy_con_invalid_(mocker, caplog, Mp_Proxy_auxiliary_init):
+def test_get_proxy_con_invalid_(mocker, caplog, mp_proxy_auxiliary_inst):
     mock_get_alias = mocker.patch.object(
         ConfigRegistry, "get_auxes_alias", return_value="later_aux"
     )
 
     with caplog.at_level(logging.ERROR):
-        result_get_proxy = Mp_Proxy_auxiliary_init.get_proxy_con(
+        result_get_proxy = mp_proxy_auxiliary_inst.get_proxy_con(
             ["not_exist_aux", "fake_aux"]
         )
 
@@ -229,56 +223,54 @@ def test_get_proxy_con_invalid_(mocker, caplog, Mp_Proxy_auxiliary_init):
     mock_get_alias.assert_called()
 
 
-def test_create_instance(mocker, Mp_Proxy_auxiliary_init, caplog):
+def test_create_auxiliary_instance(mp_proxy_auxiliary_inst, caplog):
 
     with caplog.at_level(logging.INFO):
-        result_create_inst = Mp_Proxy_auxiliary_init._create_auxiliary_instance()
+        result_create_inst = mp_proxy_auxiliary_inst._create_auxiliary_instance()
     assert result_create_inst is True
     assert "Create auxiliary instance" in caplog.text
     assert "Enable channel" in caplog.text
 
 
-def test_create_instance_false(mocker, Mp_Proxy_auxiliary_init, caplog):
-    Mp_Proxy_auxiliary_init.channel = None
+def test_create_auxiliary_instance_exception(mp_proxy_auxiliary_inst, caplog):
+    mp_proxy_auxiliary_inst.channel = None
     with caplog.at_level(logging.ERROR):
-        result_create_inst = Mp_Proxy_auxiliary_init._create_auxiliary_instance()
+        result_create_inst = mp_proxy_auxiliary_inst._create_auxiliary_instance()
     assert result_create_inst is False
     assert "Error encouting during channel creation" in caplog.text
 
 
-def test_delete_instance(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries, caplog):
+def test_delete_auxiliary_instance(
+    mocker, mp_proxy_auxiliary_inst, mock_auxiliaries, caplog
+):
     mock_empty_queue = mocker.patch.object(MpProxyAuxiliary, "_empty_queue")
-    mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
+    mp_proxy_auxiliary_inst.proxy_channels = [mock_auxiliaries[1], mock_auxiliaries[2]]
 
-    AUX_LIST_NAMES = ["MockAux1", "MockAux2"]
-    Mp_Proxy_auxiliary_init.proxy_channels = Mp_Proxy_auxiliary_init.get_proxy_con(
-        AUX_LIST_NAMES
-    )
     with caplog.at_level(logging.INFO):
 
-        result = Mp_Proxy_auxiliary_init._delete_auxiliary_instance()
+        result = mp_proxy_auxiliary_inst._delete_auxiliary_instance()
     assert "Delete auxiliary instance" in caplog.text
     assert result is True
     mock_empty_queue.assert_called()
     assert mock_empty_queue.call_count == 5
 
 
-def test_delete_instance_exception(mocker, Mp_Proxy_auxiliary_init, caplog):
-    Mp_Proxy_auxiliary_init.channel = None
+def test_delete_instance_exception(mp_proxy_auxiliary_inst, caplog):
+    mp_proxy_auxiliary_inst.channel = None
     with caplog.at_level(logging.ERROR):
-        result = Mp_Proxy_auxiliary_init._delete_auxiliary_instance()
+        result = mp_proxy_auxiliary_inst._delete_auxiliary_instance()
     assert "Error encouting during channel closure" in caplog.text
     assert result is True
 
 
-def test_receive_message(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries, caplog):
+def test_receive_message(mp_proxy_auxiliary_inst, mock_auxiliaries, caplog):
     proxy_channel_test = mock_auxiliaries[1]
     proxy_channel_test.cc_receive.return_value = b"340", "Test_source"
-    Mp_Proxy_auxiliary_init.proxy_channels = [proxy_channel_test]
+    mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
     with caplog.at_level(logging.DEBUG):
-        result_rec_message = Mp_Proxy_auxiliary_init._receive_message(1)
+        result_rec_message = mp_proxy_auxiliary_inst._receive_message(1)
     assert (
-        f"raw data : {b'340'.hex()} || source : Test_source || channel : {Mp_Proxy_auxiliary_init.channel.name}"
+        f"raw data : {b'340'.hex()} || source : Test_source || channel : {mp_proxy_auxiliary_inst.channel.name}"
         in caplog.text
     )
     assert result_rec_message is None
@@ -288,28 +280,26 @@ def test_receive_message(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries, capl
     ]
 
 
-def test_receive_message_exception(
-    mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries, caplog
-):
+def test_receive_message_exception(mp_proxy_auxiliary_inst, mock_auxiliaries, caplog):
     proxy_channel_test = mock_auxiliaries[1]
     proxy_channel_test.cc_receive.return_value = "Tree", "test"
-    Mp_Proxy_auxiliary_init.proxy_channels = [proxy_channel_test]
+    mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
     with caplog.at_level(logging.ERROR):
-        result_rec_message = Mp_Proxy_auxiliary_init._receive_message(1)
+        result_rec_message = mp_proxy_auxiliary_inst._receive_message(1)
 
     assert (
-        f"encountered error while receiving message via {Mp_Proxy_auxiliary_init.channel}"
+        f"encountered error while receiving message via {mp_proxy_auxiliary_inst.channel}"
         in caplog.text
     )
     assert result_rec_message is None
     assert proxy_channel_test.queue_out.empty()
 
 
-def test_dispatch_command_valid(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries):
+def test_dispatch_command_valid(mocker, mp_proxy_auxiliary_inst, mock_auxiliaries):
     proxy_channel_test = mock_auxiliaries[1]
-    Mp_Proxy_auxiliary_init.proxy_channels = [proxy_channel_test]
+    mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
     compare_channel = mock_auxiliaries[2]
-    result_rec_message = Mp_Proxy_auxiliary_init._dispatch_command(
+    result_rec_message = mp_proxy_auxiliary_inst._dispatch_command(
         b"340", compare_channel, 35
     )
     assert result_rec_message is None
@@ -319,33 +309,33 @@ def test_dispatch_command_valid(mocker, Mp_Proxy_auxiliary_init, mock_auxiliarie
     ]
 
 
-def test_dispatch_command_invalid(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries):
+def test_dispatch_command_invalid(mp_proxy_auxiliary_inst, mock_auxiliaries):
     proxy_channel_test = mock_auxiliaries[1]
-    Mp_Proxy_auxiliary_init.proxy_channels = [proxy_channel_test]
-    result_rec_message = Mp_Proxy_auxiliary_init._dispatch_command(
+    mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
+    result_rec_message = mp_proxy_auxiliary_inst._dispatch_command(
         b"340", proxy_channel_test, 35
     )
     assert result_rec_message is None
     assert proxy_channel_test.queue_out.empty()
 
 
-def test_run_command(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries):
+def test_run_command(mocker, mp_proxy_auxiliary_inst, mock_auxiliaries):
     mock_dispatch_command = mocker.patch.object(MpProxyAuxiliary, "_dispatch_command")
-    mock_check_comp = mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
-    mock_cc_send = mocker.patch.object(Mp_Proxy_auxiliary_init, "channel")
+    mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
+    mocker.patch.object(mp_proxy_auxiliary_inst, "channel")
     mock_queue_empty = mocker.patch("queue.Queue.empty", return_value=False)
     mock_queue_get = mocker.patch(
         "queue.Queue.get", return_value=((False, "ok"), {"msg": "Test"})
     )
 
     AUX_LIST_NAMES = ["MockAux1"]
-    Mp_Proxy_auxiliary_init.proxy_channels = Mp_Proxy_auxiliary_init.get_proxy_con(
+    mp_proxy_auxiliary_inst.proxy_channels = mp_proxy_auxiliary_inst.get_proxy_con(
         AUX_LIST_NAMES
     )
 
-    assert len(Mp_Proxy_auxiliary_init.proxy_channels) == 1
+    assert len(mp_proxy_auxiliary_inst.proxy_channels) == 1
 
-    result = Mp_Proxy_auxiliary_init._run_command()
+    result = mp_proxy_auxiliary_inst._run_command()
 
     assert result is None
     mock_dispatch_command.assert_called()
@@ -353,20 +343,20 @@ def test_run_command(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries):
     mock_queue_get.assert_called()
 
 
-def test_check_compatibility(mocker, mock_auxiliaries, mock_proxy_aux):
+def test_check_compatibility(mock_auxiliaries, mock_mp_proxy_aux):
     with pytest.raises(NotImplementedError):
         assert mock_auxiliaries[0].is_proxy_capable is False
-        mock_proxy_aux.check_compatibility(mock_auxiliaries[0])
+        mock_mp_proxy_aux.check_compatibility(mock_auxiliaries[0])
 
 
-def test_empty_queue(mocker, mock_auxiliaries, mock_proxy_aux):
+def test_empty_queue(mocker, mock_mp_proxy_aux):
     spy_empty = mocker.spy(queue.Queue, "empty")
     spy_get = mocker.spy(queue.Queue, "get")
     queue_test = queue.Queue()
     queue_test.put("A")
     queue_test.put("AA")
     assert queue_test.qsize() == 2
-    mock_proxy_aux.empty_queue(queue_test)
+    mock_mp_proxy_aux.empty_queue(queue_test)
     assert spy_empty.call_count == 3
     assert spy_get.call_count == 2
 
@@ -376,59 +366,36 @@ def test_empty_queue(mocker, mock_auxiliaries, mock_proxy_aux):
     [
         (False, "create_auxiliary_instance"),
         (True, "delete_auxiliary_instance"),
+        (False, "Test"),
     ],
 )
 def test_run(
     mocker,
-    mock_proxy_aux,
+    mock_mp_proxy_aux,
     is_instance,
     request_value,
     caplog,
 ):
-    spy_logger = mocker.patch.object(mock_proxy_aux, "initialize_loggers")
-    mock_proxy_aux.logger = logging.getLogger(__name__)
-    mock_event_init_trace = mocker.patch.object(mock_proxy_aux, "_init_trace")
+    mock_init_logger = mocker.patch.object(mock_mp_proxy_aux, "initialize_loggers")
+    mock_mp_proxy_aux.logger = logging.getLogger(__name__)
+    mock_event_init_trace = mocker.patch.object(mock_mp_proxy_aux, "_init_trace")
     mock_event_is_set = mocker.patch(
         "multiprocessing.synchronize.Event.is_set", side_effect=[False, True]
     )
-    mock_queue_empty = mocker.patch.object(mock_proxy_aux.queue_in, "empty")
+    mock_queue_empty = mocker.patch.object(mock_mp_proxy_aux.queue_in, "empty")
     mock_queue_empty.return_value = False
-    mock_queue_get_no_wait = mocker.patch.object(mock_proxy_aux.queue_in, "get_nowait")
+    mock_queue_get_no_wait = mocker.patch.object(
+        mock_mp_proxy_aux.queue_in, "get_nowait"
+    )
     mock_queue_get_no_wait.return_value = request_value
-    mock_proxy_aux.is_instance = is_instance
-
+    mock_mp_proxy_aux.is_instance = is_instance
     with caplog.at_level(logging.INFO):
-        mock_proxy_aux.run()
-    spy_logger.assert_called()
-
+        mock_mp_proxy_aux.run()
+    mock_init_logger.assert_called()
     assert mock_event_is_set.call_count == 2
     mock_queue_empty.assert_called()
     mock_queue_get_no_wait.assert_called()
     mock_event_init_trace.assert_called()
-
-
-def test_run_warning(mocker, mock_proxy_aux, caplog):
-    spy_logger = mocker.patch.object(mock_proxy_aux, "initialize_loggers")
-    mock_proxy_aux.logger = logging.getLogger(__name__)
-    mock_proxy_aux.logger.setLevel(logging.WARNING)
-    mock_event_init_trace = mocker.patch.object(mock_proxy_aux, "_init_trace")
-    mock_event_is_set = mocker.patch(
-        "multiprocessing.synchronize.Event.is_set", side_effect=[False, True]
-    )
-    mock_queue_empty = mocker.patch.object(mock_proxy_aux.queue_in, "empty")
-    mock_queue_empty.return_value = False
-    mock_queue_get_no_wait = mocker.patch.object(mock_proxy_aux.queue_in, "get_nowait")
-    mock_queue_get_no_wait.return_value = "Test"
-    mock_proxy_aux.is_instance = False
-
-    with caplog.at_level(logging.INFO):
-        mock_proxy_aux.run()
-    spy_logger.assert_called()
-
-    assert mock_event_is_set.call_count == 2
-    mock_queue_empty.assert_called()
-    mock_queue_get_no_wait.assert_called()
-    mock_event_init_trace.assert_called()
-
-    assert f"Unknown request 'Test', will not be processed!" in caplog.text
-    assert f"Aux status: {mock_proxy_aux.__dict__}" in caplog.text
+    if request_value == "Test":
+        assert f"Unknown request 'Test', will not be processed!" in caplog.text
+        assert f"Aux status: {mock_mp_proxy_aux.__dict__}" in caplog.text
