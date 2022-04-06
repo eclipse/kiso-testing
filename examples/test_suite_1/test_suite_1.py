@@ -247,7 +247,7 @@ class MyTest4(pykiso.BasicTest):
         voltage = 3.8
         self.assertAlmostEqual(voltage, 4, delta=1, msg="err")
         # additional data can be shown in the step-report
-    
+
 
     def test_run(self):
         """Here is my test description which will be showed in the step-report"""

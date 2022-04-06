@@ -21,6 +21,7 @@ Welcome to pykiso's documentation!
     instrument_control
     acroname_control
     record
+    step_report
 
 Indices and tables
 ==================

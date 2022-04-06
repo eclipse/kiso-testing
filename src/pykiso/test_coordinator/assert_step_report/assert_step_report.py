@@ -47,7 +47,7 @@ log = logging.getLogger(__name__)
 # Store the Result Step report
 ALL_STEP_REPORT = OrderedDict()
 # Step result keys used by Jinja for columns name
-REPPORT_KEYS = ["message", "var_name", "expected", "received", "succeed"]
+REPORT_KEYS = ["message", "var_name", "expected", "received", "succeed"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
 _FUNCTION_TO_APPLY = r"|".join(["test", "run", "setup", "teardown"])
 
@@ -56,8 +56,150 @@ SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 REPORT_TEMPLATE = "report_template.html.j2"
 
 
+def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
+    """Get the input parameter name to the assert method.
+
+    According to unittest.TestCase, it is always placed first.
+    That function read the source code as a text to find it.
+
+    :param f_back: frame callaing the assert method
+    :param: assert_name: current assert method name
+
+    return: variable name
+    """
+    expected_varname = ""
+    # Get source code lines
+    file = inspect.getsourcefile(f_back)
+    lines = inspect.linecache.getlines(file)
+
+    # Get current line number
+    line_no = f_back.f_lineno
+
+    # Get line content, if statement not
+    # complete, read from bottom to up
+    line = ""
+    while assert_name not in line:
+        # line_no start from 1 but list from 0
+        line_no -= 1
+        line = lines[line_no] + line
+
+    # remove line break and spaces
+    line = line.replace("\n", "")
+    line = line.replace(" ", "")
+
+    # remove current assert function name
+    line = re.split(fr".*{assert_name}\(", line)[1]
+
+    # Check the variable start names
+    if re.findall(r"^[a-zA-Z]", line):
+        # Get variable name
+        expected_varname = re.findall(r"[a-zA-Z0-9_]+", line)[0]
+
+    return expected_varname
+
+
+def _get_expected(func_name: str, arguments: dict) -> str:
+    """Get the assertion purpose and the expected value
+
+    :param func_name: name of the assertion function
+    :param arguments: argument of the function
+        eg: {arg_name: value}
+
+    :return: expected value
+    """
+    # Get assertion purpose (eg: get Equal from assertEqual)
+    name = re.findall(r"([A-Z][a-z]+)", func_name)
+    expected = " ".join(name)
+
+    # Get expected value and parameters if exist
+    # eg: assertAlmostEqual(50, 60, msg="message", delta=10)
+    # but assertTrue(var1, "message") -> nothing else to do
+    if len(arguments) >= 3:
+        # Parameters not known in advance.
+        # Remove the "input value" and the "msg".
+        arguments_keys = list(arguments.keys())
+        args = arguments.copy()
+        args.pop("msg", None)
+        # "input value" always 1st position
+        args.pop(arguments_keys[0], None)
+        # "expected value" always 2nd position
+        expected_val = args.pop(arguments_keys[1], None)
+        # Add expected value to string
+        expected += f" to {expected_val}"
+        # Add the additional parameter if exist
+        if args:
+            # only param are left in args
+            expected += "; with"
+            for key, value in args.items():
+                expected += f" {key}={value},"
+            # remove the coma from last loop
+            expected = expected[:-1]
+
+    return expected
+
+
+def _prepare_report(test_class, test_name: str) -> None:
+    """Make ALL_STEP_REPORT variable ready for update
+
+    Create the tree if required, otherwise, does nothing
+    - CurrentTestClass
+        - header: additional data
+        - description: test description from test_run
+        - file_path: test file location
+        - time_result: start/end/elapsed time
+        - test_list: store the steps result
+            - test_name: list of steps
+
+    :param test_class: class being tested
+    :param test_name: name of the function being tested
+    """
+    global ALL_STEP_REPORT
+
+    test_class_name = type(test_class).__name__
+
+    # Create the testClass
+    if not ALL_STEP_REPORT.get(test_class_name):
+        ALL_STEP_REPORT[test_class_name] = OrderedDict()
+        # Add header (mutable object -> dictionary fed during test)
+        ALL_STEP_REPORT[test_class_name]["header"] = test_class.step_report_header
+        # Add description of the test -> Always test_run
+        ALL_STEP_REPORT[test_class_name]["description"] = (
+            test_class._testMethodDoc or "Not provided"
+        )
+        # Add test file path
+        ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(
+            type(test_class)
+        )
+        # Store the result (start, stop, elapsed time)
+        ALL_STEP_REPORT[test_class_name]["time_result"] = OrderedDict()
+        ALL_STEP_REPORT[test_class_name]["time_result"][
+            "Start Time"
+        ] = '"--junit" required'
+        # Store the tests list
+        ALL_STEP_REPORT[test_class_name]["test_list"] = OrderedDict()
+
+    # Create the current test step storage
+    if not ALL_STEP_REPORT[test_class_name]["test_list"].get(test_name):
+        ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = []
+
+
+def _add_step(
+    test_class_name: str,
+    test_name: str,
+    message: str,
+    var_name: str,
+    expected: any,
+    received: any,
+):
+    global ALL_STEP_REPORT, REPORT_KEYS
+
+    ALL_STEP_REPORT[test_class_name]["test_list"][test_name].append(
+        dict(zip(REPORT_KEYS, [message, var_name, expected, received, True]))
+    )
+
+
 def assert_decorator(func):
-    '''Decorator to gather assertion information
+    """Decorator to gather assertion information
 
     - MyTestClass
         - header: additional data
@@ -75,137 +217,13 @@ def assert_decorator(func):
 
         MyTest(pykiso.BasicTest):
             def test_run(self):
-                """Here is my test description"""
-                self.step_report_header["version"] = "0.16.0"
+                '''Here is my test description'''
+                self.step_report_header["Voltage"] = 5
 
-    :param func: function to decorate
+    :param func: function to decorate (expected assert method)
 
     return: The func output if it exists. Otherwise, None
-    '''
-
-    def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
-        """Get the input parameter name to the assert method.
-
-        According to unittest.TestCase, it is always placed first.
-        That function read the source code as a text to find it.
-
-        :param f_back: frame callaing the assert method
-        :param: assert_name: current assert method name
-
-        return: variable name
-        """
-        expected_varname = ""
-        # Get source code lines
-        file = inspect.getsourcefile(f_back)
-        lines = inspect.linecache.getlines(file)
-
-        # Get current line number
-        line_no = f_back.f_lineno
-
-        # Get line content, if statement not
-        # complete, read from bottom to up
-        line = ""
-        while assert_name not in line:
-            # line_no start from 1 but list from 0
-            line_no -= 1
-            line = lines[line_no] + line
-
-        # remove line break and spaces
-        line = line.replace("\n", "")
-        line = line.replace(" ", "")
-
-        # remove current assert function name
-        line = re.split(fr".*{assert_name}\(", line)[1]
-
-        # Check the variable start names
-        if re.findall(r"^[a-zA-Z]", line):
-            # Get variable name
-            expected_varname = re.findall(r"[a-zA-Z0-9_]+", line)[0]
-
-        return expected_varname
-
-    def _get_expected(func_name: str, arguments: dict) -> str:
-        """Get the assertion purpose and the expected value
-
-        :param func_name: name of the assertion function
-        :param arguments: argument of the function
-            eg: {arg_name: value}
-
-        :return: expected value
-        """
-        # Get assertion purpose (eg: get Equal from assertEqual)
-        name = re.findall(r"([A-Z][a-z]+)", func_name)
-        expected = " ".join(name)
-
-        # Get expected value and parameters if exist
-        # eg: assertAlmostEqual(50, 60, msg="message", delta=10)
-        # but assertTrue(var1, "message") -> nothing else to do
-        if len(arguments) >= 3:
-            # Parameters not known in advance.
-            # Remove the "input value" and the "msg".
-            arguments_keys = list(arguments.keys())
-            args = arguments.copy()
-            args.pop("msg", None)
-            # "input value" always 1st position
-            args.pop(arguments_keys[0], None)
-            # "expected value" always 2nd position
-            expected_val = args.pop(arguments_keys[1], None)
-            # Add expected value to string
-            expected += f" to {expected_val}"
-            # Add the additional parameter if exist
-            if args:
-                # only param are left in args
-                expected += "; with"
-                for key, value in args.items():
-                    expected += f" {key}={value},"
-                # remove the coma from last loop
-                expected = expected[:-1]
-
-        return expected
-
-    def _prepare_report(test_class, test_name: str) -> None:
-        """Make ALL_STEP_REPORT variable ready for update
-
-        Create the tree if required, otherwise, does nothing
-        - CurrentTestClass
-            - header: additional data
-            - description: test description from test_run
-            - file_path: test file location
-            - time_result: start/end/elapsed time
-            - test_list: store the steps result
-                - test_name: list of steps
-
-        :param test_class: class being tested
-        :param test_name: name of the function being tested
-        """
-        global ALL_STEP_REPORT
-
-        test_class_name = type(test_class).__name__
-
-        # Create the testClass
-        if not ALL_STEP_REPORT.get(test_class_name):
-            ALL_STEP_REPORT[test_class_name] = OrderedDict()
-            # Add header (mutable object -> dictionary fed during test)
-            ALL_STEP_REPORT[test_class_name]["header"] = test_class.step_report_header
-            # Add description of the test -> Always test_run
-            ALL_STEP_REPORT[test_class_name]["description"] = (
-                test_class._testMethodDoc or "Not provided"
-            )
-            # Add test file path
-            ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(
-                type(test_class)
-            )
-            # Store the result (start, stop, elapsed time)
-            ALL_STEP_REPORT[test_class_name]["time_result"] = OrderedDict()
-            ALL_STEP_REPORT[test_class_name]["time_result"][
-                "Start Time"
-            ] = '"--junit" required'
-            # Store the tests list
-            ALL_STEP_REPORT[test_class_name]["test_list"] = OrderedDict()
-
-        # Create the current test step storage
-        if not ALL_STEP_REPORT[test_class_name]["test_list"].get(test_name):
-            ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = []
+    """
 
     @functools.wraps(func)
     def func_wrapper(*args, **kwargs):
@@ -214,7 +232,7 @@ def assert_decorator(func):
 
         return: The assertion method output if it exists. Otherwise, None
         """
-        global ALL_STEP_REPORT, REPPORT_KEYS, _FUNCTION_TO_APPLY
+        global _FUNCTION_TO_APPLY
         try:
             # Context
             currentframe = inspect.currentframe()
@@ -260,9 +278,10 @@ def assert_decorator(func):
                 _prepare_report(test_class, test_name)
 
                 # 2.2. Add new step
-                ALL_STEP_REPORT[test_class_name]["test_list"][test_name].append(
-                    dict(zip(REPPORT_KEYS, [message, var_name, expected, received, True]))
+                _add_step(
+                    test_class_name, test_name, message, var_name, expected, received
                 )
+
         except Exception as e:
             log.error(f"Unable to update Step due to exception: {e}")
 
@@ -299,7 +318,7 @@ def generate_step_report(
     """Generate the HTML step report based on Jinja2 template
 
     Args:
-        result ([type]): [description]
+        test_result ([type]): [description]
         output_file (str, optional): [description]. Defaults to "step_report.html".
     """
     global ALL_STEP_REPORT, SCRIPT_PATH, REPORT_TEMPLATE
@@ -318,7 +337,6 @@ def generate_step_report(
     # Update info for each test
     for tests in [succeed_tests, failed_test]:
         for test_case in tests:
-            #
             if isinstance(test_case, TestInfo):
                 # Case of success
                 test_info = test_case
