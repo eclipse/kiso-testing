@@ -60,14 +60,14 @@ class CCProxy(CChannel):
         self.queue_out = Queue()
         log.debug("Close proxy channel")
 
-    def _cc_send(self, any_msg: Any, raw: bool = False) -> None:
+    def _cc_send(self, msg: Any, raw: bool = False) -> None:
         """Populate the queue in of the proxy connector.
 
         :param args: tuple containing positionnal arguments
         :param kwargs: dictionary containing named arguments
         """
-        log.debug(f"put at proxy level: {any_msg} {raw}")
-        self.queue_in.put((any_msg, raw))
+        log.debug(f"put at proxy level: {msg} {raw}")
+        self.queue_in.put((msg, raw))
 
     def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
@@ -80,8 +80,8 @@ class CCProxy(CChannel):
         """
 
         try:
-            any_msg, raw = self.queue_out.get(True, self.timeout)
-            log.debug(f"received at proxy level : {any_msg}")
-            return any_msg
+            msg = self.queue_out.get(True, self.timeout)
+            log.debug(f"received at proxy level : {msg}")
+            return msg
         except queue.Empty:
             return None

@@ -70,10 +70,7 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         self.queue_in = queue.Queue()
         self.queue_out = queue.Queue()
         self.stop_event = threading.Event()
-        # Not handled yet, should be looked closely. If it reaches 50,
-        # it means more requests are comming in as what the thread can process.
-        semaphore_buffer=50 
-        self.notifyer = threading.Semaphore(semaphore_buffer)
+        self.notifyer = threading.Semaphore(0)
         self.is_proxy_capable = is_proxy_capable
         # Create state
         self.is_instance = False

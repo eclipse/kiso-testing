@@ -197,8 +197,13 @@ class ProxyAuxiliary(AuxiliaryInterface):
         """
         try:
             log.info("Create auxiliary instance")
+
+            # Define callback
+            def thread_aux_callback():
+                self.notifyer.release()
+
             log.info("Enable channel")
-            self.channel.open()
+            self.channel.open(thread_aux_callback)
             return True
         except Exception as e:
             log.exception(f"Error encouting during channel creation, reason : {e}")
@@ -245,7 +250,8 @@ class ProxyAuxiliary(AuxiliaryInterface):
         """
         for conn in self.proxy_channels:
             if conn != con_use:
-                conn.queue_out.put((message, raw))
+                conn.callback()
+                conn.queue_out.put(message)
 
     def _abort_command(self) -> None:
         """Not Used."""
@@ -276,6 +282,10 @@ class ProxyAuxiliary(AuxiliaryInterface):
     def run(self) -> None:
         """Run function of the auxiliary thread"""
         while not self.stop_event.is_set():
+            # Step 0: Wait for a User or Connector to publish something
+            self.notifyer.acquire(
+                blocking=True, timeout=1
+            )  # So that we exit loop when needed
             # Step 1: Check if a request is available & process it
             request = ""
             # Check if a request was received
