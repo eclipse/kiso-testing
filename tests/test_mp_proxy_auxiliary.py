@@ -6,23 +6,19 @@
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
-import time
 import logging
-from collections import namedtuple
-from msilib.schema import Error
-from pathlib import Path
-import sys
 import queue
-from unittest.mock import Mock
+import sys
+import time
+from pathlib import Path
 
 import pytest
-from pytest_mock import MockerFixture
-import pykiso.connector
+
 from pykiso.connector import CChannel
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.auxiliaries.mp_proxy_auxiliary import (
-    MpProxyAuxiliary,
     ConfigRegistry,
+    MpProxyAuxiliary,
     TraceOptions,
 )
 
@@ -142,17 +138,17 @@ def test_run(mocker, Mp_Proxy_auxiliary_init):
     mock_init_trace = mocker.patch.object(
         MpProxyAuxiliary, "_init_trace", return_value=None
     )
-    proxy_inst = Mp_Proxy_auxiliary_init
-    proxy_inst.logger = logging.getLogger(__name__)
-    proxy_inst.stop()
-    proxy_inst.run()
-    mock_init_trace.assert_called_once()
-    mock_init_logger.assert_called_once()
+    with mocker.patch("pickle.dump"):
+        proxy_inst = Mp_Proxy_auxiliary_init
+        proxy_inst.logger = logging.getLogger(__name__)
+        proxy_inst.stop()
+        proxy_inst.run()
+        mock_init_trace.assert_called_once()
+        mock_init_logger.assert_called_once()
 
 
 def test_init_trace(mocker, Mp_Proxy_auxiliary_init, caplog):
-    # mock_addhandler = mocker.patch("logging.Logger.addHandler")
-    mock_formatter = mocker.patch("logging.Formatter", return_value="Format_info")
+    mocker.patch("logging.Formatter", return_value="Format_info")
     log = logging.getLogger(__name__)
     with caplog.at_level(
         logging.INFO,
@@ -212,8 +208,7 @@ def test_get_proxy_con_valid_(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries)
     result_get_proxy = Mp_Proxy_auxiliary_init.get_proxy_con(AUX_LIST_NAMES)
 
     assert len(result_get_proxy) == 2
-    assert isinstance(result_get_proxy[0], CChannel)
-    assert isinstance(result_get_proxy[1], CChannel)
+    assert all(isinstance(items, CChannel) for items in result_get_proxy)
     mock_check_comp.assert_called()
 
 
@@ -253,7 +248,7 @@ def test_create_instance_false(mocker, Mp_Proxy_auxiliary_init, caplog):
 
 def test_delete_instance(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries, caplog):
     mock_empty_queue = mocker.patch.object(MpProxyAuxiliary, "_empty_queue")
-    mock_check_comp = mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
+    mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
 
     AUX_LIST_NAMES = ["MockAux1", "MockAux2"]
     Mp_Proxy_auxiliary_init.proxy_channels = Mp_Proxy_auxiliary_init.get_proxy_con(
@@ -359,7 +354,7 @@ def test_run_command(mocker, Mp_Proxy_auxiliary_init, mock_auxiliaries):
 
 
 def test_check_compatibility(mocker, mock_auxiliaries, mock_proxy_aux):
-    with pytest.raises(NotImplementedError) as excinfo:
+    with pytest.raises(NotImplementedError):
         assert mock_auxiliaries[0].is_proxy_capable is False
         mock_proxy_aux.check_compatibility(mock_auxiliaries[0])
 
@@ -406,7 +401,6 @@ def test_run(
         mock_proxy_aux.run()
     spy_logger.assert_called()
 
-    # assert f" was stopped" in caplog.text
     assert mock_event_is_set.call_count == 2
     mock_queue_empty.assert_called()
     mock_queue_get_no_wait.assert_called()
