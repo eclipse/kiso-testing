@@ -128,7 +128,7 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     run_timeout=2,
     teardown_timeout=1,
     test_ids={"Component1": ["Req-01"]},
-    variant=["variant1"],
+    tag={"variant": "variant1"},
 )
 class TestCaseBasic(pykiso.BasicTest):
     """This test case definition will be executed using base behavior

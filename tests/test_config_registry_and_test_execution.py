@@ -13,6 +13,7 @@ from unittest import TestCase, TestResult
 
 import pytest
 
+import pykiso.test_coordinator.test_execution
 from pykiso import cli
 from pykiso.config_parser import parse_config
 from pykiso.test_coordinator import test_execution
@@ -273,3 +274,160 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
         )
         == 3
     )
+
+
+@pytest.mark.parametrize(
+    "m_tag ,tests_to_run, variants, branch_levels, expected_success",
+    [
+        (None, {}, (), (), True),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [],
+            },
+            {},
+            ("omicron",),
+            (),
+            True,
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "leaf",
+                ],
+            },
+            {},
+            ("omicron",),
+            ("leaf",),
+            True,
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "leaf",
+                ],
+            },
+            {},
+            (),
+            ("leaf",),
+            True,
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "leaf",
+                ],
+            },
+            {},
+            ("omicron",),
+            (),
+            True,
+        ),
+        (
+            {
+                "variant": [],
+                "branch_level": [
+                    "leaf",
+                ],
+            },
+            {},
+            (),
+            ("leaf",),
+            True,
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [],
+            },
+            {},
+            (),
+            ("leaf",),
+            False,
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "leaf",
+                ],
+            },
+            {},
+            ("delta",),
+            ("feuille",),
+            False,
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "leaf",
+                ],
+            },
+            {},
+            (),
+            ("feuille",),
+            False,
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "leaf",
+                ],
+            },
+            {},
+            ("delta",),
+            (),
+            False,
+        ),
+    ],
+)
+def test_config_registry_and_test_execution_apply_variant_filter(
+    m_tag, tests_to_run, variants, branch_levels, expected_success, mocker
+):
+    mock_test_case = mocker.Mock()
+    mock_test_case.setUp = None
+    mock_test_case.tearDown = None
+    mock_test_case.testMethodName = None
+    mock_test_case.skipTest = lambda x: x  # return input
+    mock_test_case.tag = m_tag
+    mock_test_case._testMethodName = "testMethodName"
+    mock = mocker.patch(
+        "pykiso.test_coordinator.test_execution.test_suite.flatten",
+        return_value=[mock_test_case],
+    )
+
+    test_execution.apply_variant_filter(tests_to_run, variants, branch_levels)
+
+    mock.assert_called_once()
+    if expected_success:
+        assert mock_test_case.setUp is None
+        assert mock_test_case.tearDown is None
+        assert mock_test_case.testMethodName is None
+    else:
+        assert mock_test_case.setUp() == "setup_skipped"
+        assert (
+            mock_test_case.testMethodName()
+            == "skipped due to non-matching variant value"
+        )
+        assert mock_test_case.tearDown() == "tearDown_skipped"

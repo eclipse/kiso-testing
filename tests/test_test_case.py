@@ -54,7 +54,7 @@ class IntegrationTestCase(unittest.TestCase):
 
 
 @pytest.mark.parametrize(
-    "suite_id, case_id, aux_list, setup_timeout, run_timeout, teardown_timeout, test_ids, variant",
+    "suite_id, case_id, aux_list, setup_timeout, run_timeout, teardown_timeout, test_ids, tag",
     [
         (1, 1, None, 1, 2, 3, {"Component1": ["Req1", "Req2"]}, None),
         (1, 2, ["aux2"], None, 2, 3, {"Component1": ["Req1", "Req2"]}, None),
@@ -91,7 +91,7 @@ def test_define_test_parameters_on_tc(
     run_timeout,
     teardown_timeout,
     test_ids,
-    variant,
+    tag,
 ):
     @test_case.define_test_parameters(
         suite_id=suite_id,
@@ -101,7 +101,7 @@ def test_define_test_parameters_on_tc(
         run_timeout=run_timeout,
         teardown_timeout=teardown_timeout,
         test_ids=test_ids,
-        variant=variant,
+        tag=tag,
     )
     class MyClass(test_case.BasicTest):
         pass
@@ -119,7 +119,7 @@ def test_define_test_parameters_on_tc(
     timeout_value = teardown_timeout or tc_inst.response_timeout
     assert tc_inst.teardown_timeout == timeout_value
     assert tc_inst.test_ids == test_ids
-    assert tc_inst.variant == variant
+    assert tc_inst.tag == tag
 
 
 def test_setUpClass(mocker):

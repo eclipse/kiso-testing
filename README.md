@@ -71,7 +71,7 @@ Commits are sorted into multiple categories based on keywords that can occur at 
 * [Fixes] fix:
 * [Docs] docs:
 * [Styles] style:
-* [Refactors] Refactors:
+* [Refactors] refactor!:
 * [Performances] perf:
 * [Tests] test:
 * [Build] build:
