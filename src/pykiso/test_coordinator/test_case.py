@@ -23,7 +23,7 @@ Generic Test
 import functools
 import logging
 import unittest
-from typing import List, Optional, Type, Union
+from typing import Dict, List, Optional, Type, Union
 
 from .. import message
 from ..cli import get_logging_options, initialize_logging
@@ -123,7 +123,7 @@ class BasicTest(unittest.TestCase):
         run_timeout: Union[int, None],
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
-        variant: Union[list, None],
+        tag: Union[Dict[str, List[str]], None],
         args: tuple,
         kwargs: dict,
     ):
@@ -140,7 +140,7 @@ class BasicTest(unittest.TestCase):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
-        :param variant: string that allows the user to execute a subset of tests
+        :param tag: dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
         """
         # Initialize base class
         super().__init__(*args, **kwargs)
@@ -153,7 +153,7 @@ class BasicTest(unittest.TestCase):
         self.run_timeout = run_timeout or BasicTest.response_timeout
         self.teardown_timeout = teardown_timeout or BasicTest.response_timeout
         self.test_ids = test_ids
-        self.variant = variant
+        self.tag = tag
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
@@ -213,7 +213,7 @@ def define_test_parameters(
     run_timeout: Optional[int] = None,
     teardown_timeout: Optional[int] = None,
     test_ids: Optional[dict] = None,
-    variant: Optional[dict] = None,
+    tag: Optional[Dict[str, List[str]]] = None,
 ):
     """Decorator to fill out test parameters of the BasicTest automatically."""
 
@@ -233,7 +233,7 @@ def define_test_parameters(
             run_timeout: {run_timeout}
             teardown_timeout: {teardown_timeout}
             test_ids: {test_ids}
-            variant: {variant}
+            tag: {tag}
             """
 
             @functools.wraps(DecoratedClass.__init__)
@@ -246,7 +246,7 @@ def define_test_parameters(
                     run_timeout,
                     teardown_timeout,
                     test_ids,
-                    variant,
+                    tag,
                     args,
                     kwargs,
                 )
@@ -260,7 +260,7 @@ def define_test_parameters(
             run_timeout=run_timeout,
             teardown_timeout=teardown_timeout,
             test_ids=test_ids,
-            variant=variant,
+            tag=tag,
         )
         # Used to display the current test module in the test result
         NewClass.__module__ = DecoratedClass.__module__

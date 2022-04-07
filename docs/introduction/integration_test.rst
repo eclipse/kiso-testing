@@ -419,7 +419,7 @@ Find below a full example for a test suite/case declaration :
   -> run_timeout : time to wait for a report 10 seconds during test_run
   -> teardown_timeout : time to wait for a report 3 seconds during teardown
   -> test_ids: [optional] store the requirements into the report
-  -> variant: [optional] list of variances if a subset of tests need to be executed
+  -> tag: [optional] dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
   """
     @pykiso.define_test_parameters(
             suite_id=1,
@@ -429,7 +429,7 @@ Find below a full example for a test suite/case declaration :
             run_timeout=10,
             teardown_timeout=3,
             test_ids={"Component1": ["Req1", "Req2"]},
-            variant={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
+            tag={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
     )
     class MyTest(pykiso.BasicTest):
         pass
