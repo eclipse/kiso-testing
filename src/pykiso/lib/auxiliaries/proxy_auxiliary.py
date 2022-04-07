@@ -227,18 +227,13 @@ class ProxyAuxiliary(AuxiliaryInterface):
         """
         for conn in self.proxy_channels:
             if not conn.queue_in.empty():
-                args, kwargs = conn.queue_in.get()
-                message = kwargs.get("msg")
-                if message is not None:
-                    self._dispatch_command(
-                        message=message,
-                        remote_id=kwargs.get("remote_id"),
-                        con_use=conn,
-                    )
+                any_msg, raw = conn.queue_in.get()
+                if any_msg is not None:
+                    self._dispatch_command(message=any_msg, con_use=conn, raw=raw)
 
-                self.channel._cc_send(*args, **kwargs)
+                self.channel._cc_send(any_msg, raw)
 
-    def _dispatch_command(self, message: bytes, con_use: CChannel, remote_id: int):
+    def _dispatch_command(self, message: bytes, con_use: CChannel, raw: bool):
         """Dispatch the current command to others connected auxiliaries.
 
         This action is performed by populating the queue out from each
@@ -246,12 +241,11 @@ class ProxyAuxiliary(AuxiliaryInterface):
 
         :param message: message to send
         :param con_use: current proxy connector where the command come from
-        :param remote_id: if CAN is used, CAN frame ID on which
-            the message will be sent
+        :param raw: if the message is raw or not (makes no sense)
         """
         for conn in self.proxy_channels:
             if conn != con_use:
-                conn.queue_out.put([message, remote_id])
+                conn.queue_out.put((message, raw))
 
     def _abort_command(self) -> None:
         """Not Used."""
@@ -266,16 +260,14 @@ class ProxyAuxiliary(AuxiliaryInterface):
             for a message.
         """
         try:
-            received_data, source = self.channel.cc_receive(
-                timeout=timeout_in_s, raw=True
-            )
+            any_rec_msg = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
             # if data are received, populate connected proxy connectors queue out
-            if received_data is not None:
+            if any_rec_msg is not None:
                 self.logger.debug(
-                    f"raw data : {received_data.hex()} || source : {source} || channel : {self.channel.name}"
+                    f"data : {any_rec_msg} || channel : {self.channel.name}"
                 )
                 for conn in self.proxy_channels:
-                    conn.queue_out.put([received_data, source])
+                    conn.queue_out.put(any_rec_msg)
         except Exception:
             log.exception(
                 f"encountered error while receiving message via {self.channel}"

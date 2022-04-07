@@ -37,32 +37,32 @@ def test_cc_close():
 
 def test_cc_send():
     with CCProxy() as proxy_inst:
-        proxy_inst._cc_send(b"\x12\x34\x56", raw=True, remote_id=0x500)
-        arg, kwargs = proxy_inst.queue_in.get()
-        assert arg[0] == b"\x12\x34\x56"
-        assert kwargs["raw"] == True
-        assert kwargs["remote_id"] == 0x500
+        msg = b"\x12\x34\x56"
+        remote_id = 0x500
+        proxy_inst._cc_send((msg, remote_id), raw=True)
+        rc_msg = proxy_inst.queue_in.get()
+        assert rc_msg[0][0] == b"\x12\x34\x56"
+        assert rc_msg[0][1] == 0x500
+        assert rc_msg[1] == True
 
 
 @pytest.mark.parametrize(
-    "timeout, raw, message, source",
+    "timeout, raw, any_msg",  # any_msg contains ((message', 'source))
     [
-        (0.200, True, b"\x12\x34\x56", None),
-        (0, False, b"\x12", 0x500),
-        (None, None, None, None),
+        (0.200, True, (b"\x12\x34\x56", None)),
+        (0, False, (b"\x12", 0x500)),
+        (None, None, (None, None)),
     ],
 )
-def test_cc_receive(timeout, raw, message, source):
+def test_cc_receive(timeout, raw, any_msg):
     with CCProxy() as proxy_inst:
-        proxy_inst.queue_out.put((message, source))
-        msg, src = proxy_inst._cc_receive(timeout, raw)
-        assert msg == message
-        assert src == source
+        proxy_inst.queue_out.put((any_msg, raw))
+        msg = proxy_inst._cc_receive(timeout, raw)
+        assert msg == any_msg
 
 
 def test_cc_receive_timeout():
     with CCProxy() as proxy_inst:
         proxy_inst.timeout = 0.01
-        msg, src = proxy_inst._cc_receive()
+        msg = proxy_inst._cc_receive()
         assert msg == None
-        assert src == None

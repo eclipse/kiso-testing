@@ -26,7 +26,7 @@ has to be used with a so called proxy auxiliary.
 import logging
 import queue
 from multiprocessing import Queue
-from typing import Tuple, Union
+from typing import Any, Tuple, Union
 
 from pykiso import Message
 from pykiso.connector import CChannel
@@ -60,19 +60,19 @@ class CCProxy(CChannel):
         self.queue_out = Queue()
         log.debug("Close proxy channel")
 
-    def _cc_send(self, *args: tuple, **kwargs: dict) -> None:
+    def _cc_send(self, any_msg: Any, raw: bool = False) -> None:
         """Populate the queue in of the proxy connector.
 
         :param args: tuple containing positionnal arguments
         :param kwargs: dictionary containing named arguments
         """
-        log.debug(f"put at proxy level: {args} {kwargs}")
-        self.queue_in.put((args, kwargs))
+        log.debug(f"put at proxy level: {any_msg} {raw}")
+        self.queue_in.put((any_msg, raw))
 
     def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
 
-        :param timeout: not used
+        :param timeout: Time you want to wait for a message to come
         :param raw: not used
 
         :return: raw bytes and source when it exist. if queue timeout
@@ -80,8 +80,8 @@ class CCProxy(CChannel):
         """
 
         try:
-            raw_msg, source = self.queue_out.get(True, self.timeout)
-            log.debug(f"received at proxy level : {raw_msg} || source {source}")
-            return raw_msg, source
+            any_msg, raw = self.queue_out.get(True, self.timeout)
+            log.debug(f"received at proxy level : {any_msg}")
+            return any_msg
         except queue.Empty:
-            return None, None
+            return None

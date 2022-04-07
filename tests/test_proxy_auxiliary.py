@@ -229,17 +229,17 @@ def test_abort_command(mocker, cchannel_inst):
 
 
 @pytest.mark.parametrize(
-    "message, source",
+    "message, source, raw",
     [
-        (b"\x12\x34\x56", 0x545),
-        (b"\x12\x34\x56\x12\x34\x56", None),
+        (b"\x12\x34\x56", 0x545, True),
+        (b"\x12\x34\x56\x12\x34\x56", None, True),
     ],
 )
 def test_receive_message_valid(
-    mocker, cchannel_inst, mock_auxiliaries, message, source
+    mocker, cchannel_inst, mock_auxiliaries, message, source, raw
 ):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", return_value=(message, source))
+    mocker.patch.object(CChannel, "cc_receive", return_value=((message, source), raw))
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     proxy_inst._receive_message()
@@ -250,15 +250,15 @@ def test_receive_message_valid(
     recv_aux1 = link_aux_1.channel.queue_out.get()
     recv_aux2 = link_aux_2.channel.queue_out.get()
 
-    msg_1, source_1 = recv_aux1
-    msg_2, source_2 = recv_aux2
+    msg_1, raw_1 = recv_aux1
+    msg_2, raw_2 = recv_aux2
 
-    assert isinstance(recv_aux1, list)
-    assert isinstance(recv_aux2, list)
-    assert msg_1 == message
-    assert source_1 == source
-    assert msg_2 == message
-    assert source_2 == source
+    assert isinstance(recv_aux1, tuple)
+    assert isinstance(recv_aux2, tuple)
+    assert msg_1[0] == message
+    assert msg_1[1] == source
+    assert msg_2[0] == message
+    assert msg_2[1] == source
 
 
 def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
@@ -271,8 +271,8 @@ def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
     link_aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
     link_aux_2 = sys.modules["pykiso.auxiliaries.MockAux2"]
 
-    assert link_aux_1.channel.queue_out.empty()
-    assert link_aux_2.channel.queue_out.empty()
+    assert link_aux_1.channel.queue_out.empty() != (None, None)
+    assert link_aux_2.channel.queue_out.empty() != (None, None)
 
 
 def test_receive_message_exception(mocker, caplog, cchannel_inst):
@@ -320,9 +320,9 @@ def test_run_command(mocker, cchannel_inst, mock_auxiliaries):
     conn_1 = sys.modules["pykiso.auxiliaries.MockAux2"].channel
     conn_2 = sys.modules["pykiso.auxiliaries.MockAux1"].channel
 
-    command_1 = ((), {"msg": b"\x12\x34\x56", "remote_id": 0x512})
-    command_2 = ((), {"msg": b"\x12", "remote_id": None})
-    command_3 = ((), {"msg": b"\x12\x34\x56\x78", "remote_id": 0x56})
+    command_1 = ((b"\x12\x34\x56", 0x512), True)
+    command_2 = ((b"\x12", None), True)
+    command_3 = ((b"\x12\x34\x56\x78", 0x56), True)
 
     conn_1.queue_in.put(command_1)
     conn_1.queue_in.put(command_2)
@@ -332,9 +332,7 @@ def test_run_command(mocker, cchannel_inst, mock_auxiliaries):
     proxy_inst._run_command()
 
     mock_dispatch.assert_called()
-    proxy_inst.channel._cc_send.assert_called_with(
-        msg=command_2[1]["msg"], remote_id=command_2[1]["remote_id"]
-    )
+    proxy_inst.channel._cc_send.assert_called_with(*command_2)
 
 
 def test_run(mocker, cchannel_inst, mock_auxiliaries):
