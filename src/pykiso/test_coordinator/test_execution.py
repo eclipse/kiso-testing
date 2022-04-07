@@ -118,10 +118,10 @@ def apply_variant_filter(
 
     for tc in base_suite:
         # if variant at decorator level is not given just run it
-        if tc.variant is not None:
+        if tc.tag is not None:
             # extract variant and branch from test fixture
-            tc_variants = tc.variant.get("variant", list())
-            tc_branches = tc.variant.get("branch_level", list())
+            tc_variants = tc.tag.get("variant", list())
+            tc_branches = tc.tag.get("branch_level", list())
             tc_tags = list(itertools.chain(tc_variants, tc_branches))
 
             # if user gives both branch and variant filter using couple
