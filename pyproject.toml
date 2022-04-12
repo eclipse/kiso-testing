@@ -9,7 +9,7 @@ homepage = "https://pypi.org/project/pykiso/"
 repository = "https://github.com/eclipse/kiso-testing"
 documentation = "https://kiso-testing.readthedocs.io/en/latest/"
 packages = [
-    { include = "pykiso", from = "src", format = "wheel" }
+    { include = "pykiso", from = "src" }
 ]
 keywords = [
     "testing",
@@ -25,7 +25,6 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -35,11 +34,11 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
+python = "^3.7"
 PyYAML = "*"
 pylink-square = "^0.12.0"
 pyserial = "*"
-python-can = {extras = ["can"], version = ">=3.3.4"} # TODO: should 4.0.0 be enforced and support for python 3.6 removed?
+python-can = {extras = ["pcan"], version = "^4.0.0"}
 python-uds = {git = "https://github.com/BKaDamien/python-uds.git", rev = "2.0.2"}
 PyVISA = "*"
 PyVISA-py = "*"
