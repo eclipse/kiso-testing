@@ -1,8 +1,0 @@
-[run]
-
-omit = */tests/*
-       */examples/*
-       */setup.py
-       */tasks.py
-       */src/pykiso/__main__.py
-       *__init__.py
