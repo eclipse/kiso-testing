@@ -15,7 +15,7 @@ Install
 
    git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
    cd integration-test-framework
-   poetry install --dev
+   poetry install
    poetry shell
 
 Pre-Commit

@@ -31,7 +31,7 @@ pipeline
                 cleanWs()
                 checkout scm
                 sh "pip install poetry"
-                sh 'poetry install --dev'
+                sh 'poetry install'
             }
         }
         stage('Format check')
