@@ -30,7 +30,6 @@ pipeline
                 // Clean workspace
                 cleanWs()
                 checkout scm
-                sh "pip install poetry"
                 sh 'poetry install'
             }
         }
