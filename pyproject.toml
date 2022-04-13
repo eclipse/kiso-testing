@@ -67,7 +67,7 @@ sphinx-autodoc-typehints = "*"
 pykiso = 'pykiso.cli:main'
 instrument-control = 'pykiso.lib.auxiliaries.instrument_control_auxiliary.instrument_control_cli:main'
 
-[tool.pytest]
+[tool.pytest.ini_options]
 testpaths = [
     "tests/"
 ]
