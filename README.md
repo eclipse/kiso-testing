@@ -16,7 +16,7 @@ The project will contain:
 
 ## Requirements ##
 
-* Python 3.6+
+* Python 3.7+
 * pip/poetry (used to get the rest of the requirements)
 
 ## Install ##
@@ -39,6 +39,8 @@ To improve code-quality, a configuration of [pre-commit](https://pre-commit.com/
 The following pre-commit hooks are used:
 
 - black
+- flake8
+- isort
 - trailing-whitespace
 - end-of-file-fixer
 - check-docstring-first
@@ -46,8 +48,6 @@ The following pre-commit hooks are used:
 - check-added-large-files
 - check-yaml
 - debug-statements
-- flake8
-- isort
 
 If you don't have pre-commit installed, you can get it using pip:
 

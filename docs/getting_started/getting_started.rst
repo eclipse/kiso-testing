@@ -5,7 +5,7 @@ User Guide
 Requirements
 ------------
 
--  Python 3.6+
+-  Python 3.7+
 -  pip/poetry (used to get the rest of the requirements)
 
 .. _pykiso_installation:
@@ -15,17 +15,15 @@ Install
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
-   pip install .
+   pip install pykiso
 
 `Poetry <https://python-poetry.org/>`__ is more appropriate for
 developers as it automatically creates virtual environments.
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
+   git clone https://github.com/eclipse/kiso-testing.git
+   cd kiso-testing
    poetry install
    poetry shell
 
@@ -39,7 +37,7 @@ with the following arguments:
 .. command-output:: pykiso --help
 
 
-Suitable config files are available in the ``test-examples`` folder.
+Suitable config files are available in the ``examples`` folder.
 
 Demo using example config
 ~~~~~~~~~~~~~~~~~~~~~~~~~
