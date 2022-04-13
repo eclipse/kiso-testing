@@ -23,7 +23,7 @@ Test Suite
 import logging
 import unittest
 from collections.abc import Iterable
-from typing import Callable, List, Union
+from typing import Callable, Dict, List, Union
 
 from .. import message
 from ..interfaces.thread_auxiliary import AuxiliaryInterface
@@ -52,7 +52,7 @@ class BaseTestSuite(unittest.TestCase):
         run_timeout: Union[int, None],
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
-        variant: Union[list, None],
+        tag: Union[Dict[str, List[str]], None],
         args: tuple,
         kwargs: dict,
     ):
@@ -69,7 +69,8 @@ class BaseTestSuite(unittest.TestCase):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2 ["Req3"]}
-        :param variant: string that allows the user to execute a subset of tests
+        :param tag: dictionary containing lists of variants and/or test levels
+            when only a subset of tests needs to be executed
         """
         # Initialize base class
         super().__init__(*args, **kwargs)
@@ -81,7 +82,7 @@ class BaseTestSuite(unittest.TestCase):
         self.run_timeout = run_timeout or BaseTestSuite.response_timeout
         self.teardown_timeout = teardown_timeout or BaseTestSuite.response_timeout
         self.test_ids = test_ids
-        self.variant = variant
+        self.tag = tag
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str):
         """Cleanup auxiliary and log reasons.
@@ -111,7 +112,7 @@ class BasicTestSuiteSetup(BaseTestSuite):
         run_timeout: Union[int, None],
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
-        variant: Union[list, None],
+        tag: Union[Dict[str, List[str]], None],
         args: tuple,
         kwargs: dict,
     ):
@@ -128,7 +129,8 @@ class BasicTestSuiteSetup(BaseTestSuite):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
-        :param variant: string that allows the user to execute a subset of tests
+        :param tag: dictionary containing lists of variants and/or test levels
+            when only a subset of tests needs to be executed
         """
         # Initialize base class
         super().__init__(
@@ -139,7 +141,7 @@ class BasicTestSuiteSetup(BaseTestSuite):
             run_timeout,
             teardown_timeout,
             test_ids,
-            variant,
+            tag,
             args,
             kwargs,
         )
@@ -164,7 +166,7 @@ class BasicTestSuiteTeardown(BaseTestSuite):
         run_timeout: Union[int, None],
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
-        variant: Union[list, None],
+        tag: Union[Dict[str, List[str]], None],
         args: tuple,
         kwargs: dict,
     ):
@@ -181,7 +183,8 @@ class BasicTestSuiteTeardown(BaseTestSuite):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
-        :param variant: string that allows the user to execute a subset of tests
+        :param tag: dictionary containing lists of variants and/or test levels
+            when only a subset of tests needs to be executed
         """
         # Initialize base class
         super().__init__(
@@ -192,7 +195,7 @@ class BasicTestSuiteTeardown(BaseTestSuite):
             run_timeout,
             teardown_timeout,
             test_ids,
-            variant,
+            tag,
             args,
             kwargs,
         )

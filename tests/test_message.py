@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import itertools
 import struct
 import unittest
 
@@ -78,6 +79,7 @@ class MessageTest(unittest.TestCase):
             TlvKnownTags.TEST_REPORT: "OK",
             TlvKnownTags.FAILURE_REASON: b"\x12\x34\x56",
         }
+        message_mod.msg_cnt = itertools.cycle(range(256))
         message_for_test = Message(
             msg_type=MessageType.COMMAND,
             sub_type=MessageCommandType.TEST_CASE_SETUP,

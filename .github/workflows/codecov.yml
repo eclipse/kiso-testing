@@ -33,7 +33,7 @@ jobs:
 
       - name: Install pipenv
         run: pip3.8 install pipenv
-          
+
       # Runs the preparation
       - name: Prepare working environement
         run: pipenv install --dev
@@ -41,7 +41,7 @@ jobs:
       # Runs the test
       - name: Run unittests
         run: pipenv run pytest --cov=./ --cov-report=xml
-      
+
       # Upload the test result
       - name: Upload test-result to codecov
         uses: codecov/codecov-action@v2
