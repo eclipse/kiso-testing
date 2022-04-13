@@ -6,7 +6,7 @@ Requirements
 ------------
 
 -  Python 3.7+
--  pip/poetry (used to get the rest of the requirements)
+-  pip
 
 .. _pykiso_installation:
 
@@ -44,17 +44,4 @@ Demo using example config
 
 .. code:: bash
 
-   invoke run
-
-Running the Tests
-~~~~~~~~~~~~~~~~~
-
-.. code:: bash
-
-   invoke test
-
-or
-
-.. code:: bash
-
-   pytest
+   pykiso -c ./examples/dummy.yaml --log-level=DEBUG -l killme.log
