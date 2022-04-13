@@ -30,6 +30,8 @@ pipeline
                 // Clean workspace
                 cleanWs()
                 checkout scm
+                // TODO remove once new docker image is available
+                sh 'python3 -m pip install poetry'
                 sh 'poetry install'
             }
         }
