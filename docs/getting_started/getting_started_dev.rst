@@ -5,7 +5,7 @@ Contributor Setup
 Requirements
 ~~~~~~~~~~~~
 
--  Python 3.6+
+-  Python 3.7+
 -  poetry (used to get the rest of the requirements)
 
 Install
@@ -13,8 +13,8 @@ Install
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
+   git clone https://github.com/eclipse/kiso-testing.git
+   cd kiso-testing
    poetry install
    poetry shell
 
@@ -26,6 +26,8 @@ To improve code-quality, a configuration of
 following pre-commit hooks are used:
 
 -  black
+-  flake8
+-  isort
 -  trailing-whitespace
 -  end-of-file-fixer
 -  check-docstring-first
