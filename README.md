@@ -29,7 +29,7 @@ pip install pykiso
 
 ```bash
 cd kiso-testing
-poetry install --dev
+poetry install
 poetry shell
 ```
 

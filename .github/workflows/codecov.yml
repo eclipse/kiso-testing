@@ -36,7 +36,7 @@ jobs:
 
       # Runs the preparation
       - name: Prepare working environement
-        run: poetry install --dev
+        run: poetry install
 
       # Runs the test
       - name: Run unittests
