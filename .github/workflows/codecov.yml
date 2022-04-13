@@ -31,16 +31,16 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Install pipenv
-        run: pip3.8 install pipenv
+      - name: Install poetry
+        run: pip3.8 install poetry
 
       # Runs the preparation
       - name: Prepare working environement
-        run: pipenv install --dev
+        run: poetry install --dev
 
       # Runs the test
       - name: Run unittests
-        run: pipenv run pytest --cov=./ --cov-report=xml
+        run: poetry run pytest --cov=./ --cov-report=xml
 
       # Upload the test result
       - name: Upload test-result to codecov

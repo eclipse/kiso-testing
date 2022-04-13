@@ -6,7 +6,7 @@ Requirements
 ~~~~~~~~~~~~
 
 -  Python 3.6+
--  pipenv (used to get the rest of the requirements)
+-  poetry (used to get the rest of the requirements)
 
 Install
 ~~~~~~~
@@ -15,8 +15,8 @@ Install
 
    git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
    cd integration-test-framework
-   pipenv install --dev
-   pipenv shell
+   poetry install --dev
+   poetry shell
 
 Pre-Commit
 ~~~~~~~~~~
@@ -34,7 +34,7 @@ following pre-commit hooks are used:
 -  check-yaml
 -  debug-statements
 
-If you don’t have pre-commit installed, you can get it using pip:
+If you don't have pre-commit installed, you can get it using pip:
 
 .. code:: bash
 

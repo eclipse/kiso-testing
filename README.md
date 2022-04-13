@@ -17,21 +17,20 @@ The project will contain:
 ## Requirements ##
 
 * Python 3.6+
-* pip/pipenv (used to get the rest of the requirements)
+* pip/poetry (used to get the rest of the requirements)
 
 ## Install ##
 
 ```bash
-cd kiso-testing
-pip install .
+pip install pykiso
 ```
 
-[Pipenv](https://github.com/pypa/pipenv) is more appropriate for developers as it automatically creates virtual environments.
+[Poetry](https://python-poetry.org/) is more appropriate for developers as it automatically creates virtual environments.
 
 ```bash
 cd kiso-testing
-pipenv install --dev
-pipenv shell
+poetry install --dev
+poetry shell
 ```
 
 ### Pre-Commit
