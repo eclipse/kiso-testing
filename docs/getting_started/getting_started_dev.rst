@@ -73,4 +73,4 @@ Building the Docs
 
 .. code:: bash
 
-    invoke docs
+   invoke docs
