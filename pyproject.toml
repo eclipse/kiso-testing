@@ -51,7 +51,7 @@ MarkupSafe = "~2.0"
 auto-changelog = "0.5.3"
 black = { version = "^21.12b0", allow-prereleases = true }
 bump2version = "*"
-coverage = "*"
+coverage = { version = "^5.0", extras = ["toml"] }
 invoke = "*"
 pdbpp = "*"
 pre-commit = "*"
@@ -78,7 +78,6 @@ addopts = """\
     --cov=./src \
     --cov-report=html \
     --cov-report html:./tests/coverage_report.html \
-    --cov-config=.coveragerc \
     --ignore=tests/test_acroname_usb_auxiliary.py \
     --ignore=tests/test_robot_acroname.py \
 """
