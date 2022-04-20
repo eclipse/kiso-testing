@@ -255,9 +255,7 @@ class CCPCanCan(CChannel):
             finally:
                 self.raw_pcan_interface = None
 
-    def _cc_send(
-        self, msg: MessageType, remote_id: int = None, raw: bool = False
-    ) -> None:
+    def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
         If remote_id parameter is not given take configured ones, in addition if
@@ -270,6 +268,7 @@ class CCPCanCan(CChannel):
 
         """
         _data = msg
+        remote_id = kwargs.get("remote_id")
 
         if remote_id is None:
             remote_id = self.remote_id

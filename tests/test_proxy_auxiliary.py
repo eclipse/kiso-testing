@@ -14,7 +14,7 @@ import threading
 
 import pytest
 
-from pykiso.connector import CChannel
+from pykiso.connector import CChannel, ProxyCChannel
 from pykiso.lib.auxiliaries.proxy_auxiliary import (
     ConfigRegistry,
     ProxyAuxiliary,
@@ -27,7 +27,7 @@ AUX_LIST_INCOMPATIBLE = ["MockAux3"]
 
 @pytest.fixture
 def mock_auxiliaries(mocker):
-    class MockProxyCChannel(CChannel):
+    class MockProxyCChannel(ProxyCChannel):
         def __init__(self, name=None, *args, **kwargs):
             self.name = name
             self.queue_in = queue.Queue()
@@ -38,6 +38,7 @@ def mock_auxiliaries(mocker):
         _cc_close = mocker.stub(name="_cc_close")
         _cc_send = mocker.stub(name="_cc_send")
         _cc_receive = mocker.stub(name="_cc_receive")
+        cc_share = mocker.stub(name="cc_share")
 
     class MockAux1:
         def __init__(self, **kwargs):
@@ -125,8 +126,8 @@ def test_get_proxy_con_valid(mocker, cchannel_inst, mock_auxiliaries):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
 
     assert len(proxy_inst.proxy_channels) == 2
-    assert isinstance(proxy_inst.proxy_channels[0], CChannel)
-    assert isinstance(proxy_inst.proxy_channels[1], CChannel)
+    assert isinstance(proxy_inst.proxy_channels[0], ProxyCChannel)
+    assert isinstance(proxy_inst.proxy_channels[1], ProxyCChannel)
 
 
 def test_get_proxy_con_invalid(mocker, caplog, cchannel_inst):
@@ -177,7 +178,7 @@ def test_check_compatibility_exception(mocker, cchannel_inst):
 
 def test_create_auxiliary_instance_valid(mocker, cchannel_inst):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "open")
+    mocker.patch.object(ProxyCChannel, "open")
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     state = proxy_inst._create_auxiliary_instance()
@@ -199,7 +200,7 @@ def test_create_auxiliary_instance_exception(mocker, cchannel_inst):
 
 def test_delete_auxiliary_instance_valid(mocker, caplog, cchannel_inst):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "close")
+    mocker.patch.object(ProxyCChannel, "close")
 
     with caplog.at_level(logging.INFO):
         proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
@@ -211,7 +212,7 @@ def test_delete_auxiliary_instance_valid(mocker, caplog, cchannel_inst):
 
 def test_delete_auxiliary_instance_exception(mocker, caplog, cchannel_inst):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "close", side_effect=ValueError())
+    mocker.patch.object(ProxyCChannel, "close", side_effect=ValueError())
 
     with caplog.at_level(logging.ERROR):
         proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
@@ -263,7 +264,7 @@ def test_receive_message_valid(
 
 def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", return_value=(None, None))
+    mocker.patch.object(ProxyCChannel, "cc_receive", return_value=(None, None))
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     proxy_inst._receive_message()
@@ -277,7 +278,7 @@ def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
 
 def test_receive_message_exception(mocker, caplog, cchannel_inst):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", side_effect=ValueError())
+    mocker.patch.object(ProxyCChannel, "cc_receive", side_effect=ValueError())
 
     with caplog.at_level(logging.ERROR):
         proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
@@ -287,14 +288,14 @@ def test_receive_message_exception(mocker, caplog, cchannel_inst):
 
 
 @pytest.mark.parametrize(
-    "message, remote_id",
+    "raw_message",
     [
-        (b"\x12\x34\x56", 0x545),
-        (b"\x12\x34", 0x001),
-        (b"\x12\x34\x12\x34\x56", None),
+        {"msg": b"\x12\x34\x56", "remote_id": 0x545},
+        {"msg": b"\x12\x34", "remote_id": 0x001},
+        {"msg": b"\x12\x34\x12\x34\x56", "remote_id": None},
     ],
 )
-def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, message, remote_id):
+def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, raw_message):
     mocker.patch.object(ProxyAuxiliary, "run")
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
@@ -302,13 +303,9 @@ def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, message, remo
     conn_use = sys.modules["pykiso.auxiliaries.MockAux1"].channel
     conn_not_use = sys.modules["pykiso.auxiliaries.MockAux2"].channel
 
-    proxy_inst._dispatch_command(message, conn_use, remote_id)
+    proxy_inst._dispatch_command(conn_use, raw_message)
 
-    msg, r_id = conn_not_use.queue_out.get()
-
-    assert conn_use.queue_out.empty()
-    assert msg == message
-    assert r_id == remote_id
+    conn_not_use.cc_share.assert_called_with(raw_message)
 
 
 def test_run_command(mocker, cchannel_inst, mock_auxiliaries):

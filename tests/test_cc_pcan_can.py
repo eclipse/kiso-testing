@@ -390,7 +390,7 @@ def test_cc_close_with_exception(
 
 
 @pytest.mark.parametrize(
-    "parameters",
+    "mmessage, remote_id, raw",
     [
         (b"\x10\x36", 0x0A, True),
         (b"\x10\x36", None, True),
@@ -398,14 +398,17 @@ def test_cc_close_with_exception(
         (b"", 10, True),
         (message_with_tlv, 0x0A, False),
         (message_with_no_tlv, 0x0A, False),
-        (message_with_no_tlv,),
-        (message_with_no_tlv, 36),
+        (message_with_no_tlv, None, False),
+        (message_with_no_tlv, None, False),
     ],
 )
-def test_cc_send(mock_can_bus, parameters, mock_PCANBasic):
+def test_cc_send(mock_can_bus, mmessage, remote_id, raw, mock_PCANBasic):
 
     with CCPCanCan(remote_id=0x0A) as can:
-        can._cc_send(*parameters)
+        if remote_id is not None:
+            can._cc_send(mmessage, raw, remote_id=remote_id)
+        else:
+            can._cc_send(mmessage, raw)
 
     mock_can_bus.Bus.send.assert_called_once()
     mock_can_bus.Bus.shutdown.assert_called_once()

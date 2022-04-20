@@ -29,7 +29,7 @@ from multiprocessing import Queue
 from typing import Tuple, Union
 
 from pykiso import Message
-from pykiso.connector import CChannel
+from pykiso.connector import ProxyCChannel
 
 ProxyReturn = Union[
     Tuple[bytes, int], Tuple[bytes, None], Tuple[Message, None], Tuple[None, None]
@@ -38,7 +38,7 @@ ProxyReturn = Union[
 log = logging.getLogger(__name__)
 
 
-class CCProxy(CChannel):
+class CCProxy(ProxyCChannel):
     """Proxy CChannel for multi auxiliary usage."""
 
     def __init__(self, **kwargs):
@@ -80,8 +80,28 @@ class CCProxy(CChannel):
         """
 
         try:
-            raw_msg, source = self.queue_out.get(True, self.timeout)
-            log.debug(f"received at proxy level : {raw_msg} || source {source}")
-            return raw_msg, source
+            recv = self.queue_out.get(True, self.timeout)
+            log.debug(f"received at proxy level : {recv}")
+            return recv
         except queue.Empty:
             return None, None
+
+    def cc_share(self, *args: tuple, **kwargs: dict) -> None:
+        """Populate the connector's queue out with other auxiliaries
+        requests. Before populating the queue, just adapt the return
+        values to fit with current connectors return type (message,
+        source pair).
+
+        This method is currently used by the proxy auxiliary to dispatch
+        other commands coming from ohter auxiliaries.
+
+        .. note:: for the moment only handle the special case of
+            remote_id parameter, ohterwise extend this function to
+            handle more specific cases
+
+        :param args: postional arguments
+        :param kwargs: named arguments
+        """
+        message = kwargs.get("msg")
+        source = kwargs.get("remote_id")
+        self.queue_out.put([message, source])

@@ -66,3 +66,30 @@ def test_cc_receive_timeout():
         msg, src = proxy_inst._cc_receive()
         assert msg == None
         assert src == None
+
+
+def test_cc_share_with_remote_id():
+    with CCProxy() as proxy_inst:
+        proxy_inst.cc_share(msg=b"\x01\x0c", remote_id=0x123)
+        msg, src = proxy_inst._cc_receive()
+
+        assert msg == b"\x01\x0c"
+        assert src == 0x123
+
+
+def test_cc_share_with_positional():
+    with CCProxy() as proxy_inst:
+        proxy_inst.cc_share(b"\x01\x0c", 0x123)
+        msg, src = proxy_inst._cc_receive()
+
+        assert msg is None
+        assert src is None
+
+
+def test_cc_share_without_remote_id():
+    with CCProxy() as proxy_inst:
+        proxy_inst.cc_share(msg=b"\x01\x0c")
+        msg, src = proxy_inst._cc_receive()
+
+        assert msg == b"\x01\x0c"
+        assert src is None

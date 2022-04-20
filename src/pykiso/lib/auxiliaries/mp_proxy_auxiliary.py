@@ -247,30 +247,27 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
         for conn in self.proxy_channels:
             if not conn.queue_in.empty():
                 args, kwargs = conn.queue_in.get()
-                message = kwargs.get("msg")
-                if message is not None:
-                    self._dispatch_command(
-                        message=message,
-                        remote_id=kwargs.get("remote_id"),
-                        con_use=conn,
-                    )
+                self._dispatch_command(
+                    con_use=conn,
+                    *args,
+                    **kwargs,
+                )
 
                 self.channel._cc_send(*args, **kwargs)
 
-    def _dispatch_command(self, message: bytes, con_use: CChannel, remote_id: int):
+    def _dispatch_command(self, con_use: CChannel, *args: tuple, **kwargs: dict):
         """Dispatch the current command to others connected auxiliaries.
 
         This action is performed by populating the queue out from each
         proxy connectors.
 
-        :param message: message to send
         :param con_use: current proxy connector where the command come from
-        :param remote_id: if CAN is used, CAN frame ID on which
-            the message will be sent
+        :param args: postionnal arguments
+        :param kwargs: named arguments
         """
         for conn in self.proxy_channels:
             if conn != con_use:
-                conn.queue_out.put([message, remote_id])
+                conn.cc_share(*args, **kwargs)
 
     def _abort_command(self) -> None:
         """Not Used."""

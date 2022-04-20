@@ -71,7 +71,7 @@ class Connector(abc.ABC):
 class CChannel(Connector):
     """Abstract class for coordination channel."""
 
-    def __init__(self, processing=False, **kwargs):
+    def __init__(self, processing=False, **kwargs) -> None:
         """constructor"""
         super().__init__(**kwargs)
         if processing:
@@ -160,6 +160,25 @@ class CChannel(Connector):
         :return: message.Message() - If one received / None - If not
         """
         # TODO define exception to raise?
+        pass
+
+
+class ProxyCChannel(CChannel):
+    def __init__(self, **kwargs) -> None:
+        """constructor.
+
+        :param kwargs: named arguments
+        """
+        super().__init__(**kwargs)
+
+    @abc.abstractmethod
+    def cc_share(self, *args: tuple, **kwargs: dict) -> None:
+        """How to deal with requests parmeters from external sources
+        like other auxiliaries (e.g proxy setup).
+
+        :param args: positional arguments
+        :param kwargs: named arguments
+        """
         pass
 
 
