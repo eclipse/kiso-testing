@@ -6,12 +6,9 @@
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
-
+import logging
 import pytest
 import pyvisa
-from _pytest.fixtures import wrap_function_to_error_out_if_called_directly
-from pyvisa.highlevel import ResourceManager, open_visa_library
-from pyvisa.resources.serial import SerialInstrument
 
 from pykiso.lib.connectors import cc_visa
 
@@ -112,13 +109,16 @@ def test_cc_close(constructor_params_serial):
 
 
 @pytest.mark.parametrize(
-    "constructor_params_serial",
-    [constructor_params_serial],
+    "constructor_params_serial, raw_value, expected_return",
+    [
+        (constructor_params_serial, True, b"read response"),
+        (constructor_params_serial, False, "read response"),
+    ],
 )
-def test__cc_receive(mocker, constructor_params_serial):
+def test__cc_receive(mocker, constructor_params_serial, raw_value, expected_return):
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
-    assert visa_inst._cc_receive() == "read response"
+    assert visa_inst._cc_receive(raw=raw_value) == expected_return
 
 
 @pytest.mark.parametrize(
@@ -130,7 +130,7 @@ def test__cc_receive(mocker, constructor_params_serial):
         )
     ],
 )
-def test__process_request(mocker, constructor_params_serial, scpi_cmds):
+def test__process_request(mocker, constructor_params_serial, scpi_cmds, caplog):
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
     # Test when command is normally processed
@@ -163,6 +163,15 @@ def test__process_request(mocker, constructor_params_serial, scpi_cmds):
         == ""
     )
 
+    with caplog.at_level(logging.WARNING):
+        assert (
+            visa_inst._process_request(
+                request="Test", request_data=scpi_cmds["trigger_other_error"]
+            )
+            == ""
+        )
+    assert "Unknown request 'Test'!" in caplog.text
+
 
 @pytest.mark.parametrize(
     "constructor_params_serial, scpi_cmds",
@@ -178,10 +187,10 @@ def test__cc_send(mocker, constructor_params_serial, scpi_cmds):
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
 
     # Test with string input
-    assert visa_inst._cc_send(scpi_cmds["example"]) == None
+    assert visa_inst._cc_send(scpi_cmds["example"]) is None
 
     # Test with bytes input
-    assert visa_inst._cc_send(scpi_cmds["example"], raw=True) == None
+    assert visa_inst._cc_send(b"example", raw=True) is None
 
 
 @pytest.mark.parametrize(
@@ -212,17 +221,6 @@ def test_query(mocker, constructor_params_serial, scpi_cmds):
 
     # Test when timeout error occurs
     assert visa_inst.query(query_command=scpi_cmds["trigger_other_error"]) == ""
-
-
-@pytest.mark.parametrize(
-    "constructor_params_serial",
-    [constructor_params_serial],
-)
-def test__cc_send(mocker, constructor_params_serial):
-    """Test _cc_send"""
-    visa_inst = cc_visa.VISASerial(constructor_params_serial)
-    mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
-    assert visa_inst._cc_send("cmd") == None
 
 
 # Test of VisaSerial and VisaTcpip connector

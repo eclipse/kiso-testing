@@ -8,7 +8,7 @@
 ##########################################################################
 
 import pytest
-
+from pathlib import Path
 from pykiso.lib.connectors.flash_jlink import JLinkFlasher, pylink
 
 
@@ -32,12 +32,25 @@ def mock_jlink(mocker):
         flash_file = mocker.stub(name="flash_file")
 
     class MockJLib:
-        def __init__(self, lib=None):
+        def __init__(self, lib=None, **kwargs):
             pass
 
     mocker.patch.object(pylink, "JLink", new=MockJLink)
     mocker.patch.object(pylink, "Library", new=MockJLib)
     return pylink
+
+
+@pytest.mark.parametrize(
+    "return_value",
+    [True, False],
+)
+def test_open(mocker, tmp_file, mock_jlink, return_value):
+    Jlink_inst = JLinkFlasher(tmp_file)
+    Jlink_inst.lib = Path()
+    Jlink_inst.xml_path = "test_xml"
+    mock_exist = mocker.patch.object(Path, "exists", return_value=return_value)
+    Jlink_inst.open()
+    mock_exist.assert_called()
 
 
 def test_jlink_flasher(tmp_file, mock_jlink):
