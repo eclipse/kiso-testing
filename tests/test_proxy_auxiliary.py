@@ -11,10 +11,11 @@ import logging
 import queue
 import sys
 import threading
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
+
 import pytest
 
 from pykiso.connector import CChannel, ProxyCChannel
+from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.auxiliaries.proxy_auxiliary import (
     ConfigRegistry,
     ProxyAuxiliary,

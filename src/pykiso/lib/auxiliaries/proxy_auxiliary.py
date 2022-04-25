@@ -244,8 +244,9 @@ class ProxyAuxiliary(AuxiliaryInterface):
         This action is performed by populating the queue out from each
         proxy connectors.
 
-        :param con_use: current proxy connector where the command come from
-        :param args: postionnal arguments
+        :param con_use: current proxy connector where the command comes
+            from
+        :param args: postional arguments
         :param kwargs: named arguments
         """
         for conn in self.proxy_channels:

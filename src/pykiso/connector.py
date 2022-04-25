@@ -72,7 +72,12 @@ class CChannel(Connector):
     """Abstract class for coordination channel."""
 
     def __init__(self, processing=False, **kwargs) -> None:
-        """constructor"""
+        """constructor
+
+        :param processing: determine if a multiprocessing or a threading
+            RLock is used
+        :param kwargs: named arguments
+        """
         super().__init__(**kwargs)
         if processing:
             self._lock = multiprocessing.RLock()
@@ -173,7 +178,7 @@ class ProxyCChannel(CChannel):
 
     @abc.abstractmethod
     def cc_share(self, *args: tuple, **kwargs: dict) -> None:
-        """How to deal with requests parmeters from external sources
+        """How to deal with request parmeters from external sources
         like other auxiliaries (e.g proxy setup).
 
         :param args: positional arguments

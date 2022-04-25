@@ -38,6 +38,7 @@ def mock_auxiliaries(mocker):
         _cc_send = mocker.stub(name="_cc_send")
         _cc_receive = mocker.stub(name="_cc_receive")
         cc_receive = mocker.stub(name="cc_receive")
+        cc_share = mocker.stub(name="cc_share")
 
     class MockAux1:
         def __init__(self, **kwargs):
@@ -300,13 +301,11 @@ def test_dispatch_command_valid(mocker, mp_proxy_auxiliary_inst, mock_auxiliarie
     mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
     compare_channel = mock_auxiliaries[2]
     result_rec_message = mp_proxy_auxiliary_inst._dispatch_command(
-        b"340", compare_channel, 35
+        compare_channel, msg=b"340", remote_id=35
     )
     assert result_rec_message is None
-    assert proxy_channel_test.queue_out.get_nowait() == [
-        b"340",
-        35,
-    ]
+
+    proxy_channel_test.cc_share.assert_called_with(msg=b'340', remote_id=35)
 
 
 def test_dispatch_command_invalid(mp_proxy_auxiliary_inst, mock_auxiliaries):

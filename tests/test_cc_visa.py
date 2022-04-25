@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 import logging
+
 import pytest
 import pyvisa
 

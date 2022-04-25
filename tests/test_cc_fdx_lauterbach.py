@@ -9,9 +9,11 @@
 
 """ Test module for CCLauterbach.py
 """
-import time
 import logging
+import time
+
 import pytest
+
 from pykiso.lib.connectors.cc_fdx_lauterbach import CCFdxLauterbach
 from pykiso.message import Message
 

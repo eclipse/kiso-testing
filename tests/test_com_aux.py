@@ -7,10 +7,14 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import pytest
 import logging
+
+import pytest
+
 from pykiso import Message
-from pykiso.lib.auxiliaries.communication_auxiliary import CommunicationAuxiliary
+from pykiso.lib.auxiliaries.communication_auxiliary import (
+    CommunicationAuxiliary,
+)
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
 

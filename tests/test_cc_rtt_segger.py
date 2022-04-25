@@ -7,9 +7,10 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import logging
 from itertools import cycle
 from pathlib import Path
-import logging
+
 import pylink
 import pytest
 

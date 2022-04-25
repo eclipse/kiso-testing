@@ -93,10 +93,10 @@ class CCProxy(ProxyCChannel):
         source pair).
 
         This method is currently used by the proxy auxiliary to dispatch
-        other commands coming from ohter auxiliaries.
+        other commands coming from other auxiliaries.
 
         .. note:: for the moment only handle the special case of
-            remote_id parameter, ohterwise extend this function to
+            remote_id parameter, otherwise extend this function to
             handle more specific cases
 
         :param args: postional arguments
