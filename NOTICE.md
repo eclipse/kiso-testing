@@ -39,7 +39,7 @@ SPDX-License-Identifier: EPL-2.0
 
 ## Third-party Content
 
-There is none direct hosted 3rd party content nevertheless, important dependencies are downloaded via pipenv.
+There is none direct hosted 3rd party content nevertheless, important dependencies are downloaded via poetry.
 
 Python 3.8.2
 

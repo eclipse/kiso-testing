@@ -5,18 +5,18 @@ Contributor Setup
 Requirements
 ~~~~~~~~~~~~
 
--  Python 3.6+
--  pipenv (used to get the rest of the requirements)
+-  Python 3.7+
+-  poetry (used to get the rest of the requirements)
 
 Install
 ~~~~~~~
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
-   pipenv install --dev
-   pipenv shell
+   git clone https://github.com/eclipse/kiso-testing.git
+   cd kiso-testing
+   poetry install
+   poetry shell
 
 Pre-Commit
 ~~~~~~~~~~
@@ -26,6 +26,8 @@ To improve code-quality, a configuration of
 following pre-commit hooks are used:
 
 -  black
+-  flake8
+-  isort
 -  trailing-whitespace
 -  end-of-file-fixer
 -  check-docstring-first
@@ -34,7 +36,7 @@ following pre-commit hooks are used:
 -  check-yaml
 -  debug-statements
 
-If you don’t have pre-commit installed, you can get it using pip:
+If you don't have pre-commit installed, you can get it using pip:
 
 .. code:: bash
 
@@ -71,4 +73,4 @@ Building the Docs
 
 .. code:: bash
 
-    invoke docs
+   invoke docs

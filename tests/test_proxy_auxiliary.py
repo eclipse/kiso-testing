@@ -11,7 +11,7 @@ import logging
 import queue
 import sys
 import threading
-
+from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 import pytest
 
 from pykiso.connector import CChannel, ProxyCChannel
@@ -58,6 +58,32 @@ def mock_auxiliaries(mocker):
     sys.modules["pykiso.auxiliaries.MockAux1"] = MockAux1()
     sys.modules["pykiso.auxiliaries.MockAux2"] = MockAux2()
     sys.modules["pykiso.auxiliaries.MockAux3"] = MockAux3()
+
+    return MockProxyCChannel()
+
+
+@pytest.fixture
+def mock_aux_interface(mocker, mock_auxiliaries):
+    class MockAuxInterface(AuxiliaryInterface):
+        def __init__(self, param_1=None, param_2=None, **kwargs):
+            self.param_1 = param_1
+            self.param_2 = param_2
+            self.channel = mock_auxiliaries
+            super().__init__(
+                name="mp_aux",
+            )
+
+        _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
+        _create_auxiliary_instance.return_value = True
+        _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
+        _delete_auxiliary_instance.return_value = False
+        _run_command = mocker.stub(name="_run_command")
+        _abort_command = mocker.stub(name="_abort_command")
+        _receive_message = mocker.stub(name="_receive_message")
+
+    sys.modules["pykiso.auxiliaries.MockAuxInterface"] = MockAuxInterface()
+
+    return MockAuxInterface()
 
 
 def test_constructor(mocker, cchannel_inst):
@@ -120,12 +146,13 @@ def test_init_trace_not_activate(mocker):
     assert logger == log
 
 
-def test_get_proxy_con_valid(mocker, cchannel_inst, mock_auxiliaries):
+def test_get_proxy_con_valid(mocker, cchannel_inst, mock_aux_interface):
     mocker.patch.object(ProxyAuxiliary, "run")
+    mocker.patch.object(ProxyAuxiliary, "_check_compatibility")
 
-    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES, mock_aux_interface])
 
-    assert len(proxy_inst.proxy_channels) == 2
+    assert len(proxy_inst.proxy_channels) == 3
     assert isinstance(proxy_inst.proxy_channels[0], ProxyCChannel)
     assert isinstance(proxy_inst.proxy_channels[1], ProxyCChannel)
 
@@ -176,49 +203,44 @@ def test_check_compatibility_exception(mocker, cchannel_inst):
         proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_INCOMPATIBLE])
 
 
-def test_create_auxiliary_instance_valid(mocker, cchannel_inst):
+@pytest.mark.parametrize(
+    "side_effect_value, stop_event_set, expected_function_return",
+    [
+        (None, False, True),
+        (ValueError(), True, False),
+    ],
+)
+def test_create_auxiliary_instance_valid(
+    mocker, cchannel_inst, side_effect_value, stop_event_set, expected_function_return
+):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(ProxyCChannel, "open")
+    mocker.patch.object(CChannel, "open", side_effect=side_effect_value)
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     state = proxy_inst._create_auxiliary_instance()
 
-    assert state is True
-    assert proxy_inst.stop_event.is_set() is False
+    assert state is expected_function_return
+    assert proxy_inst.stop_event.is_set() is stop_event_set
 
 
-def test_create_auxiliary_instance_exception(mocker, cchannel_inst):
+@pytest.mark.parametrize(
+    "side_effect_value, log_level, expected_log",
+    [
+        (None, logging.INFO, "Delete auxiliary instance"),
+        (ValueError(), logging.ERROR, "Error encouting during channel closure"),
+    ],
+)
+def test_delete_auxiliary_instance(
+    mocker, caplog, cchannel_inst, side_effect_value, log_level, expected_log
+):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "open", side_effect=ValueError())
+    mocker.patch.object(CChannel, "close", side_effect=side_effect_value)
 
-    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
-    state = proxy_inst._create_auxiliary_instance()
-
-    assert state is False
-    assert proxy_inst.stop_event.is_set() is True
-
-
-def test_delete_auxiliary_instance_valid(mocker, caplog, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(ProxyCChannel, "close")
-
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(log_level):
         proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
         state = proxy_inst._delete_auxiliary_instance()
 
-    assert "Delete auxiliary instance" in caplog.text
-    assert state is True
-
-
-def test_delete_auxiliary_instance_exception(mocker, caplog, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(ProxyCChannel, "close", side_effect=ValueError())
-
-    with caplog.at_level(logging.ERROR):
-        proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
-        state = proxy_inst._delete_auxiliary_instance()
-
-    assert "Error encouting during channel closure" in caplog.text
+    assert expected_log in caplog.text
     assert state is True
 
 

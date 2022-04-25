@@ -144,6 +144,8 @@ def test_receive(data, expected_data, mocker, mock_channel):
     )
     mocker.patch.object(threading.Thread, "start", return_value=None)
     record_aux = RecordAuxiliary(mock_channel, is_active=True)
+    record_aux.multiprocess = True
+    mock_dump_to_file = mocker.patch.object(record_aux, "dump_to_file")
     mocker.patch.object(record_aux.channel, "cc_receive", return_value=data)
     mock_set_data = mocker.patch.object(record_aux, "set_data")
 
@@ -153,6 +155,7 @@ def test_receive(data, expected_data, mocker, mock_channel):
     mock_channel.open.assert_called_once()
     mock_channel.close.assert_called_once()
     mock_set_data.assert_called_once_with(expected_data)
+    mock_dump_to_file.assert_called()
 
 
 def test_receive_open_error(caplog, mocker, mock_channel):

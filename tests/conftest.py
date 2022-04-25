@@ -16,6 +16,7 @@ import pytest
 from pykiso import CChannel, Flasher, test_suite
 from pykiso.lib.auxiliaries import example_test_auxiliary
 from pykiso.lib.connectors import cc_example
+from pykiso import message
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
 from pykiso.test_coordinator import test_case
@@ -61,6 +62,24 @@ class TestAux:
     def stop(self):
         self.is_instance = False
 """
+
+
+@pytest.fixture
+def mock_msg(mocker):
+    class msg_sub_class(message.Message):
+        def __init__(self):
+            self.msg_type = 2
+            self.sub_type = 1
+            self.test_suite = 1
+            self.test_case = 1
+            self.msg_token = None
+            self.error_code = None
+            self.reserved = True
+            self.tlv_dict = dict()
+
+        serialize = mocker.stub(name="serialize")
+
+    return msg_sub_class()
 
 
 @pytest.fixture(scope="module")

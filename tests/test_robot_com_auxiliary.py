@@ -7,17 +7,12 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import logging
-import sys
-
 import pytest
 
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.robot_framework.communication_auxiliary import (
     ComAux,
     CommunicationAuxiliary,
 )
-from pykiso.test_setup.config_registry import ConfigRegistry
 
 
 @pytest.fixture

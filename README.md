@@ -16,22 +16,21 @@ The project will contain:
 
 ## Requirements ##
 
-* Python 3.6+
-* pip/pipenv (used to get the rest of the requirements)
+* Python 3.7+
+* pip/poetry (used to get the rest of the requirements)
 
 ## Install ##
 
 ```bash
-cd kiso-testing
-pip install .
+pip install pykiso
 ```
 
-[Pipenv](https://github.com/pypa/pipenv) is more appropriate for developers as it automatically creates virtual environments.
+[Poetry](https://python-poetry.org/) is more appropriate for developers as it automatically creates virtual environments.
 
 ```bash
 cd kiso-testing
-pipenv install --dev
-pipenv shell
+poetry install
+poetry shell
 ```
 
 ### Pre-Commit
@@ -40,6 +39,8 @@ To improve code-quality, a configuration of [pre-commit](https://pre-commit.com/
 The following pre-commit hooks are used:
 
 - black
+- flake8
+- isort
 - trailing-whitespace
 - end-of-file-fixer
 - check-docstring-first
@@ -47,8 +48,6 @@ The following pre-commit hooks are used:
 - check-added-large-files
 - check-yaml
 - debug-statements
-- flake8
-- isort
 
 If you don't have pre-commit installed, you can get it using pip:
 

@@ -8,7 +8,7 @@
 ##########################################################################
 
 import socket
-
+import logging
 import pytest
 
 from pykiso.lib.connectors.cc_udp_server import CCUdpServer
@@ -143,3 +143,34 @@ def test_udp_server_recv_valid(
         cc_receive_param[0] or 1e-6
     )
     mock_udp_socket.socket.recvfrom.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "side_effect_mock",
+    [
+        BlockingIOError,
+        socket.timeout,
+        BaseException,
+    ],
+)
+def test_udp_recv_invalid(mocker, mock_udp_socket, side_effect_mock, caplog):
+    """Test message _cc_receive method using context manager from Connector class.
+
+    Validation criteria:
+     - correct Exception is catched
+     - correct log message
+     - return is None
+    """
+    mocker.patch("socket.socket.recvfrom", side_effect=side_effect_mock)
+
+    with CCUdpServer("120.0.0.7", 5005) as udp_server:
+        with caplog.at_level(
+            logging.DEBUG,
+        ):
+            msg_received = udp_server._cc_receive(timeout=0.0000001)
+        assert (
+            f"encountered error while receiving message via {udp_server}" in caplog.text
+        )
+
+    assert msg_received is None
+    assert udp_server.address is None
