@@ -305,7 +305,7 @@ def test_dispatch_command_valid(mocker, mp_proxy_auxiliary_inst, mock_auxiliarie
     )
     assert result_rec_message is None
 
-    proxy_channel_test.cc_share.assert_called_with(msg=b'340', remote_id=35)
+    proxy_channel_test.cc_share.assert_called_with(msg=b"340", remote_id=35)
 
 
 def test_dispatch_command_invalid(mp_proxy_auxiliary_inst, mock_auxiliaries):
