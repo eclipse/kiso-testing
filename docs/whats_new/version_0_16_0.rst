@@ -19,7 +19,7 @@ tests will be stopped on the first error or failure.
 
 At the same time the behavior of the auxiliary create instance was changed.
 When the auxiliary instance creation are now failing, they will raise an exception.
-Combined with the new flag the test execution will be stopp when something went wrong.
+Combined with the new flag the test execution will be stopped when something go wrong.
 
 
 Include Sub-YAMLs

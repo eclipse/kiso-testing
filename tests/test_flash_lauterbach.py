@@ -9,7 +9,6 @@
 
 import ctypes
 import logging
-import pathlib
 import subprocess
 
 import psutil
@@ -158,15 +157,31 @@ def test_open(
         )
 
 
+@pytest.mark.parametrize(
+    "side_effect_load_library, side_effect_subprocess, expected_log",
+    [
+        (Exception, None, "Unable to open Trace32"),
+        (None, Exception, "Unable to open Trace32"),
+        (None, None, "Unable to connect on port"),
+    ],
+)
 def test_open_fail(
-    caplog, lauterbach_flasher, mock_psutil, mock_subprocess, mock_remote_api, mocker
+    caplog,
+    lauterbach_flasher,
+    mocker,
+    side_effect_load_library,
+    side_effect_subprocess,
+    expected_log,
 ):
     mocker.patch("test_flash_lauterbach.StubTrace32Api.T32_Init", return_value=1)
+    mocker.patch("ctypes.cdll.LoadLibrary", side_effect=side_effect_load_library)
+    mocker.patch("subprocess.Popen", side_effect=side_effect_subprocess)
     lauterbach_flasher.loadup_wait_time = 0
 
-    with pytest.raises(Exception) as e:
-        lauterbach_flasher.open()
-    assert "Unable to connect on port" in str(e.value)
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(Exception) as e:
+            lauterbach_flasher.open()
+        assert expected_log in caplog.text
 
 
 def test_close(
@@ -211,6 +226,37 @@ def test_flash(
         lauterbach_flasher.flash()
 
     assert "flash procedure successful" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "return_value_t32_cmd, expected_log",
+    [
+        (-3, "TRACE32 Remote API communication error"),
+        (3, "An error occurred during flash,state :"),
+    ],
+)
+def test_flash_exception(
+    lauterbach_flasher,
+    mock_psutil,
+    mock_subprocess,
+    mock_remote_api,
+    mocker,
+    return_value_t32_cmd,
+    expected_log,
+):
+    lauterbach_flasher.loadup_wait_time = 0
+    lauterbach_flasher.open()
+    mocker.patch.object(ctypes, "byref", return_value=CtypeTypeMock(0))
+    mocker.patch.object(ctypes, "c_int", return_value=CtypeTypeMock(0))
+    mocker.patch.object(StubTrace32Api, "T32_Cmd", return_value=return_value_t32_cmd)
+    mocker.patch.object(StubTrace32Api, "T32_GetMessage", return_value=-3)
+
+    mocker.patch("time.sleep", return_value=None)
+
+    with pytest.raises(Exception) as e:
+        lauterbach_flasher.flash()
+
+    assert expected_log in str(e.value)
 
 
 def test_script_execution_error(

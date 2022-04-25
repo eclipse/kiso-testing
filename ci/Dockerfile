@@ -35,6 +35,6 @@ RUN npm install -g vsce
 
 # Environment settings
 ENV HOME=/home/kiso
-RUN python3 -m pip install pipenv \
+RUN python3 -m pip install poetry \
     && chmod -R 777 ${HOME}
 ENV PATH="/home/kiso/.local/bin:${PATH}"

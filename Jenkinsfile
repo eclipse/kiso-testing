@@ -30,7 +30,9 @@ pipeline
                 // Clean workspace
                 cleanWs()
                 checkout scm
-                sh 'pipenv install --dev --skip-lock'
+                // TODO remove once new docker image is available
+                sh 'python3 -m pip install poetry'
+                sh 'poetry install'
             }
         }
         stage('Format check')
@@ -39,7 +41,7 @@ pipeline
             {
                 script
                 {
-                    sh "pipenv run black --diff . > ${env.WORKSPACE}/black.patch"
+                    sh "poetry run black --diff . > ${env.WORKSPACE}/black.patch"
 
                     final def patch = readFile("${env.WORKSPACE}/black.patch")
 
@@ -56,7 +58,7 @@ pipeline
         {
             steps
             {
-                sh 'pipenv run pytest --junitxml=reports/testReport.xml'
+                sh 'poetry run pytest --junitxml=reports/testReport.xml'
             }
         }
         stage('Run virtual-test')
@@ -64,14 +66,14 @@ pipeline
             steps
             {
                 // Run dummy yaml file
-                sh 'pipenv run pykiso -c examples/dummy.yaml --junit'
+                sh 'poetry run pykiso -c examples/dummy.yaml --junit'
             }
         }
         stage('Generate documentation')
         {
             steps {
                 script {
-                    sh "pipenv run invoke docs"
+                    sh "poetry run invoke docs"
                 }
             }
         }
@@ -89,18 +91,15 @@ pipeline
                     {
                         script
                         {
-                            sh "pipenv run pip install twine"
-                            sh "pipenv run invoke clean"
-                            sh "pipenv run invoke dist"
                             withCredentials([string(
                                 credentialsId: 'pypi-bot-token',
-                                variable: 'token')]) {
-
-                                    sh "pipenv run twine upload\
-                                            --verbose \
+                                variable: 'token')])
+                                {
+                                    sh "poetry publish \
+                                            --no-interaction \
+                                            --build \
                                             --username __token__\
-                                            --password ${token}\
-                                            dist/*"
+                                            --password ${token}"
                                 }
                         }
                     }

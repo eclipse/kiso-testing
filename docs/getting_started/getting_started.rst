@@ -5,8 +5,8 @@ User Guide
 Requirements
 ------------
 
--  Python 3.6+
--  pip/pipenv (used to get the rest of the requirements)
+-  Python 3.7+
+-  pip
 
 .. _pykiso_installation:
 
@@ -15,19 +15,17 @@ Install
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
-   pip install .
+   pip install pykiso
 
-`Pipenv <https://github.com/pypa/pipenv>`__ is more appropriate for
+`Poetry <https://python-poetry.org/>`__ is more appropriate for
 developers as it automatically creates virtual environments.
 
 .. code:: bash
 
-   git clone https://dev-bosch.com/bitbucket/scm/pea/integration-test-framework.git
-   cd integration-test-framework
-   pipenv install --dev
-   pipenv shell
+   git clone https://github.com/eclipse/kiso-testing.git
+   cd kiso-testing
+   poetry install
+   poetry shell
 
 Usage
 -----
@@ -39,24 +37,11 @@ with the following arguments:
 .. command-output:: pykiso --help
 
 
-Suitable config files are available in the ``test-examples`` folder.
+Suitable config files are available in the ``examples`` folder.
 
 Demo using example config
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
-   invoke run
-
-Running the Tests
-~~~~~~~~~~~~~~~~~
-
-.. code:: bash
-
-   invoke test
-
-or
-
-.. code:: bash
-
-   pytest
+   pykiso -c ./examples/dummy.yaml --log-level=DEBUG -l killme.log
