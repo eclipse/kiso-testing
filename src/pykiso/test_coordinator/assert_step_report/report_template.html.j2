@@ -9,7 +9,13 @@
         <hr>
         <div class="col-12 text-left">
             {# Add Title and description #}
-            <h2>ITF Test Report for:  <a href="{{class_content["file_path"]}}">{{class_name}}</a></h2>
+            <h2>ITF Test Report for:  <a href="{{class_content["file_path"]}}">{{class_name}}</a>
+            {% if class_content["succeed"] %}
+                -> [<div style="color:green;">Success</div>]
+            {% else %}
+                -> [<div style="color:red;">Fail</div>]
+            {% endif %}
+            </h2>
             <h3>Test Description:</h3>
             <p>    {{class_content["description"] | replace("\n", "<br/>\n") }}</p>
             <h3>Date, Time, Software versions:</h3>

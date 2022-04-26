@@ -15,12 +15,14 @@ def test_case():
 
     # Add the step-report parameters
     tc.step_report_header = {}
+    tc.step_report_message = ""
+    tc.step_report_succeed = True
+    tc.step_report_continue_on_error = False
 
     return tc
 
 
-def test_assert_step_report_header_error(caplog):
-    test_case = TestCase()
+def test_assert_step_report_header_error(test_case, caplog):
     test_case.assertTrue = assert_step_report.assert_decorator(test_case.assertTrue)
 
     with caplog.at_level(logging.ERROR):

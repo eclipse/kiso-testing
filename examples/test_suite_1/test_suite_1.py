@@ -240,29 +240,35 @@ class MyTest4(pykiso.BasicTest):
         logging.info(
             f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
+        self.step_report_current_table = "first"
         device_on = True
         self.step_report_message = "smth"
-        self.step_report_continue_on_error = True
         self.assertTrue(device_on, msg="Check my device is ready")
         voltage = 3.8
+        self.step_report_current_table = "second"
         self.assertAlmostEqual(voltage, 4, delta=1, msg="err")
         # additional data can be shown in the step-report
-
+    
 
     def test_run(self):
+        
+        self.step_report_header["brc"] = "1231"
+
         """Here is my test description which will be showed in the step-report"""
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
-        kiso_is_great = True
+        kiso_is_great = False
         self.step_report_continue_on_error = True
-        self.assertTrue(False, "Some verification")
+        self.assertTrue(kiso_is_great, "Some verification")
         wrong_placement = "123"
+        self.step_report_continue_on_error = False
         self.assertEqual(
             "123",
             wrong_placement,
             "Variable name not found because data_in/data_expected order inverted",
         )
+        assert self.step_report_succeed == True
         logging.info(f"I HAVE RUN 0.1.1 for variant {self.variant}!")
 
     def tearDown(self):

@@ -27,6 +27,15 @@ Usage Examples
 
         # assert
         self.assertTrue(device_on, msg="Check my device is ready")
+
+        # assert fail but continue on error
+        # test is set to failed if assertion does not succeed
+        self.step_report_continue_on_error = True
+        self.assertTrue(!device_on, msg="Some check")
+
+        # assert with custom message
+        # assert msg overwritten when step_report_message not null
+        self.step_report_message = "Custom message"
         self.assertAlmostEqual(voltage, 4, delta=1, msg="Check voltage device")
 
         # additional data to include in the step-report
