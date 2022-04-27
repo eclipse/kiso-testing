@@ -392,20 +392,20 @@ def test_cc_close_with_exception(
 @pytest.mark.parametrize(
     "parameters",
     [
-        (b"\x10\x36", 0x0A, True),
-        (b"\x10\x36", None, True),
-        (b"\x10\x36", 10, True),
-        (b"", 10, True),
-        (message_with_tlv, 0x0A, False),
-        (message_with_no_tlv, 0x0A, False),
-        (message_with_no_tlv,),
-        (message_with_no_tlv, 36),
+        {"msg": b"\x10\x36", "raw": True, "remote_id": 0x0A},
+        {"msg": b"\x10\x36", "raw": True, "remote_id": None},
+        {"msg": b"\x10\x36", "raw": True, "remote_id": 10},
+        {"msg": b"", "raw": True, "remote_id": 10},
+        {"msg": message_with_tlv, "raw": False, "remote_id": 0x0A},
+        {"msg": message_with_no_tlv, "raw": False, "remote_id": 0x0A},
+        {"msg": message_with_no_tlv},
+        {"msg": message_with_no_tlv, "raw": False, "remote_id": 36},
     ],
 )
 def test_cc_send(mock_can_bus, parameters, mock_PCANBasic):
 
     with CCPCanCan(remote_id=0x0A) as can:
-        can._cc_send(*parameters)
+        can._cc_send(**parameters)
 
     mock_can_bus.Bus.send.assert_called_once()
     mock_can_bus.Bus.shutdown.assert_called_once()
@@ -439,7 +439,10 @@ def test_can_recv(
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
     with CCPCanCan() as can:
-        msg_received, id_received = can._cc_receive(*cc_receive_param)
+        response = can._cc_receive(*cc_receive_param)
+
+    msg_received = response.get("msg")
+    id_received = response.get("remote_id")
 
     assert isinstance(msg_received, expected_type) == True
     assert id_received == can_id
@@ -456,13 +459,13 @@ def test_can_recv(
 )
 def test_can_recv_invalid(mocker, mock_can_bus, raw_state, mock_PCANBasic):
 
-    mocker.patch("can.interface.Bus.recv", return_value=None)
+    mocker.patch("can.interface.Bus.recv", return_value={"msg": None})
 
     with CCPCanCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001, raw=raw_state)
+        response = can._cc_receive(timeout=0.0001, raw=raw_state)
 
-    assert msg_received == None
-    assert id_received == None
+    assert response["msg"] is None
+    assert response.get("remote_id") is None
 
 
 def test_can_recv_exception(caplog, mocker, mock_can_bus, mock_PCANBasic):
@@ -472,10 +475,10 @@ def test_can_recv_exception(caplog, mocker, mock_can_bus, mock_PCANBasic):
     logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
 
     with CCPCanCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001)
+        response = can._cc_receive(timeout=0.0001)
 
-    assert msg_received == None
-    assert id_received == None
+    assert response["msg"] is None
+    assert response.get("remote_id") is None
     assert "Exception" in caplog.text
 
 
@@ -490,8 +493,8 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
     with caplog.at_level(logging.DEBUG):
 
         with CCPCanCan() as can:
-            msg_received, id_received = can._cc_receive(timeout=0.0001)
+            response = can._cc_receive(timeout=0.0001)
 
-    assert msg_received == None
-    assert id_received == None
+    assert response["msg"] is None
+    assert response.get("remote_id") is None
     assert "encountered can error: Invalid Message" in caplog.text
