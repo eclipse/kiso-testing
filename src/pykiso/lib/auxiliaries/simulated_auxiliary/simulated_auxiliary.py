@@ -87,7 +87,9 @@ class SimulatedAuxiliary(AuxiliaryInterface):
         """
         responses = []
 
-        msg = self.channel.cc_receive(timeout_in_s)
+        recv_response = self.channel.cc_receive(timeout_in_s)
+
+        msg = recv_response.get("msg")
 
         # don't advance simulation if no message or ACK has been received
         if msg is None or msg.msg_type == ACK:

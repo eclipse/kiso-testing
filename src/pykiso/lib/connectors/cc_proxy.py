@@ -80,8 +80,8 @@ class CCProxy(CChannel):
         """
 
         try:
-            raw_msg, source = self.queue_out.get(True, self.timeout)
-            log.debug(f"received at proxy level : {raw_msg} || source {source}")
-            return raw_msg, source
+            return_response = self.queue_out.get(True, self.timeout)
+            log.debug(f"received at proxy level : {return_response}")
+            return return_response
         except queue.Empty:
-            return None, None
+            return {"msg": None}

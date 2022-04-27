@@ -85,7 +85,6 @@ class CCTcpip(CChannel):
         """
         self.socket.settimeout(timeout or self.timeout)
 
-        msg_received = ""
         try:
             msg_received = self.socket.recv(self.max_msg_size)
 
@@ -97,7 +96,9 @@ class CCTcpip(CChannel):
             log.exception(
                 f"encountered timeout error while receiving message via {self}"
             )
+            return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
+            return {"msg": None}
 
-        return msg_received
+        return {"msg": msg_received}
