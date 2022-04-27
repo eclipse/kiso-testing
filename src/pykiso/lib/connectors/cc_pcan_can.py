@@ -21,7 +21,7 @@ Can Communication Channel using PCAN hardware
 
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Dict, Union
 
 import can
 import can.bus
@@ -289,7 +289,7 @@ class CCPCanCan(CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.0001, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
         If raw parameter is set to True return received message as it is (bytes)
@@ -302,6 +302,7 @@ class CCPCanCan(CChannel):
         """
         try:  # Catch bus errors & rcv.data errors when no messages where received
             received_msg = self.bus.recv(timeout=timeout or self.timeout)
+
             if received_msg is not None:
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data

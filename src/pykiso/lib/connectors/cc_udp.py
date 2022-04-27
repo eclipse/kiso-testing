@@ -23,7 +23,7 @@ Communication Channel Via Udp
 
 import logging
 import socket
-from typing import Union
+from typing import Dict, Union
 
 from pykiso import Message, connector
 
@@ -73,7 +73,7 @@ class CCUdp(connector.CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.0000001, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[Message, bytes, None]]:
         """Read message from socket.
 
         :param timeout: timeout applied on receive event

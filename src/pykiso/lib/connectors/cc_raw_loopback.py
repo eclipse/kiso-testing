@@ -53,7 +53,7 @@ class CCLoopback(CChannel):
         """
         self._loopback_buffer.append(msg)
 
-    def _cc_receive(self, timeout: float, raw: bool = True) -> Dict[MsgType, None]:
+    def _cc_receive(self, timeout: float, raw: bool = True) -> Dict[str, MsgType]:
         """Read message by simply removing an element from the left side of deque.
 
         :param timeout: timeout applied on receive event

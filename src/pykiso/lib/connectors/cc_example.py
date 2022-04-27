@@ -78,7 +78,7 @@ class CCExample(connector.CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.1, raw: bool = False
-    ) -> Dict[message.Message, None]:
+    ) -> Dict[str, message.Message]:
         """Reads from the channel - decorator usage for test.
 
         :param timeout: not use
