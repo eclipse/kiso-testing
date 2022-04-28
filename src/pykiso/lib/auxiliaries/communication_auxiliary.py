@@ -129,8 +129,10 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         """
         try:
             rcv_data = self.channel.cc_receive(timeout=0, raw=True)
-            log.debug(f"received message '{rcv_data}' from {self.channel}")
-            return rcv_data
+            msg  = rcv_data.get("msg")
+            if msg is not None:
+                log.debug(f"received message '{rcv_data}' from {self.channel}")
+                return rcv_data
         except Exception:
             log.exception(
                 f"encountered error while receiving message via {self.channel}"

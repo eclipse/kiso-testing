@@ -240,21 +240,21 @@ def test_abort_command_fail(mocker):
 def test_receive_message(mocker):
     """Test receive message"""
 
-    receive_msg = Message()
-    com = MockCChanel(msg=receive_msg)
+    receive_msg = {"msg" : Message()}
+    com = MockCChanel(receive_msg)
 
     mocker.patch.object(AuxiliaryInterface, "start")
     auxiliary = DUTAuxiliary("connector", com)
 
     mocker.patch.object(Message, "generate_ack_message", return_value=True)
 
-    assert auxiliary._receive_message(1) == receive_msg
+    assert auxiliary._receive_message(1) == receive_msg["msg"]
 
 
 def test_receive_message_fail(mocker):
     """Test receive message fail"""
 
-    com = MockCChanel()
+    com = MockCChanel({"msg" : None})
 
     mocker.patch.object(AuxiliaryInterface, "start")
     auxiliary = DUTAuxiliary("connector", com)
@@ -267,8 +267,8 @@ def test_receive_message_fail(mocker):
 def test_ping_pong(mocker):
     """Test ping-pong"""
 
-    receive_msg = Message(msg_type=MessageType.ACK)
-    com = MockCChanel(msg=receive_msg)
+    receive_msg = {"msg" : Message(msg_type=MessageType.ACK)}
+    com = MockCChanel(receive_msg)
 
     mocker.patch.object(AuxiliaryInterface, "start")
     auxiliary = DUTAuxiliary("connector", com)
