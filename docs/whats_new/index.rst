@@ -5,3 +5,4 @@ What’s New In Pykiso
 
     version_0_16_0
     version_0_17_0
+    version_0_17_1
