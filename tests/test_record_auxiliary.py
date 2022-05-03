@@ -243,7 +243,7 @@ def test_size_too_large(mocker, caplog, mock_channel):
 
 
 def test_display_new_log(mocker, caplog, mock_channel):
-    mocker.patch.object(mock_channel, "cc_receive", return_value=b"\x12\x34\x56")
+    mocker.patch.object(mock_channel, "cc_receive", return_value={"msg" : b"\x12\x34\x56"})
     record_aux = RecordAuxiliary(mock_channel, is_active=True)
     mocker.patch.object(
         record_aux.stop_receive_event, "is_set", side_effect=[False, True]

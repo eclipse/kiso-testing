@@ -142,6 +142,8 @@ def test_run(mocker, mp_proxy_auxiliary_inst):
 
 
 def test_init_trace(mocker, mp_proxy_auxiliary_inst, caplog):
+    mocker.patch("logging.Logger.addHandler")
+    mocker.patch("logging.FileHandler.__init__", return_value=None)
     mock_formatter = mocker.patch("logging.Formatter")
     log = logging.getLogger(__name__)
     with caplog.at_level(
