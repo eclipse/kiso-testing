@@ -38,13 +38,13 @@ class MockCChanel:
         pass
 
     def _cc_receive(self, timeout: float = 0.1, raw: bool = False):
-        return self.msg
+        return {"msg": self.msg}
 
     def cc_send(self, msg: MsgType, raw: bool = False):
         pass
 
     def cc_receive(self, timeout: float = 0.1, raw: bool = False):
-        return self.msg
+        return {"msg": self.msg}
 
 
 class MockFlasher:
@@ -240,8 +240,8 @@ def test_abort_command_fail(mocker):
 def test_receive_message(mocker):
     """Test receive message"""
 
-    receive_msg = {"msg" : Message()}
-    com = MockCChanel(receive_msg)
+    receive_msg = {"msg": Message()}
+    com = MockCChanel(receive_msg["msg"])
 
     mocker.patch.object(AuxiliaryInterface, "start")
     auxiliary = DUTAuxiliary("connector", com)
@@ -254,7 +254,7 @@ def test_receive_message(mocker):
 def test_receive_message_fail(mocker):
     """Test receive message fail"""
 
-    com = MockCChanel({"msg" : None})
+    com = MockCChanel()
 
     mocker.patch.object(AuxiliaryInterface, "start")
     auxiliary = DUTAuxiliary("connector", com)
@@ -267,7 +267,7 @@ def test_receive_message_fail(mocker):
 def test_ping_pong(mocker):
     """Test ping-pong"""
 
-    receive_msg = {"msg" : Message(msg_type=MessageType.ACK)}
+    receive_msg = {"msg": Message(msg_type=MessageType.ACK)}
     com = MockCChanel(receive_msg)
 
     mocker.patch.object(AuxiliaryInterface, "start")

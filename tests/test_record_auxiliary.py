@@ -121,21 +121,21 @@ def test_delete_aux_error(caplog, mocker, mock_channel):
     "data, expected_data",
     [
         (
-            (
-                b"test",
-                0,
-            ),
+            {
+                "msg": b"test",
+                "remote_id": 0,
+            },
             "\n0    test",
         ),
-        (b"test", "\ntest"),
+        ({"msg": b"test"}, "\ntest"),
         (
-            (
-                b"\x00\x01\x02\xcc\xcc\xee\xff",
-                55,
-            ),
+            {
+                "msg": b"\x00\x01\x02\xcc\xcc\xee\xff",
+                "remote_id": 55,
+            },
             "\n55    000102cccceeff",
         ),
-        (b"\x00\x01\x02\xcc\xcc\xee\xff", "\n000102cccceeff"),
+        ({"msg": b"\x00\x01\x02\xcc\xcc\xee\xff"}, "\n000102cccceeff"),
     ],
 )
 def test_receive(data, expected_data, mocker, mock_channel):
@@ -230,7 +230,7 @@ def test_stop_and_resume(mocker, mock_channel):
 
 def test_size_too_large(mocker, caplog, mock_channel):
     mocker.patch.object(threading.Thread, "start")
-    mock_channel.cc_receive.return_value = "test".encode()
+    mock_channel.cc_receive.return_value = {"msg": "test".encode()}
     mock_event = mocker.Mock()
     mock_event.is_set.side_effect = [False, False, True]
 
@@ -449,7 +449,9 @@ def test_message_in_full_log(mocker, mock_channel):
 
 
 def test_stop_recording(mocker, caplog, mock_channel):
-    mocker.patch.object(mock_channel, "cc_receive", return_value=b"\x12\x34\x56")
+    mocker.patch.object(
+        mock_channel, "cc_receive", return_value={"msg": b"\x12\x34\x56"}
+    )
     record_aux = RecordAuxiliary(mock_channel, is_active=True)
 
     with caplog.at_level(logging.INFO):

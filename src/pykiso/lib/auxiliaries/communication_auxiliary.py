@@ -129,7 +129,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         """
         try:
             rcv_data = self.channel.cc_receive(timeout=0, raw=True)
-            msg  = rcv_data.get("msg")
+            msg = rcv_data.get("msg")
             if msg is not None:
                 log.debug(f"received message '{rcv_data}' from {self.channel}")
                 return rcv_data
