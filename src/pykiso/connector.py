@@ -161,7 +161,6 @@ class CChannel(Connector):
 
         :return: message.Message() - If one received / None - If not
         """
-        # TODO define exception to raise?
         pass
 
 

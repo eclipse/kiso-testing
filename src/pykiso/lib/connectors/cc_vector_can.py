@@ -165,7 +165,7 @@ class CCVectorCan(CChannel):
         :param timeout: timeout applied on reception
         :param raw: boolean use to select test entity protocol format
 
-        :return: tuple containing the received data and the source can id
+        :return: the received data and the source can id
         """
         try:  # Catch bus errors & rcv.data errors when no messages where received
             received_msg = self.bus.recv(timeout=timeout or self.timeout)
