@@ -507,6 +507,18 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "pykiso-python-uds-alpha"
+version = "2.0.2"
+description = "Please use python-uds instead, this is a refactored version with breaking changes, only for pykiso"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+python-can = ">=3.0.0"
+python-lin = ">=0.1.0"
+
+[[package]]
 name = "pylink-square"
 version = "0.12.0"
 description = "Python interface for SEGGER J-Link."
@@ -663,25 +675,6 @@ description = "A library for interfacing with LIN devices using python"
 category = "main"
 optional = false
 python-versions = "*"
-
-[[package]]
-name = "python-uds"
-version = "2.0.2"
-description = ""
-category = "main"
-optional = false
-python-versions = "*"
-develop = false
-
-[package.dependencies]
-python-can = ">=3.0.0"
-python-lin = ">=0.1.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/BKaDamien/python-uds.git"
-reference = "2.0.2"
-resolved_reference = "fe2d25fd1687bf7c96e41a8c7dd81a3b1d591c57"
 
 [[package]]
 name = "pytz"
@@ -1053,7 +1046,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "965a99b43d402c76362806c490ca48668c9f5a4d882eebc9b41f8754240b7378"
+content-hash = "f69cec72f15508654e3397b2a6bde6a1d4b09ba0207877f4dae5bd2427fa8a91"
 
 [metadata.files]
 alabaster = [
@@ -1515,6 +1508,10 @@ pygments = [
     {file = "Pygments-2.11.2-py3-none-any.whl", hash = "sha256:44238f1b60a76d78fc8ca0528ee429702aae011c265fe6a8dd8b63049ae41c65"},
     {file = "Pygments-2.11.2.tar.gz", hash = "sha256:4e426f72023d88d03b2fa258de560726ce890ff3b630f88c21cbb8b2503b8c6a"},
 ]
+pykiso-python-uds-alpha = [
+    {file = "pykiso-python-uds-alpha-2.0.2.tar.gz", hash = "sha256:63a765c7ea194117dae35dbf45457986fb3cc15e879afa8695c2da72bf9f0ece"},
+    {file = "pykiso_python_uds_alpha-2.0.2-py3-none-any.whl", hash = "sha256:555e26e670cc88d63177febade906eed43afcc5cbcc014fe1972a9c2841a3b75"},
+]
 pylink-square = [
     {file = "pylink-square-0.12.0.tar.gz", hash = "sha256:5bd4a2c709b097d00191ecbe1a8ede46617395275d07c932c538edbf2a050207"},
     {file = "pylink_square-0.12.0-py2.py3-none-any.whl", hash = "sha256:9cd80e36e434afdb5e58261f2b089d9a0745c5419bc906407dc1315933a92212"},
@@ -1562,7 +1559,6 @@ python-lin = [
     {file = "python-lin-0.1.1.tar.gz", hash = "sha256:b8dedc14e6f784168219c0d7b27510a00ec717217cb7e82379103cebdfe374f8"},
     {file = "python_lin-0.1.1-py3-none-any.whl", hash = "sha256:c7a333fb73b515067966d251a438d357d4c5367ebddcdd551b62e2126f3eeac5"},
 ]
-python-uds = []
 pytz = [
     {file = "pytz-2022.1-py2.py3-none-any.whl", hash = "sha256:e68985985296d9a66a881eb3193b0906246245294a881e7c8afe623866ac6a5c"},
     {file = "pytz-2022.1.tar.gz", hash = "sha256:1e760e2fe6a8163bc0b3d9a19c4f84342afa0a2affebfaa84b01b978a02ecaa7"},
