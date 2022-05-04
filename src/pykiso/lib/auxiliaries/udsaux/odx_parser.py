@@ -212,10 +212,13 @@ class OdxParser:
                     (param.find("DIAG-CODED-TYPE")).find("BIT-LENGTH").text
                 )
                 byte_length = (service_bit_length + 7) // 8
+                # keep in case it could be useful in future
                 # service ID start
-                responseIdStart = start_byte
+                # responseIdStart = start_byte
+
+                # keep in case it could be useful in future
                 # service ID end
-                responseIdEnd = start_byte + byte_length
+                # responseIdEnd = start_byte + byte_length
                 reponse_length += byte_length
 
             elif semantic == "SUBFUNCTION" or semantic == "ID":
@@ -237,7 +240,8 @@ class OdxParser:
                     (param.find("DOP-REF")).attrib["ID-REF"]
                 ]
                 if data_object_element.tag == "DATA-OBJECT-PROP":
-                    start = int(param.find("BYTE-POSITION").text)
+                    # keep in case it could be useful in future
+                    # start = int(param.find("BYTE-POSITION").text)
                     fixed_data_length = data_object_element.find(
                         "DIAG-CODED-TYPE"
                     ).find("BIT-LENGTH")
@@ -249,7 +253,8 @@ class OdxParser:
                     byte_length = int(data_bit_length / 8)
                     reponse_length += byte_length
                 elif data_object_element.tag == "STRUCTURE":
-                    start = int(param.find("BYTE-POSITION").text)
+                    # keep in case it could be useful in future
+                    # start = int(param.find("BYTE-POSITION").text)
                     if data_object_element.find("BYTE-SIZE") is not None:
                         byte_length = int(data_object_element.find("BYTE-SIZE").text)
                     else:

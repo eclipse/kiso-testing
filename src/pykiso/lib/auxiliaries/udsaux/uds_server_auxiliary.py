@@ -21,13 +21,12 @@ uds_auxiliary
 import configparser
 import logging
 import threading
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
+from xml.etree import ElementTree as ET
 
 from uds import Uds, createUdsConnection
-from uds.uds_communications.Uds.Uds import Uds
 from uds.uds_config_tool.FunctionCreation.ClearDTCMethodFactory import (
     ClearDTCMethodFactory,
 )
@@ -71,12 +70,11 @@ from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory imp
     WriteDataByIdentifierMethodFactory,
 )
 from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
-from uds.uds_config_tool.UdsConfigTool import get_serviceIdFromXmlElement
 
 from pykiso.connector import CChannel
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
-from . import uds_exceptions
+from .odx_parser import OdxParser
 from .uds_utils import get_uds_service
 
 log = logging.getLogger(__name__)
@@ -102,20 +100,35 @@ service_to_positive_response_func = {
 
 @dataclass
 class UdsCallback:
-    request: Union[int, bytes]  # e.g. 0x1003 or b'\x10\x03'
-    response: Union[int, bytes]  # e.g. 0x50034911 or b'\x50\x03\x49\x11'
-    response_length: int = None
+    request: Union[int, List[int]]  # e.g. 0x1003 or [0x10, 0x03]
+    response: Union[
+        int, List[int]
+    ] = None  # e.g. 0x50030102 or [0x50, 0x03, 0x01, 0x02]
+    response_data: Union[int, bytes] = None  # e.g. 0x1011 or b'DATA'
+    response_length: Optional[int] = None  # specify zero-padding
 
     def __post_init__(self):
         if isinstance(self.request, int):
-            self.request = UdsCallback.int_to_bytes(self.request)
+            self.request = list(UdsCallback.int_to_bytes(self.request))
+
         if isinstance(self.response, int):
-            self.response = UdsCallback.int_to_bytes(self.response)
+            self.response = list(UdsCallback.int_to_bytes(self.response))
+        elif not self.response:
+            self.response = [self.request[0] + 0x40].extend(self.request[1:])
+
+        if self.response_data:
+            self.response_data = (
+                list(UdsCallback.int_to_bytes(self.response_data))
+                if isinstance(self.response_data, int)
+                else list(self.response_data)
+            )
+            self.response.extend(self.response_data)
 
         if self.response_length is None:
             self.response_length = len(self.response)
         else:
-            self.response = self.response.ljust(self.response_length, b"\x00")
+            # pad with zeros to reach the expected length
+            self.response = self.response.extend([0x00 * self.response_length])
 
     @staticmethod
     def int_to_bytes(integer: int) -> bytes:
@@ -125,15 +138,14 @@ class UdsCallback:
 class UdsServerAuxiliary(AuxiliaryInterface):
     """Auxiliary used to handle UDS messages"""
 
-    POSITIVE_RESPONSE_OFFSET = 0x40
-    errors = uds_exceptions
-
     def __init__(
         self,
         com: CChannel,
-        config_ini_path: str,
+        config_ini_path: Union[Path, str],
+        request_id: Optional[int] = None,
+        response_id: Optional[int] = None,
         callbacks: Optional[List[UdsCallback]] = None,
-        odx_file_path: str = None,
+        odx_file_path: Optional[Union[Path, str]] = None,
         **kwargs,
     ):
         """Initialize attributes.
@@ -146,15 +158,15 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         self.odx_file_path = odx_file_path
         if odx_file_path:
             self.odx_file_path = Path(odx_file_path)
-            self.sid_to_did_to_name = UdsServerAuxiliary._parse_odx(self.odx_file_path)
+            self.sid_to_did_to_info = OdxParser(self.odx_file_path).parse()
 
         self.config_ini_path = Path(config_ini_path)
 
         config = configparser.ConfigParser()
         config.read(self.config_ini_path)
 
-        self.req_id = int(config.get("can", "defaultReqId"), 16)
-        self.res_id = int(config.get("can", "defaultResId"), 16)
+        self.req_id = request_id or int(config.get("can", "defaultReqId"), 16)
+        self.res_id = response_id or int(config.get("can", "defaultResId"), 16)
 
         self.uds_config_enable = False
         self.uds_config = None
@@ -164,37 +176,6 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         self._callback_lock = threading.Lock()
 
         super().__init__(is_proxy_capable=True, **kwargs)
-
-    @staticmethod
-    def _parse_odx(odx_file) -> Dict[int, Dict[int, str]]:
-
-        sid_to_human_name = {}
-        xml_elements = {}
-
-        root = ET.parse(odx_file)
-
-        for child in root.iter():
-            try:
-                xml_elements[child.attrib["ID"]] = child
-            except KeyError:
-                pass
-
-        for value in xml_elements.values():
-            if value.tag == "DIAG-SERVICE":
-                sid = get_serviceIdFromXmlElement(value, xml_elements)
-                sid_to_human_name[sid] = {}
-                sdg = value.find("SDGS").find("SDG")
-                human_name = ""
-                for sd in sdg:
-                    try:
-                        if sd.attrib["SI"] == "DiagInstanceName":
-                            human_name = sd.text
-                            # TODO NOT ENOUGH (sd is ET.Element)
-                            sid_to_human_name[sid][sd] = human_name
-                    except KeyError:
-                        pass
-
-        return sid_to_human_name
 
     def _create_auxiliary_instance(self) -> bool:
         """Open current associated channel.
@@ -247,14 +228,6 @@ class UdsServerAuxiliary(AuxiliaryInterface):
                     reqId=self.req_id,
                     resId=self.res_id,
                 )
-            # use Server TP layer instead of the default client implementation
-            # self.uds_config.tp = ServerCanTp(
-            #    configPath=self.config_ini_path,
-            #    bus=bus,
-            #    interface=interface,
-            #    reqId=self.req_id,
-            #    resId=self.res_id,
-            # )
             # replace transmit method from python-uds with a method
             # using ITF's connector
             self.uds_config.tp.overwrite_transmit_method(self.transmit)
@@ -286,12 +259,30 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         return True
 
     def register_callback(
-        self, request, response, response_length: Optional[int] = None
+        self,
+        request: Union[int, List[int]],
+        response: Optional[Union[int, List[int]]] = None,
+        response_data: Optional[Union[int, bytes]] = None,
+        response_length: Optional[int] = None,
     ):
+        """Register an automatic response to send if the specified request is received
+        from the client.
+
+        :param request: UDS request to be responded to.
+        :param response: full UDS response to send. If not set, respond with a basic
+            positive response with the specified response_data.
+        :param response_data: UDS data to send. If not set, respond with a basic
+            positive response containing no data.
+        :param response_length: optional length of the response to send if the contained
+            data is supposed to be zero-padded.
+        """
         with self._callback_lock:
             self.callbacks.append(
                 UdsCallback(
-                    request=request, response=response, response_length=response_length
+                    request=request,
+                    response=response,
+                    response_data=response_data,
+                    response_length=response_length,
                 )
             )
 
@@ -312,11 +303,13 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             with self._callback_lock:
                 self._dispatch_callback(uds_data)
 
-    def _dispatch_callback(self, received_uds_data: bytes):
+    def _dispatch_callback(self, received_uds_data: List[int]):
+        response = None
         if self.uds_config_enable:
+            # TODO reimplement this based on the Uds
             # find "human name" for the received data
             sid = received_uds_data[0]
-            did_to_name = self.sid_to_did_to_name[sid]
+            did_to_name = self.sid_to_did_to_info[sid]
             name = did_to_name.get(received_uds_data[1]) or did_to_name.get(
                 received_uds_data[1:3]
             )
@@ -325,18 +318,23 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             # run the positive response function registered for the "human name"
             service_name = get_uds_service(sid)
             service = getattr(self.uds_config, service_name + "Container")
-            # TODO IT REQUIRES THE "HUMAN NAME"
+            # TODO still not enough
             response = service.positiveResponseFunctions[name]
 
             ### ALTERNATIVE
-            service_encode_func = service_to_positive_response_func[sid]
+            # service_encode_func = service_to_positive_response_func[sid]
         else:
             for callback in self.callbacks:
                 if received_uds_data == callback.request:
                     response = callback.response
                     break
 
-        self.uds_config.tp.encode_isotp(response, use_external_snd_rcv_functions=True)
+        if response is not None:
+            to_send = self.uds_config.tp.encode_isotp(
+                response, use_external_snd_rcv_functions=True
+            )
+            print(f"******************* SEND: {to_send} on ID {self.req_id}")
+            self.transmit(to_send, req_id=self.res_id)
 
     def _abort_command(self) -> None:
         """Not used."""
