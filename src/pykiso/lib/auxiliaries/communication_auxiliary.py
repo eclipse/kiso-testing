@@ -61,8 +61,15 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         log.debug(
             f"retrieving message in {self} (blocking={blocking}, timeout={timeout_in_s})"
         )
-        msg = self.wait_and_get_report(blocking=blocking, timeout_in_s=timeout_in_s)
-        log.debug(f"retrieved message '{msg}' in {self}")
+        response = self.wait_and_get_report(
+            blocking=blocking, timeout_in_s=timeout_in_s
+        )
+        log.debug(f"retrieved message '{response}' in {self}")
+        msg = response.get("msg")
+        remote_id = response.get("remote_id")
+        # stay with the old return type to not making a breaking change
+        if remote_id is not None:
+            return (msg, remote_id)
         return msg
 
     def _create_auxiliary_instance(self) -> bool:

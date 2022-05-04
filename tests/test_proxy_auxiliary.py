@@ -253,13 +253,11 @@ def test_abort_command(mocker, cchannel_inst):
 @pytest.mark.parametrize(
     "response",
     [
-        {"msg" : b"\x12\x34\x56", "remote_id" : 0x545},
-        {"msg" : b"\x12\x34\x56\x12\x34\x56", "remote_id" : None},
+        {"msg": b"\x12\x34\x56", "remote_id": 0x545},
+        {"msg": b"\x12\x34\x56\x12\x34\x56", "remote_id": None},
     ],
 )
-def test_receive_message_valid(
-    mocker, cchannel_inst, mock_auxiliaries, response
-):
+def test_receive_message_valid(mocker, cchannel_inst, mock_auxiliaries, response):
     mocker.patch.object(ProxyAuxiliary, "run")
     mocker.patch.object(CChannel, "cc_receive", return_value=response)
 
@@ -272,9 +270,9 @@ def test_receive_message_valid(
     recv_aux1 = link_aux_1.channel.queue_out.get()
     recv_aux2 = link_aux_2.channel.queue_out.get()
 
-    msg_1 =  recv_aux1["msg"]
+    msg_1 = recv_aux1["msg"]
     source_1 = recv_aux1["remote_id"]
-    msg_2 =  recv_aux2["msg"]
+    msg_2 = recv_aux2["msg"]
     source_2 = recv_aux2["remote_id"]
 
     assert isinstance(recv_aux1, dict)
@@ -287,7 +285,7 @@ def test_receive_message_valid(
 
 def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", return_value={"msg" : None})
+    mocker.patch.object(CChannel, "cc_receive", return_value={"msg": None})
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     proxy_inst._receive_message()
@@ -313,9 +311,9 @@ def test_receive_message_exception(mocker, caplog, cchannel_inst):
 @pytest.mark.parametrize(
     "req",
     [
-        {"msg" : b"\x12\x34\x56", "remote_id" : 0x545},
-        {"msg" : b"\x12\x34", "remote_id" : 0x001},
-        {"msg" : b"\x12\x34\x12\x34\x56", "remote_id" : None},
+        {"msg": b"\x12\x34\x56", "remote_id": 0x545},
+        {"msg": b"\x12\x34", "remote_id": 0x001},
+        {"msg": b"\x12\x34\x12\x34\x56", "remote_id": None},
     ],
 )
 def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, req):

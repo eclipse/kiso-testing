@@ -111,7 +111,7 @@ class CChannel(Connector):
             raise ConnectionRefusedError
         self._lock.release()
 
-    def cc_receive(self, timeout: float = 0.1, raw: bool = False):
+    def cc_receive(self, timeout: float = 0.1, raw: bool = False) -> dict:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message

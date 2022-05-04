@@ -67,13 +67,12 @@ def test_com_aux_messaging(com_aux_linker, caplog):
     assert com_aux.send_message(msg)
     with caplog.at_level(logging.DEBUG):
         rec_msg = com_aux.receive_message()
-    assert rec_msg["msg"] == msg
+    assert rec_msg == msg
     assert com_aux.is_proxy_capable
     assert (
         f"retrieving message in {com_aux} (blocking={True}, timeout={None})"
         in caplog.text
     )
-    assert f"retrieved message '{rec_msg}' in {com_aux}" in caplog.text
 
 
 @pytest.mark.parametrize(
