@@ -8,22 +8,25 @@
 ##########################################################################
 
 """
-uds_auxiliary
-*************
+odx_parser
+**********
 
-:module: uds_auxiliary
+:module: odx_parser
 
-:synopsis: Auxiliary used to handle Unified Diagnostic Service protocol
+:synopsis: A parser for Open Diagnostics eXchange (ODX) format.
 
-.. currentmodule:: uds_auxiliary
+.. currentmodule:: odx_parser
 
 """
 
-import json
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, NewType, Union
+
+ServiceId = NewType("ServiceId", str)
+DataId = NewType("DataId", str)
+SubfunctionId = NewType("SubfunctionId", str)
 
 
 class OdxParser:
@@ -53,7 +56,7 @@ class OdxParser:
         self.service_configuration = defaultdict(dict)
         self._xml_elements = {}
 
-    def parse(self):
+    def parse(self) -> Dict[ServiceId, Dict[Union[DataId, SubfunctionId], Any]]:
 
         root = ET.parse(self.odx_file)
 
@@ -98,6 +101,11 @@ class OdxParser:
     def _parse_request(
         self, odx_request_params: ET.Element, did_config: Dict[str, Any]
     ):
+        """Parse the UDS requests information of the ODX file.
+
+        :param odx_request_params: _description_
+        :param did_config: _description_
+        """
         uds_request = list()
 
         for request_param in odx_request_params:
@@ -107,12 +115,12 @@ class OdxParser:
                 continue
 
             elif semantic == "SERVICE-ID":
-                serviceId = int(request_param.find("CODED-VALUE").text)
-                uds_request.append(serviceId)
-                did_config["SID"] = serviceId
-                did_config["SID_name"] = self.service_id_to_name.get(serviceId)
+                service_id = int(request_param.find("CODED-VALUE").text)
+                uds_request.append(service_id)
+                did_config["SID"] = service_id
+                did_config["SID_name"] = self.service_id_to_name.get(service_id)
 
-                service_name = self.service_id_to_name.get(serviceId)
+                service_name = self.service_id_to_name.get(service_id)
 
                 if service_name is None:
                     continue

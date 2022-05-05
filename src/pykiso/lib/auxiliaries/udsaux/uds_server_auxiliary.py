@@ -8,68 +8,27 @@
 ##########################################################################
 
 """
-uds_auxiliary
+uds_server_auxiliary
 *************
 
-:module: uds_auxiliary
+:module: uds_server_auxiliary
 
-:synopsis: Auxiliary used to handle Unified Diagnostic Service protocol
+:synopsis: Auxiliary used to handle Unified Diagnostic Service protocol as an Server.
+    This auxiliary is meant to run in the background and replies to configured requests.
 
 .. currentmodule:: uds_auxiliary
 
 """
+from __future__ import annotations
+
 import configparser
 import logging
 import threading
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Union
-from xml.etree import ElementTree as ET
+from typing import Callable, Dict, List, Optional, Union
 
 from uds import Uds, createUdsConnection
-from uds.uds_config_tool.FunctionCreation.ClearDTCMethodFactory import (
-    ClearDTCMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.DiagnosticSessionControlMethodFactory import (
-    DiagnosticSessionControlMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.ECUResetMethodFactory import (
-    ECUResetMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.InputOutputControlMethodFactory import (
-    InputOutputControlMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import (
-    ReadDataByIdentifierMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.ReadDTCMethodFactory import (
-    ReadDTCMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import (
-    RequestDownloadMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.RequestUploadMethodFactory import (
-    RequestUploadMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.RoutineControlMethodFactory import (
-    RoutineControlMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.SecurityAccessMethodFactory import (
-    SecurityAccessMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.TesterPresentMethodFactory import (
-    TesterPresentMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.TransferDataMethodFactory import (
-    TransferDataMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.TransferExitMethodFactory import (
-    TransferExitMethodFactory,
-)
-from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import (
-    WriteDataByIdentifierMethodFactory,
-)
-from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
 
 from pykiso.connector import CChannel
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
@@ -80,34 +39,29 @@ from .uds_utils import get_uds_service
 log = logging.getLogger(__name__)
 
 
-service_to_positive_response_func = {
-    IsoServices.ClearDiagnosticInformation: ClearDTCMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.DiagnosticSessionControl: DiagnosticSessionControlMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.EcuReset: ECUResetMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.InputOutputControlByIdentifier: InputOutputControlMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.ReadDataByIdentifier: ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.ReadDTCInformation: ReadDTCMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.RequestDownload: RequestDownloadMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.RequestTransferExit: TransferExitMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.RequestUpload: RequestUploadMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.RoutineControl: RoutineControlMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.SecurityAccess: SecurityAccessMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.TesterPresent: TesterPresentMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.TransferData: TransferDataMethodFactory.create_encodePositiveResponseFunction,
-    IsoServices.WriteDataByIdentifier: WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction,
-}
-
-
 @dataclass
 class UdsCallback:
+    """Class used to store information needed for UDS callbacks.
+
+    :param request: request from the client that should be responded to.
+    :param response: full UDS response to send. If not set, respond with a basic
+        positive response with the specified response_data.
+    :param response_data: UDS data to send. If not set, respond with a basic
+        positive response containing no data.
+    :param response_length: optional length of the response to send if the contained
+        data is supposed to be zero-padded.
+    """
+
     request: Union[int, List[int]]  # e.g. 0x1003 or [0x10, 0x03]
     response: Union[
         int, List[int]
     ] = None  # e.g. 0x50030102 or [0x50, 0x03, 0x01, 0x02]
     response_data: Union[int, bytes] = None  # e.g. 0x1011 or b'DATA'
     response_length: Optional[int] = None  # specify zero-padding
+    callback: Optional[Callable[[List[int], UdsServerAuxiliary], None]] = None
 
     def __post_init__(self):
+        """Parse the provided parameters to create a fully formed UDS response."""
         if isinstance(self.request, int):
             self.request = list(UdsCallback.int_to_bytes(self.request))
 
@@ -303,8 +257,14 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             with self._callback_lock:
                 self._dispatch_callback(uds_data)
 
-    def _dispatch_callback(self, received_uds_data: List[int]):
+    def _dispatch_callback(self, received_uds_data: List[int]) -> None:
+        """Verify if the received UDS request has an associated response
+        and send it if applicable.
+
+        :param received_uds_data: received UDS request from the client.
+        """
         response = None
+        custom_callback = None
         if self.uds_config_enable:
             # TODO reimplement this based on the Uds
             # find "human name" for the received data
@@ -326,14 +286,17 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         else:
             for callback in self.callbacks:
                 if received_uds_data == callback.request:
+                    custom_callback = callback.callback
                     response = callback.response
                     break
 
-        if response is not None:
+        if custom_callback is not None:
+            custom_callback(received_uds_data, self)
+        elif response is not None:
             to_send = self.uds_config.tp.encode_isotp(
                 response, use_external_snd_rcv_functions=True
             )
-            print(f"******************* SEND: {to_send} on ID {self.req_id}")
+            log.info(f"Sent response to request {received_uds_data}: {response}")
             self.transmit(to_send, req_id=self.res_id)
 
     def _abort_command(self) -> None:
