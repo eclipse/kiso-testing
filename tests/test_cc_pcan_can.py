@@ -16,6 +16,7 @@ import can as python_can
 import pytest
 
 from pykiso import Message
+from pykiso.lib.connectors import cc_pcan_can
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan, PCANBasic, can
 from pykiso.message import (
     MessageAckType,
@@ -173,10 +174,11 @@ def mock_PCANBasic(mocker):
 def test_constructor(constructor_params, expected_config, caplog):
 
     param = constructor_params.values()
+    log = logging.getLogger("can.pcan")
+
     with caplog.at_level(logging.WARNING):
         can_inst = CCPCanCan(*param)
-    log = logging.getLogger("can.pcan")
-    log.info("Bus error: an error counter")
+    log.warning("Bus error: an error counter")
     assert can_inst.interface == expected_config["interface"]
     assert can_inst.channel == expected_config["channel"]
     assert can_inst.bitrate == expected_config["bitrate"]
