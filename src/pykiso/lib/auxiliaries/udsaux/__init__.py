@@ -9,3 +9,5 @@
 
 from . import uds_auxiliary
 from .uds_auxiliary import UdsAuxiliary
+from .uds_request import UDSCommands
+from .uds_response import NegativeResponseCode, UdsResponse

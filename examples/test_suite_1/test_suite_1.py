@@ -77,7 +77,7 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     setup_timeout=1,
     teardown_timeout=1,
     test_ids={"Component1": ["Req1", "Req2"], "Component2": ["Req3"]},
-    variant={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
+    tag={"variant": ["variant1"], "branch_level": ["daily", "nightly"]},
 )
 class MyTest1(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
@@ -95,7 +95,7 @@ class MyTest1(pykiso.BasicTest):
     -> teardown_timeout : ITF will wait 1 seconds (maximum) to receive a
     report from device under test otherwise an abort command is sent.
     -> test_ids: [optional] store the requirements into the report
-    -> variant: [optional] allows the run of subset of tests
+    -> tag: [optional] allows the run of subset of tests
 
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.
@@ -123,7 +123,7 @@ class MyTest1(pykiso.BasicTest):
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
         self.assertTrue(next(side_effect))
-        logging.info(f"I HAVE RUN 0.1.1 for variant {self.variant}!")
+        logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")
 
     @pykiso.retry_test_case(max_try=3)
     def tearDown(self):
@@ -143,7 +143,7 @@ class MyTest1(pykiso.BasicTest):
     run_timeout=2,
     teardown_timeout=1,
     test_ids={"Component1": ["Req"]},
-    variant={"branch_level": ["nightly"]},
+    tag={"branch_level": ["nightly"]},
 )
 class MyTest2(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
@@ -163,7 +163,7 @@ class MyTest2(pykiso.BasicTest):
     -> teardown_timeout : ITF will wait 1 seconds (maximum) to receive a
     report from device under test otherwise an abort command is sent.
     -> test_ids: [optional] store the requirements into the report
-    -> variant: [optional] allows the run of subset of tests
+    -> tag: [optional] allows the run of subset of tests
 
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.
@@ -197,7 +197,7 @@ class MyTest2(pykiso.BasicTest):
     setup_timeout=5,
     run_timeout=2,
     teardown_timeout=3,
-    variant={"variant": ["variant3"]},
+    tag={"variant": ["variant3"]},
 )
 class MyTest3(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
@@ -217,7 +217,7 @@ class MyTest3(pykiso.BasicTest):
     -> teardown_timeout : ITF will wait 3 seconds (maximum) to receive a
     report from device under test otherwise an abort command is sent.
     -> test_ids: [optional] store the requirements into the report
-    -> variant: [optional] allows the run of subset of tests
+    -> tag: [optional] allows the run of subset of tests
 
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.

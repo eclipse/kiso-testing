@@ -74,8 +74,8 @@ def config_instance():
         log_path=None,
         log_level="INFO",
         report_type="text",
-        variant=("variant1", "daily"),
-        branch_level=None,
+        variant=("variant1",),
+        branch_level=("daily",),
         pattern=None,
     )
     return GlobalConfig()

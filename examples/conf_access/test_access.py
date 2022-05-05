@@ -39,7 +39,7 @@ cli_config = GlobalConfig().cli
     aux_list=[aux1, aux2],
     setup_timeout=1,
     teardown_timeout=1,
-    variant={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
+    tag={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
 )
 class MyTest1(pykiso.BasicTest):
     """Simply Test case use to show configuraton parameters access."""
