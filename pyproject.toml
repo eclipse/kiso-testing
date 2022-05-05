@@ -1,0 +1,97 @@
+[tool.poetry]
+name = "pykiso"
+version = "0.17.0"
+description = "Embedded integration testing framework."
+authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
+license = "Eclipse Public License - v 2.0"
+readme = "README.md"
+homepage = "https://pypi.org/project/pykiso/"
+repository = "https://github.com/eclipse/kiso-testing"
+documentation = "https://kiso-testing.readthedocs.io/en/latest/"
+packages = [
+    { include = "pykiso", from = "src" }
+]
+keywords = [
+    "testing",
+    "integration testing",
+    "framework",
+    "testing framework",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Eclipse Public License 2.0 (EPL-2.0)",
+    "Operating System :: Unix",
+    "Operating System :: POSIX",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Utilities",
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+PyYAML = "*"
+pylink-square = "^0.12.0"
+pyserial = "*"
+python-can = {extras = ["pcan"], version = "^4.0.0"}
+PyVISA = "*"
+PyVISA-py = "*"
+robotframework = "3.2.2"
+unittest-xml-reporting = "*"
+click = "*"
+MarkupSafe = "~2.0"
+pykiso-python-uds-alpha = "^2.0.2"
+
+[tool.poetry.dev-dependencies]
+auto-changelog = "0.5.3"
+black = { version = "^21.12b0", allow-prereleases = true }
+bump2version = "*"
+coverage = { version = "^5.0", extras = ["toml"] }
+invoke = "*"
+pdbpp = "*"
+pre-commit = "*"
+pylint = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+Sphinx = "*"
+sphinx-rtd-theme = "*"
+sphinxcontrib-programoutput = "*"
+sphinx-autodoc-typehints = "*"
+
+[tool.poetry.scripts]
+pykiso = 'pykiso.cli:main'
+instrument-control = 'pykiso.lib.auxiliaries.instrument_control_auxiliary.instrument_control_cli:main'
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests/"
+]
+addopts = """\
+    --verbose \
+    --log-level=INFO \
+    --cov=./src \
+    --cov-report=html \
+    --cov-report html:./tests/coverage_report.html \
+    --ignore=tests/test_acroname_usb_auxiliary.py \
+    --ignore=tests/test_robot_acroname.py \
+"""
+
+[tool.coverage.run]
+omit = [
+    "*/tests/*",
+    "*/examples/*",
+    "*/setup.py",
+    "*/tasks.py",
+    "*/src/pykiso/__main__.py",
+    "*__init__.py",
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
