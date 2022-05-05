@@ -34,6 +34,11 @@ MessageType = Union[Message, bytes]
 log = logging.getLogger(__name__)
 
 
+class PcanFilter(logging.Filter):
+    def filter(self, record):
+        return not record.getMessage().startswith("Bus error: an error counter")
+
+
 class CCPCanCan(CChannel):
     """CAN FD channel-adapter."""
 
@@ -58,6 +63,7 @@ class CCPCanCan(CChannel):
         remote_id: int = None,
         can_filters: list = None,
         logging_activated: bool = True,
+        bus_error_warning_filter: bool = False,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -88,6 +94,8 @@ class CCPCanCan(CChannel):
         :param remote_id: id used for transmission
         :param can_filters: iterable used to filter can id on reception
         :param logging_activated: boolean used to disable logfile creation
+        :param bus_error_warning_filter : if True filter the logging message
+        ('Bus error: an error counter')
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -126,6 +134,9 @@ class CCPCanCan(CChannel):
         generic logfile in the current working directory, which will be
         overwritten every time, a log is initiated.
         """
+        if bus_error_warning_filter:
+            logging.getLogger("can.pcan").addFilter(PcanFilter())
+
         if self.logging_activated:
             try:
                 self.logging_path = (

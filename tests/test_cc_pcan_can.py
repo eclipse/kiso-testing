@@ -115,6 +115,7 @@ def mock_PCANBasic(mocker):
                 "remote_id": None,
                 "can_filters": None,
                 "logging_activated": True,
+                "bus_error_warning_filter": False,
             },
         ),
         (
@@ -140,6 +141,7 @@ def mock_PCANBasic(mocker):
                     {"can_id": 0x507, "can_mask": 0x7FF, "extended": False}
                 ],
                 "logging_activated": False,
+                "bus_error_warning_filter": True,
             },
             {
                 "interface": "pcan",
@@ -163,6 +165,7 @@ def mock_PCANBasic(mocker):
                     {"can_id": 0x507, "can_mask": 0x7FF, "extended": False}
                 ],
                 "logging_activated": False,
+                "bus_error_warning_filter": True,
             },
         ),
     ],
@@ -172,7 +175,8 @@ def test_constructor(constructor_params, expected_config, caplog):
     param = constructor_params.values()
     with caplog.at_level(logging.WARNING):
         can_inst = CCPCanCan(*param)
-
+    log = logging.getLogger("can.pcan")
+    log.info("Bus error: an error counter")
     assert can_inst.interface == expected_config["interface"]
     assert can_inst.channel == expected_config["channel"]
     assert can_inst.bitrate == expected_config["bitrate"]
@@ -196,6 +200,11 @@ def test_constructor(constructor_params, expected_config, caplog):
 
     if not can_inst.is_fd and can_inst.enable_brs:
         assert "Bitrate switch will have no effect" in caplog.text
+
+    if expected_config["bus_error_warning_filter"]:
+        assert "Bus error: an error counter" not in caplog.text
+    else:
+        assert "Bus error: an error counter" in caplog.text
 
 
 @pytest.mark.parametrize(
