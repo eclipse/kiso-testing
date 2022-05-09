@@ -19,29 +19,21 @@ from pykiso.test_coordinator.test_message_handler import (
 from pykiso.auxiliaries import aux_virtual, aux_udp  # isort:skip
 
 
-@pykiso.define_test_parameters(
-    suite_id=1, case_id=10, aux_list=[aux_udp], teardown_timeout=2
-)
+@pykiso.define_test_parameters(suite_id=1, case_id=10, aux_list=[aux_udp])
 class ReportFailedDuringTearDown(pykiso.BasicTest):
     pass
 
 
-@pykiso.define_test_parameters(
-    suite_id=1, case_id=11, aux_list=[aux_udp], teardown_timeout=2
-)
+@pykiso.define_test_parameters(suite_id=1, case_id=11, aux_list=[aux_udp])
 class ReportNotImplementedDuringTearDown(pykiso.BasicTest):
     pass
 
 
-@pykiso.define_test_parameters(
-    suite_id=1, case_id=12, aux_list=[aux_udp], teardown_timeout=2
-)
+@pykiso.define_test_parameters(suite_id=1, case_id=12, aux_list=[aux_udp])
 class LostComDuringTearDownAck(pykiso.BasicTest):
     pass
 
 
-@pykiso.define_test_parameters(
-    suite_id=1, case_id=13, aux_list=[aux_udp], teardown_timeout=2
-)
+@pykiso.define_test_parameters(suite_id=1, case_id=13, aux_list=[aux_udp])
 class LostComDuringTearDownReport(pykiso.BasicTest):
     pass

@@ -79,10 +79,43 @@ class IntegrationTestSuite(unittest.TestCase):
 
 
 @pytest.mark.parametrize(
-    "fixture, suite_id, aux_list, setup_timeout, teardown_timeout, test_ids",
+    "fixture, suite_id, aux_list, test_ids",
     [
         (
             test_suite.BasicTestSuiteSetup,
+            1,
+            ["aux1"],
+            {"Component1": ["Req1", "Req2"]},
+        ),
+        (
+            test_suite.BasicTestSuiteTeardown,
+            1,
+            ["aux2"],
+            {"Component1": ["Req1", "Req2"]},
+        ),
+        (test_suite.BasicTestSuiteTeardown, 1, ["aux2"], None),
+    ],
+)
+def test_define_test_parameters_on_basic_ts(fixture, suite_id, aux_list, test_ids):
+    @test_case.define_test_parameters(
+        suite_id=suite_id,
+        aux_list=aux_list,
+    )
+    class MyTestSuiteFixture(fixture):
+        pass
+
+    ts_fix_inst = MyTestSuiteFixture()
+
+    assert ts_fix_inst.test_suite_id == suite_id
+    assert ts_fix_inst.test_case_id == 0
+    assert ts_fix_inst.test_auxiliary_list == aux_list
+
+
+@pytest.mark.parametrize(
+    "fixture, suite_id, aux_list, setup_timeout, teardown_timeout, test_ids",
+    [
+        (
+            test_suite.GreyTestSuiteSetup,
             1,
             ["aux1"],
             3,
@@ -90,17 +123,17 @@ class IntegrationTestSuite(unittest.TestCase):
             {"Component1": ["Req1", "Req2"]},
         ),
         (
-            test_suite.BasicTestSuiteTeardown,
+            test_suite.GreyTestSuiteTeardown,
             1,
             ["aux2"],
             None,
             3,
             {"Component1": ["Req1", "Req2"]},
         ),
-        (test_suite.BasicTestSuiteTeardown, 1, ["aux2"], None, 3, None),
+        (test_suite.GreyTestSuiteTeardown, 1, ["aux2"], None, 3, None),
     ],
 )
-def test_define_test_parameters_on_ts(
+def test_define_test_parameters_on_grey_ts(
     fixture, suite_id, aux_list, setup_timeout, teardown_timeout, test_ids
 ):
     @test_case.define_test_parameters(

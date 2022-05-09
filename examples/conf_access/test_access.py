@@ -41,7 +41,7 @@ cli_config = GlobalConfig().cli
     teardown_timeout=1,
     tag={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
 )
-class MyTest1(pykiso.BasicTest):
+class MyTest1(pykiso.GreyTest):
     """Simply Test case use to show configuraton parameters access."""
 
     def setUp(self):

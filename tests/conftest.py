@@ -176,7 +176,7 @@ def CustomTestCaseAndSuite(request):
             @define_test_parameters(
                 suite_id=param[0], case_id=param[1], aux_list=param[2]
             )
-            class MyTestCase(test_case.BasicTest):
+            class MyTestCase(test_case.GreyTest):
                 pass
 
             self.suite.addTest(MyTestCase("test_run"))

@@ -24,9 +24,9 @@ from pykiso.auxiliaries import aux1, aux2
 
 
 @pykiso.define_test_parameters(suite_id=2, case_id=0, aux_list=[aux1, aux2])
-class SuiteSetup(pykiso.BasicTestSuiteSetup):
+class SuiteSetup(pykiso.GreyTestSuiteSetup):
     """This test suite setup will be executed using base behavior given
-    by BasicTestSuiteTeardown.
+    by GreyTestSuiteTeardown.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test suite setup :
@@ -46,9 +46,9 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
 
 
 @pykiso.define_test_parameters(suite_id=2, case_id=0, aux_list=[aux1, aux2])
-class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+class SuiteTearDown(pykiso.GreyTestSuiteTeardown):
     """This test suite teardown will be executed using base behavior
-    given by BasicTestSuiteTeardown.
+    given by GreyTestSuiteTeardown.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test suite teardown :
@@ -78,9 +78,9 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     teardown_timeout=3,
     tag={"variant": ["variant3", "variant2"], "branch_level": ["daily"]},
 )
-class MyTest4(pykiso.BasicTest):
+class MyTest4(pykiso.GreyTest):
     """This test case definition will be executed using base behavior
-    given by BasicTest.
+    given by GreyTest.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp, test_run and tearDown:
@@ -106,9 +106,9 @@ class MyTest4(pykiso.BasicTest):
 
 
 @pykiso.define_test_parameters(suite_id=2, case_id=2, aux_list=[aux2])
-class MyTest2(pykiso.BasicTest):
+class MyTest2(pykiso.GreyTest):
     """This test case definition will be executed using base behavior
-    given by BasicTest.
+    given by GreyTest.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp, test_run and tearDown:

@@ -349,7 +349,8 @@ gives access to the following parameters:
 - case_id : current test case identification number (optional for test suite setup and teardown)
 - aux_list : list of used auxiliaries
 
-Based on Message Protocol, users can configure the maximum time (in seconds) used to wait for a report.
+If GreyTestCase / GreyTestSuite are used, based on Message Protocol, 
+users can configure the maximum time (in seconds) used to wait for a report.
 This "timeout" is configurable for each available fixtures :
 
 - setup_timeout : the maximum time (in seconds) used to wait for a report during setup execution (optional)
@@ -389,12 +390,57 @@ Find below a full example for a test suite/case declaration :
   -> suite_id : set to 1
   -> case_id : Parameter case_id is not mandatory for setup.
   -> aux_list : used aux1 and aux2 is used
+  """
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
+    class SuiteSetup(pykiso.BasicTestSuiteSetup):
+        pass
+
+  """
+  Add test suite teardown fixture, run once at test suite's end.
+  Test Suite Teardown Information:
+  -> suite_id : set to 1
+  -> case_id : Parameter case_id is not mandatory for setup.
+  -> aux_list : used aux1 and aux2 is used
+  """
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
+    class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+        pass
+
+  """
+  Add a test case 1 from test suite 1 using auxiliary 1.
+    Test Suite Teardown Information:
+  -> suite_id : set to 1
+  -> case_id : set to 1
+  -> aux_list : used aux1 and aux2 is used
+  -> test_ids: [optional] store the requirements into the report
+  -> tag: [optional] dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
+  """
+    @pykiso.define_test_parameters(
+            suite_id=1,
+            case_id=1,
+            aux_list=[aux1, aux2],
+            test_ids={"Component1": ["Req1", "Req2"]},
+            tag={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
+    )
+    class MyTest(pykiso.BasicTest):
+        pass
+
+Find below a full example for a test suite/case declaration in case the Message Protocol / TestApp is used:
+
+.. code:: python
+
+  """
+  Add test suite setup fixture, run once at test suite's beginning.
+  Test Suite Setup Information:
+  -> suite_id : set to 1
+  -> case_id : Parameter case_id is not mandatory for setup.
+  -> aux_list : used aux1 and aux2 is used
   -> setup_timeout : time to wait for a report 5 seconds
   -> run_timeout : Parameter run_timeout is not mandatory for test suite setup.
   -> teardown_timeout : Parameter run_timeout is not mandatory for test suite setup.
   """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=5)
-    class SuiteSetup(pykiso.BasicTestSuiteSetup):
+    class SuiteSetup(pykiso.GreyTestSuiteSetup):
         pass
 
   """
@@ -408,7 +454,7 @@ Find below a full example for a test suite/case declaration :
   -> teardown_timeout : time to wait for a report 5 seconds
   """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], teardown_timeout=5,)
-    class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+    class SuiteTearDown(pykiso.GreyTestSuiteTeardown):
         pass
 
   """
@@ -433,7 +479,7 @@ Find below a full example for a test suite/case declaration :
             test_ids={"Component1": ["Req1", "Req2"]},
             tag={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
     )
-    class MyTest(pykiso.BasicTest):
+    class MyTest(pykiso.GreyTest):
         pass
 
 
@@ -456,7 +502,7 @@ Implementation of Basic Tests
   Add test suite setup fixture, run once at test suite's beginning.
   Parameter case_id is not mandatory for setup.
   """
-    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=1, run_timeout=2, teardown_timeout=3)
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
         pass
 
@@ -525,7 +571,7 @@ If you need to have more complex tests, you can do the following:
 -  ``BasicTest`` also contains the following information
    ``test_section_id``, ``test_suite_id``, ``test_case_id``.
 -  Import *logging* or/and *message* (if needed) to communicate with the
-   **auxiliary**
+   **auxiliary**(in that case use GreyTest instead of BasicTest)
 
 **test_suite_2.py**:
 

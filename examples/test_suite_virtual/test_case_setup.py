@@ -19,29 +19,21 @@ from pykiso.test_coordinator.test_message_handler import (
 from pykiso.auxiliaries import aux_virtual, aux_udp  # isort:skip
 
 
-@pykiso.define_test_parameters(
-    suite_id=1, case_id=2, aux_list=[aux_udp], setup_timeout=2
-)
+@pykiso.define_test_parameters(suite_id=1, case_id=2, aux_list=[aux_udp])
 class ReportFailedDuringSetup(pykiso.BasicTest):
     pass
 
 
-@pykiso.define_test_parameters(
-    suite_id=1, case_id=3, aux_list=[aux_udp], setup_timeout=2
-)
+@pykiso.define_test_parameters(suite_id=1, case_id=3, aux_list=[aux_udp])
 class ReportNotImplementedDuringSetup(pykiso.BasicTest):
     pass
 
 
-@pykiso.define_test_parameters(
-    suite_id=1, case_id=4, aux_list=[aux_udp], setup_timeout=2
-)
+@pykiso.define_test_parameters(suite_id=1, case_id=4, aux_list=[aux_udp])
 class LostComDuringSetupAck(pykiso.BasicTest):
     pass
 
 
-@pykiso.define_test_parameters(
-    suite_id=1, case_id=5, aux_list=[aux_udp], setup_timeout=2
-)
+@pykiso.define_test_parameters(suite_id=1, case_id=5, aux_list=[aux_udp])
 class LostComDuringSetupReport(pykiso.BasicTest):
     pass
