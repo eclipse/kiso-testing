@@ -9,6 +9,12 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
+## Version Unreleased (2022-05-05)
+
+#### New Features
+
+* add flag to make bus error warning switchable for pcan connector
+
 ## Version 0.17.0 (2022-04-14)
 
 #### Fixes
