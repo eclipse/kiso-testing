@@ -18,11 +18,7 @@ from pykiso.lib.connectors.cc_vector_can import (
     can,
     detect_serial_number,
 )
-from pykiso.message import (
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.message import MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",

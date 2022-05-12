@@ -10,6 +10,7 @@
 import logging
 
 import pytest
+
 from pykiso.interfaces.mp_auxiliary import MpAuxiliaryInterface
 
 

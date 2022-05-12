@@ -7,8 +7,9 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import socket
 import logging
+import socket
+
 import pytest
 
 from pykiso.lib.connectors.cc_udp import CCUdp

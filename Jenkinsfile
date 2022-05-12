@@ -40,8 +40,8 @@ pipeline
             steps
             {
                 script
-                {   sh "poetry run pre-commit run --all"
-                    //sh "black --diff . > ${env.WORKSPACE}/black.patch"
+                {
+                    sh "poetry run black --diff . > ${env.WORKSPACE}/black.patch"
 
                     final def patch = readFile("${env.WORKSPACE}/black.patch")
 

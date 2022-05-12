@@ -8,9 +8,9 @@
 ##########################################################################
 
 """ This example shows how to use pykiso framework with pytest.
-The conftest.py has been created with the tool pykiso_to_pytest.
+The conftest.py has been created with the tool pykitest.
 From the root folder:
-pykiso_to_pytest.py examples/dummy.yaml -d examples/pytest/dummy/conftest.py
+pykitest examples/dummy.yaml -d examples/pytest/dummy/conftest.py
 
 Run it via:
 pytest examples/pytest/dummy/ --log-cli-level=DEBUG

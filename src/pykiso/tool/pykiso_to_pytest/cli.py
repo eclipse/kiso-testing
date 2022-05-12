@@ -9,13 +9,16 @@
 
 import pathlib
 import re
-from typing import Any, List, Optional, Tuple, Union
+import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import click
 import isort
-import yaml
 from black import FileMode, format_str
 from jinja2 import Environment, FileSystemLoader
+
+from pykiso import config_parser
 
 ROOT_PATH = pathlib.Path(__file__).parent.resolve()
 
@@ -25,7 +28,7 @@ def format_value(value: Any) -> Union[Any, str]:
     of type string. Else return original value
 
     :param value: value to evaluate
-    :return: quotet string if value was a string
+    :return: quoted string if value was a string
     """
 
     if isinstance(value, (str)):
@@ -37,7 +40,7 @@ def format_value(value: Any) -> Union[Any, str]:
 def find_string_in(
     nested_dict: dict, search_value: str, prepath: Tuple[str, ...] = ()
 ) -> Optional[Tuple[str, ...]]:
-    """find if string is part of an value in a nested dictionary.
+    """Find if string is part of a value in a nested dictionary.
 
     :param nested_dict: dictionary to search in
     :param search_value: string to search for
@@ -48,7 +51,7 @@ def find_string_in(
         path = prepath + (key,)
         if isinstance(value, str) and search_value in value:  # found value
             return path
-        elif hasattr(value, "items"):
+        elif isinstance(value, dict):
             key_path = find_string_in(value, search_value, path)
             if key_path is not None:
                 return key_path
@@ -56,12 +59,13 @@ def find_string_in(
     return None
 
 
-def nested_get(dic: dict, keys: Tuple[str, ...], copy: bool) -> Any:
-    """Get dictionary items from list of keys
+def nested_get(dic: dict, keys: List[str], copy: bool = False) -> Any:
+    """Get dictionary items from a sequence of keys
 
     :param dic: dictionary to search in
     :param keys: key path as list
-    :return: element at located position
+    :param copy: if true return a new dictionary instance
+    :return: dictionary value at located key positions
     """
     for key in keys:
         dic = dic[key]
@@ -72,7 +76,7 @@ def nested_get(dic: dict, keys: Tuple[str, ...], copy: bool) -> Any:
     return dic
 
 
-def remove_key(dic: dict, key_path: Tuple[str, ...]) -> None:
+def remove_key(dic: Dict[str, Union[Dict, Any]], key_path: List[str]) -> None:
     """Remove dictionary element at given location.
 
     :param dic: dictionary where the key shall be removed
@@ -94,12 +98,13 @@ def get_imports(file: str) -> List[str]:
 
 
 @click.command()
-@click.argument("filename", type=click.Path(exists=True))
+@click.argument("filename", type=click.Path(exists=True, dir_okay=False))
 @click.option(
     "-d",
     "--destination",
     default="./conftest.py",
     help="Output file path.",
+    type=click.Path(writable=True),
     show_default=True,
 )
 def main(filename: str, destination: str):
@@ -109,17 +114,14 @@ def main(filename: str, destination: str):
     :param filename: pykiso yaml file to convert
     :param destination: destination file path
     """
-
-    with open(filename, encoding="utf8") as file:
-
-        pykiso_config = yaml.load(file, Loader=yaml.FullLoader)
+    pykiso_config = config_parser.parse_config(filename)
 
     template_loader = FileSystemLoader(searchpath=str(ROOT_PATH / "templates"))
     template_env = Environment(loader=template_loader)
     template_env.filters["format_value"] = format_value
     template = template_env.get_template("conftest_template.jinja2")
 
-    # Grap import informations -> Channels and Auxiliaries
+    # Grab import informations -> Channels and Auxiliaries
     yaml_config_folder = pathlib.Path(filename).resolve().parent
 
     import_info = set()
@@ -132,7 +134,7 @@ def main(filename: str, destination: str):
 
     module_imports = {}
     for aux_con_type in import_info:
-        value, key = aux_con_type.split(":")
+        value, key = aux_con_type.split(":")[-2:]
         if ".py" in value:
             ext_file_imports = get_imports(yaml_config_folder / value)
             for imp in ext_file_imports:
@@ -144,26 +146,33 @@ def main(filename: str, destination: str):
     key_path = find_string_in(pykiso_config, "ProxyAuxiliary")
     proxy_aux_config = None
     if key_path:
-        proxy_aux_config = nested_get(pykiso_config, key_path[:-1], copy=True)
-        remove_key(pykiso_config, key_path[:-1])
-        proxy_aux_config["name"] = key_path[1]
+        proxy_aux_path = list(key_path[:-1])
+        proxy_aux_name = key_path[1]
+        proxy_aux_config = nested_get(pykiso_config, proxy_aux_path, copy=True)
+        remove_key(pykiso_config, proxy_aux_path)
+        proxy_aux_config["name"] = proxy_aux_name
 
     # Use jinja to render conftest
     conftest = template.render(
+        sys_args=sys.argv,
         dict_item=pykiso_config,
         proxy_aux_config=proxy_aux_config,
         module_imports=module_imports,
     )
-
     # Sort imports with isort and use black to format the code
     conftest = format_str(isort.code(conftest), mode=FileMode())
 
-    if not destination.endswith(".py"):
-        destination += ".py"
-    with open(destination, "w", encoding="utf8") as file:
+    destination_path = Path(destination)
+    if destination_path.is_dir():
+        destination_path = destination_path / "conftest.py"
+    else:
+        if not destination_path.suffix == ".py":
+            destination_path = destination_path.with_suffix(".py")
+
+    with open(destination_path, "w", encoding="utf8") as file:
         file.write(conftest)
 
-    print(f"Conftest has been written to {destination}")
+    print(f"Conftest has been written to {destination_path.resolve()}")
 
 
 if __name__ == "__main__":
