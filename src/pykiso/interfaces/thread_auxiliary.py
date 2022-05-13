@@ -70,6 +70,7 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         self.queue_in = queue.Queue()
         self.queue_out = queue.Queue()
         self.stop_event = threading.Event()
+        self.notifyer = threading.Semaphore(0)
         self.is_proxy_capable = is_proxy_capable
         # Create state
         self.is_instance = False
@@ -129,6 +130,8 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         if self.lock.acquire():
             # Trigger the internal requests
             self.queue_in.put("create_auxiliary_instance")
+            # Notify
+            self.notifyer.release()
             # Wait until the request was processed
             report = self.queue_out.get()
             # Release the above lock
@@ -157,6 +160,10 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
     def run(self) -> None:
         """Run function of the auxiliary thread."""
         while not self.stop_event.is_set():
+            # Step 0: Wait for a User or Connector to publish something
+            self.notifyer.acquire(
+                blocking=True, timeout=1
+            )  # So that we exit loop when needed
             # Step 1: Check if a request is available & process it
             request = ""
             # Check if a request was received

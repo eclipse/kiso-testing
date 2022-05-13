@@ -23,6 +23,7 @@ import abc
 import multiprocessing
 import pathlib
 import threading
+from typing import Callable
 
 from .types import MsgType, PathType
 
@@ -39,6 +40,7 @@ class Connector(abc.ABC):
         :param name: alias for the connector, used for ``repr`` and logging.
         """
         super().__init__()
+        self.callback = None
         self.name = name
 
     def __repr__(self):
@@ -74,12 +76,13 @@ class CChannel(Connector):
     def __init__(self, processing=False, **kwargs):
         """constructor"""
         super().__init__(**kwargs)
+        self.callback = None
         if processing:
             self._lock = multiprocessing.RLock()
         else:
             self._lock = threading.RLock()
 
-    def open(self) -> None:
+    def open(self, callback: Callable = None) -> None:
         """Open a thread-safe channel.
 
         :raise ConnectionRefusedError: when lock acquire failed
@@ -87,12 +90,14 @@ class CChannel(Connector):
         # If we successfully lock the channel, open it
         if self._lock.acquire(False):
             self._cc_open()
+            self.callback = callback
         else:
             raise ConnectionRefusedError
 
     def close(self) -> None:
         """Close a thread-safe channel."""
         # Close channel and release lock
+        self.callback = None
         self._cc_close()
         self._lock.release()
 
@@ -100,6 +105,7 @@ class CChannel(Connector):
         """Send a thread-safe message on the channel and wait for an acknowledgement.
 
         :param msg: message to send
+        :param kwargs: named arguments
 
         :raise ConnectionRefusedError: when lock acquire failed
         """
@@ -110,7 +116,7 @@ class CChannel(Connector):
             raise ConnectionRefusedError
         self._lock.release()
 
-    def cc_receive(self, timeout: float = 0.1, raw: bool = False):
+    def cc_receive(self, timeout: float = 0.1, raw: bool = False) -> dict:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
@@ -132,7 +138,7 @@ class CChannel(Connector):
 
     @abc.abstractmethod
     def _cc_open(self):
-        """Open the channel."""
+        """Open the channel, if self.callback exist, handle it"""
         pass
 
     @abc.abstractmethod
@@ -141,17 +147,18 @@ class CChannel(Connector):
         pass
 
     @abc.abstractmethod
-    def _cc_send(self, msg: MsgType, raw: bool = False) -> None:
+    def _cc_send(self, msg: MsgType, raw: bool = False, **kwargs) -> None:
         """Sends the message on the channel.
 
         :param msg: Message to send out
         :param raw: send raw message without further work (default: False)
+        :param kwargs: named arguments
         """
         # TODO define exception to raise?
         pass
 
     @abc.abstractmethod
-    def _cc_receive(self, timeout: float, raw: bool = False) -> MsgType:
+    def _cc_receive(self, timeout: float, raw: bool = False) -> dict:
         """How to receive something from the channel.
 
         :param timeout: Time to wait in second for a message to be received
@@ -159,7 +166,6 @@ class CChannel(Connector):
 
         :return: message.Message() - If one received / None - If not
         """
-        # TODO define exception to raise?
         pass
 
 

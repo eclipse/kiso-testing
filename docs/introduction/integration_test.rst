@@ -336,8 +336,6 @@ Flow
 6. If the tests fail, you will see it in the the output. For more
    details, you can take a look at the log file (logs to STDOUT as default).
 
-.. _define_test_information:
-
 Define the test information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

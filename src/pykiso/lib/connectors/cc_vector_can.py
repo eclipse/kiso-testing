@@ -20,7 +20,7 @@ CAN Communication Channel using Vector hardware
 """
 
 import logging
-from typing import Union
+from typing import Dict, Union
 
 import can
 import can.bus
@@ -28,6 +28,8 @@ import can.interfaces.vector
 from can.interfaces.vector.canlib import get_channel_configs
 
 from pykiso import CChannel, Message
+
+MessageType = Union[Message, bytes]
 
 log = logging.getLogger(__name__)
 
@@ -120,7 +122,7 @@ class CCVectorCan(CChannel):
         self.bus.shutdown()
         self.bus = None
 
-    def _cc_send(self, msg, remote_id: int = None, raw: bool = False) -> None:
+    def _cc_send(self, msg, raw: bool = False, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
         If remote_id parameter is not given take configured ones, in addition if
@@ -128,11 +130,12 @@ class CCVectorCan(CChannel):
         test entity protocol format.
 
         :param msg: data to send
-        :param remote_id: destination can id used
         :param raw: boolean use to select test entity protocol format
+        :param kwargs: destination can id used
 
         """
         _data = msg
+        remote_id = kwargs.get("remote_id")
 
         if remote_id is None:
             remote_id = self.remote_id
@@ -153,7 +156,7 @@ class CCVectorCan(CChannel):
 
     def _cc_receive(
         self, timeout=0.0001, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
         If raw parameter is set to True return received message as it is (bytes)
@@ -162,7 +165,7 @@ class CCVectorCan(CChannel):
         :param timeout: timeout applied on reception
         :param raw: boolean use to select test entity protocol format
 
-        :return: tuple containing the received data and the source can id
+        :return: the received data and the source can id
         """
         try:  # Catch bus errors & rcv.data errors when no messages where received
             received_msg = self.bus.recv(timeout=timeout or self.timeout)
@@ -176,12 +179,12 @@ class CCVectorCan(CChannel):
 
                 log.debug(f"received CAN Message: {frame_id}, {payload}")
 
-                return payload, frame_id
+                return {"msg": payload, "remote_id": frame_id}
             else:
-                return None, None
+                return {"msg": None}
         except BaseException:
             log.exception(f"encountered error while receiving message via {self}")
-            return None, None
+            return {"msg": None}
 
 
 def detect_serial_number() -> int:

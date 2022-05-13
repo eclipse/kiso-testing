@@ -24,7 +24,7 @@ import enum
 import logging
 import subprocess
 import time
-from typing import Union
+from typing import Dict, Union
 
 from pykiso import connector
 from pykiso.message import Message
@@ -259,7 +259,7 @@ class CCFdxLauterbach(connector.CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.1, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[bytes, str, None]]:
         """Receive message using the FDX channel.
 
         :param raw: boolean precising the message type
@@ -272,7 +272,7 @@ class CCFdxLauterbach(connector.CChannel):
         received_msg = None
         if self.reset_flag:
             # If the Reset function is called, do not attempt to read messages
-            return received_msg
+            return {"msg": received_msg}
 
         self.safe_reset_flag = False
 
@@ -316,7 +316,7 @@ class CCFdxLauterbach(connector.CChannel):
 
         self.safe_reset_flag = True
         # No message received
-        return received_msg
+        return {"msg": received_msg}
 
     def start(self) -> None:
         """Override clicking on "go" in the Trace32 application.

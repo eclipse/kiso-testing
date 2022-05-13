@@ -7,10 +7,14 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import pytest
 import logging
+
+import pytest
+
 from pykiso import Message
-from pykiso.lib.auxiliaries.communication_auxiliary import CommunicationAuxiliary
+from pykiso.lib.auxiliaries.communication_auxiliary import (
+    CommunicationAuxiliary,
+)
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
 
@@ -69,7 +73,6 @@ def test_com_aux_messaging(com_aux_linker, caplog):
         f"retrieving message in {com_aux} (blocking={True}, timeout={None})"
         in caplog.text
     )
-    assert f"retrieved message '{msg}' in {com_aux}" in caplog.text
 
 
 @pytest.mark.parametrize(

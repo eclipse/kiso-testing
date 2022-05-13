@@ -39,13 +39,14 @@ PyYAML = "*"
 pylink-square = "^0.12.0"
 pyserial = "*"
 python-can = {extras = ["pcan"], version = "^4.0.0"}
+python-uds = {git = "https://github.com/BKaDamien/python-uds.git", rev = "2.0.2"}
 PyVISA = "*"
 PyVISA-py = "*"
 robotframework = "3.2.2"
 unittest-xml-reporting = "*"
 click = "*"
 MarkupSafe = "~2.0"
-pykiso-python-uds-alpha = "^2.0.2"
+Resource = "^0.2.1"
 
 [tool.poetry.dev-dependencies]
 auto-changelog = "0.5.3"

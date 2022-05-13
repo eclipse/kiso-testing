@@ -19,10 +19,14 @@ Loopback CChannel
 
 """
 
+import logging
 from collections import deque
+from typing import Dict
 
 from pykiso import CChannel
 from pykiso.types import MsgType
+
+log = logging.getLogger(__name__)
 
 
 class CCLoopback(CChannel):
@@ -52,7 +56,7 @@ class CCLoopback(CChannel):
         """
         self._loopback_buffer.append(msg)
 
-    def _cc_receive(self, timeout: float, raw: bool = True) -> MsgType:
+    def _cc_receive(self, timeout: float, raw: bool = True) -> Dict[str, MsgType]:
         """Read message by simply removing an element from the left side of deque.
 
         :param timeout: timeout applied on receive event
@@ -61,6 +65,12 @@ class CCLoopback(CChannel):
         :return: Message or raw bytes if successful, otherwise None
         """
         try:
-            return self._loopback_buffer.popleft()
+            recv_msg = self._loopback_buffer.popleft()
+            # Put here, the callback will be triggered only if no error occur above
+            if self.callback:
+                self.callback()
+            else:
+                log.warning("Receive was called but callback not set!")
+            return {"msg": recv_msg}
         except IndexError:
-            return None
+            return {"msg": None}

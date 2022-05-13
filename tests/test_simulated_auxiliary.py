@@ -147,7 +147,7 @@ def mock_msg(mocker):
     msg.sub_type = ACK
     msg.test_suite = 1
     msg.test_case = 1
-    return msg
+    return {"msg": msg}
 
 
 def test_constructor(mocker, caplog):
@@ -194,7 +194,7 @@ def test_delete_auxiliary_instance(mocker, simulated_constructor_init, caplog):
 
 def test_receive_message_ack_received(mocker, simulated_constructor_init, mock_msg):
     simulated_aux = simulated_constructor_init
-    mock_msg.msg_type = ACK
+    mock_msg["msg"].msg_type = ACK
     mocker_cc_receive = mocker.patch(
         "pykiso.connector.CChannel.cc_receive", return_value=mock_msg
     )
@@ -215,7 +215,7 @@ def test_receive_message_no_ack_received(mocker, simulated_constructor_init, moc
     return_receive_message = simulated_aux._receive_message(2)
     mocker_cc_receive.assert_called()
     mock_send_responses.assert_called()
-    assert return_receive_message == mock_msg
+    assert return_receive_message == mock_msg["msg"]
 
 
 def test_send_responses(mocker, simulated_constructor_init, mock_msg):

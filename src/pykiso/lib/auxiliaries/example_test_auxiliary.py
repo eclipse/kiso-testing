@@ -59,10 +59,15 @@ class ExampleAuxiliary(AuxiliaryInterface):
             answered return True otherwise False
         """
         log.info("Create auxiliary instance")
+
+        # Define callback
+        def thread_aux_callback():
+            self.notifyer.release()
+
         # Create an instance (e.g. flash it) -> Placeholder
         # Enable the communication with it
         log.info("Enable channel")
-        self.channel.open()
+        self.channel.open(thread_aux_callback)
         # Pingpong
         return_code = self._send_and_wait_ack(message.Message(), 0.5, 2)
         # Return output
@@ -116,14 +121,16 @@ class ExampleAuxiliary(AuxiliaryInterface):
         :return: receive message
         """
         # Read message on the channel
-        received_message = self.channel.cc_receive(timeout_in_s)
+        recv_response = self.channel.cc_receive(timeout_in_s)
+        received_message = recv_response.get("msg")
+
         if received_message is not None:
             # Send ack
             self.channel._cc_send(
                 msg=received_message.generate_ack_message(message.MessageAckType.ACK)
             )
-        # Return message
-        return received_message
+            # Return message
+            return received_message
 
     def _send_and_wait_ack(
         self, message_to_send: message.Message, timeout: float, tries: int
@@ -138,6 +145,7 @@ class ExampleAuxiliary(AuxiliaryInterface):
         """
         number_of_tries = 0
         result = False
+
         while number_of_tries < tries:
             log.debug("Run send try n:" + str(number_of_tries))
             # Increase number of tries
@@ -145,7 +153,8 @@ class ExampleAuxiliary(AuxiliaryInterface):
             # Send the message
             self.channel.cc_send(msg=message_to_send)
             # Wait until we get something back
-            received_message = self.channel.cc_receive(timeout)
+            recv_response = self.channel.cc_receive(timeout)
+            received_message = recv_response.get("msg")
             # Check the outcome
             if received_message is None:
                 continue  # Next try will occur

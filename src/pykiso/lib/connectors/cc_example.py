@@ -18,7 +18,7 @@ Virtual Communication Channel for tests
 """
 
 import logging
-from typing import Optional, Union
+from typing import Dict, Optional
 
 from pykiso import connector, message
 
@@ -78,7 +78,7 @@ class CCExample(connector.CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.1, raw: bool = False
-    ) -> Union[message.Message, None]:
+    ) -> Dict[str, message.Message]:
         """Reads from the channel - decorator usage for test.
 
         :param timeout: not use
@@ -88,6 +88,11 @@ class CCExample(connector.CChannel):
 
         :return: Message if successful, otherwise None
         """
+        # It does not matter if we call it here or later, we should be in the right thread
+        if self.callback:
+            self.callback()
+        else:
+            log.warning("Receiver was called but callback not set!")
         if raw:
             raise NotImplementedError()
         if self.last_received_message is not None:
@@ -99,7 +104,7 @@ class CCExample(connector.CChannel):
             self.last_received_message = None
             # Return the ACK
             log.debug("Receive: {}".format(r_message))
-            return r_message
+            return {"msg": r_message}
         elif self.report_requested_message is not None:
             # Transform message to ACK
             r_message = message.Message.parse_packet(self.report_requested_message)
@@ -109,4 +114,6 @@ class CCExample(connector.CChannel):
             self.report_requested_message = None
             # Return REPORT
             log.debug("Receive: {}".format(r_message))
-            return r_message
+            return {"msg": r_message}
+        else:
+            return {"msg": None}
