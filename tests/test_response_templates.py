@@ -8,6 +8,7 @@
 ##########################################################################
 
 import pytest
+
 from pykiso import message
 from pykiso.lib.auxiliaries.simulated_auxiliary import response_templates
 

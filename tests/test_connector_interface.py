@@ -8,6 +8,7 @@
 ##########################################################################
 
 import pytest
+
 from pykiso import CChannel, Flasher
 
 

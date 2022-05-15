@@ -7,11 +7,12 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-from pykiso.lib.robot_framework import record_auxiliary
 import pytest
+
+from pykiso.lib.auxiliaries.record_auxiliary import RecordAuxiliary
+from pykiso.lib.robot_framework import record_auxiliary
 from pykiso.lib.robot_framework.aux_interface import RobotAuxInterface
 from pykiso.test_setup.config_registry import ConfigRegistry
-from pykiso.lib.auxiliaries.record_auxiliary import RecordAuxiliary
 
 
 @pytest.fixture
