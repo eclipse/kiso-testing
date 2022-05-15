@@ -7,8 +7,10 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from pykiso.lib.connectors.flash_jlink import JLinkFlasher, pylink
 
 
