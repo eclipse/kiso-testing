@@ -150,6 +150,8 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         if self.lock.acquire():
             # Trigger the internal requests
             self.queue_in.put("delete_auxiliary_instance")
+            # Notify
+            self.notifyer.release()
             # Wait until the request was processed
             report = self.queue_out.get()
             # Release the above lock
@@ -226,6 +228,8 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         :return: True - Successfully created / False - Failed by creation
 
         .. note: Errors should be logged via the logging with the right level
+
+        .. note:
         """
         pass
 

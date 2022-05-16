@@ -24,7 +24,7 @@ import abc
 import logging
 import queue
 import time
-from typing import Any
+from typing import Any, Callable
 
 from .test_setup.config_registry import ConfigRegistry
 from .types import MsgType
@@ -252,6 +252,10 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
             self.delete_instance()
         else:
             log.warning(f"Auxiliary '{self}' is already stopped")
+
+    @property
+    def my_callback(self) -> Callable:
+        return self.notifyer.release
 
     @abc.abstractmethod
     def create_instance(self) -> bool:

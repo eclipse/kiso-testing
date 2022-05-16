@@ -197,13 +197,8 @@ class ProxyAuxiliary(AuxiliaryInterface):
         """
         try:
             log.info("Create auxiliary instance")
-
-            # Define callback
-            def thread_aux_callback():
-                self.notifyer.release()
-
             log.info("Enable channel")
-            self.channel.open(thread_aux_callback)
+            self.channel.open(self.my_callback)
             return True
         except Exception as e:
             log.exception(f"Error encouting during channel creation, reason : {e}")
