@@ -30,6 +30,8 @@ def mock_auxiliaries(mocker):
             self.queue_in = queue.Queue()
             self.queue_out = queue.Queue()
             super(MockProxyCChannel, self).__init__(*args, **kwargs)
+            # We have to put the callback after the super because super set it to None
+            self.callback = mocker.stub(name="callback")
 
         _cc_open = mocker.stub(name="_cc_open")
         open = mocker.stub(name="open")

@@ -60,6 +60,7 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         self.queue_in = multiprocessing.Queue()
         self.queue_out = multiprocessing.Queue()
         self.stop_event = multiprocessing.Event()
+        self.notifyer = multiprocessing.Semaphore(0)
         self.is_proxy_capable = is_proxy_capable
         self.logger = None
         self.is_instance = False
@@ -80,6 +81,8 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         if self.lock.acquire():
             # Trigger the internal requests
             self.queue_in.put("create_auxiliary_instance")
+            # Notify
+            self.notifyer.release()
             # Wait until the request was processed
             self.is_instance = self.queue_out.get()
             # Release the above lock
@@ -99,6 +102,8 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         if self.lock.acquire() and self.is_alive:
             # Trigger the internal requests
             self.queue_in.put("delete_auxiliary_instance")
+            # Notify
+            self.notifyer.release()
             # Wait until the request was processed
             self.is_instance = self.queue_out.get()
             # Release the above lock
@@ -139,6 +144,10 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         # initialize logging mechanism at process startup
         self.initialize_loggers()
         while not self.stop_event.is_set():
+            # Step 0: Wait for a User or Connector to publish something
+            self.notifyer.acquire(
+                block=True, timeout=1
+            )  # So that we exit loop when needed
             # Step 1: Check if a request is available & process it
             request = ""
             # Check if a request was received
