@@ -41,6 +41,9 @@ This interface enforces the implementation of the following methods:
   Requires one positional argument ``timeout`` and one keyword argument ``raw``, used to deserialize
   the data when receiving it.
 
+Additional to the interfaces, the auxiliary, during the channel opening phase, populated `self.callback`.
+If an asynchronous behaviour can be implemented, `self.callback` should be called to trigger a `_cc_receive()` call.
+
 
 Class definition and instanciation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -122,6 +125,8 @@ The connector then becomes:
 
         def _cc_receive(self, timeout, raw = False):
             received_data = self.my_connection.receive(timeout=timeout)
+            if self.callback:
+                self.callback()
             if received_data:
                 if not raw:
                     data = Data.deserialize(received_data)
@@ -131,7 +136,12 @@ The connector then becomes:
     The API used in this example for the fictive *my_connection* module
     entirely depends on the used module.
 
-Parameters and return vqlues
+.. note::
+    When a connector cannot have an asynchronous implementation, `self.callback`
+    needs to be called in the `_cc_receive` for the auxiliary to directly start
+    its run.
+
+Parameters and return values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to stay compatible and usable by the attached auxiliary, the created connector

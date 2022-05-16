@@ -90,7 +90,7 @@ to be implemented:
 
 - :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._create_auxiliary_instance`:
   handle the auxiliary creation. Minimal actions to perform are
-  opening the attached :py:class:`~pykiso.connector.CChannel`, to which can be added actions such as flashing the device under test,
+  opening the attached :py:class:`~pykiso.connector.CChannel` with `self.my_callback`, to which can be added actions such as flashing the device under test,
   perform security related operations to allow the communication, etc.
 - :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._delete_auxiliary_instance`:
   handle the auxiliary deletion. This method is the counterpart of
@@ -161,7 +161,7 @@ See below an example implementing the basic functionalities of a Thread Auxiliar
                 flasher.flash()
 
             logging.info("Open communication")
-            self.channel.open()
+            self.channel.open(self.my_callback)
 
         def _delete_auxiliary_instance(self):
             """Delete the auxiliary instance at test teardown.
