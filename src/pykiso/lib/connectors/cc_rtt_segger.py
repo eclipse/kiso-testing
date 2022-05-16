@@ -295,6 +295,14 @@ class CCRttSegger(connector.CChannel):
         size = self.rx_buffer_size if raw else Message().header_size
         t_start = time.perf_counter()
 
+        # Call the callback of the auxiliary
+        # The following lines should be replaced with an async call if segger is capable!
+        # Note, the order of the call does not matter for now, we are in the same thread.
+        if self.callback:
+            self.callback()
+        else:
+            log.warning("Receiver was called but callback not set!")
+
         # rtt_read is not a blocking method due to this fact a while loop is used
         # to act like a blocking ones.
         while not is_timeout:

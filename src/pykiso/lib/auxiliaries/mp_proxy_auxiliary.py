@@ -269,6 +269,7 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
         for conn in self.proxy_channels:
             if conn != con_use:
                 conn.queue_out.put(kwargs)
+                conn.callback()
 
     def _abort_command(self) -> None:
         """Not Used."""

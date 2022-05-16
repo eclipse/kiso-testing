@@ -167,6 +167,14 @@ class CCVectorCan(CChannel):
 
         :return: the received data and the source can id
         """
+        # Call the callback of the auxiliary
+        # The following lines should be replaced with an async call if vector can is capable!
+        # Note, the order of the call does not matter for now, we are in the same thread.
+        if self.callback:
+            self.callback()
+        else:
+            log.warning("Receiver was called but callback not set!")
+
         try:  # Catch bus errors & rcv.data errors when no messages where received
             received_msg = self.bus.recv(timeout=timeout or self.timeout)
 

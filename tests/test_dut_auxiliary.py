@@ -22,7 +22,7 @@ class MockCChanel:
     def __init__(self, msg: Message = None):
         self.msg = msg
 
-    def open(self):
+    def open(self, callback=None):
         pass
 
     def close(self):

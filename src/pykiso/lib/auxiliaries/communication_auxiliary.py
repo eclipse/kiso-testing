@@ -81,12 +81,8 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         log.info("Create auxiliary instance")
         log.info("Enable channel")
 
-        # Define callback
-        def thread_aux_callback():
-            self.notifyer.release()
-
         try:
-            self.channel.open(thread_aux_callback)
+            self.channel.open(self.my_callback)
             state = True
         except Exception:
             log.exception("Unable to open channel communication")

@@ -19,12 +19,15 @@ Communication Channel Via Uart
 
 """
 
+import logging
 import struct
 import time
 
 import serial
 
 from pykiso import connector, message
+
+log = logging.getLogger(__name__)
 
 
 class IncompleteCCMsgError(Exception):
@@ -80,6 +83,14 @@ class CCUart(connector.CChannel):
         if raw:
             raise NotImplementedError()
         self.serial.timeout = timeout or self.timeout
+
+        # Call the callback of the auxiliary
+        # The following lines should be replaced with an async call if serial is capable!
+        # Note, the order of the call does not matter for now, we are in the same thread.
+        if self.callback:
+            self.callback()
+        else:
+            log.warning("Receiver was called but callback not set!")
 
         receivingState = self.WAITING_FOR_START
         bytesToRead = 10

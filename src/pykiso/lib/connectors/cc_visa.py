@@ -110,6 +110,14 @@ class VISAChannel(CChannel):
         :return: the received response message, or an empty string if the request
             expired with a timeout.
         """
+        # Call the callback of the auxiliary
+        # The following lines should be replaced with an async call if visa is capable!
+        # Note, the order of the call does not matter for now, we are in the same thread.
+        if self.callback:
+            self.callback()
+        else:
+            log.warning("Receiver was called but callback not set!")
+
         if raw:
             return self._process_request("read").encode()
         else:

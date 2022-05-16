@@ -315,6 +315,12 @@ class CCFdxLauterbach(connector.CChannel):
                 is_timeout = True
 
         self.safe_reset_flag = True
+        # Call the callback of the auxiliary
+        # The following lines should be replaced with an async call if lauterbach is capable!
+        if self.callback:
+            self.callback()
+        else:
+            log.warning("Receiver was called but callback not set!")
         # No message received
         return {"msg": received_msg}
 

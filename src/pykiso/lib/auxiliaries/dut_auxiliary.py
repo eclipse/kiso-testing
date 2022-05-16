@@ -73,8 +73,9 @@ class DUTAuxiliary(AuxiliaryInterface):
         # Enable the communication through the connector
         log.info("Open channel communication")
         return_code = False
+
         try:
-            self.channel.open()
+            self.channel.open(self.my_callback)
         except Exception:
             log.exception("Unable to open channel communication")
             self.stop()

@@ -86,6 +86,14 @@ class CCUdpServer(connector.CChannel):
 
         self.udp_socket.settimeout(timeout or self.timeout)
 
+        # Call the callback of the auxiliary
+        # The following lines should be replaced with an async call of socket later on!
+        # Note, the order of the call does not matter for now, we are in the same thread.
+        if self.callback:
+            self.callback()
+        else:
+            log.warning("Receiver was called but callback not set!")
+
         try:
             msg_received, self.address = self.udp_socket.recvfrom(self.max_msg_size)
 
