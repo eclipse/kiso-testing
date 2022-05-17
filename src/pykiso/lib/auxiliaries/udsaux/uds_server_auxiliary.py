@@ -35,7 +35,6 @@ from pykiso.connector import CChannel
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
 from .odx_parser import OdxParser
-from .server_can_tp import ServerCanTp
 from .uds_utils import get_uds_service
 
 log = logging.getLogger(__name__)
@@ -202,7 +201,7 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             #     resId=self.res_id,
             # )
             self.uds_config.tp.overwrite_transmit_method(self.transmit)
-            self.uds_config.tp.receive = self.receive
+            self.uds_config.tp.getNextBufferedMessage = self.receive
             return True
         except Exception:
             log.exception("Error during channel creation")
@@ -288,7 +287,6 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             uds_data = self.uds_config.tp.decode_isotp(
                 received_data=received_data, use_external_snd_rcv_functions=True
             )
-            log.info(f"Got UDS data: {uds_data}")
             with self._callback_lock:
                 self._dispatch_callback(uds_data)
 
