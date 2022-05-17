@@ -26,6 +26,7 @@ import logging
 import threading
 from dataclasses import dataclass
 from pathlib import Path
+from socket import timeout
 from typing import Callable, Dict, List, Optional, Union
 
 from uds import Uds, createUdsConnection
@@ -34,6 +35,7 @@ from pykiso.connector import CChannel
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
 from .odx_parser import OdxParser
+from .server_can_tp import ServerCanTp
 from .uds_utils import get_uds_service
 
 log = logging.getLogger(__name__)
@@ -52,16 +54,21 @@ class UdsCallback:
         data is supposed to be zero-padded.
     """
 
-    request: Union[int, List[int]]  # e.g. 0x1003 or [0x10, 0x03]
-    response: Union[
-        int, List[int]
-    ] = None  # e.g. 0x50030102 or [0x50, 0x03, 0x01, 0x02]
-    response_data: Union[int, bytes] = None  # e.g. 0x1011 or b'DATA'
-    response_length: Optional[int] = None  # specify zero-padding
+    # e.g. 0x1003 or [0x10, 0x03]
+    request: Union[int, List[int]]
+    # e.g. 0x5003 or [0x50, 0x03]
+    response: Union[int, List[int]] = None
+    # e.g. 0x1011 or b'DATA'
+    response_data: Union[int, bytes] = None
+    # specify zero-padding
+    response_length: Optional[int] = None
+    # custom callback
     callback: Optional[Callable[[List[int], UdsServerAuxiliary], None]] = None
 
     def __post_init__(self):
         """Parse the provided parameters to create a fully formed UDS response."""
+        self.call_count = 0
+
         if isinstance(self.request, int):
             self.request = list(UdsCallback.int_to_bytes(self.request))
 
@@ -83,6 +90,9 @@ class UdsCallback:
         else:
             # pad with zeros to reach the expected length
             self.response = self.response.extend([0x00 * self.response_length])
+
+    def __call__(self):
+        pass
 
     @staticmethod
     def int_to_bytes(integer: int) -> bytes:
@@ -184,7 +194,15 @@ class UdsServerAuxiliary(AuxiliaryInterface):
                 )
             # replace transmit method from python-uds with a method
             # using ITF's connector
+            # self.uds_config.tp = ServerCanTp(
+            #     configPath=self.config_ini_path,
+            #     bus=bus,
+            #     interface=interface,
+            #     reqId=self.req_id,
+            #     resId=self.res_id,
+            # )
             self.uds_config.tp.overwrite_transmit_method(self.transmit)
+            self.uds_config.tp.receive = self.receive
             return True
         except Exception:
             log.exception("Error during channel creation")
@@ -201,6 +219,19 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             False
         """
         self.channel._cc_send(msg=data, remote_id=req_id, raw=True)
+
+    def receive(self) -> None:
+        """Receive a message through ITF connector. Called inside a thread, this method
+        is a substitute to the CanConnection reception present in python-uds package.
+
+        :param data: data to send
+        :param req_id: CAN message identifier
+        :param extended: True if addressing mode is extended otherwise
+            False
+        """
+        received_data, arbitration_id = self.channel._cc_receive(timeout=0, raw=True)
+        if received_data is not None and arbitration_id == self.res_id:
+            return received_data
 
     def _delete_auxiliary_instance(self) -> bool:
         """Close current associated channel.
@@ -247,13 +278,17 @@ class UdsServerAuxiliary(AuxiliaryInterface):
 
         :param timeout_in_s: timeout on reception.
         """
+        # ideally, find the reception method in python-uds -> python-can and override it
+        #            CanConnectionFactory().CanConnection()  can.Listener()
+        # problem: CanTp().__connection.__listener
         received_data, arbitration_id = self.channel.cc_receive(
             timeout=timeout_in_s, raw=True
         )
-        if received_data is not None and arbitration_id == self.req_id:
+        if received_data is not None and arbitration_id == self.res_id:
             uds_data = self.uds_config.tp.decode_isotp(
                 received_data=received_data, use_external_snd_rcv_functions=True
             )
+            log.info(f"Got UDS data: {uds_data}")
             with self._callback_lock:
                 self._dispatch_callback(uds_data)
 
@@ -285,10 +320,13 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             # service_encode_func = service_to_positive_response_func[sid]
         else:
             for callback in self.callbacks:
-                if received_uds_data == callback.request:
+                if callback.request == received_uds_data[: len(callback.request)]:
                     custom_callback = callback.callback
                     response = callback.response
                     break
+            else:
+                response = received_uds_data[:3]
+                response[0] = received_uds_data[0] + 0x40
 
         if custom_callback is not None:
             custom_callback(received_uds_data, self)
@@ -296,8 +334,10 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             to_send = self.uds_config.tp.encode_isotp(
                 response, use_external_snd_rcv_functions=True
             )
-            log.info(f"Sent response to request {received_uds_data}: {response}")
-            self.transmit(to_send, req_id=self.res_id)
+            log.info(
+                f"Sent response to request 0x{bytes(received_uds_data).hex()}: 0x{bytes(response).hex()}"
+            )
+            self.transmit(to_send, req_id=self.req_id)
 
     def _abort_command(self) -> None:
         """Not used."""
