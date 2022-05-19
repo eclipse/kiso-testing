@@ -7,33 +7,26 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import logging
-import unittest
-
 import pykiso
-from pykiso import message
-from pykiso.test_coordinator.test_message_handler import (
-    handle_basic_interaction,
-)
 
 from pykiso.auxiliaries import aux_virtual, aux_udp  # isort:skip
 
 
 @pykiso.define_test_parameters(suite_id=2, aux_list=[aux_udp])
-class ReportFailedDuringSetup(pykiso.BasicTestSuiteSetup):
+class ReportFailedDuringSetup(pykiso.GreyTestSuiteSetup):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=3, aux_list=[aux_udp])
-class ReportNotImplementedDuringSetup(pykiso.BasicTestSuiteSetup):
+class ReportNotImplementedDuringSetup(pykiso.GreyTestSuiteSetup):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=4, aux_list=[aux_udp])
-class LostComDuringSetupAck(pykiso.BasicTestSuiteSetup):
+class LostComDuringSetupAck(pykiso.GreyTestSuiteSetup):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=5, aux_list=[aux_udp])
-class LostComDuringSetupReport(pykiso.BasicTestSuiteSetup):
+class LostComDuringSetupReport(pykiso.GreyTestSuiteSetup):
     pass

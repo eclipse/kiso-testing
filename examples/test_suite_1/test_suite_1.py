@@ -28,8 +28,8 @@ from pykiso.auxiliaries import aux1, aux2, aux3
 side_effect = cycle([False, False, True])
 
 
-@pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=2)
-class SuiteSetup(pykiso.GreyTestSuiteSetup):
+@pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
+class SuiteSetup(pykiso.BasicTestSuiteSetup):
     """This test suite setup will be executed using base behavior
     given by GreyTestSuiteTeardown.
 
@@ -49,8 +49,8 @@ class SuiteSetup(pykiso.GreyTestSuiteSetup):
     pass
 
 
-@pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], teardown_timeout=2)
-class SuiteTearDown(pykiso.GreyTestSuiteTeardown):
+@pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
+class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     """This test suite teardown will be executed using base behavior
     given by GreyTestSuiteTeardown.
 
@@ -60,11 +60,6 @@ class SuiteTearDown(pykiso.GreyTestSuiteTeardown):
     -> suite_id : set to 1
     -> aux_list : test suite teardown executed using aux1 and aux2 (see
     yaml configuration file)
-    -> teardown_timeout : ITF will wait 2 seconds (maximum) to receive a
-    report from device under test otherwise an abort command is sent.
-
-    If teardown_timeout is not given the default timeout value is 10
-    seconds.
     """
 
     pass
@@ -74,12 +69,10 @@ class SuiteTearDown(pykiso.GreyTestSuiteTeardown):
     suite_id=1,
     case_id=1,
     aux_list=[aux1],
-    setup_timeout=1,
-    teardown_timeout=1,
     test_ids={"Component1": ["Req1", "Req2"], "Component2": ["Req3"]},
     tag={"variant": ["variant1"], "branch_level": ["daily", "nightly"]},
 )
-class MyTest1(pykiso.GreyTest):
+class MyTest1(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
     given by GreyTest only for setUp and tearDown method.
 
@@ -90,15 +83,8 @@ class MyTest1(pykiso.GreyTest):
     -> case_id : set to 1
     -> aux_list : test case test_run, setUp, and tearDown executed using
     aux1 (see yaml configuration file)
-    -> setup_timeout : ITF will wait 1 seconds (maximum) to receive a
-    report from device under test otherwise an abort command is sent.
-    -> teardown_timeout : ITF will wait 1 seconds (maximum) to receive a
-    report from device under test otherwise an abort command is sent.
     -> test_ids: [optional] store the requirements into the report
     -> tag: [optional] allows the run of subset of tests
-
-    If setup_timeout, run_timeout and teardown_timeout are not given the
-    default timeout value is 10 seconds for each.
     """
 
     @pykiso.retry_test_case(max_try=3)

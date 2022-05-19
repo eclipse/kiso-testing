@@ -49,6 +49,9 @@ class BaseTestSuite(unittest.TestCase):
         test_suite_id: int,
         test_case_id: int,
         aux_list: Union[List[AuxiliaryInterface], None],
+        setup_timeout: Union[int, None],
+        run_timeout: Union[int, None],
+        teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
         args: tuple,
@@ -59,6 +62,12 @@ class BaseTestSuite(unittest.TestCase):
         :param test_suite_id: test suite identification number
         :param test_case_id: test case identification number
         :param aux_list: list of used auxiliaries
+        :param setup_timeout: maximum time (in seconds) used to wait
+            for a report during setup execution
+        :param run_timeout: maximum time (in seconds) used to wait for
+            a report during test_run execution
+        :param teardown_timeout: the maximum time (in seconds) used to
+            wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
         :param tag: dictionary containing lists of variants and/or test levels
@@ -92,6 +101,50 @@ class BaseTestSuite(unittest.TestCase):
 class BasicTestSuiteSetup(BaseTestSuite):
     """Inherit from unittest testCase and represent setup fixture."""
 
+    def __init__(
+        self,
+        test_suite_id: int,
+        test_case_id: int,
+        aux_list: Union[List[AuxiliaryInterface], None],
+        setup_timeout: Union[int, None],
+        run_timeout: Union[int, None],
+        teardown_timeout: Union[int, None],
+        test_ids: Union[dict, None],
+        tag: Union[Dict[str, List[str]], None],
+        args: tuple,
+        kwargs: dict,
+    ):
+        """Initialize Message Protocol / TestApp test-case.
+
+        :param test_suite_id: test suite identification number
+        :param test_case_id: test case identification number
+        :param aux_list: list of used auxiliaries
+        :param setup_timeout: maximum time (in seconds) used to wait
+            for a report during setup execution
+        :param run_timeout: maximum time (in seconds) used to wait for
+            a report during test_run execution
+        :param teardown_timeout: the maximum time (in seconds) used to
+            wait for a report during teardown execution
+        :param test_ids: jama references to get the coverage
+            eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
+        :param tag: dictionary containing lists of variants and/or test levels
+            when only a subset of tests needs to be executed
+        """
+        super().__init__(
+            test_suite_id,
+            test_case_id,
+            aux_list,
+            setup_timeout,
+            run_timeout,
+            teardown_timeout,
+            test_ids,
+            tag,
+            args,
+            kwargs,
+        )
+        if any([setup_timeout, run_timeout, teardown_timeout]):
+            log.warning("For BasicTestSuiteSetup, timeout are not taken into account")
+
     def test_suite_setUp(self):
         """Test method for constructing the actual test suite."""
         pass
@@ -99,6 +152,52 @@ class BasicTestSuiteSetup(BaseTestSuite):
 
 class BasicTestSuiteTeardown(BaseTestSuite):
     """Inherit from unittest testCase and represent teardown fixture."""
+
+    def __init__(
+        self,
+        test_suite_id: int,
+        test_case_id: int,
+        aux_list: Union[List[AuxiliaryInterface], None],
+        setup_timeout: Union[int, None],
+        run_timeout: Union[int, None],
+        teardown_timeout: Union[int, None],
+        test_ids: Union[dict, None],
+        tag: Union[Dict[str, List[str]], None],
+        args: tuple,
+        kwargs: dict,
+    ):
+        """Initialize Message Protocol / TestApp test-case.
+
+        :param test_suite_id: test suite identification number
+        :param test_case_id: test case identification number
+        :param aux_list: list of used auxiliaries
+        :param setup_timeout: maximum time (in seconds) used to wait
+            for a report during setup execution
+        :param run_timeout: maximum time (in seconds) used to wait for
+            a report during test_run execution
+        :param teardown_timeout: the maximum time (in seconds) used to
+            wait for a report during teardown execution
+        :param test_ids: jama references to get the coverage
+            eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
+        :param tag: dictionary containing lists of variants and/or test levels
+            when only a subset of tests needs to be executed
+        """
+        super().__init__(
+            test_suite_id,
+            test_case_id,
+            aux_list,
+            setup_timeout,
+            run_timeout,
+            teardown_timeout,
+            test_ids,
+            tag,
+            args,
+            kwargs,
+        )
+        if any([setup_timeout, run_timeout, teardown_timeout]):
+            log.warning(
+                "For BasicTestSuiteTeardown, timeout are not taken into account"
+            )
 
     def test_suite_tearDown(self):
         """Test method for deconstructing the actual test suite after testing it."""
@@ -145,6 +244,9 @@ class GreyTestSuiteSetup(BasicTestSuiteSetup):
             test_suite_id,
             test_case_id,
             aux_list,
+            setup_timeout,
+            run_timeout,
+            teardown_timeout,
             test_ids,
             tag,
             args,
@@ -202,6 +304,9 @@ class GreyTestSuiteTeardown(BasicTestSuiteTeardown):
             test_suite_id,
             test_case_id,
             aux_list,
+            setup_timeout,
+            run_timeout,
+            teardown_timeout,
             test_ids,
             tag,
             args,

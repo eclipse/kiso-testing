@@ -22,7 +22,6 @@ TestCase for Message Protocol / TestApp usage.
 """
 
 import functools
-import inspect
 import logging
 import unittest
 from typing import Dict, List, Optional, Union
@@ -31,7 +30,6 @@ from .. import message
 from ..cli import get_logging_options, initialize_logging
 from ..interfaces.thread_auxiliary import AuxiliaryInterface
 from .test_message_handler import test_app_interaction
-from .test_suite import GreyTestSuiteSetup, GreyTestSuiteTeardown
 
 log = logging.getLogger(__name__)
 
@@ -120,6 +118,9 @@ class BasicTest(unittest.TestCase):
         test_suite_id: int,
         test_case_id: int,
         aux_list: Union[List[AuxiliaryInterface], None],
+        setup_timeout: Union[int, None],
+        run_timeout: Union[int, None],
+        teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
         args: tuple,
@@ -130,6 +131,12 @@ class BasicTest(unittest.TestCase):
         :param test_suite_id: test suite identification number
         :param test_case_id: test case identification number
         :param aux_list: list of used auxiliaries
+        :param setup_timeout: maximum time (in seconds) used to wait
+            for a report during setup execution
+        :param run_timeout: maximum time (in seconds) used to wait for
+            a report during test_run execution
+        :param teardown_timeout: the maximum time (in seconds) used to
+            wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
         :param tag: dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
@@ -143,6 +150,10 @@ class BasicTest(unittest.TestCase):
         self.test_case_id = test_case_id
         self.test_ids = test_ids
         self.tag = tag
+        if any([setup_timeout, run_timeout, teardown_timeout]) and not isinstance(
+            self, GreyTest
+        ):
+            log.warning("For BasicTest, timeout are not taken into account")
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
@@ -174,6 +185,10 @@ class BasicTest(unittest.TestCase):
 
     def setUp(self) -> None:
         """Hook method for constructing the test fixture."""
+        pass
+
+    def test_run(self) -> None:
+        """Hook method from unittest in order to execute test case."""
         pass
 
     def tearDown(self) -> None:
@@ -218,6 +233,9 @@ class GreyTest(BasicTest):
             test_suite_id,
             test_case_id,
             aux_list,
+            setup_timeout,
+            run_timeout,
+            teardown_timeout,
             test_ids,
             tag,
             args,
@@ -266,84 +284,46 @@ def define_test_parameters(
         already filled. It works as a partially filled-out call to the __init__ method.
         """
 
-        ancestors = inspect.getmro(DecoratedClass)
-        if any(
-            grey_test_class in ancestors
-            for grey_test_class in [GreyTest, GreyTestSuiteSetup, GreyTestSuiteTeardown]
-        ):
+        class NewClass(DecoratedClass):
+            """Modified {DecoratedClass.__name__}, with the __init__ method
+            already filled out with the following test-parameters:
+            Suite ID:    {suite_id}
+            Case ID:     {case_id}
+            Auxiliaries: {auxes}
+            setup_timeout: {setup_timeout}
+            run_timeout: {run_timeout}
+            teardown_timeout: {teardown_timeout}
+            test_ids: {test_ids}
+            tag: {tag}
+            """
 
-            class NewClass(DecoratedClass):
-                """Modified {DecoratedClass.__name__}, with the __init__ method
-                already filled out with the following test-parameters:
-                Suite ID:    {suite_id}
-                Case ID:     {case_id}
-                Auxiliaries: {auxes}
-                setup_timeout: {setup_timeout}
-                run_timeout: {run_timeout}
-                teardown_timeout: {teardown_timeout}
-                test_ids: {test_ids}
-                tag: {tag}
-                """
+            @functools.wraps(DecoratedClass.__init__)
+            def __init__(self, *args, **kwargs):
+                super(NewClass, self).__init__(
+                    suite_id,
+                    case_id,
+                    aux_list,
+                    setup_timeout,
+                    run_timeout,
+                    teardown_timeout,
+                    test_ids,
+                    tag,
+                    args,
+                    kwargs,
+                )
 
-                @functools.wraps(DecoratedClass.__init__)
-                def __init__(self, *args, **kwargs):
-                    super(NewClass, self).__init__(
-                        suite_id,
-                        case_id,
-                        aux_list,
-                        setup_timeout,
-                        run_timeout,
-                        teardown_timeout,
-                        test_ids,
-                        tag,
-                        args,
-                        kwargs,
-                    )
+        NewClass.__doc__ = NewClass.__doc__.format(
+            DecoratedClass=DecoratedClass,
+            suite_id=suite_id,
+            case_id=case_id,
+            auxes=[aux.__class__.__name__ for aux in aux_list or []],
+            setup_timeout=setup_timeout,
+            run_timeout=run_timeout,
+            teardown_timeout=teardown_timeout,
+            test_ids=test_ids,
+            tag=tag,
+        )
 
-            NewClass.__doc__ = NewClass.__doc__.format(
-                DecoratedClass=DecoratedClass,
-                suite_id=suite_id,
-                case_id=case_id,
-                auxes=[aux.__class__.__name__ for aux in aux_list or []],
-                setup_timeout=setup_timeout,
-                run_timeout=run_timeout,
-                teardown_timeout=teardown_timeout,
-                test_ids=test_ids,
-                tag=tag,
-            )
-
-        else:
-
-            class NewClass(DecoratedClass):
-                """Modified {DecoratedClass.__name__}, with the __init__ method
-                already filled out with the following test-parameters:
-                Suite ID:    {suite_id}
-                Case ID:     {case_id}
-                Auxiliaries: {auxes}
-                test_ids: {test_ids}
-                tag: {tag}
-                """
-
-                @functools.wraps(DecoratedClass.__init__)
-                def __init__(self, *args, **kwargs):
-                    super(NewClass, self).__init__(
-                        suite_id,
-                        case_id,
-                        aux_list,
-                        test_ids,
-                        tag,
-                        args,
-                        kwargs,
-                    )
-
-            NewClass.__doc__ = NewClass.__doc__.format(
-                DecoratedClass=DecoratedClass,
-                suite_id=suite_id,
-                case_id=case_id,
-                auxes=[aux.__class__.__name__ for aux in aux_list or []],
-                test_ids=test_ids,
-                tag=tag,
-            )
         # Used to display the current test module in the test result
         NewClass.__module__ = DecoratedClass.__module__
         # Passing the name of the decorated class to the new returned class
