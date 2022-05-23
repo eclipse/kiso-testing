@@ -131,13 +131,13 @@ The connector then becomes:
     The API used in this example for the fictive *my_connection* module
     entirely depends on the used module.
 
-Parameters and return vqlues
+Parameters and return values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to stay compatible and usable by the attached auxiliary, the created connector
 has to respect certain rules (in addition to the CChannel base class interface):
 
-- **rule 1** : _cc_receive concret implementation has to return a dictionary containing
+- **rule 1** : _cc_receive concrete implementation has to return a dictionary containing
   at least the key "msg". If more than the data received is return, for example the CAN ID
   from the emitter, just put it in the return dictionary.
 
