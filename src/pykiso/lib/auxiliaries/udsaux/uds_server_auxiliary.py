@@ -22,12 +22,13 @@ uds_server_auxiliary
 from __future__ import annotations
 
 import configparser
+import enum
 import logging
+import sys
 import threading
 from dataclasses import dataclass
 from pathlib import Path
-from socket import timeout
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, List, Optional, Union
 
 from uds import Uds, createUdsConnection
 
@@ -38,6 +39,14 @@ from .odx_parser import OdxParser
 from .uds_utils import get_uds_service
 
 log = logging.getLogger(__name__)
+
+
+CAN_FD_DATA_LENGTHS = (8, 12, 16, 20, 24, 32, 48, 64)
+
+
+class State(enum.Enum):
+    RECEPTION = enum.auto()
+    TRANSMISSION = enum.auto()
 
 
 @dataclass
@@ -56,11 +65,11 @@ class UdsCallback:
     # e.g. 0x1003 or [0x10, 0x03]
     request: Union[int, List[int]]
     # e.g. 0x5003 or [0x50, 0x03]
-    response: Union[int, List[int]] = None
+    response: Optional[Union[int, List[int]]] = None
     # e.g. 0x1011 or b'DATA'
-    response_data: Union[int, bytes] = None
+    response_data: Optional[Union[int, bytes]] = None
     # specify zero-padding
-    response_length: Optional[int] = None
+    data_length: Optional[int] = None
     # custom callback
     callback: Optional[Callable[[List[int], UdsServerAuxiliary], None]] = None
 
@@ -74,7 +83,7 @@ class UdsCallback:
         if isinstance(self.response, int):
             self.response = list(UdsCallback.int_to_bytes(self.response))
         elif not self.response:
-            self.response = [self.request[0] + 0x40].extend(self.request[1:])
+            self.response = [self.request[0] + 0x40] + self.request[1:]
 
         if self.response_data:
             self.response_data = (
@@ -84,11 +93,9 @@ class UdsCallback:
             )
             self.response.extend(self.response_data)
 
-        if self.response_length is None:
-            self.response_length = len(self.response)
-        else:
+        if self.data_length is not None and self.response_data:
             # pad with zeros to reach the expected length
-            self.response = self.response.extend([0x00 * self.response_length])
+            self.response.extend([0x00] * (self.data_length - len(self.response_data)))
 
     def __call__(self):
         pass
@@ -135,6 +142,7 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         self.uds_config = None
 
         self.callbacks = callbacks or list()
+        # self._state = State.RECEPTION
 
         self._callback_lock = threading.Lock()
 
@@ -217,6 +225,7 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         :param extended: True if addressing mode is extended otherwise
             False
         """
+        data = self._pad_message(data)
         self.channel._cc_send(msg=data, remote_id=req_id, raw=True)
 
     def receive(self) -> None:
@@ -228,9 +237,20 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         :param extended: True if addressing mode is extended otherwise
             False
         """
+        # if self._state == State.TRANSMISSION:
+        # avoid receiving message during ISO TP encoding
+        # return
         received_data, arbitration_id = self.channel._cc_receive(timeout=0, raw=True)
         if received_data is not None and arbitration_id == self.res_id:
             return received_data
+
+    def send_response(self, response_data) -> None:
+        # self._state = State.TRANSMISSION
+        to_send = self.uds_config.tp.encode_isotp(
+            response_data, use_external_snd_rcv_functions=True
+        )
+        if to_send is not None:
+            self.transmit(to_send, req_id=self.req_id)
 
     def _delete_auxiliary_instance(self) -> bool:
         """Close current associated channel.
@@ -244,7 +264,7 @@ class UdsServerAuxiliary(AuxiliaryInterface):
 
     def register_callback(
         self,
-        request: Union[int, List[int]],
+        request: Union[int, List[int], UdsCallback],
         response: Optional[Union[int, List[int]]] = None,
         response_data: Optional[Union[int, bytes]] = None,
         response_length: Optional[int] = None,
@@ -260,15 +280,18 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         :param response_length: optional length of the response to send if the contained
             data is supposed to be zero-padded.
         """
-        with self._callback_lock:
-            self.callbacks.append(
-                UdsCallback(
-                    request=request,
-                    response=response,
-                    response_data=response_data,
-                    response_length=response_length,
-                )
+        callback = (
+            request
+            if isinstance(request, UdsCallback)
+            else UdsCallback(
+                request=request,
+                response=response,
+                response_data=response_data,
+                response_length=response_length,
             )
+        )
+        with self._callback_lock:
+            self.callbacks.append(callback)
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """This method is only used to populate the python-uds reception
@@ -284,11 +307,23 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             timeout=timeout_in_s, raw=True
         )
         if received_data is not None and arbitration_id == self.res_id:
-            uds_data = self.uds_config.tp.decode_isotp(
-                received_data=received_data, use_external_snd_rcv_functions=True
-            )
+            try:
+                uds_data = self.uds_config.tp.decode_isotp(
+                    received_data=received_data, use_external_snd_rcv_functions=True
+                )
+                log.info(
+                    f"Received data: {received_data.hex()} || UDS data: {uds_data}"
+                )
+                if not uds_data:
+                    uds_data = list(received_data[6:])
+            except Exception as e:
+                # avoid timeouts that would break the thread
+                log.error(e)
+                return
+
             with self._callback_lock:
                 self._dispatch_callback(uds_data)
+                # self._state = State.RECEPTION
 
     def _dispatch_callback(self, received_uds_data: List[int]) -> None:
         """Verify if the received UDS request has an associated response
@@ -323,19 +358,33 @@ class UdsServerAuxiliary(AuxiliaryInterface):
                     response = callback.response
                     break
             else:
-                response = received_uds_data[:3]
-                response[0] = received_uds_data[0] + 0x40
+                log.info(
+                    f"Received unregistered data: 0x{bytes(received_uds_data).hex().upper()}"
+                )
+                # response = received_uds_data[:3]
+                # response[0] = received_uds_data[0] + 0x40
 
         if custom_callback is not None:
             custom_callback(received_uds_data, self)
         elif response is not None:
-            to_send = self.uds_config.tp.encode_isotp(
-                response, use_external_snd_rcv_functions=True
-            )
+            self.send_response(response)
             log.info(
-                f"Sent response to request 0x{bytes(received_uds_data).hex()}: 0x{bytes(response).hex()}"
+                f"Sent response to request 0x{bytes(received_uds_data).hex().upper()}: 0x{bytes(response).hex().upper()}"
             )
-            self.transmit(to_send, req_id=self.req_id)
+
+    @staticmethod
+    def _pad_message(response: List[int]) -> List[int]:
+        """
+        response_length = len(response)
+        if response_length < CAN_FD_DATA_LENGTHS[0]:
+            padded_length = CAN_FD_DATA_LENGTHS[0]
+        else:
+            padded_length = [length for length in CAN_FD_DATA_LENGTHS if length > response_length][0]
+        """
+        padded_length = next(
+            size for size in CAN_FD_DATA_LENGTHS if size >= len(response)
+        )
+        return response + ([0xCC] * (padded_length - len(response)))
 
     def _abort_command(self) -> None:
         """Not used."""
