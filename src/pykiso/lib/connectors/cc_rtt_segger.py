@@ -324,7 +324,7 @@ class CCRttSegger(connector.CChannel):
                 log.exception(
                     f"encountered error while receiving message via {self} on buffer {self.rx_buffer_idx}"
                 )
-                return None
+                return {"msg": None}
 
             # Exit the while loop once timeout is reached
             if time.perf_counter() > (t_start + timeout):
