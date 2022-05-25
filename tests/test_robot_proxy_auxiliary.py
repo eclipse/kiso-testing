@@ -8,15 +8,16 @@
 ##########################################################################
 
 import pytest
+
 from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
 from pykiso.lib.robot_framework import proxy_auxiliary
+from pykiso.lib.robot_framework.aux_interface import RobotAuxInterface
 from pykiso.lib.robot_framework.proxy_auxiliary import (
     MpProxyAux,
     ProxyAux,
     ProxyAuxiliary,
 )
 from pykiso.test_setup.config_registry import ConfigRegistry
-from pykiso.lib.robot_framework.aux_interface import RobotAuxInterface
 
 
 @pytest.fixture(scope="function")

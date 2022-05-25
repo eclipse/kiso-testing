@@ -13,10 +13,9 @@ import unittest
 
 import pytest
 
-from pykiso import CChannel, Flasher, test_suite
+from pykiso import CChannel, Flasher, message, test_suite
 from pykiso.lib.auxiliaries import example_test_auxiliary
 from pykiso.lib.connectors import cc_example
-from pykiso import message
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
 from pykiso.test_coordinator import test_case

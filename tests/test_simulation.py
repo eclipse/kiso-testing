@@ -8,14 +8,13 @@
 ##########################################################################
 
 
+import pytest
+
+from pykiso.lib.auxiliaries.simulated_auxiliary import Simulation
 from pykiso.lib.auxiliaries.simulated_auxiliary.scenario import (
+    ResponseTemplates,
     Scenario,
     TestScenario,
-    ResponseTemplates,
-)
-import pytest
-from pykiso.lib.auxiliaries.simulated_auxiliary import (
-    Simulation,
 )
 
 

@@ -336,6 +336,10 @@ Flow
 6. If the tests fail, you will see it in the the output. For more
    details, you can take a look at the log file (logs to STDOUT as default).
 
+.. note:: User can run several test using several times flag -c. If a folder path is specified,
+a log for each yaml file will be stored. If otherwise a filename is provided, all log information
+will be in one logfile.
+
 .. _define_test_information:
 
 Define the test information
