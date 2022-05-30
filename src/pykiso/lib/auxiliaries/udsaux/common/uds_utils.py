@@ -24,6 +24,24 @@ from enum import IntEnum
 log = logging.getLogger(__name__)
 
 
+SERVICE_ID_TO_NAME = {
+    0x10: "diagnosticSessionControl",
+    0x11: "ecuReset",
+    0x14: "clearDTC",
+    0x19: "readDTC",
+    0x22: "readDataByIdentifier",
+    0x27: "securityAccess",
+    0x2E: "writeDataByIdentifier",
+    0x2F: "inputOutputControl",
+    0x31: "routineControl",
+    0x34: "requestDownload",
+    0x35: "requestUpload",
+    0x36: "transferData",
+    0x37: "transferExit",
+    0x3E: "testerPresent",
+}
+
+
 def get_uds_service(service_id: IntEnum) -> str or None:
     """Get uds service name function that is binded to uds instance
 
@@ -31,24 +49,7 @@ def get_uds_service(service_id: IntEnum) -> str or None:
 
     :return: uds service function name
     """
-    service_name = {
-        0x10: "diagnosticSessionControl",
-        0x11: "ecuReset",
-        0x14: "clearDTC",
-        0x19: "readDTC",
-        0x22: "readDataByIdentifier",
-        0x27: "securityAccess",
-        0x2E: "writeDataByIdentifier",
-        0x2F: "inputOutputControl",
-        0x31: "routineControl",
-        0x34: "requestDownload",
-        0x35: "requestUpload",
-        0x36: "transferData",
-        0x37: "transferExit",
-        0x3E: "testerPresent",
-    }
-
-    name = service_name.get(service_id)
+    name = SERVICE_ID_TO_NAME.get(service_id)
     if name is None:
         log.error("UDS service ID not found")
 

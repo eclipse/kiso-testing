@@ -8,12 +8,12 @@
 ##########################################################################
 
 """
-odx_parser
+ODX parser
 **********
 
 :module: odx_parser
 
-:synopsis: A parser for Open Diagnostics eXchange (ODX) format.
+:synopsis: A basic parser for Open Diagnostics eXchange (ODX) format.
 
 .. currentmodule:: odx_parser
 
@@ -22,42 +22,30 @@ odx_parser
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, NewType, Union
+from typing import Any, Dict, Union
 
-ServiceId = NewType("ServiceId", str)
-DataId = NewType("DataId", str)
-SubfunctionId = NewType("SubfunctionId", str)
+from uds_utils import SERVICE_ID_TO_NAME
 
 
 class OdxParser:
-
-    service_id_to_name = {
-        0x10: "diagnosticSessionControl",
-        0x11: "ecuReset",
-        0x14: "clearDTC",
-        0x19: "readDTC",
-        0x22: "readDataByIdentifier",
-        0x27: "securityAccess",
-        0x2E: "writeDataByIdentifier",
-        0x2F: "inputOutputControl",
-        0x31: "routineControl",
-        0x34: "requestDownload",
-        0x35: "requestUpload",
-        0x36: "transferData",
-        0x37: "transferExit",
-        0x3E: "testerPresent",
-    }
+    """A parser for ODX files that extracts the request and positive response
+    information and stored it into the `service_configuration` attribute.
+    """
 
     def __init__(
         self, odx_file_path: Union[str, Path], **services: Dict[int, str]
     ) -> None:
         self.odx_file = odx_file_path
-        self.services = {**self.service_id_to_name, **services}
+        self.services = {**SERVICE_ID_TO_NAME, **services}
         self.service_configuration = defaultdict(dict)
         self._xml_elements = {}
 
-    def parse(self) -> Dict[ServiceId, Dict[Union[DataId, SubfunctionId], Any]]:
+    def parse(self) -> Dict[int, Dict[str, Any]]:
+        """Parse an ODX file to extract the request and positive response information
+        for each service.
 
+        :return: the ODX file parsed as a dictionary.
+        """
         root = ET.parse(self.odx_file)
 
         self._xml_elements = {
@@ -66,27 +54,27 @@ class OdxParser:
             if child.attrib.get("ID") is not None
         }
 
-        for value in self._xml_elements.values():
-            if value.tag != "DIAG-SERVICE":
+        for service_desc in self._xml_elements.values():
+            if service_desc.tag != "DIAG-SERVICE":
                 continue
 
-            did_config = {}
+            service_config = {}
 
-            sdg = value.find("SDGS").find("SDG")
+            sdg = service_desc.find("SDGS").find("SDG")
             for sd in sdg:
                 if sd.attrib.get("SI") == "DiagInstanceName":
-                    did_config["DID_Name"] = sd.text
-                    did_config["DID"] = []
+                    service_config["DID_name"] = sd.text
+                    service_config["DID"] = []
 
-            request_id = value.find("REQUEST-REF").attrib["ID-REF"]
+            request_id = service_desc.find("REQUEST-REF").attrib["ID-REF"]
             request_element = self._xml_elements[request_id]
             request_params = request_element.find("PARAMS")
 
-            self._parse_request(request_params, did_config)
+            self._parse_request(request_params, service_config)
 
-            if value.attrib.get("TRANSMISSION-MODE") != "SEND-ONLY":
+            if service_desc.attrib.get("TRANSMISSION-MODE") != "SEND-ONLY":
                 positive_response_id = (
-                    value.find("POS-RESPONSE-REFS")
+                    service_desc.find("POS-RESPONSE-REFS")
                     .find("POS-RESPONSE-REF")
                     .attrib["ID-REF"]
                 )
@@ -94,17 +82,19 @@ class OdxParser:
 
             positive_response_params = positive_response_element.find("PARAMS")
 
-            self._parse_positive_response(positive_response_params, did_config)
+            self._parse_positive_response(positive_response_params, service_config)
 
         return self.service_configuration
 
     def _parse_request(
-        self, odx_request_params: ET.Element, did_config: Dict[str, Any]
+        self, odx_request_params: ET.Element, service_config: Dict[str, Any]
     ):
-        """Parse the UDS requests information of the ODX file.
+        """Parse the UDS requests information from the ODX file.
 
-        :param odx_request_params: _description_
-        :param did_config: _description_
+        :param odx_request_params: XML description of the positive response
+            elements from the loaded ODX.
+        :param service_config: dictionary containing the information of the
+            previously parsed data identifiers and subfunctions.
         """
         uds_request = list()
 
@@ -117,34 +107,36 @@ class OdxParser:
             elif semantic == "SERVICE-ID":
                 service_id = int(request_param.find("CODED-VALUE").text)
                 uds_request.append(service_id)
-                did_config["SID"] = service_id
-                did_config["SID_name"] = self.service_id_to_name.get(service_id)
+                service_config["SID"] = service_id
+                service_name = self.services.get(service_id)
 
-                service_name = self.service_id_to_name.get(service_id)
+                service_config["SID_name"] = service_name
 
                 if service_name is None:
                     continue
-                elif service_name not in self.service_configuration:
-                    self.service_configuration[service_name] = {
-                        did_config["DID_Name"]: {service_name: []}
+                elif service_id not in self.service_configuration:
+                    self.service_configuration[service_id] = {
+                        service_config["DID_name"]: {service_name: []}
                     }
 
             elif semantic == "SUBFUNCTION":
-                subId = int(request_param.find("CODED-VALUE").text)
-                did_config["SubID"] = subId
-                uds_request.append(subId)
+                subfunction_id = int(request_param.find("CODED-VALUE").text)
+                service_config["SubID"] = subfunction_id
+                uds_request.append(subfunction_id)
 
             elif semantic == "ID":
                 data = int(request_param.find("CODED-VALUE").text)
-                dataLength = int(
+                data_length = int(
                     int(request_param.find("DIAG-CODED-TYPE").find("BIT-LENGTH").text)
                     / 8
                 )
-                dataId = []
-                for param in range(0, dataLength):
-                    dataId.append((data >> (8 * (dataLength - param - 1))) & 0xFF)
-                did_config["DID"].extend(dataId)
-                uds_request.extend(dataId)
+                data_identifier = []
+                for param_idx in range(1, data_length + 1):
+                    data_identifier.append(
+                        (data >> (8 * (data_length - param_idx))) & 0xFF
+                    )
+                service_config["DID"].extend(data_identifier)
+                uds_request.extend(data_identifier)
 
             elif semantic == "DATA":
                 data_object_prop = request_param.find("DOP-REF")
@@ -195,12 +187,22 @@ class OdxParser:
 
                 uds_request.extend(param_length * [0x00])
 
-        did_config["UdsRequest"] = uds_request
-        self.service_configuration[service_name][did_config["DID_Name"]] = did_config
+        service_config["request"] = uds_request
+        self.service_configuration[service_id]["name"] = service_name
+        self.service_configuration[service_id][
+            service_config["DID_name"]
+        ] = service_config
 
     def _parse_positive_response(
-        self, odx_positive_response_params: ET.Element, did_config: Dict[str, Any]
+        self, odx_positive_response_params: ET.Element, service_config: Dict[str, Any]
     ):
+        """Parse the UDS positive responses information from the ODX file.
+
+        :param odx_request_params: XML description of the positive response
+            elements from the loaded ODX.
+        :param service_config: dictionary containing the information of the
+            previously parsed data identifiers and subfunctions.
+        """
         reponse_length = 0
         subfunction_id = None
 
@@ -214,8 +216,8 @@ class OdxParser:
 
             if semantic == "SERVICE-ID":
                 # expected service ID
-                response_sid = int(param.find("CODED-VALUE").text)
-                service_name = self.service_id_to_name.get(response_sid - 0x40)
+                response_id = int(param.find("CODED-VALUE").text)
+                service_id = response_id - 0x40
                 service_bit_length = int(
                     (param.find("DIAG-CODED-TYPE")).find("BIT-LENGTH").text
                 )
@@ -223,8 +225,6 @@ class OdxParser:
                 # keep in case it could be useful in future
                 # service ID start
                 # responseIdStart = start_byte
-
-                # keep in case it could be useful in future
                 # service ID end
                 # responseIdEnd = start_byte + byte_length
                 reponse_length += byte_length
@@ -281,10 +281,10 @@ class OdxParser:
         )
 
         resp_list = list()
-        resp_list.extend([response_sid])
+        resp_list.extend([response_id])
         resp_list.extend(subfunction_id)
         resp_list.extend([0] * (reponse_length - len(resp_list)))
 
-        self.service_configuration[service_name][did_config["DID_Name"]][
-            "UdsResponse"
+        self.service_configuration[service_id][service_config["DID_name"]][
+            "response"
         ] = resp_list

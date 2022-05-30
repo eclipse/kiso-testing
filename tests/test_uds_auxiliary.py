@@ -13,11 +13,11 @@ import unittest.mock as mock
 
 import pytest
 
-from pykiso.lib.auxiliaries.udsaux.uds_auxiliary import UdsAuxiliary
-from pykiso.lib.auxiliaries.udsaux.uds_response import (
+from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
     NegativeResponseCode,
     UdsResponse,
 )
+from pykiso.lib.auxiliaries.udsaux.uds_auxiliary import UdsAuxiliary
 
 
 def create_config():

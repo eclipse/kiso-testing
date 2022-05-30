@@ -18,144 +18,25 @@ uds_auxiliary
 .. currentmodule:: uds_auxiliary
 
 """
-import configparser
 import logging
-import threading
-from pathlib import Path
 from typing import List, Optional, Union
 
 import can
+from uds import IsoServices
 
-from pykiso.connector import CChannel
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
-
-from . import uds_exceptions
-from .uds_request import UDSCommands
-from .uds_response import UdsResponse
-from .uds_utils import get_uds_service
+from .common import uds_exceptions
+from .common.uds_base_auxiliary import UdsBaseAuxiliary
+from .common.uds_request import UDSCommands
+from .common.uds_response import UdsResponse
+from .common.uds_utils import get_uds_service
 
 log = logging.getLogger(__name__)
 
-Uds = None
-createUdsConnection = None
-IsoServices = None
 
+class UdsAuxiliary(UdsBaseAuxiliary):
+    """Auxiliary used to handle the UDS protocol on client (tester) side."""
 
-class UdsAuxiliary(AuxiliaryInterface):
-    """Auxiliary used to handle UDS messages"""
-
-    POSITIVE_RESPONSE_OFFSET = 0x40
     errors = uds_exceptions
-
-    def __new__(cls, *args, **kwargs):
-        """Handle class creation.
-
-        Import python-uds at instanciation to avoid warnings due to
-        missing drivers.
-
-        :raises ImportError: If python-uds is not install on the current
-            computer.
-        """
-        try:
-            global Uds, createUdsConnection, IsoServices
-            from uds import IsoServices, Uds, createUdsConnection
-
-            Uds = Uds
-            createUdsConnection = createUdsConnection
-            IsoServices = IsoServices
-        except ImportError:
-            raise ImportError("python-uds package missing, could not import it!")
-        return super(UdsAuxiliary, cls).__new__(cls)
-
-    def __init__(
-        self,
-        com: CChannel,
-        config_ini_path: str,
-        odx_file_path: str = None,
-        **kwargs,
-    ):
-        """Initialize attributes.
-
-        :param com: communication channel connector.
-        :param config_ini_path: uds parameters file.
-        :param odx_file_path: ecu diagnostic definition file.
-        """
-        self.channel = com
-        self.odx_file_path = odx_file_path
-        if odx_file_path:
-            self.odx_file_path = Path(odx_file_path)
-        self.config_ini_path = Path(config_ini_path)
-
-        config = configparser.ConfigParser()
-        config.read(self.config_ini_path)
-
-        self.req_id = int(config.get("can", "defaultReqId"), 16)
-        self.res_id = int(config.get("can", "defaultResId"), 16)
-
-        self.uds_config_enable = False
-        self.uds_config = None
-
-        super().__init__(is_proxy_capable=True, **kwargs)
-
-    def _create_auxiliary_instance(self) -> bool:
-        """Open current associated channel.
-
-        :return: if channel creation is successful return True
-            otherwise false
-        """
-        try:
-            log.info("Create auxiliary instance")
-            log.info("Enable channel")
-            self.channel.open()
-
-            channel_name = self.channel.__class__.__name__.lower()
-
-            if "vectorcan" in channel_name:
-                interface = "vector"
-                bus = self.channel.bus
-            elif "pcan" in channel_name:
-                interface = "peak"
-                bus = self.channel.bus
-            elif "socketcan" in channel_name:
-                interface = "socketcan"
-                bus = self.channel.bus
-            elif "ccproxy" in channel_name:
-                # Just fake python-uds (when proxy auxiliary is used),
-                # by setting bus to True no channel creation is
-                # performed
-                bus = True
-                interface = "peak"
-
-            if self.odx_file_path:
-                log.info("Create Uds Config connection with ODX")
-                self.uds_config_enable = True
-                self.uds_config = createUdsConnection(
-                    self.odx_file_path,
-                    "",
-                    configPath=self.config_ini_path,
-                    bus=bus,
-                    interface=interface,
-                    reqId=self.req_id,
-                    resId=self.res_id,
-                )
-            else:
-                log.info("Create Uds Config connection without ODX")
-                self.uds_config_enable = False
-                self.uds_config = Uds(
-                    configPath=self.config_ini_path,
-                    bus=bus,
-                    interface=interface,
-                    reqId=self.req_id,
-                    resId=self.res_id,
-                )
-            # replace transmit method from python-uds with a method
-            # using ITF's connector
-            self.uds_config.tp.overwrite_transmit_method(self.transmit)
-            return True
-        except Exception:
-            log.exception("Error during channel creation")
-            self.stop()
-            return False
 
     def transmit(self, data: bytes, req_id: int, extended: bool = False) -> None:
         """Transmit a message through ITF connector. This method is a
@@ -167,16 +48,6 @@ class UdsAuxiliary(AuxiliaryInterface):
             False
         """
         self.channel._cc_send(msg=data, remote_id=req_id, raw=True)
-
-    def _delete_auxiliary_instance(self) -> bool:
-        """Close current associated channel.
-
-        :return: always True
-        """
-        log.info("Delete auxiliary instance")
-        self.uds_config.disconnect()
-        self.channel.close()
-        return True
 
     def send_uds_raw(
         self,
@@ -200,7 +71,6 @@ class UdsAuxiliary(AuxiliaryInterface):
                 f"UDS request to send '{['0x{:02X}'.format(i) for i in msg_to_send]}'"
             )
             resp = self.uds_config.send(msg_to_send)
-
         except Exception:
             log.exception("Error while sending uds raw request")
             return False
@@ -226,11 +96,9 @@ class UdsAuxiliary(AuxiliaryInterface):
 
         :return: True if response is positive
         """
-
         if resp.is_negative:
             log.info(f"Negative response with NRC: {resp.nrc.name}")
             raise self.errors.UnexpectedResponseError(resp)
-
         return True
 
     def check_raw_response_negative(self, resp: UdsResponse) -> Optional[bool]:
@@ -245,7 +113,6 @@ class UdsAuxiliary(AuxiliaryInterface):
         if not resp.is_negative:
             raise self.errors.UnexpectedResponseError(resp)
         log.info(f"Negative response with :{resp.nrc.name}")
-
         return True
 
     def send_uds_config(
@@ -375,9 +242,9 @@ class UdsAuxiliary(AuxiliaryInterface):
                 self.uds_config.tp.callback_onReceive(can_msg)
 
     def _abort_command(self) -> None:
-        """Not use."""
+        """Not used."""
         pass
 
     def _run_command(self, cmd_message, cmd_data=None) -> Union[dict, bytes, bool]:
-        """Not use."""
+        """Not used."""
         pass

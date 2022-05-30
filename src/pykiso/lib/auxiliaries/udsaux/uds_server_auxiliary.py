@@ -8,12 +8,12 @@
 ##########################################################################
 
 """
-uds_server_auxiliary
-*************
+UDS Auxiliary acting as a Server/ECU
+************************************
 
 :module: uds_server_auxiliary
 
-:synopsis: Auxiliary used to handle Unified Diagnostic Service protocol as an Server.
+:synopsis: Auxiliary used to handle Unified Diagnostic Service protocol as a Server.
     This auxiliary is meant to run in the background and replies to configured requests.
 
 .. currentmodule:: uds_auxiliary
@@ -21,246 +21,150 @@ uds_server_auxiliary
 """
 from __future__ import annotations
 
-import configparser
-import enum
 import logging
-import sys
 import threading
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Callable, List, Optional, Union
+from typing import List, Optional, Union
 
-from uds import Uds, createUdsConnection
+from uds import IsoServices
 
-from pykiso.connector import CChannel
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
-
-from .odx_parser import OdxParser
-from .uds_utils import get_uds_service
+from .common.odx_parser import OdxParser
+from .common.uds_base_auxiliary import UdsBaseAuxiliary
+from .common.uds_callback import UdsCallback
 
 log = logging.getLogger(__name__)
 
-
+# possible data lengths for CAN FD padding
 CAN_FD_DATA_LENGTHS = (8, 12, 16, 20, 24, 32, 48, 64)
 
 
-class State(enum.Enum):
-    RECEPTION = enum.auto()
-    TRANSMISSION = enum.auto()
+class UdsServerAuxiliary(UdsBaseAuxiliary):
+    """Auxiliary used to handle the UDS protocol on server (ECU) side."""
 
+    CAN_FD_PADDING_PATTERN = 0xCC
+    MAX_TRANSFER_SIZE = 0xFFFF
+    services = IsoServices
 
-@dataclass
-class UdsCallback:
-    """Class used to store information needed for UDS callbacks.
-
-    :param request: request from the client that should be responded to.
-    :param response: full UDS response to send. If not set, respond with a basic
-        positive response with the specified response_data.
-    :param response_data: UDS data to send. If not set, respond with a basic
-        positive response containing no data.
-    :param response_length: optional length of the response to send if the contained
-        data is supposed to be zero-padded.
-    """
-
-    # e.g. 0x1003 or [0x10, 0x03]
-    request: Union[int, List[int]]
-    # e.g. 0x5003 or [0x50, 0x03]
-    response: Optional[Union[int, List[int]]] = None
-    # e.g. 0x1011 or b'DATA'
-    response_data: Optional[Union[int, bytes]] = None
-    # specify zero-padding
-    data_length: Optional[int] = None
-    # custom callback
-    callback: Optional[Callable[[List[int], UdsServerAuxiliary], None]] = None
-
-    def __post_init__(self):
-        """Parse the provided parameters to create a fully formed UDS response."""
-        self.call_count = 0
-
-        if isinstance(self.request, int):
-            self.request = list(UdsCallback.int_to_bytes(self.request))
-
-        if isinstance(self.response, int):
-            self.response = list(UdsCallback.int_to_bytes(self.response))
-        elif not self.response:
-            self.response = [self.request[0] + 0x40] + self.request[1:]
-
-        if self.response_data:
-            self.response_data = (
-                list(UdsCallback.int_to_bytes(self.response_data))
-                if isinstance(self.response_data, int)
-                else list(self.response_data)
-            )
-            self.response.extend(self.response_data)
-
-        if self.data_length is not None and self.response_data:
-            # pad with zeros to reach the expected length
-            self.response.extend([0x00] * (self.data_length - len(self.response_data)))
-
-    def __call__(self):
-        pass
-
-    @staticmethod
-    def int_to_bytes(integer: int) -> bytes:
-        return integer.to_bytes((integer.bit_length() + 7) // 8, "big")
-
-
-class UdsServerAuxiliary(AuxiliaryInterface):
-    """Auxiliary used to handle UDS messages"""
-
-    def __init__(
-        self,
-        com: CChannel,
-        config_ini_path: Union[Path, str],
-        request_id: Optional[int] = None,
-        response_id: Optional[int] = None,
-        callbacks: Optional[List[UdsCallback]] = None,
-        odx_file_path: Optional[Union[Path, str]] = None,
-        **kwargs,
-    ):
+    def __init__(self, **kwargs):
         """Initialize attributes.
 
         :param com: communication channel connector.
         :param config_ini_path: uds parameters file.
+        :param request_id: optional CAN ID used for sending messages.
+        :param response_id: optional CAN ID used for receiving messages.
         :param odx_file_path: ecu diagnostic definition file.
         """
-        self.channel = com
-        self.odx_file_path = odx_file_path
-        if odx_file_path:
-            self.odx_file_path = Path(odx_file_path)
-            self.sid_to_did_to_info = OdxParser(self.odx_file_path).parse()
+        super().__init__(**kwargs)
 
-        self.config_ini_path = Path(config_ini_path)
+        if self.odx_file_path is not None:
+            self._ecu_config = OdxParser(self.odx_file_path).parse()
 
-        config = configparser.ConfigParser()
-        config.read(self.config_ini_path)
-
-        self.req_id = request_id or int(config.get("can", "defaultReqId"), 16)
-        self.res_id = response_id or int(config.get("can", "defaultResId"), 16)
-
-        self.uds_config_enable = False
-        self.uds_config = None
-
-        self.callbacks = callbacks or list()
-        # self._state = State.RECEPTION
-
+        self._callbacks: List[UdsCallback] = list()
         self._callback_lock = threading.Lock()
 
-        super().__init__(is_proxy_capable=True, **kwargs)
+    @staticmethod
+    def format_data(uds_data: List[int]) -> str:
+        """Format UDS data as a list of integers to a hexadecimal string.
 
-    def _create_auxiliary_instance(self) -> bool:
-        """Open current associated channel.
+        :param uds_data: UDS data as a list of integers.
 
-        :return: if channel creation is successful return True
-            otherwise false
+        :return: the UDS data as a hexadecimal string.
         """
-        try:
-            log.info("Create auxiliary instance")
-            log.info("Enable channel")
-            self.channel.open()
+        return f"0x{bytes(uds_data).hex().upper()}"
 
-            channel_name = self.channel.__class__.__name__.lower()
+    @classmethod
+    def _pad_message(cls, message: List[int]) -> List[int]:
+        """Pad a CAN FD message to send with the configured padding pattern.
 
-            if "vectorcan" in channel_name:
-                interface = "vector"
-                bus = self.channel.bus
-            elif "pcan" in channel_name:
-                interface = "peak"
-                bus = self.channel.bus
-            elif "socketcan" in channel_name:
-                interface = "socketcan"
-                bus = self.channel.bus
-            elif "ccproxy" in channel_name:
-                # Just fake python-uds (when proxy auxiliary is used),
-                # by setting bus to True no channel creation is
-                # performed
-                bus = True
-                interface = "peak"
+        :param message: message to pad.
 
-            if self.odx_file_path:
-                log.info("Create Uds Config connection with ODX")
-                self.uds_config_enable = True
-                self.uds_config = createUdsConnection(
-                    self.odx_file_path,
-                    "",
-                    configPath=self.config_ini_path,
-                    bus=bus,
-                    interface=interface,
-                    reqId=self.req_id,
-                    resId=self.res_id,
-                )
-            else:
-                log.info("Create Uds Config connection without ODX")
-                self.uds_config_enable = False
-                self.uds_config = Uds(
-                    configPath=self.config_ini_path,
-                    bus=bus,
-                    interface=interface,
-                    reqId=self.req_id,
-                    resId=self.res_id,
-                )
-            # replace transmit method from python-uds with a method
-            # using ITF's connector
-            # self.uds_config.tp = ServerCanTp(
-            #     configPath=self.config_ini_path,
-            #     bus=bus,
-            #     interface=interface,
-            #     reqId=self.req_id,
-            #     resId=self.res_id,
-            # )
-            self.uds_config.tp.overwrite_transmit_method(self.transmit)
-            self.uds_config.tp.getNextBufferedMessage = self.receive
-            return True
-        except Exception:
-            log.exception("Error during channel creation")
-            self.stop()
-            return False
+        :return: the padded message.
+        """
+        padded_length = next(
+            size for size in CAN_FD_DATA_LENGTHS if size >= len(message)
+        )
+        return message + ([cls.CAN_FD_PADDING_PATTERN] * (padded_length - len(message)))
 
-    def transmit(self, data: bytes, req_id: int, extended: bool = False) -> None:
-        """Transmit a message through ITF connector. This method is a
-        substitute to transmit method present in python-uds package.
+    def transmit(
+        self, data: bytes, req_id: Optional[int] = None, extended: bool = False
+    ) -> None:
+        """Pad and transmit a message through ITF connector. This method
+        is a substitute to transmit method present in python-uds package.
 
-        :param data: data to send
-        :param req_id: CAN message identifier
+        :param data: data to send.
+        :param req_id: CAN message identifier.
         :param extended: True if addressing mode is extended otherwise
-            False
+            False.
         """
+        req_id = req_id or self.req_id
         data = self._pad_message(data)
         self.channel._cc_send(msg=data, remote_id=req_id, raw=True)
 
-    def receive(self) -> None:
-        """Receive a message through ITF connector. Called inside a thread, this method
-        is a substitute to the CanConnection reception present in python-uds package.
+    def receive(self) -> bytes:
+        """Receive a message through ITF connector. Called inside a thread,
+        this method is a substitute to the reception method used in the
+        python-uds package.
 
         :param data: data to send
         :param req_id: CAN message identifier
         :param extended: True if addressing mode is extended otherwise
             False
         """
-        # if self._state == State.TRANSMISSION:
-        # avoid receiving message during ISO TP encoding
-        # return
         received_data, arbitration_id = self.channel._cc_receive(timeout=0, raw=True)
         if received_data is not None and arbitration_id == self.res_id:
             return received_data
 
     def send_response(self, response_data) -> None:
-        # self._state = State.TRANSMISSION
+        """Encode and transmit a UDS response.
+
+        :param response_data: the UDS response to send.
+        """
         to_send = self.uds_config.tp.encode_isotp(
             response_data, use_external_snd_rcv_functions=True
         )
         if to_send is not None:
             self.transmit(to_send, req_id=self.req_id)
 
-    def _delete_auxiliary_instance(self) -> bool:
-        """Close current associated channel.
+    @staticmethod
+    def encode_stmin(stmin: float) -> int:
+        """Encode the provided minimum separation time according to the ISO TP
+        specification.
 
-        :return: always True
+        :param stmin: minimum separation time in ms.
+        :raises ValueError: if the provided value is not valid.
+        :return: the encoded STmin to be sent in a flow control frame.
         """
-        log.info("Delete auxiliary instance")
-        self.uds_config.disconnect()
-        self.channel.close()
-        return True
+        if stmin == 0:
+            return stmin
+        elif 1 <= stmin <= 127:
+            # 1 - 127 ms -> 0x01 - 0x7F
+            return int(stmin)
+        elif 0.1 <= stmin <= 0.9:
+            # 0.1 - 0.9 ms -> 0xF1 - 0xF9
+            return 0xF0 + int(stmin * 10)
+        else:
+            raise ValueError(
+                f"Invalid minimum Separation Time {stmin}ms. "
+                "Acceptable values are between 0.1ms and 127ms."
+            )
+
+    def send_flow_control(
+        self, flow_status: int = 0, block_size: int = 0, stmin: float = 0
+    ) -> None:
+        """Send an ISO TP flow control frame to the client.
+
+        :param flow_status: status of the flow control, defaults to 0
+            (continue to send).
+        :param block_size: size of the data block to send, defaults to 0
+            (infinitely large).
+        :param stmin: minimum separation time between 2 consecutive frames
+            in ms, defaults to 0 ms.
+        """
+        flow_control_frame = [
+            (0x30 + flow_status),
+            block_size,
+            self.encode_stmin(stmin),
+        ]
+        self.transmit(flow_control_frame)
 
     def register_callback(
         self,
@@ -268,7 +172,7 @@ class UdsServerAuxiliary(AuxiliaryInterface):
         response: Optional[Union[int, List[int]]] = None,
         response_data: Optional[Union[int, bytes]] = None,
         response_length: Optional[int] = None,
-    ):
+    ) -> None:
         """Register an automatic response to send if the specified request is received
         from the client.
 
@@ -291,18 +195,14 @@ class UdsServerAuxiliary(AuxiliaryInterface):
             )
         )
         with self._callback_lock:
-            self.callbacks.append(callback)
+            self._callbacks.append(callback)
 
     def _receive_message(self, timeout_in_s: float) -> None:
-        """This method is only used to populate the python-uds reception
-        buffer. When a message is received, invoke python-uds configured
-        callback to make it available for python-uds
+        """Reception method called by the auxiliary thread. This method received
+        data and triggers the registered callbacks according to the received data.
 
         :param timeout_in_s: timeout on reception.
         """
-        # ideally, find the reception method in python-uds -> python-can and override it
-        #            CanConnectionFactory().CanConnection()  can.Listener()
-        # problem: CanTp().__connection.__listener
         received_data, arbitration_id = self.channel.cc_receive(
             timeout=timeout_in_s, raw=True
         )
@@ -311,85 +211,59 @@ class UdsServerAuxiliary(AuxiliaryInterface):
                 uds_data = self.uds_config.tp.decode_isotp(
                     received_data=received_data, use_external_snd_rcv_functions=True
                 )
-                log.info(
-                    f"Received data: {received_data.hex()} || UDS data: {uds_data}"
+                log.debug(
+                    "Received ISO TP data: %s || UDS data: %s",
+                    f"0x{received_data.hex()}",
+                    self.format_data(uds_data),
                 )
-                if not uds_data:
-                    uds_data = list(received_data[6:])
             except Exception as e:
                 # avoid timeouts that would break the thread
-                log.error(e)
+                log.exception(e)
                 return
 
             with self._callback_lock:
                 self._dispatch_callback(uds_data)
-                # self._state = State.RECEPTION
 
     def _dispatch_callback(self, received_uds_data: List[int]) -> None:
         """Verify if the received UDS request has an associated response
-        and send it if applicable.
+        registered by a callback and send it.
 
         :param received_uds_data: received UDS request from the client.
         """
         response = None
         custom_callback = None
         if self.uds_config_enable:
-            # TODO reimplement this based on the Uds
-            # find "human name" for the received data
-            sid = received_uds_data[0]
-            did_to_name = self.sid_to_did_to_info[sid]
-            name = did_to_name.get(received_uds_data[1]) or did_to_name.get(
-                received_uds_data[1:3]
-            )
-            if name is None:
-                return
-            # run the positive response function registered for the "human name"
-            service_name = get_uds_service(sid)
-            service = getattr(self.uds_config, service_name + "Container")
-            # TODO still not enough
-            response = service.positiveResponseFunctions[name]
-
-            ### ALTERNATIVE
-            # service_encode_func = service_to_positive_response_func[sid]
+            service_id = received_uds_data[0]
+            service_config = self._ecu_config.get(service_id)
+            for service_subconfig in service_config:
+                if received_uds_data == service_subconfig["request"]:
+                    self.send_response(service_subconfig["response"])
         else:
-            for callback in self.callbacks:
+            for callback in self._callbacks:
+                # match on the registered request instead of the entire request
                 if callback.request == received_uds_data[: len(callback.request)]:
-                    custom_callback = callback.callback
-                    response = callback.response
+                    callback_to_execute = callback
                     break
             else:
-                log.info(
-                    f"Received unregistered data: 0x{bytes(received_uds_data).hex().upper()}"
+                log.warning(
+                    f"Unregistered request received: {self.format_data(received_uds_data)}"
                 )
-                # response = received_uds_data[:3]
-                # response[0] = received_uds_data[0] + 0x40
+                return
+
+        callback_to_execute(received_uds_data, self)
 
         if custom_callback is not None:
             custom_callback(received_uds_data, self)
         elif response is not None:
             self.send_response(response)
             log.info(
-                f"Sent response to request 0x{bytes(received_uds_data).hex().upper()}: 0x{bytes(response).hex().upper()}"
+                f"Sent response to request {self.format_data(received_uds_data)}: {self.format_data(response)}"
             )
-
-    @staticmethod
-    def _pad_message(response: List[int]) -> List[int]:
-        """
-        response_length = len(response)
-        if response_length < CAN_FD_DATA_LENGTHS[0]:
-            padded_length = CAN_FD_DATA_LENGTHS[0]
-        else:
-            padded_length = [length for length in CAN_FD_DATA_LENGTHS if length > response_length][0]
-        """
-        padded_length = next(
-            size for size in CAN_FD_DATA_LENGTHS if size >= len(response)
-        )
-        return response + ([0xCC] * (padded_length - len(response)))
 
     def _abort_command(self) -> None:
         """Not used."""
         pass
 
-    def _run_command(self, cmd_message, cmd_data=None) -> Union[dict, bytes, bool]:
+    def _run_command(self, cmd_message, cmd_data=None) -> None:
         """Not used."""
         pass
