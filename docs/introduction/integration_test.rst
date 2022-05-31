@@ -10,6 +10,39 @@ services involved in the tests. The framework can be used for both
 white-box and black-box testing as well as in the integration and system
 testing.
 
+Quality Goals
+-------------
+The framework tries to achieve the following quality goals:
+
++---------------------------+----------------------------------------------------------------------------------------------------+
+| Quality Goal (with prio)  | Scenarios                                                                                          |
++===========================+====================================================================================================+
+| **Portability**           | The framework shall run on linux, windows, macOS                                                   |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall run on a raspberryPI or a regular laptop                                       |
++---------------------------+----------------------------------------------------------------------------------------------------+
+| **Modularity**            | The framework shall allow me to implement complex logic and to run it over any communication port  |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall allow me to add any communication port                                         |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall allow me to use private modules within my tests if it respects its APIs        |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall allow me to define my own test approach                                        |
++---------------------------+----------------------------------------------------------------------------------------------------+
+| **Correctness**           | The framework shall verify that its inputs (test-setup) are correct before performing any test     |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall execute the provided tests always in the same order                            |
++---------------------------+----------------------------------------------------------------------------------------------------+
+| **Usability**             | The framework shall feel familiar for embedded developers                                          |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall feel familiar for system tester                                                |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall generate test reports that are human and machine readable                      |
++---------------------------+----------------------------------------------------------------------------------------------------+
+| **Performance** (new)     | The framework shall use only the right/reasonable amount of resources to run (real-time timings)   |
++---------------------------+----------------------------------------------------------------------------------------------------+
+
+
 Design Overview
 ---------------
 
