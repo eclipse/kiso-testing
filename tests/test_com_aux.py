@@ -181,3 +181,19 @@ def test_receive_message_exception(mocker, com_aux_init, caplog):
         f"encountered error while receiving message via {com_aux_init.channel}"
         in caplog.text
     )
+
+
+def test_receive_message_none(mocker, com_aux_init):
+    mocker.patch.object(com_aux_init, "wait_and_get_report", return_value=None)
+    recv = com_aux_init.receive_message(2)
+
+    assert recv is None
+
+
+def test_receive_message_with_remote_id(mocker, com_aux_init):
+    ret = {"msg": b"\x01", "remote_id": 0x123}
+
+    mocker.patch.object(com_aux_init, "wait_and_get_report", return_value=ret)
+    recv = com_aux_init.receive_message(2)
+
+    assert recv == (ret["msg"], ret["remote_id"])

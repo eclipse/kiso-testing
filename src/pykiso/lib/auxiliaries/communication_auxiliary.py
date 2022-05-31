@@ -22,6 +22,7 @@ CommunicationAuxiliary
 """
 
 import logging
+from typing import Optional
 
 from pykiso import AuxiliaryInterface, CChannel, Message
 
@@ -50,7 +51,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
 
     def receive_message(
         self, blocking: bool = True, timeout_in_s: float = None
-    ) -> bytes:
+    ) -> Optional[bytes]:
         """Receive a raw message.
 
         :param blocking: wait for message till timeout elapses?
@@ -65,8 +66,15 @@ class CommunicationAuxiliary(AuxiliaryInterface):
             blocking=blocking, timeout_in_s=timeout_in_s
         )
         log.debug(f"retrieved message '{response}' in {self}")
+
+        # if queue.Empty exception is raised None is returned so just
+        # directly return it
+        if response is None:
+            return None
+
         msg = response.get("msg")
         remote_id = response.get("remote_id")
+
         # stay with the old return type to not making a breaking change
         if remote_id is not None:
             return (msg, remote_id)
