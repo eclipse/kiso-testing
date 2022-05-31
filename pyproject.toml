@@ -39,13 +39,13 @@ PyYAML = "*"
 pylink-square = "^0.12.0"
 pyserial = "*"
 python-can = {extras = ["pcan"], version = "^4.0.0"}
-python-uds = {git = "https://github.com/BKaDamien/python-uds.git", rev = "2.0.2"}
 PyVISA = "*"
 PyVISA-py = "*"
 robotframework = "3.2.2"
 unittest-xml-reporting = "*"
 click = "*"
 MarkupSafe = "~2.0"
+pykiso-python-uds-alpha = "^2.0.2"
 
 [tool.poetry.dev-dependencies]
 auto-changelog = "0.5.3"
@@ -67,6 +67,7 @@ sphinx-autodoc-typehints = "*"
 [tool.poetry.scripts]
 pykiso = 'pykiso.cli:main'
 instrument-control = 'pykiso.lib.auxiliaries.instrument_control_auxiliary.instrument_control_cli:main'
+pykitest = 'pykiso.tool.pykiso_to_pytest.cli:main'
 
 [tool.pytest.ini_options]
 testpaths = [
