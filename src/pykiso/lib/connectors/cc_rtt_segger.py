@@ -25,7 +25,7 @@ import logging
 import threading
 import time
 from pathlib import Path
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 import pylink
 
@@ -282,7 +282,7 @@ class CCRttSegger(connector.CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.1, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[Message, bytes, None]]:
         """Read message from the corresponding RTT buffer.
 
         :param timeout: timeout applied on receive event
@@ -324,14 +324,14 @@ class CCRttSegger(connector.CChannel):
                 log.exception(
                     f"encountered error while receiving message via {self} on buffer {self.rx_buffer_idx}"
                 )
-                return None
+                return {"msg": None}
 
             # Exit the while loop once timeout is reached
             if time.perf_counter() > (t_start + timeout):
                 is_timeout = True
                 msg_received = None
 
-        return msg_received
+        return {"msg": msg_received}
 
     @_need_rtt
     def receive_log(self) -> None:

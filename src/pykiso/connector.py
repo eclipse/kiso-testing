@@ -100,6 +100,7 @@ class CChannel(Connector):
         """Send a thread-safe message on the channel and wait for an acknowledgement.
 
         :param msg: message to send
+        :param kwargs: named arguments
 
         :raise ConnectionRefusedError: when lock acquire failed
         """
@@ -110,7 +111,7 @@ class CChannel(Connector):
             raise ConnectionRefusedError
         self._lock.release()
 
-    def cc_receive(self, timeout: float = 0.1, raw: bool = False):
+    def cc_receive(self, timeout: float = 0.1, raw: bool = False) -> dict:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
@@ -141,17 +142,18 @@ class CChannel(Connector):
         pass
 
     @abc.abstractmethod
-    def _cc_send(self, msg: MsgType, raw: bool = False) -> None:
+    def _cc_send(self, msg: MsgType, raw: bool = False, **kwargs) -> None:
         """Sends the message on the channel.
 
         :param msg: Message to send out
         :param raw: send raw message without further work (default: False)
+        :param kwargs: named arguments
         """
         # TODO define exception to raise?
         pass
 
     @abc.abstractmethod
-    def _cc_receive(self, timeout: float, raw: bool = False) -> MsgType:
+    def _cc_receive(self, timeout: float, raw: bool = False) -> dict:
         """How to receive something from the channel.
 
         :param timeout: Time to wait in second for a message to be received
@@ -159,7 +161,6 @@ class CChannel(Connector):
 
         :return: message.Message() - If one received / None - If not
         """
-        # TODO define exception to raise?
         pass
 
 

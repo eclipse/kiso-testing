@@ -182,10 +182,10 @@ class RecordAuxiliary(SimpleAuxiliaryInterface):
             if sys.getsizeof(self.get_data()) > self.max_file_size:
                 log.error("Data size too large")
 
-            stream = self.channel.cc_receive(timeout=self.timeout, raw=True)
-            source = None
-            if isinstance(stream, tuple):
-                stream, source = stream
+            recv_response = self.channel.cc_receive(timeout=self.timeout, raw=True)
+
+            stream = recv_response.get("msg")
+            source = recv_response.get("remote_id")
 
             if stream:
                 stream = self.parse_bytes(stream)

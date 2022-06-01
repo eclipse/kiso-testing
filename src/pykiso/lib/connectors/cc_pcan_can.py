@@ -21,7 +21,7 @@ Can Communication Channel using PCAN hardware
 
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Dict, Union
 
 import can
 import can.bus
@@ -299,9 +299,7 @@ class CCPCanCan(CChannel):
             finally:
                 self.raw_pcan_interface = None
 
-    def _cc_send(
-        self, msg: MessageType, remote_id: int = None, raw: bool = False
-    ) -> None:
+    def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
         If remote_id parameter is not given take configured ones, in addition if
@@ -309,11 +307,12 @@ class CCPCanCan(CChannel):
         test entity protocol format.
 
         :param msg: data to send
-        :param remote_id: destination can id used
         :param raw: boolean use to select test entity protocol format
+        :param kwargs: named arguments
 
         """
         _data = msg
+        remote_id = kwargs.get("remote_id")
 
         if remote_id is None:
             remote_id = self.remote_id
@@ -334,7 +333,7 @@ class CCPCanCan(CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.0001, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
         If raw parameter is set to True return received message as it is (bytes)
@@ -343,10 +342,11 @@ class CCPCanCan(CChannel):
         :param timeout: timeout applied on reception
         :param raw: boolean use to select test entity protocol format
 
-        :return: tuple containing the received data and the source can id
+        :return: the received data and the source can id
         """
         try:  # Catch bus errors & rcv.data errors when no messages where received
             received_msg = self.bus.recv(timeout=timeout or self.timeout)
+
             if received_msg is not None:
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data
@@ -354,12 +354,12 @@ class CCPCanCan(CChannel):
                 if not raw:
                     payload = Message.parse_packet(payload)
                 log.debug(f"received CAN Message: {frame_id}, {payload}, {timestamp}")
-                return payload, frame_id
+                return {"msg": payload, "remote_id": frame_id}
             else:
-                return None, None
+                return {"msg": None}
         except can.CanError as can_error:
             log.debug(f"encountered can error: {can_error}")
-            return None, None
+            return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
-            return None, None
+            return {"msg": None}
