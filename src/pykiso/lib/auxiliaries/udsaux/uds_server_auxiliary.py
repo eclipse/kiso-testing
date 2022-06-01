@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from uds import IsoServices
 
@@ -41,7 +41,6 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
     """Auxiliary used to handle the UDS protocol on server (ECU) side."""
 
     CAN_FD_PADDING_PATTERN = 0xCC
-    MAX_TRANSFER_SIZE = 0xFFFF
     services = IsoServices
 
     def __init__(self, **kwargs):
@@ -55,11 +54,21 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         """
         super().__init__(**kwargs)
 
+        self._ecu_config = None
         if self.odx_file_path is not None:
             self._ecu_config = OdxParser(self.odx_file_path).parse()
 
-        self._callbacks: List[UdsCallback] = list()
+        self._callbacks: Dict[str, UdsCallback] = {}
         self._callback_lock = threading.Lock()
+
+    @property
+    def callbacks(self):
+        """Access the callback dictionary in a thread-safe way.
+
+        :return: the internal callbacks dictionary.
+        """
+        with self._callback_lock:
+            return self._callbacks
 
     @staticmethod
     def format_data(uds_data: List[int]) -> str:
@@ -85,13 +94,15 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         return message + ([cls.CAN_FD_PADDING_PATTERN] * (padded_length - len(message)))
 
     def transmit(
-        self, data: bytes, req_id: Optional[int] = None, extended: bool = False
+        self, data: List[int], req_id: Optional[int] = None, extended: bool = False
     ) -> None:
         """Pad and transmit a message through ITF connector. This method
-        is a substitute to transmit method present in python-uds package.
+        is also used as a substitute to the transmit method present in
+        python-uds package.
 
         :param data: data to send.
-        :param req_id: CAN message identifier.
+        :param req_id: CAN message identifier. If not set use the one
+            configured.
         :param extended: True if addressing mode is extended otherwise
             False.
         """
@@ -171,18 +182,22 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         request: Union[int, List[int], UdsCallback],
         response: Optional[Union[int, List[int]]] = None,
         response_data: Optional[Union[int, bytes]] = None,
-        response_length: Optional[int] = None,
+        data_length: Optional[int] = None,
     ) -> None:
         """Register an automatic response to send if the specified request is received
         from the client.
+
+        The callback is stored inside the callbacks dictionary under the format
+        `{"0x2EC4": UdsCallback()}`_, where the keys are case-sensitive and
+        correspond to the registered requests.
 
         :param request: UDS request to be responded to.
         :param response: full UDS response to send. If not set, respond with a basic
             positive response with the specified response_data.
         :param response_data: UDS data to send. If not set, respond with a basic
             positive response containing no data.
-        :param response_length: optional length of the response to send if the contained
-            data is supposed to be zero-padded.
+        :param data_length: optional length of the data to send if it is supposed
+            to have a fixed length (zero-padded).
         """
         callback = (
             request
@@ -191,11 +206,10 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 request=request,
                 response=response,
                 response_data=response_data,
-                response_length=response_length,
+                data_length=data_length,
             )
         )
-        with self._callback_lock:
-            self._callbacks.append(callback)
+        self.callbacks[self.format_data(callback.request)] = callback
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """Reception method called by the auxiliary thread. This method received
@@ -203,9 +217,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :param timeout_in_s: timeout on reception.
         """
-        received_data, arbitration_id = self.channel.cc_receive(
-            timeout=timeout_in_s, raw=True
-        )
+        received_data, arbitration_id = self.channel.cc_receive(timeout_in_s, raw=True)
         if received_data is not None and arbitration_id == self.res_id:
             try:
                 uds_data = self.uds_config.tp.decode_isotp(
@@ -221,8 +233,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 log.exception(e)
                 return
 
-            with self._callback_lock:
-                self._dispatch_callback(uds_data)
+            self._dispatch_callback(uds_data)
 
     def _dispatch_callback(self, received_uds_data: List[int]) -> None:
         """Verify if the received UDS request has an associated response
@@ -230,8 +241,6 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :param received_uds_data: received UDS request from the client.
         """
-        response = None
-        custom_callback = None
         if self.uds_config_enable:
             service_id = received_uds_data[0]
             service_config = self._ecu_config.get(service_id)
@@ -239,8 +248,8 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 if received_uds_data == service_subconfig["request"]:
                     self.send_response(service_subconfig["response"])
         else:
-            for callback in self._callbacks:
-                # match on the registered request instead of the entire request
+            for callback in self.callbacks.values():
+                # match on the registered request instead of the entire received request
                 if callback.request == received_uds_data[: len(callback.request)]:
                     callback_to_execute = callback
                     break
@@ -251,19 +260,12 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 return
 
         callback_to_execute(received_uds_data, self)
-
-        if custom_callback is not None:
-            custom_callback(received_uds_data, self)
-        elif response is not None:
-            self.send_response(response)
-            log.info(
-                f"Sent response to request {self.format_data(received_uds_data)}: {self.format_data(response)}"
-            )
+        return
 
     def _abort_command(self) -> None:
-        """Not used."""
+        """Not used, satisfy interface."""
         pass
 
     def _run_command(self, cmd_message, cmd_data=None) -> None:
-        """Not used."""
+        """Not used, satisfy interface."""
         pass

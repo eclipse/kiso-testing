@@ -155,7 +155,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
         :return: response of the hard reset request
         """
-        return self.send_uds_raw(UDSCommands.ECUReset.ECU_RESET_SW_INSTALLATION_STATE)
+        return self.send_uds_raw(UDSCommands.ECUReset.HARD_RESET)
 
     def force_ecu_reset(self) -> UdsResponse:
         """Allow power reset of the component
@@ -163,7 +163,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :return: response of the force ecu reset request
         """
         if not self.uds_config_enable:
-            return self.send_uds_raw(UDSCommands.ECUReset.FORCE_ECU_RESET)
+            return self.send_uds_raw(UDSCommands.ECUReset.KEY_OFF_ON_RESET)
         else:
             ecu_hard_reset_req = {
                 "service": IsoServices.EcuReset,

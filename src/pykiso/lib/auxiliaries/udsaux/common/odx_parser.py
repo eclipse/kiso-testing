@@ -24,7 +24,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Union
 
-from uds_utils import SERVICE_ID_TO_NAME
+from .uds_utils import SERVICE_ID_TO_NAME
 
 
 class OdxParser:

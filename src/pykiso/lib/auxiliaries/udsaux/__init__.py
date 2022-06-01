@@ -8,6 +8,7 @@
 ##########################################################################
 
 from . import uds_auxiliary, uds_server_auxiliary
+from .common import UdsCallback, UdsDownloadCallback
 from .common.uds_request import UDSCommands
 from .common.uds_response import NegativeResponseCode, UdsResponse
 from .uds_auxiliary import UdsAuxiliary

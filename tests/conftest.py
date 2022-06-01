@@ -13,10 +13,9 @@ import unittest
 
 import pytest
 
-from pykiso import CChannel, Flasher, test_suite
+from pykiso import CChannel, Flasher, message, test_suite
 from pykiso.lib.auxiliaries import example_test_auxiliary
 from pykiso.lib.connectors import cc_example
-from pykiso import message
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
 from pykiso.test_coordinator import test_case
@@ -255,3 +254,44 @@ def mock_tp(mocker):
         decode_isotp = lambda *args, **kwargs: [80, 1, 0, 100, 1, 244]
 
     return MockTp()
+
+
+def uds_create_config():
+    cfg = """
+[can]
+interface=peak
+canfd=True
+baudrate=500000
+data_baudrate=2000000
+defaultReqId=0xAB
+defaultResId=0xAC
+
+[uds]
+transportProtocol=CAN
+P2_CAN_Client=5
+P2_CAN_Server=1
+
+[canTp]
+reqId=0xAB
+resId=0xAC
+addressingType=NORMAL
+N_SA=0xFF
+N_TA=0xFF
+N_AE=0xFF
+Mtype=DIAGNOSTICS
+discardNegResp=False
+
+[vector]
+channel=1
+appName=MyApp
+    """
+    return cfg
+
+
+@pytest.fixture
+def tmp_uds_config_ini(tmp_path):
+    uds_folder = tmp_path / "fake_uds"
+    uds_folder.mkdir()
+    config_ini = uds_folder / "_config.ini"
+    config_ini.write_text(uds_create_config())
+    return config_ini
