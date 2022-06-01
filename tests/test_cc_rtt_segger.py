@@ -296,7 +296,8 @@ def test_rtt_segger_receive(
     with CCRttSegger() as cc_rtt_inst:
         response = cc_rtt_inst._cc_receive(timeout=timeout, raw=raw)
 
-    assert isinstance(response, expected_return)
+    assert isinstance(response, dict)
+    assert isinstance(response["msg"], expected_return)
 
 
 def test_rtt_segger_timeout(mocker, mock_pylink_square_socket):
@@ -305,7 +306,7 @@ def test_rtt_segger_timeout(mocker, mock_pylink_square_socket):
     with CCRttSegger() as cc_rtt_inst:
         response = cc_rtt_inst._cc_receive(timeout=0.010, raw=True)
 
-    assert response == None
+    assert response["msg"] == None
 
 
 @pytest.mark.parametrize(

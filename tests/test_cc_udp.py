@@ -138,7 +138,7 @@ def test_udp_recv_invalid(mocker, mock_udp_socket, expected_exception, caplog):
             f"encountered error while receiving message via {udp_inst}" in caplog.text
         )
 
-    assert msg_received is None
+    assert msg_received["msg"] is None
     assert udp_inst.source_addr is None
 
 
@@ -174,7 +174,8 @@ def test_udp_recv_valid(
     with CCUdp("120.0.0.7", 5005) as udp_inst:
         msg_received = udp_inst._cc_receive(*cc_receive_param)
 
-    assert isinstance(msg_received, expected_type) is True
+    assert isinstance(msg_received, dict)
+    assert isinstance(msg_received["msg"], expected_type)
     assert udp_inst.source_addr == raw_data[1]
     mock_udp_socket.socket.settimeout.assert_called_once_with(
         cc_receive_param[0] or 1e-6

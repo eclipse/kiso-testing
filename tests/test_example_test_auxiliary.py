@@ -39,7 +39,7 @@ def test__send_and_wait_ack_failed(mocker, mock_msg, cchannel_inst, caplog):
     mocker_check_if_ack_message_is_matching = mocker.patch.object(
         message.Message, "check_if_ack_message_is_matching"
     )
-    cchannel_inst._cc_receive.return_value = "Message"
+    cchannel_inst._cc_receive.return_value = {"msg": "Message"}
     mocker_check_if_ack_message_is_matching.return_value = False
 
     with caplog.at_level(logging.WARNING):

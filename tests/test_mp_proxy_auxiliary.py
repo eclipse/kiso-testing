@@ -142,6 +142,8 @@ def test_run(mocker, mp_proxy_auxiliary_inst):
 
 
 def test_init_trace(mocker, mp_proxy_auxiliary_inst, caplog):
+    mocker.patch("logging.Logger.addHandler")
+    mocker.patch("logging.FileHandler.__init__", return_value=None)
     mock_formatter = mocker.patch("logging.Formatter")
     log = logging.getLogger(__name__)
     with caplog.at_level(
@@ -265,19 +267,22 @@ def test_delete_instance_exception(mp_proxy_auxiliary_inst, caplog):
 
 def test_receive_message(mp_proxy_auxiliary_inst, mock_auxiliaries, caplog):
     proxy_channel_test = mock_auxiliaries[1]
-    proxy_channel_test.cc_receive.return_value = b"340", "Test_source"
+    proxy_channel_test.cc_receive.return_value = {
+        "msg": b"340",
+        "remote_id": "Test_source",
+    }
     mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
     with caplog.at_level(logging.DEBUG):
         result_rec_message = mp_proxy_auxiliary_inst._receive_message(1)
     assert (
-        f"raw data : {b'340'.hex()} || source : Test_source || channel : {mp_proxy_auxiliary_inst.channel.name}"
+        f"raw data : {b'340'.hex()} || channel : {mp_proxy_auxiliary_inst.channel.name}"
         in caplog.text
     )
     assert result_rec_message is None
-    assert proxy_channel_test.queue_out.get_nowait() == [
-        b"340",
-        "Test_source",
-    ]
+    assert proxy_channel_test.queue_out.get_nowait() == {
+        "msg": b"340",
+        "remote_id": "Test_source",
+    }
 
 
 def test_receive_message_exception(mp_proxy_auxiliary_inst, mock_auxiliaries, caplog):
@@ -300,20 +305,17 @@ def test_dispatch_command_valid(mocker, mp_proxy_auxiliary_inst, mock_auxiliarie
     mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
     compare_channel = mock_auxiliaries[2]
     result_rec_message = mp_proxy_auxiliary_inst._dispatch_command(
-        b"340", compare_channel, 35
+        compare_channel, **{"msg": b"340", "remote_id": 35}
     )
     assert result_rec_message is None
-    assert proxy_channel_test.queue_out.get_nowait() == [
-        b"340",
-        35,
-    ]
+    assert proxy_channel_test.queue_out.get_nowait() == {"msg": b"340", "remote_id": 35}
 
 
 def test_dispatch_command_invalid(mp_proxy_auxiliary_inst, mock_auxiliaries):
     proxy_channel_test = mock_auxiliaries[1]
     mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
     result_rec_message = mp_proxy_auxiliary_inst._dispatch_command(
-        b"340", proxy_channel_test, 35
+        proxy_channel_test, **{"msg": b"340", "remote_id": 35}
     )
     assert result_rec_message is None
     assert proxy_channel_test.queue_out.empty()

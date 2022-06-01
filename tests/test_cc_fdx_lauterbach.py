@@ -536,8 +536,8 @@ def test_receive():
     mock_t32_api.t32_Fdx_ReceivePoll_msg = msg_received
     lauterbach_inst.t32_api = mock_t32_api
 
-    message = lauterbach_inst._cc_receive()
-    assert message.serialize() == msg_received
+    response = lauterbach_inst._cc_receive()
+    assert response["msg"].serialize() == msg_received
 
 
 @pytest.mark.parametrize(
@@ -573,8 +573,8 @@ def test_receive_outside(mocker, side_effect, reset_Flag, caplog):
 
     lauterbach_inst.t32_api = mock_t32_api
     with caplog.at_level(logging.ERROR):
-        message = lauterbach_inst._cc_receive()
-    assert message is None
+        response = lauterbach_inst._cc_receive()
+    assert response["msg"] is None
 
     if len(side_effect) == 1:
         assert (
@@ -606,8 +606,8 @@ def test_reset_board_success(mocker, caplog):
     lauterbach_inst.t32_api = mock_t32_api
     mock_time_sleep = mocker.patch("time.sleep")
 
-    message = lauterbach_inst._cc_receive()
-    assert message.serialize() == msg_received
+    response = lauterbach_inst._cc_receive()
+    assert response["msg"].serialize() == msg_received
 
     # reset_board can be called only after the receive function was called.
     mock_t32_api_fdx_open = mocker.patch.object(Mock_t32_api, "T32_Fdx_Open")
