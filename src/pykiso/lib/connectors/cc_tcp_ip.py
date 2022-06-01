@@ -20,7 +20,7 @@ Communication Channel via socket
 """
 import logging
 import socket
-from typing import Union
+from typing import Dict, Union
 
 from pykiso import CChannel
 
@@ -74,7 +74,9 @@ class CCTcpip(CChannel):
         log.debug(f"Sending {msg} via socket to {self.dest_ip}")
         self.socket.send(msg)
 
-    def _cc_receive(self, timeout=0.01, raw: bool = False) -> Union[bytes, str]:
+    def _cc_receive(
+        self, timeout=0.01, raw: bool = False
+    ) -> Dict[str, Union[bytes, str, None]]:
         """Read message from socket.
 
         :param timeout: time in second to wait for reading a message
@@ -85,7 +87,6 @@ class CCTcpip(CChannel):
         """
         self.socket.settimeout(timeout or self.timeout)
 
-        msg_received = ""
         try:
             msg_received = self.socket.recv(self.max_msg_size)
 
@@ -97,7 +98,9 @@ class CCTcpip(CChannel):
             log.exception(
                 f"encountered timeout error while receiving message via {self}"
             )
+            return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
+            return {"msg": None}
 
-        return msg_received
+        return {"msg": msg_received}
