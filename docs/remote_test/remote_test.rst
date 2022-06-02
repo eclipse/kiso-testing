@@ -1,7 +1,7 @@
-Test App
-========
+Remote Test
+===========
 
-With the TestApp / GreyTest approach, the idea is to execute tests on the targeted hardware to enable 
+With the RemoteTest approach, the idea is to execute tests on the targeted hardware to enable 
 the developer to practice test-driven-development directly on the target.
 
 
@@ -245,10 +245,10 @@ Flashing is done via a flashing connector, which has to be configured with the c
 The flashing connector is in turn called from an appropriate auxiliary (usually in its setup phase).
 
 
-Implementation of Grey Tests
+Implementation of Remote Tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For test using the TestApp, GreyTestCase / GreyTestSuite should be used instead of BasicTestCase / BasicTestSuite, based on Message Protocol, 
+For test using the TestApp, RemoteTestCase / RemoteTestSuite should be used instead of BasicTestCase / BasicTestSuite, based on Message Protocol, 
 users can configure the maximum time (in seconds) used to wait for a report.
 This "timeout" is configurable for each available fixtures :
 
@@ -274,7 +274,7 @@ Find below a full example for a test suite/case declaration in case the Message 
   -> teardown_timeout : Parameter run_timeout is not mandatory for test suite setup.
   """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=5)
-    class SuiteSetup(pykiso.GreyTestSuiteSetup):
+    class SuiteSetup(pykiso.RemoteTestSuiteSetup):
         pass
 
   """
@@ -288,7 +288,7 @@ Find below a full example for a test suite/case declaration in case the Message 
   -> teardown_timeout : time to wait for a report 5 seconds
   """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], teardown_timeout=5,)
-    class SuiteTearDown(pykiso.GreyTestSuiteTeardown):
+    class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
         pass
 
   """
@@ -313,7 +313,7 @@ Find below a full example for a test suite/case declaration in case the Message 
             test_ids={"Component1": ["Req1", "Req2"]},
             tag={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
     )
-    class MyTest(pykiso.GreyTest):
+    class MyTest(pykiso.RemoteTest):
         pass
 
 

@@ -115,7 +115,7 @@ def test_define_test_parameters_on_basic_ts(fixture, suite_id, aux_list, test_id
     "fixture, suite_id, aux_list, setup_timeout, teardown_timeout, test_ids",
     [
         (
-            test_suite.GreyTestSuiteSetup,
+            test_suite.RemoteTestSuiteSetup,
             1,
             ["aux1"],
             3,
@@ -123,17 +123,17 @@ def test_define_test_parameters_on_basic_ts(fixture, suite_id, aux_list, test_id
             {"Component1": ["Req1", "Req2"]},
         ),
         (
-            test_suite.GreyTestSuiteTeardown,
+            test_suite.RemoteTestSuiteTeardown,
             1,
             ["aux2"],
             None,
             3,
             {"Component1": ["Req1", "Req2"]},
         ),
-        (test_suite.GreyTestSuiteTeardown, 1, ["aux2"], None, 3, None),
+        (test_suite.RemoteTestSuiteTeardown, 1, ["aux2"], None, 3, None),
     ],
 )
-def test_define_test_parameters_on_grey_ts(
+def test_define_test_parameters_on_remote_ts(
     fixture, suite_id, aux_list, setup_timeout, teardown_timeout, test_ids
 ):
     @test_case.define_test_parameters(

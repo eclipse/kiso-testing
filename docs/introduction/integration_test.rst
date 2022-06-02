@@ -39,7 +39,7 @@ following:
 -  generate the list of tests to perform
 -  provide the testcases with the auxiliaries they need
 -  verify if the tests can be performed 
--  when using the TestApp (see :ref:`../test_app/test_app`) flash and run and synchronize the tests on the auxiliaries
+-  when using the TestApp (see :ref:`../remote_test/remote_test`) flash and run and synchronize the tests on the auxiliaries
 -  gather the reports and publish the results
 
 Auxiliary
@@ -293,7 +293,7 @@ If you need to have more complex tests, you can do the following:
 -  ``BasicTest`` also contains the following information
    ``test_section_id``, ``test_suite_id``, ``test_case_id``.
 -  Import *logging* or/and *message* (if needed) to communicate with the
-   **auxiliary**(in that case use GreyTest instead of BasicTest)
+   **auxiliary**(in that case use RemoteTest instead of BasicTest)
 
 **test_suite_2.py**:
 

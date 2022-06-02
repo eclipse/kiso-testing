@@ -204,7 +204,7 @@ class BasicTestSuiteTeardown(BaseTestSuite):
         pass
 
 
-class GreyTestSuiteSetup(BasicTestSuiteSetup):
+class RemoteTestSuiteSetup(BasicTestSuiteSetup):
     """Inherit from unittest testCase and represent setup fixture
     when Message Protocol / TestApp  is used.
     """
@@ -252,9 +252,9 @@ class GreyTestSuiteSetup(BasicTestSuiteSetup):
             args,
             kwargs,
         )
-        self.setup_timeout = setup_timeout or GreyTestSuiteSetup.response_timeout
-        self.run_timeout = run_timeout or GreyTestSuiteSetup.response_timeout
-        self.teardown_timeout = teardown_timeout or GreyTestSuiteSetup.response_timeout
+        self.setup_timeout = setup_timeout or RemoteTestSuiteSetup.response_timeout
+        self.run_timeout = run_timeout or RemoteTestSuiteSetup.response_timeout
+        self.teardown_timeout = teardown_timeout or RemoteTestSuiteSetup.response_timeout
 
     @test_app_interaction(
         message_type=message.MessageCommandType.TEST_SUITE_SETUP, timeout_cmd=5
@@ -264,7 +264,7 @@ class GreyTestSuiteSetup(BasicTestSuiteSetup):
         pass
 
 
-class GreyTestSuiteTeardown(BasicTestSuiteTeardown):
+class RemoteTestSuiteTeardown(BasicTestSuiteTeardown):
     """Inherit from unittest testCase and represent teardown fixture
     when Message Protocol / TestApp is used.
     """
@@ -312,10 +312,10 @@ class GreyTestSuiteTeardown(BasicTestSuiteTeardown):
             args,
             kwargs,
         )
-        self.setup_timeout = setup_timeout or GreyTestSuiteTeardown.response_timeout
-        self.run_timeout = run_timeout or GreyTestSuiteTeardown.response_timeout
+        self.setup_timeout = setup_timeout or RemoteTestSuiteTeardown.response_timeout
+        self.run_timeout = run_timeout or RemoteTestSuiteTeardown.response_timeout
         self.teardown_timeout = (
-            teardown_timeout or GreyTestSuiteTeardown.response_timeout
+            teardown_timeout or RemoteTestSuiteTeardown.response_timeout
         )
 
     @test_app_interaction(
@@ -365,7 +365,7 @@ def tc_sort_key(tc):
     will sort by test-suite/test-case, but the setup will always be first,
     the teardown will always be last.
 
-    :param tc: a Base or Grey TestSuite/TestCase to rank
+    :param tc: a Base or Remote TestSuite/TestCase to rank
 
     :return: key for :py:func:`sorted`
 
@@ -373,9 +373,9 @@ def tc_sort_key(tc):
     """
     try:
         fix_ind = 0
-        if isinstance(tc, (BasicTestSuiteSetup, GreyTestSuiteSetup)):
+        if isinstance(tc, (BasicTestSuiteSetup, RemoteTestSuiteSetup)):
             fix_ind = -1
-        elif isinstance(tc, (BasicTestSuiteTeardown, GreyTestSuiteTeardown)):
+        elif isinstance(tc, (BasicTestSuiteTeardown, RemoteTestSuiteTeardown)):
             fix_ind = 1
         elif isinstance(tc, unittest.loader._FailedTest):
             raise tc._exception

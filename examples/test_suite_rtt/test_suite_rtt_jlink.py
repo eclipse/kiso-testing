@@ -14,15 +14,15 @@ from pykiso.auxiliaries import aux1
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1])
-class TestSuiteSetUp(pykiso.GreyTestSuiteSetup):
+class TestSuiteSetUp(pykiso.RemoteTestSuiteSetup):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=[aux1])
-class TestCase(pykiso.GreyTest):
+class TestCase(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1])
-class TestSuiteTearDown(pykiso.GreyTestSuiteTeardown):
+class TestSuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     pass

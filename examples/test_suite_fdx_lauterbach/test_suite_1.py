@@ -14,15 +14,15 @@ from pykiso.auxiliaries import fdx_aux
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[fdx_aux])
-class TestSuiteSetUp(pykiso.GreyTestSuiteSetup):
+class TestSuiteSetUp(pykiso.RemoteTestSuiteSetup):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=[fdx_aux])
-class TestCase(pykiso.GreyTest):
+class TestCase(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[fdx_aux])
-class TestSuiteTearDown(pykiso.GreyTestSuiteTeardown):
+class TestSuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     pass

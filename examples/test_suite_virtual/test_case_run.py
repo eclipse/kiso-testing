@@ -13,41 +13,41 @@ from pykiso.auxiliaries import aux_virtual, aux_udp  # isort:skip
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=6, aux_list=[aux_udp], run_timeout=2)
-class ReportFailedDuringRun(pykiso.GreyTest):
+class ReportFailedDuringRun(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=7, aux_list=[aux_udp], run_timeout=2)
-class ReportNotImplementedDuringRun(pykiso.GreyTest):
+class ReportNotImplementedDuringRun(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=8, aux_list=[aux_udp], run_timeout=2)
-class LostComDuringRunAck(pykiso.GreyTest):
+class LostComDuringRunAck(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=9, aux_list=[aux_udp], run_timeout=2)
-class LostComDuringRunReport(pykiso.GreyTest):
+class LostComDuringRunReport(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(
     suite_id=1, case_id=14, aux_list=[aux_udp], run_timeout=2
 )
-class Successful(pykiso.GreyTest):
+class Successful(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(
     suite_id=1, case_id=15, aux_list=[aux_udp], run_timeout=2
 )
-class SuccessfulWithLog(pykiso.GreyTest):
+class SuccessfulWithLog(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(
     suite_id=1, case_id=16, aux_list=[aux_udp], run_timeout=2
 )
-class ReportFailedDuringRunWithLog(pykiso.GreyTest):
+class ReportFailedDuringRunWithLog(pykiso.RemoteTest):
     pass

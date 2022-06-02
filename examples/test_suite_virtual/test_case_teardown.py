@@ -13,20 +13,20 @@ from pykiso.auxiliaries import aux_virtual, aux_udp  # isort:skip
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=10, aux_list=[aux_udp])
-class ReportFailedDuringTearDown(pykiso.GreyTest):
+class ReportFailedDuringTearDown(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=11, aux_list=[aux_udp])
-class ReportNotImplementedDuringTearDown(pykiso.GreyTest):
+class ReportNotImplementedDuringTearDown(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=12, aux_list=[aux_udp])
-class LostComDuringTearDownAck(pykiso.GreyTest):
+class LostComDuringTearDownAck(pykiso.RemoteTest):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=13, aux_list=[aux_udp])
-class LostComDuringTearDownReport(pykiso.GreyTest):
+class LostComDuringTearDownReport(pykiso.RemoteTest):
     pass

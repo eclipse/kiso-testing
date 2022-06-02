@@ -42,7 +42,7 @@ class IntegrationTestCase(unittest.TestCase):
 
         for params in parameters:
             self.init.prepare_default_test_cases(params)
-            self.init.prepare_grey_test_cases(params)
+            self.init.prepare_remote_test_cases(params)
 
         runner = unittest.TextTestRunner()
         result = runner.run(self.init.suite)
@@ -166,7 +166,7 @@ def test_define_test_parameters_on_basic_tc(
         ),
     ],
 )
-def test_define_test_parameters_on_grey_tc(
+def test_define_test_parameters_on_remote_tc(
     suite_id,
     case_id,
     aux_list,
@@ -186,7 +186,7 @@ def test_define_test_parameters_on_grey_tc(
         test_ids=test_ids,
         tag=tag,
     )
-    class MyClass(test_case.GreyTest):
+    class MyClass(test_case.RemoteTest):
         pass
 
     tc_inst = MyClass()
@@ -215,7 +215,7 @@ def test_setUpClass(mocker):
     test_case.BasicTest.setUpClass()
     mock_init_log.assert_called_with(None, "ERROR", "junit")
 
-    test_case.GreyTest.setUpClass()
+    test_case.RemoteTest.setUpClass()
     mock_init_log.assert_called_with(None, "ERROR", "junit")
 
 

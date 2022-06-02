@@ -13,7 +13,7 @@ Generic Test
 
 :module: test_case
 
-:synopsis: Basic extensible implementation of a TestCase, and of a Grey
+:synopsis: Basic extensible implementation of a TestCase, and of a Remote
 TestCase for Message Protocol / TestApp usage.
 
 .. currentmodule:: test_case
@@ -151,7 +151,7 @@ class BasicTest(unittest.TestCase):
         self.test_ids = test_ids
         self.tag = tag
         if any([setup_timeout, run_timeout, teardown_timeout]) and not isinstance(
-            self, GreyTest
+            self, RemoteTest
         ):
             log.warning("For BasicTest, timeout are not taken into account")
 
@@ -192,7 +192,7 @@ class BasicTest(unittest.TestCase):
         pass
 
 
-class GreyTest(BasicTest):
+class RemoteTest(BasicTest):
     """Base test-cases for Message Protocol / TestApp usage."""
 
     response_timeout: int = 10
@@ -237,9 +237,9 @@ class GreyTest(BasicTest):
             args,
             kwargs,
         )
-        self.setup_timeout = setup_timeout or GreyTest.response_timeout
-        self.run_timeout = run_timeout or GreyTest.response_timeout
-        self.teardown_timeout = teardown_timeout or GreyTest.response_timeout
+        self.setup_timeout = setup_timeout or RemoteTest.response_timeout
+        self.run_timeout = run_timeout or RemoteTest.response_timeout
+        self.teardown_timeout = teardown_timeout or RemoteTest.response_timeout
 
     @test_app_interaction(
         message_type=message.MessageCommandType.TEST_CASE_SETUP, timeout_cmd=5
@@ -273,7 +273,7 @@ def define_test_parameters(
     test_ids: Optional[dict] = None,
     tag: Optional[Dict[str, List[str]]] = None,
 ):
-    """Decorator to fill out test parameters of the BasicTest and GreyTest automatically."""
+    """Decorator to fill out test parameters of the BasicTest and RemoteTest automatically."""
 
     def generate_modified_class(DecoratedClass):
         """For basic test-case, generates the same class but with the test IDs

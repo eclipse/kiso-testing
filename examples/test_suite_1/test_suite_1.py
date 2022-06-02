@@ -32,7 +32,7 @@ side_effect = cycle([False, False, True])
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
 class SuiteSetup(pykiso.BasicTestSuiteSetup):
     """This test suite setup will be executed using base behavior
-    given by GreyTestSuiteTeardown.
+    given by RemoteTestSuiteTeardown.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test suite setup :
@@ -57,7 +57,7 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
 class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     """This test suite teardown will be executed using base behavior
-    given by GreyTestSuiteTeardown.
+    given by RemoteTestSuiteTeardown.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test suite teardown :
@@ -79,7 +79,7 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
 )
 class MyTest1(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
-    given by GreyTest only for setUp and tearDown method.
+    given by RemoteTest only for setUp and tearDown method.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp and tearDown:
@@ -104,7 +104,7 @@ class MyTest1(pykiso.BasicTest):
     @pykiso.retry_test_case(max_try=5, rerun_setup=True, rerun_teardown=True)
     def test_run(self):
         """In this case the default test_run method is overridden and
-        instead of calling test_run from GreyTest class the following
+        instead of calling test_run from RemoteTest class the following
         code is called.
 
         Here, the test pass at the 3rd attempt out of 5. The setup and
@@ -136,9 +136,9 @@ class MyTest1(pykiso.BasicTest):
     test_ids={"Component1": ["Req"]},
     tag={"branch_level": ["nightly"]},
 )
-class MyTest2(pykiso.GreyTest):
+class MyTest2(pykiso.RemoteTest):
     """This test case definition will be executed using base behavior
-    given by GreyTest.
+    given by RemoteTest.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp, test_run and tearDown:
@@ -194,9 +194,9 @@ class MyTest2(pykiso.GreyTest):
     teardown_timeout=3,
     tag={"variant": ["variant3"]},
 )
-class MyTest3(pykiso.GreyTest):
+class MyTest3(pykiso.RemoteTest):
     """This test case definition will be executed using base behavior
-    given by GreyTest.
+    given by RemoteTest.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp, test_run and tearDown:

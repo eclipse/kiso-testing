@@ -32,17 +32,17 @@ from pykiso.auxiliaries import aux1, aux2
     case_id=2,
     aux_list=[aux1],
 )
-class TestCaseOverride(pykiso.GreyTest):
+class TestCaseOverride(pykiso.RemoteTest):
     """In this test case we will simply re-implement test_run, setUp,
     tearDown methods to re-define the default Test-App behavior of ITF
-    GreyTest.
+    RemoteTest.
     """
 
     def setUp(self):
         """Let's say, we want to suspend aux2, execute default
         implemented setup test (for aux1) and resume the paused aux2.
         """
-        # call GreyTest base class setup method
+        # call RemoteTest base class setup method
         super().setUp()
         # make some extra logging and suspend aux2
         logging.info("------------suspend aux2 run-------------")

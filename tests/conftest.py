@@ -181,11 +181,11 @@ def CustomTestCaseAndSuite(request):
 
             self.suite.addTest(MyTestCase("test_run"))
 
-        def prepare_grey_test_cases(self, param):
+        def prepare_remote_test_cases(self, param):
             @define_test_parameters(
                 suite_id=param[0], case_id=param[1], aux_list=param[2]
             )
-            class MyTestCase(test_case.GreyTest):
+            class MyTestCase(test_case.RemoteTest):
                 pass
 
             self.suite.addTest(MyTestCase("test_run"))
