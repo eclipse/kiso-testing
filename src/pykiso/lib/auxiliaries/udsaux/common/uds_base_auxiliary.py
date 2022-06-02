@@ -43,9 +43,9 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
         self,
         com: CChannel,
         config_ini_path: Union[Path, str],
+        odx_file_path: Optional[Union[Path, str]] = None,
         request_id: Optional[int] = None,
         response_id: Optional[int] = None,
-        odx_file_path: Optional[Union[Path, str]] = None,
         **kwargs,
     ):
         """Initialize attributes.
@@ -128,7 +128,7 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
             if hasattr(self, "transmit"):
                 self.uds_config.tp.overwrite_transmit_method(self.transmit)
             if hasattr(self, "receive"):
-                self.uds_config.tp.getNextBufferedMessage = self.receive
+                self.uds_config.tp.overwrite_receive_method(self.receive)
             return True
         except Exception:
             log.exception("Error during channel creation")

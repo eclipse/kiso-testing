@@ -27,7 +27,6 @@ from typing import Dict, List, Optional, Union
 
 from uds import IsoServices
 
-from .common.odx_parser import OdxParser
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
 from .common.uds_callback import UdsCallback
 
@@ -43,7 +42,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
     CAN_FD_PADDING_PATTERN = 0xCC
     services = IsoServices
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialize attributes.
 
         :param com: communication channel connector.
@@ -52,11 +51,11 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :param response_id: optional CAN ID used for receiving messages.
         :param odx_file_path: ecu diagnostic definition file.
         """
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
         self._ecu_config = None
         if self.odx_file_path is not None:
-            self._ecu_config = OdxParser(self.odx_file_path).parse()
+            log.warning("Callback configuration through ODX files is not supported yet")
 
         self._callbacks: Dict[str, UdsCallback] = {}
         self._callback_lock = threading.Lock()
@@ -69,6 +68,15 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         """
         with self._callback_lock:
             return self._callbacks
+
+    def _create_auxiliary_instance(self) -> bool:
+        """Open communication channel, create UDS instance and adapt
+        the underlying CAN TP's padding pattern.
+
+        :return: True if creation succeeded otherwise False.
+        """
+        super()._create_auxiliary_instance()
+        self.uds_config.tp.PADDING_PATTERN = self.CAN_FD_PADDING_PATTERN
 
     @staticmethod
     def format_data(uds_data: List[int]) -> str:
@@ -110,21 +118,18 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         data = self._pad_message(data)
         self.channel._cc_send(msg=data, remote_id=req_id, raw=True)
 
-    def receive(self) -> bytes:
+    def receive(self) -> Optional[bytes]:
         """Receive a message through ITF connector. Called inside a thread,
         this method is a substitute to the reception method used in the
         python-uds package.
 
-        :param data: data to send
-        :param req_id: CAN message identifier
-        :param extended: True if addressing mode is extended otherwise
-            False
+        :return: the received message or None.
         """
         received_data, arbitration_id = self.channel._cc_receive(timeout=0, raw=True)
         if received_data is not None and arbitration_id == self.res_id:
             return received_data
 
-    def send_response(self, response_data) -> None:
+    def send_response(self, response_data: List[int]) -> None:
         """Encode and transmit a UDS response.
 
         :param response_data: the UDS response to send.
@@ -133,7 +138,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             response_data, use_external_snd_rcv_functions=True
         )
         if to_send is not None:
-            self.transmit(to_send, req_id=self.req_id)
+            self.transmit(to_send)
 
     @staticmethod
     def encode_stmin(stmin: float) -> int:

@@ -24,11 +24,11 @@ Helper classes for UDS callback registration
 
 from __future__ import annotations
 
-import itertools
 import logging
 import time
 import typing
 from dataclasses import dataclass
+from itertools import cycle
 from typing import Callable, ClassVar, List, Optional, Tuple, Union
 
 from uds import IsoServices
@@ -57,6 +57,8 @@ class UdsCallback:
         integers and the UdsServerAuxiliary instance.
     """
 
+    POSITIVE_RESPONSE_OFFSET: ClassVar[int] = 0x40
+
     # e.g. 0x1003 or [0x10, 0x03]
     request: Union[int, List[int]]
     # e.g. 0x5003 or [0x50, 0x03]
@@ -73,16 +75,18 @@ class UdsCallback:
         self.call_count = 0
 
         if isinstance(self.request, int):
-            self.request = list(UdsCallback.int_to_bytes(self.request))
+            self.request = list(self.int_to_bytes(self.request))
 
         if isinstance(self.response, int):
-            self.response = list(UdsCallback.int_to_bytes(self.response))
+            self.response = list(self.int_to_bytes(self.response))
         elif not self.response:
-            self.response = [self.request[0] + 0x40] + self.request[1:]
+            self.response = [
+                self.request[0] + self.POSITIVE_RESPONSE_OFFSET
+            ] + self.request[1:]
 
         if self.response_data:
             self.response_data = (
-                list(UdsCallback.int_to_bytes(self.response_data))
+                list(self.int_to_bytes(self.response_data))
                 if isinstance(self.response_data, int)
                 else list(self.response_data)
             )
@@ -116,9 +120,19 @@ class UdsCallback:
 
 @dataclass
 class UdsDownloadCallback(UdsCallback):
-    """UDS Callback for DownloadData handling on server-side."""
+    """UDS Callback for DownloadData handling on server-side.
 
+    In comparison to the base UdsCallback, this callback fixes the
+    request tu 0x34 (RequestDownload) and the custom callback to
+    execute in order to handle the data transfer.
+
+    :param stmin: minimum separation time between two received
+        consecutive frames.
+    """
+
+    TRANSFER_TIMEOUT: ClassVar[float] = 1
     MAX_TRANSFER_SIZE: ClassVar[int] = 0xFFFF
+
     request: Union[int, List[int]] = IsoServices.RequestDownload
     stmin: float = 0
 
@@ -126,40 +140,62 @@ class UdsDownloadCallback(UdsCallback):
         super().__post_init__()
         self.callback = self.handle_data_download
         self.transfer_successful = False
+        self.transferred_data_size = 0
 
     @staticmethod
-    def get_download_data_transfer_size(download_request: List[int]) -> int:
-        addr_len_format_identifier_index = 2
-        address_and_length_format_identifier = download_request[
-            addr_len_format_identifier_index
-        ]
-        nb_bytes_memory_address_param = address_and_length_format_identifier & 0x0F
-        nb_bytes_memory_size_param = address_and_length_format_identifier >> 4
-        data_size_start_index = (
-            addr_len_format_identifier_index + nb_bytes_memory_address_param + 1
-        )
-        data_size_end_index = data_size_start_index + nb_bytes_memory_size_param + 1
+    def get_transfer_size(download_request: List[int]) -> int:
+        """Extract the size of the data to download from the passed DownloadData
+        request.
 
-        memory_size = download_request[data_size_start_index:data_size_end_index]
+        :param download_request: the received DownloadData request.
+        :return: the expected download size.
+        """
+        addr_len_format_id_idx = 2
+        address_and_length_format_identifier = download_request[addr_len_format_id_idx]
+        # high nibble of address_and_length_format_identifier
+        nb_bytes_memory_size_param = address_and_length_format_identifier >> 4
+        # low nibble of address_and_length_format_identifier
+        nb_bytes_memory_address_param = address_and_length_format_identifier & 0x0F
+        data_size_start_index = addr_len_format_id_idx + nb_bytes_memory_address_param
+        data_size_end_index = data_size_start_index + nb_bytes_memory_size_param
+
+        memory_size = download_request[
+            data_size_start_index + 1 : data_size_end_index + 1
+        ]
         data_transfer_size = int.from_bytes(bytes(memory_size), byteorder="big") - 1
         return data_transfer_size
 
     @staticmethod
     def get_first_frame_data_length(first_frame: List[int]) -> Tuple[int, int]:
-        first_frame_data_len = (first_frame[0] & 0x0F) + first_frame[1]
-        uds_data_start_index = 2
+        """Extract the expected data size to receive from a first frame
+        (ISO TP) and the start index of the contained UDS request.
+
+        :param first_frame: received first frame.
+        :return: tuple of two integers corresponding to the expected data
+            length to receive and the resulting start index of the UDS request.
+        """
+        first_frame_data_len = ((first_frame[0] & 0x0F) << 8) + first_frame[1]
+        data_len_start_index = uds_data_start_index = 2
         if first_frame_data_len == 0:
             uds_data_start_index = 6
-            first_frame_data_len = int.from_bytes(bytes(first_frame[2:6]), "big")
+            first_frame_data_len = int.from_bytes(
+                bytes(first_frame[data_len_start_index:uds_data_start_index]), "big"
+            )
         return first_frame_data_len, uds_data_start_index
 
     def make_request_download_response(self, max_transfer_size: int = None):
+        """Build a positive response for a RequestDownload request based
+        on the maximum transfer size.
+
+        :param max_transfer_size: maximum transfer size. If not set, use
+            the default one configured inside the callback class (0xFFFF).
+        :return: the UDS RequestDownload positive response.
+        """
         max_transfer_size = max_transfer_size or self.MAX_TRANSFER_SIZE
         max_nb_of_block_length = self.int_to_bytes(max_transfer_size)
-        positive_response_offset = 0x40
         length_format_identifier = len(max_nb_of_block_length) << 4
         request_download_positive_response = [
-            IsoServices.RequestDownload + positive_response_offset,
+            IsoServices.RequestDownload + self.POSITIVE_RESPONSE_OFFSET,
             length_format_identifier,
             *list(max_nb_of_block_length),
         ]
@@ -173,12 +209,18 @@ class UdsDownloadCallback(UdsCallback):
         This method handles the entire download functional unit composed of:
 
         - sending the appropriate RequestDownload response to the received request
-        - waiting for the initial TransferData request and sending the ISO TP flow control frame
-        - receiving the data blocks until the transfer is finished.
+        - waiting for the initial TransferData request and sending the ISO TP
+            flow control frame
+        - receiving the data blocks until the transfer is finished
+        - sending the resulting TransferData positive response
 
         :param download_request: DownloadData request received from the client.
+        :param aux: UdsServerAuxiliary instance used by the callback to handle
+            data reception and transmission.
         """
         self.transfer_successful = False
+        self.transferred_data_size = 0
+
         # send RequestDownload response
         request_download_response = self.make_request_download_response()
         aux.send_response(request_download_response)
@@ -186,80 +228,79 @@ class UdsDownloadCallback(UdsCallback):
             f"Sent response to request {aux.format_data(download_request)}: {aux.format_data(request_download_response)}"
         )
 
-        # handle data transfer
-        block_number = 0
+        # get expected transfer data size from DownloadData request
+        expected_transfer_size = self.get_transfer_size(download_request)
         transfer_size = 0
+        transfer_start_time = time.perf_counter()
 
-        # get transfer data size from DownloadData request
-        expected_total_transfer_size = self.get_download_data_transfer_size(
-            download_request
-        )
-
+        # handle data transfer
         while (
-            not aux.stop_event.is_set() and transfer_size < expected_total_transfer_size
+            not aux.stop_event.is_set()
+            and transfer_size < expected_transfer_size
+            and time.perf_counter() - transfer_start_time < self.TRANSFER_TIMEOUT
         ):
             # wait for initial transfer data request
             transfer_request = aux.receive()
             if transfer_request is None:
                 continue
 
-            block_number += 1
-            log.info(f"Receiving data block number {block_number}")
-
             # decode PCI to extract the block data length
-            (
-                first_frame_data_len,
-                uds_request_start_index,
-            ) = self.get_first_frame_data_length(transfer_request)
-            uds_transfer_request = transfer_request[uds_request_start_index:]
+            expected_data_len, pci_len = self.get_first_frame_data_length(
+                transfer_request
+            )
+            uds_transfer_request = transfer_request[pci_len:]
+            service_id, sequence_number, *block_data = uds_transfer_request
 
-            if not uds_transfer_request[0] == aux.services.TransferData:
+            if not service_id == IsoServices.TransferData:
                 log.error(
                     f"Expected TransferData request from ECU, got: {bytes(transfer_request).hex()}"
                 )
                 return
 
-            # send flow control
+            # send flow control with configured STmin
             aux.send_flow_control(stmin=self.stmin)
 
-            cnt = 0
-            transfer_data_pci_sequence = itertools.cycle(
-                tuple(range(0x21, 0x30)) + (0x20,)
-            )
-            sequence_number = uds_transfer_request[1]
-            block_data_len = len(uds_transfer_request) - 2  # remove UDS service bytes
+            # expected PCI sequence of the received frames
+            transfer_data_pci_sequence = cycle(tuple(range(0x21, 0x30)) + (0x20,))
+
+            # initial received block data length -> remove UDS service bytes
+            block_data_len = len(block_data)
+            elapsed_time = 0
+            block_start_time = time.perf_counter()
 
             # receive block data
             while (
                 not aux.stop_event.is_set()
-                and block_data_len < (first_frame_data_len - 1)
-                and cnt < 10
+                and block_data_len < (expected_data_len - 1)
+                and elapsed_time < self.TRANSFER_TIMEOUT
             ):
                 data = aux.receive()
                 if data is None:
-                    cnt += 1
                     time.sleep(1e-4)
+                    elapsed_time = time.perf_counter() - block_start_time
                     continue
-                cnt = 0
+                elapsed_time = 0
                 expected_pci = next(transfer_data_pci_sequence)
+                # verify received PCI and increase receive length if one was missed
                 if data[0] != expected_pci:
+                    block_data_len += len(data) - 1
                     log.warning(
-                        f"Consecutive frame missed: expected sequence {hex(expected_pci)}, got {hex(data[0])}"
+                        f"Consecutive frame missed: "
+                        f"expected PCI {hex(expected_pci)}, got {hex(data[0])}"
                     )
                 block_data_len += len(data) - 1
 
             transfer_size += block_data_len
-            log.info(f"Got {transfer_size}B out of {expected_total_transfer_size}B")
-
+            log.info(
+                f"Block number {sequence_number}: "
+                f"Received {transfer_size} B out of {expected_transfer_size} B"
+            )
+            # send TransferData positive response with current sequence number
             success_response = [
-                IsoServices.TransferData + aux.POSITIVE_RESPONSE_OFFSET,
+                IsoServices.TransferData + self.POSITIVE_RESPONSE_OFFSET,
                 sequence_number,
             ]
             aux.send_response(success_response)
 
-        self.transfer_successful = transfer_size >= expected_total_transfer_size
-
-
-# request_download_callback = UdsCallback(
-#    request=IsoServices.RequestDownload, callback=handle_data_download
-# )
+        self.transfer_successful = transfer_size >= expected_transfer_size
+        self.transferred_data_size = transfer_size

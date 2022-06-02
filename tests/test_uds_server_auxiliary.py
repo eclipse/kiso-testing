@@ -9,22 +9,13 @@
 ##########################################################################
 
 import logging
-import threading
-from unittest import mock
 
 import pytest
 
-from pykiso.lib.auxiliaries.udsaux.common.odx_parser import OdxParser
+from pykiso.lib.auxiliaries.udsaux.common.uds_callback import UdsCallback
 from pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary import (
     UdsServerAuxiliary,
 )
-
-ODX_PARSER_RETURN = {
-    0x123: {
-        "name": "service",
-        "subid": {"request": [1, 2, 3, 4], "response": [4, 3, 2, 1]},
-    }
-}
 
 
 class TestUdsServerAuxiliary:
@@ -49,10 +40,6 @@ class TestUdsServerAuxiliary:
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
-        mocker.patch(
-            "pykiso.lib.auxiliaries.udsaux.common.odx_parser.OdxParser.parse",
-            return_value=ODX_PARSER_RETURN,
-        )
 
         TestUdsServerAuxiliary.uds_aux_instance_odx = UdsServerAuxiliary(
             com=ccpcan_inst, config_ini_path=tmp_uds_config_ini, odx_file_path="odx"
@@ -69,7 +56,6 @@ class TestUdsServerAuxiliary:
             response_id=0x321,
         )
 
-        assert uds_server_inst._ecu_config is None
         assert uds_server_inst._callbacks == {}
         assert uds_server_inst._callback_lock is not None
         assert uds_server_inst.req_id == 0x123
@@ -83,19 +69,25 @@ class TestUdsServerAuxiliary:
         assert uds_server_inst.res_id == 0xAC
 
     def test_constructor_odx(
-        self, mocker, uds_server_aux_inst, tmp_uds_config_ini, ccpcan_inst
+        self, uds_server_aux_inst, tmp_uds_config_ini, ccpcan_inst, caplog
     ):
-        uds_server_inst = UdsServerAuxiliary(
-            com=ccpcan_inst,
-            config_ini_path=tmp_uds_config_ini,
-            request_id=0x123,
-            response_id=0x321,
-            odx_file_path="dummy.odx",
-        )
+        with caplog.at_level(logging.WARNING):
+            uds_server_inst = UdsServerAuxiliary(
+                com=ccpcan_inst,
+                config_ini_path=tmp_uds_config_ini,
+                request_id=0x123,
+                response_id=0x321,
+                odx_file_path="dummy.odx",
+            )
 
-        assert uds_server_inst._ecu_config == ODX_PARSER_RETURN
+        assert (
+            "Callback configuration through ODX files is not supported yet"
+            in caplog.text
+        )
         assert uds_server_inst._callbacks == {}
         assert uds_server_inst._callback_lock is not None
+        assert uds_server_inst.req_id == 0x123
+        assert uds_server_inst.res_id == 0x321
 
     @pytest.mark.parametrize(
         "data_len, expected_padded_len",
@@ -144,7 +136,7 @@ class TestUdsServerAuxiliary:
         assert received_data == expected_received_data
 
     def test_send_response(self, mocker, uds_server_aux_inst):
-        uds_mock = mocker.patch(uds_server_aux_inst, "uds_config")
+        uds_mock = mocker.patch.object(uds_server_aux_inst, "uds_config")
         uds_mock.tp.encode_isotp.return_value = "NOT NONE"
         mock_transmit = mocker.patch.object(uds_server_aux_inst, "transmit")
 
@@ -153,7 +145,7 @@ class TestUdsServerAuxiliary:
         uds_mock.tp.encode_isotp.assert_called_with(
             b"plop", use_external_snd_rcv_functions=True
         )
-        mock_transmit.assert_called_with("NOT NONE", uds_server_aux_inst.req_id)
+        mock_transmit.assert_called_with("NOT NONE")
 
     @pytest.mark.parametrize(
         "stmin_in_ms, expected_stmin",
@@ -179,3 +171,75 @@ class TestUdsServerAuxiliary:
         uds_server_aux_inst.send_flow_control(fs, bs, stmin)
 
         mock_transmit.assert_called_with(expected_flow_control)
+
+    @pytest.mark.parametrize(
+        "callback_params, expected_callback_dict",
+        [
+            pytest.param(
+                ([0x10, 0x11, 0x12], [0x12, 0x11, 0x10]),
+                {"0x101112": UdsCallback([0x10, 0x11, 0x12], [0x12, 0x11, 0x10])},
+                id="request and response passed",
+            ),
+            pytest.param(
+                ([1, 2, 3], [3, 2, 1]),
+                {"0x010203": UdsCallback([1, 2, 3], [3, 2, 1])},
+                id="ensure trailing zero in dict key",
+            ),
+            pytest.param(
+                ([0x10, 0x11, 0x12], None, [b"\xAC\xDC"], 4),
+                {"0x101112": UdsCallback([0x10, 0x11, 0x12], None, [b"\xAC\xDC"], 4)},
+                id="request and response data passed",
+            ),
+            pytest.param(
+                UdsCallback([0x10, 0x11, 0x12], [0x12, 0x11, 0x10]),
+                {"0x101112": UdsCallback([0x10, 0x11, 0x12], [0x12, 0x11, 0x10])},
+                id="UdsCallback instance passed",
+            ),
+        ],
+    )
+    def test_register_callback(
+        self, uds_server_aux_inst, callback_params, expected_callback_dict
+    ):
+        if isinstance(callback_params, tuple):
+            uds_server_aux_inst.register_callback(*callback_params)
+        else:
+            uds_server_aux_inst.register_callback(callback_params)
+
+        assert uds_server_aux_inst._callbacks == expected_callback_dict
+
+    def test__receive_message(self, mocker, uds_server_aux_inst):
+        mock_channel = mocker.patch.object(uds_server_aux_inst, "channel")
+        mock_channel.cc_receive.return_value = (b"DATA", uds_server_aux_inst.res_id)
+
+        mock_uds_config = mocker.patch.object(uds_server_aux_inst, "uds_config")
+        mock_uds_config.tp.decode_isotp.return_value = [1, 2, 3]
+
+        mock_dispatch = mocker.patch.object(uds_server_aux_inst, "_dispatch_callback")
+
+        uds_server_aux_inst._receive_message(10)
+
+        mock_channel.cc_receive.assert_called_once_with(10, raw=True)
+        mock_uds_config.tp.decode_isotp.assert_called_once_with(
+            received_data=b"DATA", use_external_snd_rcv_functions=True
+        )
+        mock_dispatch.assert_called_once_with([1, 2, 3])
+
+    def test__receive_message_exception(self, caplog, mocker, uds_server_aux_inst):
+        mock_channel = mocker.patch.object(uds_server_aux_inst, "channel")
+        mock_channel.cc_receive.return_value = (b"DATA", uds_server_aux_inst.res_id)
+
+        mock_uds_config = mocker.patch.object(uds_server_aux_inst, "uds_config")
+        mock_uds_config.tp.decode_isotp.side_effect = Exception("oopsi")
+
+        mock_dispatch = mocker.patch.object(uds_server_aux_inst, "_dispatch_callback")
+
+        with caplog.at_level(logging.ERROR):
+            uds_server_aux_inst._receive_message(10)
+
+        mock_channel.cc_receive.assert_called_once_with(10, raw=True)
+        mock_uds_config.tp.decode_isotp.assert_called_once_with(
+            received_data=b"DATA", use_external_snd_rcv_functions=True
+        )
+
+        assert "oopsi" in caplog.text
+        mock_dispatch.assert_not_called()
