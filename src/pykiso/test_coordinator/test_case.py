@@ -184,15 +184,11 @@ class BasicTest(unittest.TestCase):
             initialize_logging(None, options.log_level, options.report_type)
 
     def setUp(self) -> None:
-        """Hook method for constructing the test fixture."""
-        pass
-
-    def test_run(self) -> None:
-        """Hook method from unittest in order to execute test case."""
+        """Startup hook method to execute code before each test method."""
         pass
 
     def tearDown(self) -> None:
-        """Hook method for deconstructing the test fixture after testing it."""
+        """Closure hook method to execute code after each test method."""
         pass
 
 
@@ -249,7 +245,7 @@ class GreyTest(BasicTest):
         message_type=message.MessageCommandType.TEST_CASE_SETUP, timeout_cmd=5
     )
     def setUp(self) -> None:
-        """Hook method for constructing the test fixture."""
+        """Startup hook method to execute code before each test method."""
         pass
 
     @test_app_interaction(
@@ -263,7 +259,7 @@ class GreyTest(BasicTest):
         message_type=message.MessageCommandType.TEST_CASE_TEARDOWN, timeout_cmd=5
     )
     def tearDown(self) -> None:
-        """Hook method for deconstructing the test fixture after testing it."""
+        """Closure hook method to execute code after each test method."""
         pass
 
 

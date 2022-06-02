@@ -19,6 +19,7 @@ using TestApp.
 """
 
 import logging
+import importlib
 from itertools import cycle
 
 import pykiso
@@ -45,6 +46,10 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
     If setup_timeout is not given the default timeout value is 10
     seconds.
     """
+
+    module = importlib.import_module("pykiso.auxiliaries")
+    attribute = dir(module)
+    logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
 
     pass
 
@@ -166,6 +171,10 @@ class MyTest2(pykiso.GreyTest):
         This test will be run 3 times in order to test stability (setUp
         and tearDown excluded as the flags are set to False).
         """
+        module = importlib.import_module("pykiso.auxiliaries")
+        attribute = dir(module)
+        logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
+
         logging.info(f"------------suspend auxiliaries run-------------")
         aux3.suspend()
         aux2.suspend()
