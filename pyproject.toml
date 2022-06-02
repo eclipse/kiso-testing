@@ -39,7 +39,7 @@ PyYAML = "*"
 pylink-square = "^0.12.0"
 pyserial = "*"
 python-can = {extras = ["pcan"], version = "^4.0.0"}
-python-uds = {git = "https://github.com/sebclrsn/python-uds.git", branch = "feature/enable-server-side-isotp"}
+pykiso-python-uds = "^2.1.0"
 PyVISA = "*"
 PyVISA-py = "*"
 robotframework = "3.2.2"
