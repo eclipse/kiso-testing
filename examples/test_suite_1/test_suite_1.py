@@ -32,7 +32,8 @@ side_effect = cycle([False, False, True])
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
 class SuiteSetup(pykiso.BasicTestSuiteSetup):
     """This test suite setup will be executed using base behavior
-    given by GreyTestSuiteTeardown.
+    given by BasicTestSuiteSetup.
+
 
     Using decorator define_test_parameters the following parameters will
     be applied on test suite setup :

@@ -100,6 +100,8 @@ def mock_PCANBasic(mocker):
                 "interface": "pcan",
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
+                "trace_path": "",
+                "trace_size": 10,
                 "bitrate": 500000,
                 "is_fd": True,
                 "enable_brs": False,
@@ -124,6 +126,8 @@ def mock_PCANBasic(mocker):
                 "interface": "pcan",
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
+                "trace_path": "",
+                "trace_size": 1000,
                 "bitrate": 500000,
                 "is_fd": False,
                 "enable_brs": True,
@@ -148,6 +152,8 @@ def mock_PCANBasic(mocker):
                 "interface": "pcan",
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
+                "trace_path": "",
+                "trace_size": 10,
                 "bitrate": 500000,
                 "is_fd": False,
                 "enable_brs": True,
@@ -171,7 +177,9 @@ def mock_PCANBasic(mocker):
         ),
     ],
 )
-def test_constructor(constructor_params, expected_config, caplog):
+def test_constructor(constructor_params, expected_config, caplog, mocker):
+
+    mocker.patch.object(pathlib.Path, "is_file", return_value=True)
 
     param = constructor_params.values()
     log = logging.getLogger("can.pcan")
@@ -179,9 +187,11 @@ def test_constructor(constructor_params, expected_config, caplog):
     with caplog.at_level(logging.WARNING):
         can_inst = CCPCanCan(*param)
     log.warning("Bus error: an error counter")
+    can_inst.trace_path = ""
     assert can_inst.interface == expected_config["interface"]
     assert can_inst.channel == expected_config["channel"]
     assert can_inst.bitrate == expected_config["bitrate"]
+    assert can_inst.trace_size == expected_config["trace_size"]
     assert can_inst.remote_id == expected_config["remote_id"]
     assert can_inst.f_clock_mhz == expected_config["f_clock_mhz"]
     assert can_inst.is_fd == expected_config["is_fd"]
@@ -237,37 +247,55 @@ def test_cc_open(
 
 
 @pytest.mark.parametrize(
-    "side_effects, os_makedirs_error, logging_info_count, logging_error_count, logging_path",
+    "side_effects, os_makedirs_error, logging_info_count, logging_error_count, logging_path, trace_option",
     [
-        ([None, None, None], None, 2, 0, None),
-        ([None, None, None], None, 4, 0, (pathlib.Path.cwd() / "test/path")),
         (
-            [RuntimeError("Test Exception 1"), None, None],
+            [None, None, None, None],
+            None,
+            4,
+            0,
+            None,
+            True,
+        ),
+        (
+            [None, None, None, None, None],
+            None,
+            6,
+            0,
+            (pathlib.Path.cwd() / "test/path"),
+            False,
+        ),
+        (
+            [RuntimeError("Test Exception 1"), None, None, None],
             None,
             1,
             1,
             (pathlib.Path.cwd() / "test/path"),
+            True,
         ),
         (
-            [None, RuntimeError("Test Exception 2"), None],
-            None,
-            2,
-            1,
-            (pathlib.Path.cwd() / "test/path"),
-        ),
-        (
-            [None, None, RuntimeError("Test Exception 3")],
+            [None, RuntimeError("Test Exception 2"), None, None],
             None,
             3,
             1,
             (pathlib.Path.cwd() / "test/path"),
+            True,
         ),
         (
-            [None, None, None],
+            [None, None, RuntimeError("Test Exception 3"), None],
+            None,
+            4,
+            1,
+            (pathlib.Path.cwd() / "test/path"),
+            True,
+        ),
+        (
+            [None, None, None, None],
             OSError("Test Exception 4"),
             0,
             2,
             (pathlib.Path.cwd() / "test/path"),
+            True,
         ),
     ],
 )
@@ -278,11 +306,14 @@ def test_pcan_configure_trace(
     logging_info_count,
     logging_error_count,
     logging_path,
+    trace_option,
 ):
     logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
     can_inst = CCPCanCan()
     caplog.clear()
-    can_inst.logging_path = logging_path
+    can_inst.trace_path = logging_path
+    can_inst.trace_size = 11
+    can_inst.segmented = trace_option
     with mock.patch.object(pathlib.Path, "mkdir", side_effect=os_makedirs_error):
         with mock.patch.object(can_inst, "_pcan_set_value", side_effect=side_effects):
             can_inst._pcan_configure_trace()
@@ -339,8 +370,8 @@ def test_cc_close_logging_deactivated(caplog, mock_can_bus, mock_PCANBasic):
         with CCPCanCan(logging_activated=False) as can_inst:
             pass
         mock_can_bus.Bus.shutdown.assert_called_once()
-        assert can_inst.bus == None
-        assert mock_PCANBasic.PCANBasic.Uninitialize.called == False
+        assert can_inst.bus is None
+        mock_PCANBasic.PCANBasic.Uninitialize.assert_not_called()
         assert not caplog.records
 
 
@@ -358,7 +389,7 @@ def test_cc_close(
 
         mock_can_bus.Bus.shutdown.assert_called_once()
         assert can_inst.bus == None
-        assert mock_PCANBasic.PCANBasic.Uninitialize.called == True
+        mock_PCANBasic.PCANBasic.Uninitialize.assert_called()
         assert not caplog.records
 
 
@@ -375,8 +406,8 @@ def test_cc_close_with_error(
             pass
 
         mock_can_bus.Bus.shutdown.assert_called_once()
-        assert can_inst.bus == None
-        assert mock_PCANBasic.PCANBasic.Uninitialize.called == True
+        assert can_inst.bus is None
+        mock_PCANBasic.PCANBasic.Uninitialize.assert_called()
         assert "Exception" not in caplog.text
         assert len(caplog.records) == 1
 
@@ -403,20 +434,20 @@ def test_cc_close_with_exception(
 @pytest.mark.parametrize(
     "parameters",
     [
-        (b"\x10\x36", 0x0A, True),
-        (b"\x10\x36", None, True),
-        (b"\x10\x36", 10, True),
-        (b"", 10, True),
-        (message_with_tlv, 0x0A, False),
-        (message_with_no_tlv, 0x0A, False),
-        (message_with_no_tlv,),
-        (message_with_no_tlv, 36),
+        {"msg": b"\x10\x36", "raw": True, "remote_id": 0x0A},
+        {"msg": b"\x10\x36", "raw": True, "remote_id": None},
+        {"msg": b"\x10\x36", "raw": True, "remote_id": 10},
+        {"msg": b"", "raw": True, "remote_id": 10},
+        {"msg": message_with_tlv, "raw": False, "remote_id": 0x0A},
+        {"msg": message_with_no_tlv, "raw": False, "remote_id": 0x0A},
+        {"msg": message_with_no_tlv},
+        {"msg": message_with_no_tlv, "raw": False, "remote_id": 36},
     ],
 )
 def test_cc_send(mock_can_bus, parameters, mock_PCANBasic):
 
     with CCPCanCan(remote_id=0x0A) as can:
-        can._cc_send(*parameters)
+        can._cc_send(**parameters)
 
     mock_can_bus.Bus.send.assert_called_once()
     mock_can_bus.Bus.shutdown.assert_called_once()
@@ -450,7 +481,10 @@ def test_can_recv(
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
     with CCPCanCan() as can:
-        msg_received, id_received = can._cc_receive(*cc_receive_param)
+        response = can._cc_receive(*cc_receive_param)
+
+    msg_received = response.get("msg")
+    id_received = response.get("remote_id")
 
     assert isinstance(msg_received, expected_type) == True
     assert id_received == can_id
@@ -467,13 +501,13 @@ def test_can_recv(
 )
 def test_can_recv_invalid(mocker, mock_can_bus, raw_state, mock_PCANBasic):
 
-    mocker.patch("can.interface.Bus.recv", return_value=None)
+    mocker.patch("can.interface.Bus.recv", return_value={"msg": None})
 
     with CCPCanCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001, raw=raw_state)
+        response = can._cc_receive(timeout=0.0001, raw=raw_state)
 
-    assert msg_received == None
-    assert id_received == None
+    assert response["msg"] is None
+    assert response.get("remote_id") is None
 
 
 def test_can_recv_exception(caplog, mocker, mock_can_bus, mock_PCANBasic):
@@ -483,10 +517,10 @@ def test_can_recv_exception(caplog, mocker, mock_can_bus, mock_PCANBasic):
     logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
 
     with CCPCanCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001)
+        response = can._cc_receive(timeout=0.0001)
 
-    assert msg_received == None
-    assert id_received == None
+    assert response["msg"] is None
+    assert response.get("remote_id") is None
     assert "Exception" in caplog.text
 
 
@@ -501,8 +535,8 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
     with caplog.at_level(logging.DEBUG):
 
         with CCPCanCan() as can:
-            msg_received, id_received = can._cc_receive(timeout=0.0001)
+            response = can._cc_receive(timeout=0.0001)
 
-    assert msg_received == None
-    assert id_received == None
+    assert response["msg"] is None
+    assert response.get("remote_id") is None
     assert "encountered can error: Invalid Message" in caplog.text

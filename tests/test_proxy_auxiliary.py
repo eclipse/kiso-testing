@@ -1,20 +1,21 @@
-##########################################################################
-# Copyright (c) 2010-2022 Robert Bosch GmbH
-# This program and the accompanying materials are made available under the
-# terms of the Eclipse Public License 2.0 which is available at
-# http://www.eclipse.org/legal/epl-2.0.
-#
-# SPDX-License-Identifier: EPL-2.0
-##########################################################################
+# ##########################################################################
+# # Copyright (c) 2010-2022 Robert Bosch GmbH
+# # This program and the accompanying materials are made available under the
+# # terms of the Eclipse Public License 2.0 which is available at
+# # http://www.eclipse.org/legal/epl-2.0.
+# #
+# # SPDX-License-Identifier: EPL-2.0
+# ##########################################################################
 
 import logging
 import queue
 import sys
 import threading
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
+
 import pytest
 
 from pykiso.connector import CChannel
+from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.auxiliaries.proxy_auxiliary import (
     ConfigRegistry,
     ProxyAuxiliary,
@@ -250,17 +251,15 @@ def test_abort_command(mocker, cchannel_inst):
 
 
 @pytest.mark.parametrize(
-    "message, source",
+    "response",
     [
-        (b"\x12\x34\x56", 0x545),
-        (b"\x12\x34\x56\x12\x34\x56", None),
+        {"msg": b"\x12\x34\x56", "remote_id": 0x545},
+        {"msg": b"\x12\x34\x56\x12\x34\x56", "remote_id": None},
     ],
 )
-def test_receive_message_valid(
-    mocker, cchannel_inst, mock_auxiliaries, message, source
-):
+def test_receive_message_valid(mocker, cchannel_inst, mock_auxiliaries, response):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", return_value=(message, source))
+    mocker.patch.object(CChannel, "cc_receive", return_value=response)
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     proxy_inst._receive_message()
@@ -271,20 +270,22 @@ def test_receive_message_valid(
     recv_aux1 = link_aux_1.channel.queue_out.get()
     recv_aux2 = link_aux_2.channel.queue_out.get()
 
-    msg_1, source_1 = recv_aux1
-    msg_2, source_2 = recv_aux2
+    msg_1 = recv_aux1["msg"]
+    source_1 = recv_aux1["remote_id"]
+    msg_2 = recv_aux2["msg"]
+    source_2 = recv_aux2["remote_id"]
 
-    assert isinstance(recv_aux1, list)
-    assert isinstance(recv_aux2, list)
-    assert msg_1 == message
-    assert source_1 == source
-    assert msg_2 == message
-    assert source_2 == source
+    assert isinstance(recv_aux1, dict)
+    assert isinstance(recv_aux2, dict)
+    assert msg_1 == response["msg"]
+    assert source_1 == response["remote_id"]
+    assert msg_2 == response["msg"]
+    assert source_2 == response["remote_id"]
 
 
 def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
     mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", return_value=(None, None))
+    mocker.patch.object(CChannel, "cc_receive", return_value={"msg": None})
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
     proxy_inst._receive_message()
@@ -308,14 +309,14 @@ def test_receive_message_exception(mocker, caplog, cchannel_inst):
 
 
 @pytest.mark.parametrize(
-    "message, remote_id",
+    "req",
     [
-        (b"\x12\x34\x56", 0x545),
-        (b"\x12\x34", 0x001),
-        (b"\x12\x34\x12\x34\x56", None),
+        {"msg": b"\x12\x34\x56", "remote_id": 0x545},
+        {"msg": b"\x12\x34", "remote_id": 0x001},
+        {"msg": b"\x12\x34\x12\x34\x56", "remote_id": None},
     ],
 )
-def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, message, remote_id):
+def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, req):
     mocker.patch.object(ProxyAuxiliary, "run")
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
@@ -323,13 +324,15 @@ def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, message, remo
     conn_use = sys.modules["pykiso.auxiliaries.MockAux1"].channel
     conn_not_use = sys.modules["pykiso.auxiliaries.MockAux2"].channel
 
-    proxy_inst._dispatch_command(message, conn_use, remote_id)
+    proxy_inst._dispatch_command(conn_use, **req)
 
-    msg, r_id = conn_not_use.queue_out.get()
+    spread_req = conn_not_use.queue_out.get()
+    msg = spread_req["msg"]
+    r_id = spread_req["remote_id"]
 
     assert conn_use.queue_out.empty()
-    assert msg == message
-    assert r_id == remote_id
+    assert msg == req["msg"]
+    assert r_id == req["remote_id"]
 
 
 def test_run_command(mocker, cchannel_inst, mock_auxiliaries):

@@ -125,6 +125,10 @@ Flow
 6. If the tests fail, you will see it in the the output. For more
    details, you can take a look at the log file (logs to STDOUT as default).
 
+.. note:: User can run several test using several times flag -c. If a folder path is specified,
+a log for each yaml file will be stored. If otherwise a filename is provided, all log information
+will be in one logfile.
+
 .. _define_test_information:
 
 Define the test information
@@ -159,6 +163,15 @@ tune the test collection and at the end ensure the execution of very specific te
 
     pykiso -c configuration_file --variant var1 --variant var2 --branch-level daily --branch-level nightly
 
+In order to utilise the SetUp/TearDown test-suite feature, users have to define a class inheriting from
+BasicTestSuiteSetup (:py:meth:`pykiso.test_coordinator.test_suite.BasicTestSuiteSetup`) or BasicTestSuiteTeardown
+(:py:meth:`pykiso.test_coordinator.test_suite.BasicTestSuiteTeardown`).
+For each of these classes, the following methods test_suite_setUp or test_suite_tearDown must be overridden with
+the behaviour you want to have.
+
+.. note:: Because the python unittest module is used in the background, all methods starting with "def test_" are
+executed automatically
+
 Find below a full example for a test suite/case declaration :
 
 .. code:: python
@@ -172,7 +185,12 @@ Find below a full example for a test suite/case declaration :
   """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
-        pass
+        def test_suite_setUp():
+            logging.info("I HAVE RUN THE TEST SUITE SETUP!")
+            if aux1.not_properly_configured():
+                aux1.configure()
+            aux2.configure()
+            callback_registering()
 
   """
   Add test suite teardown fixture, run once at test suite's end.
@@ -183,7 +201,9 @@ Find below a full example for a test suite/case declaration :
   """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
-        pass
+        def test_suite_tearDown():
+            logging.info("I HAVE RUN THE TEST SUITE TEARDOWN!")
+            callback_unregistering()
 
   """
   Add a test case 1 from test suite 1 using auxiliary 1.
@@ -203,6 +223,7 @@ Find below a full example for a test suite/case declaration :
     )
     class MyTest(pykiso.BasicTest):
         pass
+
 
 
 Implementation of Basic Tests

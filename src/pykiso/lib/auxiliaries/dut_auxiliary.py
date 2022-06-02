@@ -151,16 +151,16 @@ class DUTAuxiliary(AuxiliaryInterface):
 
         :returns: receive message
         """
-
         # Read message on the channel
-        received_message = self.channel.cc_receive(timeout_in_s)
+        recv_response = self.channel.cc_receive(timeout_in_s)
+        received_message = recv_response.get("msg")
         if received_message is not None:
             # Send ack
             self.channel._cc_send(
                 msg=received_message.generate_ack_message(message.MessageAckType.ACK)
             )
-        # Return message
-        return received_message
+            # Return message
+            return received_message
 
     def _send_ping_command(self, timeout: int, tries: int) -> bool:
         """Ping Pong test to confirm the communication state.
@@ -188,8 +188,9 @@ class DUTAuxiliary(AuxiliaryInterface):
             self.channel.cc_send(msg=ping_request)
 
             # Receive the message
-            pong_response = self.channel.cc_receive(timeout)
 
+            recv_response = self.channel.cc_receive(timeout)
+            pong_response = recv_response.get("msg")
             # Validate ping pong
             log.debug(f"ping: {ping_request}")
             log.debug(f"pong: {pong_response}")
@@ -232,8 +233,8 @@ class DUTAuxiliary(AuxiliaryInterface):
             # Send the message
             self.channel.cc_send(msg=message_to_send)
 
-            # Wait until we get something back
-            received_message = self.channel.cc_receive(timeout)
+            recv_response = self.channel.cc_receive(timeout)
+            received_message = recv_response.get("msg")
 
             # Check the outcome
             if received_message is None:
