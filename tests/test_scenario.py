@@ -7,12 +7,13 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import pytest
+
 from pykiso.lib.auxiliaries.simulated_auxiliary.scenario import (
+    ResponseTemplates,
     Scenario,
     TestScenario,
-    ResponseTemplates,
 )
-import pytest
 
 
 @pytest.fixture

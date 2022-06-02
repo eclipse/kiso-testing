@@ -7,10 +7,14 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import pytest
 import logging
+
+import pytest
+
 from pykiso import Message
-from pykiso.lib.auxiliaries.communication_auxiliary import CommunicationAuxiliary
+from pykiso.lib.auxiliaries.communication_auxiliary import (
+    CommunicationAuxiliary,
+)
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
 
@@ -69,7 +73,6 @@ def test_com_aux_messaging(com_aux_linker, caplog):
         f"retrieving message in {com_aux} (blocking={True}, timeout={None})"
         in caplog.text
     )
-    assert f"retrieved message '{msg}' in {com_aux}" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -178,3 +181,19 @@ def test_receive_message_exception(mocker, com_aux_init, caplog):
         f"encountered error while receiving message via {com_aux_init.channel}"
         in caplog.text
     )
+
+
+def test_receive_message_none(mocker, com_aux_init):
+    mocker.patch.object(com_aux_init, "wait_and_get_report", return_value=None)
+    recv = com_aux_init.receive_message(2)
+
+    assert recv is None
+
+
+def test_receive_message_with_remote_id(mocker, com_aux_init):
+    ret = {"msg": b"\x01", "remote_id": 0x123}
+
+    mocker.patch.object(com_aux_init, "wait_and_get_report", return_value=ret)
+    recv = com_aux_init.receive_message(2)
+
+    assert recv == (ret["msg"], ret["remote_id"])

@@ -7,8 +7,9 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import socket
 import logging
+import socket
+
 import pytest
 
 from pykiso.lib.connectors.cc_udp_server import CCUdpServer
@@ -138,7 +139,8 @@ def test_udp_server_recv_valid(
     with CCUdpServer("120.0.0.7", 5005) as udp_server:
         msg_received = udp_server._cc_receive(*cc_receive_param)
 
-    assert isinstance(msg_received, expected_type) == True
+    assert isinstance(msg_received, dict)
+    assert isinstance(msg_received["msg"], expected_type)
     mock_udp_socket.socket.settimeout.assert_called_once_with(
         cc_receive_param[0] or 1e-6
     )
@@ -172,5 +174,5 @@ def test_udp_recv_invalid(mocker, mock_udp_socket, side_effect_mock, caplog):
             f"encountered error while receiving message via {udp_server}" in caplog.text
         )
 
-    assert msg_received is None
+    assert msg_received["msg"] is None
     assert udp_server.address is None

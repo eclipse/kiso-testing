@@ -22,6 +22,7 @@ CommunicationAuxiliary
 """
 
 import logging
+from typing import Optional
 
 from pykiso import AuxiliaryInterface, CChannel, Message
 
@@ -50,7 +51,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
 
     def receive_message(
         self, blocking: bool = True, timeout_in_s: float = None
-    ) -> bytes:
+    ) -> Optional[bytes]:
         """Receive a raw message.
 
         :param blocking: wait for message till timeout elapses?
@@ -61,8 +62,22 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         log.debug(
             f"retrieving message in {self} (blocking={blocking}, timeout={timeout_in_s})"
         )
-        msg = self.wait_and_get_report(blocking=blocking, timeout_in_s=timeout_in_s)
-        log.debug(f"retrieved message '{msg}' in {self}")
+        response = self.wait_and_get_report(
+            blocking=blocking, timeout_in_s=timeout_in_s
+        )
+        log.debug(f"retrieved message '{response}' in {self}")
+
+        # if queue.Empty exception is raised None is returned so just
+        # directly return it
+        if response is None:
+            return None
+
+        msg = response.get("msg")
+        remote_id = response.get("remote_id")
+
+        # stay with the old return type to not making a breaking change
+        if remote_id is not None:
+            return (msg, remote_id)
         return msg
 
     def _create_auxiliary_instance(self) -> bool:
@@ -129,8 +144,10 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         """
         try:
             rcv_data = self.channel.cc_receive(timeout=0, raw=True)
-            log.debug(f"received message '{rcv_data}' from {self.channel}")
-            return rcv_data
+            msg = rcv_data.get("msg")
+            if msg is not None:
+                log.debug(f"received message '{rcv_data}' from {self.channel}")
+                return rcv_data
         except Exception:
             log.exception(
                 f"encountered error while receiving message via {self.channel}"

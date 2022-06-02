@@ -45,24 +45,24 @@ def test_cc_send():
 
 
 @pytest.mark.parametrize(
-    "timeout, raw, message, source",
+    "timeout, raw, raw_response",
     [
-        (0.200, True, b"\x12\x34\x56", None),
-        (0, False, b"\x12", 0x500),
-        (None, None, None, None),
+        (0.200, True, {"msg": b"\x12\x34\x56", "remote_id": None}),
+        (0, False, {"msg": b"\x12", "remote_id": 0x500}),
+        (None, None, {"msg": None, "remote_id": None}),
     ],
 )
-def test_cc_receive(timeout, raw, message, source):
+def test_cc_receive(timeout, raw, raw_response):
     with CCProxy() as proxy_inst:
-        proxy_inst.queue_out.put((message, source))
-        msg, src = proxy_inst._cc_receive(timeout, raw)
-        assert msg == message
-        assert src == source
+        proxy_inst.queue_out.put(raw_response)
+        resp = proxy_inst._cc_receive(timeout, raw)
+        assert resp["msg"] == raw_response["msg"]
+        assert resp["remote_id"] == raw_response["remote_id"]
 
 
 def test_cc_receive_timeout():
     with CCProxy() as proxy_inst:
         proxy_inst.timeout = 0.01
-        msg, src = proxy_inst._cc_receive()
-        assert msg == None
-        assert src == None
+        response = proxy_inst._cc_receive()
+        assert response["msg"] is None
+        assert response.get("remote_id") is None

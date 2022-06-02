@@ -26,13 +26,16 @@ has to be used with a so called proxy auxiliary.
 import logging
 import queue
 from multiprocessing import Queue
-from typing import Tuple, Union
+from typing import Dict, Union
 
 from pykiso import Message
 from pykiso.connector import CChannel
 
 ProxyReturn = Union[
-    Tuple[bytes, int], Tuple[bytes, None], Tuple[Message, None], Tuple[None, None]
+    Dict[str, Union[bytes, int]],
+    Dict[str, Union[bytes, None]],
+    Dict[str, Union[Message, None]],
+    Dict[str, Union[None, None]],
 ]
 
 log = logging.getLogger(__name__)
@@ -80,8 +83,8 @@ class CCProxy(CChannel):
         """
 
         try:
-            raw_msg, source = self.queue_out.get(True, self.timeout)
-            log.debug(f"received at proxy level : {raw_msg} || source {source}")
-            return raw_msg, source
+            return_response = self.queue_out.get(True, self.timeout)
+            log.debug(f"received at proxy level : {return_response}")
+            return return_response
         except queue.Empty:
-            return None, None
+            return {"msg": None}
