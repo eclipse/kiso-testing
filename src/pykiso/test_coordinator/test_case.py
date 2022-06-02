@@ -153,7 +153,9 @@ class BasicTest(unittest.TestCase):
         if any([setup_timeout, run_timeout, teardown_timeout]) and not isinstance(
             self, RemoteTest
         ):
-            log.warning("For BasicTest, timeout are not taken into account")
+            log.warning(
+                "BasicTest does not support test timeouts, it will be discarded"
+            )
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.

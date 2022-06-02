@@ -107,7 +107,7 @@ from pykiso.auxiliaries import """
         + ","
         + aux2
         + """])
-class SuiteSetup(pykiso.BasicTestSuiteSetup):
+class SuiteSetup(pykiso.RemoteTestSuiteSetup):
     pass
 
 
@@ -116,14 +116,14 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
         + ","
         + aux2
         + """])
-class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     pass
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=["""
         + aux1
         + """])
-class MyTest(pykiso.BasicTest):
+class MyTest(pykiso.RemoteTest):
     def test_run(self):
         logging.info("I HAVE RUN 0.1.1!")
         """

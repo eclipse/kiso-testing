@@ -176,9 +176,10 @@ def CustomTestCaseAndSuite(request):
                 suite_id=param[0], case_id=param[1], aux_list=param[2]
             )
             class MyTestCase(test_case.BasicTest):
-                pass
+                def test_run(self) -> None:
+                    pass
 
-            self.suite.addTest(MyTestCase("test_run"))
+            self.suite.addTest(MyTestCase(methodName="test_run"))
 
         def prepare_remote_test_cases(self, param):
             @define_test_parameters(

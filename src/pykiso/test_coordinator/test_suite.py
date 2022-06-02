@@ -34,6 +34,8 @@ __all__ = [
     "BaseTestSuite",
     "BasicTestSuiteSetup",
     "BasicTestSuiteTeardown",
+    "RemoteTestSuiteSetup",
+    "RemoteTestSuiteTeardown",
     "BasicTestSuite",
 ]
 
@@ -143,7 +145,9 @@ class BasicTestSuiteSetup(BaseTestSuite):
             kwargs,
         )
         if any([setup_timeout, run_timeout, teardown_timeout]):
-            log.warning("For BasicTestSuiteSetup, timeout are not taken into account")
+            log.warning(
+                "BasicTestSuiteSetup does not support test timeouts, it will be discarded"
+            )
 
     def test_suite_setUp(self):
         """Test method for constructing the actual test suite."""
@@ -196,7 +200,7 @@ class BasicTestSuiteTeardown(BaseTestSuite):
         )
         if any([setup_timeout, run_timeout, teardown_timeout]):
             log.warning(
-                "For BasicTestSuiteTeardown, timeout are not taken into account"
+                "BasicTestSuiteTeardown does not support test timeouts, it will be discarded"
             )
 
     def test_suite_tearDown(self):
@@ -254,7 +258,9 @@ class RemoteTestSuiteSetup(BasicTestSuiteSetup):
         )
         self.setup_timeout = setup_timeout or RemoteTestSuiteSetup.response_timeout
         self.run_timeout = run_timeout or RemoteTestSuiteSetup.response_timeout
-        self.teardown_timeout = teardown_timeout or RemoteTestSuiteSetup.response_timeout
+        self.teardown_timeout = (
+            teardown_timeout or RemoteTestSuiteSetup.response_timeout
+        )
 
     @test_app_interaction(
         message_type=message.MessageCommandType.TEST_SUITE_SETUP, timeout_cmd=5

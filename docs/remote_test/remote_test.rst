@@ -1,32 +1,34 @@
 Remote Test
 ===========
 
-With the RemoteTest approach, the idea is to execute tests on the targeted hardware to enable 
+With the remote test approach, the idea is to execute tests on the targeted hardware to enable 
 the developer to practice test-driven-development directly on the target.
 
 
 Test Coordinator
 ~~~~~~~~~~~~~~~~
 
-In the case of TestApp usage, the **test-coordinator** will still perform the same task 
+In the case of remote tests usage, the **test-coordinator** will still perform the same task 
 but will also:
 
 -  verify if the tests can be performed
 -  flash and run and synchronize the tests on the *device under test*
 
-DUT Auxiliary
-~~~~~~~~~~~~~
+Auxiliary
+~~~~~~~~~
 
-For TestApp usage the *device under test* auxiliary should be used.
-Like other auxiliaries it is composed by 2 blocks:
+For the remote test approach, auxiliaries should be composed by 2 blocks:
 
 -  physical or digital instance creation / deletion (e.g. flash the
    *device under test* with the testing software, e.g. Start a docker
    container)
-  -  As communication channel (**cchannel**) usually *UART*
-
 -  connectors to facilitate interaction and communication with the
    device (e.g. flashing via *JTAG*, messaging with *UART*)
+  
+One example of implementation of such an auxiliary is the *device under test* auxiliary used with the TestApp.
+In this specific case we have:
+ 
+  -  As communication channel (**cchannel**) usually *UART*
   -  As flashing channel (**flashing**) usually *JTAG*
 
 
@@ -246,9 +248,9 @@ The flashing connector is in turn called from an appropriate auxiliary (usually 
 
 
 Implementation of Remote Tests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For test using the TestApp, RemoteTestCase / RemoteTestSuite should be used instead of BasicTestCase / BasicTestSuite, based on Message Protocol, 
+For remote tests, RemoteTestCase / RemoteTestSuite should be used instead of BasicTestCase / BasicTestSuite, based on Message Protocol, 
 users can configure the maximum time (in seconds) used to wait for a report.
 This "timeout" is configurable for each available fixtures :
 
@@ -317,12 +319,12 @@ Find below a full example for a test suite/case declaration in case the Message 
         pass
 
 
-Config File for DUT Auxiliaries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Config File for remote tests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For details see :ref:`../getting_started/config_file`.
 
-Example:
+Find below an example of config for used for remote testing (is that case using *device under test* auxiliary)
 
 .. literalinclude:: ../../examples/fdx_lauterbach.yaml
     :language: yaml

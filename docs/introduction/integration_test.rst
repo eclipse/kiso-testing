@@ -4,9 +4,7 @@ Pykiso
 Introduction
 ------------
 
-The Integration Test Framework (Pykiso) provides the possibility to write and run
-tests on a HW target. It is built to orchestrate the entities and
-services involved in the tests. The framework can be used for both
+Integration Test Framework (Pykiso) is a framework that can be used for both
 white-box and black-box testing as well as in the integration and system
 testing.
 
@@ -39,7 +37,7 @@ following:
 -  generate the list of tests to perform
 -  provide the testcases with the auxiliaries they need
 -  verify if the tests can be performed 
--  when using the TestApp (see :ref:`../remote_test/remote_test`) flash and run and synchronize the tests on the auxiliaries
+-  for remote tests (see :ref:`../remote_test/remote_test`) flash and run and synchronize the tests on the auxiliaries
 -  gather the reports and publish the results
 
 Auxiliary
