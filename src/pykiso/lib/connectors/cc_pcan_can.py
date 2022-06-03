@@ -21,7 +21,7 @@ Can Communication Channel using PCAN hardware
 
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Dict, Union
 
 import can
 import can.bus
@@ -34,6 +34,20 @@ MessageType = Union[Message, bytes]
 log = logging.getLogger(__name__)
 
 
+class PcanFilter(logging.Filter):
+    """Filter specific pcan logging messages"""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Determine if the specified record is to be logged. It will not if
+        it is a pcan bus error message
+
+        :param record: record of the event to filter if it is a pcan bus error
+
+        :return: True if the record should be logged, or False otherwise.
+        """
+        return not record.getMessage().startswith("Bus error: an error counter")
+
+
 class CCPCanCan(CChannel):
     """CAN FD channel-adapter."""
 
@@ -42,6 +56,8 @@ class CCPCanCan(CChannel):
         interface: str = "pcan",
         channel: str = "PCAN_USBBUS1",
         state: str = "ACTIVE",
+        trace_path: str = "",
+        trace_size: int = 10,
         bitrate: int = 500000,
         is_fd: bool = True,
         enable_brs: bool = False,
@@ -58,6 +74,7 @@ class CCPCanCan(CChannel):
         remote_id: int = None,
         can_filters: list = None,
         logging_activated: bool = True,
+        bus_error_warning_filter: bool = False,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -65,6 +82,8 @@ class CCPCanCan(CChannel):
         :param interface: python-can interface modules used
         :param channel: the can interface name
         :param state: BusState of the channel
+        :param trace_path: path to write the trace
+        :param trace_size: maximum size of the trace (in MB)
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
         :param enable_brs: sets the bitrate_switch flag to use higher transmission speed
@@ -88,11 +107,15 @@ class CCPCanCan(CChannel):
         :param remote_id: id used for transmission
         :param can_filters: iterable used to filter can id on reception
         :param logging_activated: boolean used to disable logfile creation
+        :param bus_error_warning_filter : if True filter the logging message
+        ('Bus error: an error counter')
         """
         super().__init__(**kwargs)
         self.interface = interface
         self.channel = channel
         self.state = can.bus.BusState[state.upper()]
+        self.trace_path = Path(trace_path)
+        self.trace_size = trace_size
         self.bitrate = bitrate
         self.is_fd = is_fd
         self.enable_brs = enable_brs
@@ -126,18 +149,21 @@ class CCPCanCan(CChannel):
         generic logfile in the current working directory, which will be
         overwritten every time, a log is initiated.
         """
-        if self.logging_activated:
-            try:
-                self.logging_path = (
-                    Path(log.getLoggerClass().root.handlers[0].baseFilename)
-                    .absolute()
-                    .parent
-                    / "raw/PCAN/"
-                )
-            except AttributeError:
-                log.warning("Logging path of the logging module not set to file")
+        if self.trace_path.is_file():
+            self.trace_path = self.trace_path.parent
+            log.warning(
+                f"File names are not supported for trace file creation. Trace will be written to {self.trace_path}"
+            )
 
-        log.info(f"Logging path for PCAN set to {self.logging_path}")
+        if not 0 < self.trace_size <= 100:
+            self.trace_size = 10
+            log.warning(
+                f"Make sure trace size is between 1 and 100 Mb. Setting trace size to default value "
+                f"value : {self.trace_size}."
+            )
+
+        if bus_error_warning_filter:
+            logging.getLogger("can.pcan").addFilter(PcanFilter())
 
         if self.enable_brs and not self.is_fd:
             log.warning(
@@ -179,29 +205,47 @@ class CCPCanCan(CChannel):
         No exception is thrown in this case.
         """
         pcan_channel = getattr(PCANBasic, self.channel)
-        if self.logging_path is None:
+        if self.trace_path is None:
+            log.warning(
+                "No trace path specified, an existing trace will be overwritten."
+            )
             pcan_path_argument = PCANBasic.TRACE_FILE_OVERWRITE
         else:
             pcan_path_argument = PCANBasic.TRACE_FILE_DATE | PCANBasic.TRACE_FILE_TIME
         try:
-            if self.logging_path is not None:
-                if not Path(self.logging_path).exists():
-                    Path(self.logging_path).mkdir(parents=True, exist_ok=True)
-                    log.info(f"Path {self.logging_path} created")
+            if self.trace_path is not None:
+                if not Path(self.trace_path).exists():
+                    Path(self.trace_path).mkdir(parents=True, exist_ok=True)
+                    log.info(f"Path {self.trace_path} created")
                 self._pcan_set_value(
                     pcan_channel,
                     PCANBasic.PCAN_TRACE_LOCATION,
-                    bytes(self.logging_path),
+                    bytes(self.trace_path),
                 )
                 log.info(
-                    f"Tracefile path in PCAN device configured to {self.logging_path}"
+                    f"Tracefile path in PCAN device configured to {self.trace_path}"
                 )
+
+            log.info("Segmented option of trace file activated.")
+            self._pcan_set_value(
+                pcan_channel,
+                PCANBasic.TRACE_FILE_SEGMENTED,
+                PCANBasic.PCAN_PARAMETER_ON,
+            )
+
+            if self.trace_size != 10:
+                log.info(f"Trace size set to {self.trace_size} MB.")
+                self._pcan_set_value(
+                    pcan_channel, PCANBasic.PCAN_TRACE_SIZE, self.trace_size
+                )
+
             self._pcan_set_value(
                 pcan_channel,
                 PCANBasic.PCAN_TRACE_CONFIGURE,
                 pcan_path_argument,
             )
             log.info("Tracefile configured")
+
             self._pcan_set_value(
                 pcan_channel, PCANBasic.PCAN_TRACE_STATUS, PCANBasic.PCAN_PARAMETER_ON
             )
@@ -255,9 +299,7 @@ class CCPCanCan(CChannel):
             finally:
                 self.raw_pcan_interface = None
 
-    def _cc_send(
-        self, msg: MessageType, remote_id: int = None, raw: bool = False
-    ) -> None:
+    def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
         If remote_id parameter is not given take configured ones, in addition if
@@ -265,11 +307,12 @@ class CCPCanCan(CChannel):
         test entity protocol format.
 
         :param msg: data to send
-        :param remote_id: destination can id used
         :param raw: boolean use to select test entity protocol format
+        :param kwargs: named arguments
 
         """
         _data = msg
+        remote_id = kwargs.get("remote_id")
 
         if remote_id is None:
             remote_id = self.remote_id
@@ -290,7 +333,7 @@ class CCPCanCan(CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.0001, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
         If raw parameter is set to True return received message as it is (bytes)
@@ -299,10 +342,11 @@ class CCPCanCan(CChannel):
         :param timeout: timeout applied on reception
         :param raw: boolean use to select test entity protocol format
 
-        :return: tuple containing the received data and the source can id
+        :return: the received data and the source can id
         """
         try:  # Catch bus errors & rcv.data errors when no messages where received
             received_msg = self.bus.recv(timeout=timeout or self.timeout)
+
             if received_msg is not None:
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data
@@ -310,12 +354,12 @@ class CCPCanCan(CChannel):
                 if not raw:
                     payload = Message.parse_packet(payload)
                 log.debug(f"received CAN Message: {frame_id}, {payload}, {timestamp}")
-                return payload, frame_id
+                return {"msg": payload, "remote_id": frame_id}
             else:
-                return None, None
+                return {"msg": None}
         except can.CanError as can_error:
             log.debug(f"encountered can error: {can_error}")
-            return None, None
+            return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
-            return None, None
+            return {"msg": None}

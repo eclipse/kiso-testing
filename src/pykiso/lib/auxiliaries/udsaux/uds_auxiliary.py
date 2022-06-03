@@ -231,9 +231,11 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
         :param timeout_in_s: timeout on reception.
         """
-        received_data, arbitration_id = self.channel.cc_receive(
-            timeout=timeout_in_s, raw=True
-        )
+
+        recv_response = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
+        received_data = recv_response.get("msg")
+        arbitration_id = recv_response.get("remote_id")
+
         if received_data is not None:
             can_msg = can.Message(
                 data=received_data, arbitration_id=arbitration_id, is_extended_id=False

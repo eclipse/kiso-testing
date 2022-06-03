@@ -9,66 +9,90 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version Unreleased (2022-04-11)
+## Version Unreleased (2022-05-05)
+
+#### New Features
+
+* add flag to make bus error warning switchable for pcan connector
+
+## Version 0.17.0 (2022-04-14)
 
 #### Fixes
 
+* use coverage coonfig from pyproject.toml
+* restrict markupsafe versions and cleanup docs
+* remove --dev option (default for poetry)
+* pytest config and flake8 excludes
 * qsize() not available for macos x
 #### Refactorings
 
+* replace all setuptools-based files with poetry
 * change variant decorator
 #### Docs
 
-* add section whats new ([#38](https://github.com/Vcagnion/kiso-testing/issues/38))
+* rework getting_started
+* replace all occurences of pipenv with poetry
+* add section whats new ([#38](https://github.com/eclipse/kiso-testing/issues/38))
+#### Continous integration
 
-Full set of changes: [`0.16.0...55b2414`](https://github.com/Vcagnion/kiso-testing/compare/0.16.0...55b2414)
+* add poetry installation
+* skip poetry install
+* update pipeline with poetry
+#### Others
+
+* add poetry installation
+* skip poetry install
+* update pipeline with poetry
+* add missing unittests
+
+Full set of changes: [`0.16.0...0.17.0`](https://github.com/eclipse/kiso-testing/compare/0.16.0...0.17.0)
 
 ## Version 0.16.0 (2022-03-22)
 
 #### New Features
 
-* update to new release 0.16.0 ([#34](https://github.com/Vcagnion/kiso-testing/issues/34))
-* raise an exception when auxiliary failed at instance creation ([#33](https://github.com/Vcagnion/kiso-testing/issues/33))
-* restore yaml loader in config parser ([#31](https://github.com/Vcagnion/kiso-testing/issues/31))
+* update to new release 0.16.0 ([#34](https://github.com/eclipse/kiso-testing/issues/34))
+* raise an exception when auxiliary failed at instance creation ([#33](https://github.com/eclipse/kiso-testing/issues/33))
+* restore yaml loader in config parser ([#31](https://github.com/eclipse/kiso-testing/issues/31))
 * add uptime for pcan inside python-can
 * expose yaml and cli configuration to user test cases/suites
 * add uptime for pcan inside python-can
 #### Fixes
 
-* wait for logger thread to quit gracefully before closing segger channel ([#28](https://github.com/Vcagnion/kiso-testing/issues/28))
+* wait for logger thread to quit gracefully before closing segger channel ([#28](https://github.com/eclipse/kiso-testing/issues/28))
 #### Docs
 
-* Change auto changelog tool ([#30](https://github.com/Vcagnion/kiso-testing/issues/30))
+* Change auto changelog tool ([#30](https://github.com/eclipse/kiso-testing/issues/30))
 #### Continous integration
 
 * add skip lock for pipenv to prevent hangup
 * add skip lock for pipenv to prevent hangup
-* github-action for codecov ([#27](https://github.com/Vcagnion/kiso-testing/issues/27))
+* github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
 #### Others
 
 * add skip lock for pipenv to prevent hangup
 * add skip lock for pipenv to prevent hangup
-* github-action for codecov ([#27](https://github.com/Vcagnion/kiso-testing/issues/27))
+* github-action for codecov ([#27](https://github.com/eclipse/kiso-testing/issues/27))
 
-Full set of changes: [`0.15.1...0.16.0`](https://github.com/Vcagnion/kiso-testing/compare/0.15.1...0.16.0)
+Full set of changes: [`0.15.1...0.16.0`](https://github.com/eclipse/kiso-testing/compare/0.15.1...0.16.0)
 
 ## Version 0.15.1 (2022-02-17)
 
 #### Docs
 
-* add links for how to create an auxiliary and connector ([#17](https://github.com/Vcagnion/kiso-testing/issues/17))
+* add links for how to create an auxiliary and connector ([#17](https://github.com/eclipse/kiso-testing/issues/17))
 
-Full set of changes: [`0.15.0...0.15.1`](https://github.com/Vcagnion/kiso-testing/compare/0.15.0...0.15.1)
+Full set of changes: [`0.15.0...0.15.1`](https://github.com/eclipse/kiso-testing/compare/0.15.0...0.15.1)
 
 ## Version 0.15.0 (2022-02-11)
 
 #### New Features
 
-* update to new release 0.15 ([#13](https://github.com/Vcagnion/kiso-testing/issues/13))
+* update to new release 0.15 ([#13](https://github.com/eclipse/kiso-testing/issues/13))
 #### Docs
 
-* autogen changelog ([#15](https://github.com/Vcagnion/kiso-testing/issues/15))
-* restructure docs ([#14](https://github.com/Vcagnion/kiso-testing/issues/14))
+* autogen changelog ([#15](https://github.com/eclipse/kiso-testing/issues/15))
+* restructure docs ([#14](https://github.com/eclipse/kiso-testing/issues/14))
 ### Version 0.15.0
 
 Features:

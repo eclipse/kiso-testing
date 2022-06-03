@@ -292,19 +292,21 @@ class TestUdsAuxiliary:
 
         send_mock.assert_called_once()
 
-    def test_read_data(self, uds_raw_aux_inst, mocker):
+    @pytest.mark.parametrize("uds_config, mock_count", [(True, 1), (False, 0)])
+    def test_read_data(self, uds_raw_aux_inst, mocker, uds_config, mock_count):
         send_mock = mocker.patch.object(uds_raw_aux_inst, "send_uds_config")
-        uds_raw_aux_inst.uds_config_enable = True
+        uds_raw_aux_inst.uds_config_enable = uds_config
 
         uds_raw_aux_inst.read_data(parameter="test")
-        send_mock.assert_called_once()
+        assert send_mock.call_count == mock_count
 
-    def test_write_data(self, uds_raw_aux_inst, mocker):
+    @pytest.mark.parametrize("uds_config, mock_count", [(True, 1), (False, 0)])
+    def test_write_data(self, uds_raw_aux_inst, mocker, uds_config, mock_count):
         send_mock = mocker.patch.object(uds_raw_aux_inst, "send_uds_config")
-        uds_raw_aux_inst.uds_config_enable = True
+        uds_raw_aux_inst.uds_config_enable = uds_config
 
         uds_raw_aux_inst.write_data(parameter="test", value=b"\x01")
-        send_mock.assert_called_once()
+        assert send_mock.call_count == mock_count
 
     def test_Response_wrap(self, uds_raw_aux_inst, mock_uds_config, mocker):
         mock_uds_config.send.return_value = [0x7F, 0x03, 0x22]
