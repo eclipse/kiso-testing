@@ -1,0 +1,21 @@
+auxiliaries:
+  uds_aux:
+    connectors:
+        com: can_channel
+    config:
+      odx_file_path: null
+      request_id: 0x123
+      response_id: 0x321
+      config_ini_path: ./examples/test_uds/config.ini
+    type: pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary:UdsServerAuxiliary
+connectors:
+  can_channel:
+    config:
+      interface : 'pcan'
+      channel: 'PCAN_USBBUS1'
+      state: 'ACTIVE'
+    type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
+test_suite_list:
+- suite_dir: test_uds
+  test_filter_pattern: 'test_uds_server.py'
+  test_suite_id: 1
