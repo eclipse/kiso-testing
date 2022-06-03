@@ -9,6 +9,8 @@
 ##########################################################################
 
 import logging
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -155,6 +157,10 @@ class TestUdsServerAuxiliary:
         encoded_stmin = UdsServerAuxiliary.encode_stmin(stmin_in_ms)
         assert encoded_stmin == expected_stmin
 
+    def test_encode_stmin_exception(self):
+        with pytest.raises(ValueError):
+            UdsServerAuxiliary.encode_stmin(-1)
+
     @pytest.mark.parametrize(
         "fs, bs, stmin, expected_flow_control",
         [
@@ -243,3 +249,23 @@ class TestUdsServerAuxiliary:
 
         assert "oopsi" in caplog.text
         mock_dispatch.assert_not_called()
+
+    def test__dispatch_callback(self, mocker, uds_server_aux_inst):
+        callback_mock = MagicMock()
+        callback_mock.request = [0x01]
+
+        uds_server_aux_inst._callbacks = {"0x0102": callback_mock}
+
+        received_request = [0x01, 0x02]
+        uds_server_aux_inst._dispatch_callback(received_request)
+
+        callback_mock.assert_called_once_with(received_request, uds_server_aux_inst)
+
+    def test__dispatch_callback_no_callback(self, mocker, caplog, uds_server_aux_inst):
+        mocker.patch.object(UdsServerAuxiliary, "callbacks", return_value=dict())
+
+        received_request = [0x01, 0x02]
+        with caplog.at_level(logging.WARNING):
+            uds_server_aux_inst._dispatch_callback(received_request)
+
+        assert "Unregistered request received" in caplog.text

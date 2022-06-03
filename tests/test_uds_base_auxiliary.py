@@ -10,6 +10,7 @@
 
 import logging
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -82,30 +83,28 @@ class TestUdsAuxiliary:
         assert uds_raw_aux_inst.odx_file_path is None
         assert uds_raw_aux_inst.config_ini_path == tmp_uds_config_ini
 
-    @mock.patch(
-        "pykiso.lib.auxiliaries.udsaux.common.uds_base_auxiliary.createUdsConnection"
+    @pytest.mark.parametrize(
+        "channel_name", ["CCPCanCan", "CCVectorCan", "CCSocketCan", "CCProxy"]
     )
-    def test_create_auxiliary_instance_odx(self, uds_mocker, uds_odx_aux_inst):
-        uds_mocker.return_value = "UdsInstanceOdx"
+    def test_create_auxiliary_instance_odx(
+        self, channel_name, mocker, uds_odx_aux_inst
+    ):
 
-        uds_odx_aux_inst.channel.__class__.__name__ = "CCPCanCan"
+        uds_mocker = mocker.patch(
+            "pykiso.lib.auxiliaries.udsaux.common.uds_base_auxiliary.createUdsConnection",
+        )
+        uds_odx_aux_inst.receive = MagicMock()
+        uds_odx_aux_inst.transmit = MagicMock()
+
+        mocker.patch.object(uds_odx_aux_inst, "uds_config")
+
+        uds_odx_aux_inst.channel.__class__.__name__ = channel_name
         uds_odx_aux_inst._create_auxiliary_instance()
 
+        uds_odx_aux_inst.uds_config.tp.overwrite_receive_method.assert_called_once()
+        uds_odx_aux_inst.uds_config.tp.overwrite_transmit_method.assert_called_once()
         uds_mocker.assert_called_once()
-        assert uds_odx_aux_inst.uds_config == "UdsInstanceOdx"
-        assert uds_odx_aux_inst.uds_config_enable
-
-    @mock.patch(
-        "pykiso.lib.auxiliaries.udsaux.common.uds_base_auxiliary.createUdsConnection"
-    )
-    def test_create_auxiliary_instance_odx_v(self, uds_mocker, uds_odx_aux_inst):
-        uds_mocker.return_value = "UdsInstanceOdx"
-
-        uds_odx_aux_inst.channel.__class__.__name__ = "CCVectorCan"
-        uds_odx_aux_inst._create_auxiliary_instance()
-
-        uds_mocker.assert_called_once()
-        assert uds_odx_aux_inst.uds_config == "UdsInstanceOdx"
+        assert uds_odx_aux_inst.uds_config is not None
         assert uds_odx_aux_inst.uds_config_enable
 
     @mock.patch("pykiso.lib.auxiliaries.udsaux.common.uds_base_auxiliary.Uds")

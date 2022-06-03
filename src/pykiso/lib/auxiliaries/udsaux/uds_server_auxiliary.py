@@ -246,23 +246,16 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :param received_uds_data: received UDS request from the client.
         """
-        if self.uds_config_enable:
-            service_id = received_uds_data[0]
-            service_config = self._ecu_config.get(service_id)
-            for service_subconfig in service_config:
-                if received_uds_data == service_subconfig["request"]:
-                    self.send_response(service_subconfig["response"])
+        for callback in self.callbacks.values():
+            # match on the registered request instead of the entire received request
+            if callback.request == received_uds_data[: len(callback.request)]:
+                callback_to_execute = callback
+                break
         else:
-            for callback in self.callbacks.values():
-                # match on the registered request instead of the entire received request
-                if callback.request == received_uds_data[: len(callback.request)]:
-                    callback_to_execute = callback
-                    break
-            else:
-                log.warning(
-                    f"Unregistered request received: {self.format_data(received_uds_data)}"
-                )
-                return
+            log.warning(
+                f"Unregistered request received: {self.format_data(received_uds_data)}"
+            )
+            return
 
         callback_to_execute(received_uds_data, self)
         return
