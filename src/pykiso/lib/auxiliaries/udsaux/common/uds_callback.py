@@ -244,6 +244,8 @@ class UdsDownloadCallback(UdsCallback):
             if transfer_request is None:
                 continue
 
+            # reset timer
+            transfer_start_time = time.perf_counter()
             # decode PCI to extract the block data length
             expected_data_len, pci_len = self.get_first_frame_data_length(
                 transfer_request

@@ -125,9 +125,10 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :return: the received message or None.
         """
-        received_data, arbitration_id = self.channel._cc_receive(timeout=0, raw=True)
-        if received_data is not None and arbitration_id == self.res_id:
-            return received_data
+        rcv_data = self.channel._cc_receive(timeout=0, raw=True)
+        msg, arbitration_id = rcv_data.get("msg"), rcv_data.get("remote_id")
+        if msg is not None and arbitration_id == self.res_id:
+            return msg
 
     def send_response(self, response_data: List[int]) -> None:
         """Encode and transmit a UDS response.
@@ -222,15 +223,16 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :param timeout_in_s: timeout on reception.
         """
-        received_data, arbitration_id = self.channel.cc_receive(timeout_in_s, raw=True)
-        if received_data is not None and arbitration_id == self.res_id:
+        rcv_data = self.channel.cc_receive(timeout_in_s, raw=True)
+        msg, arbitration_id = rcv_data.get("msg"), rcv_data.get("remote_id")
+        if msg is not None and arbitration_id == self.res_id:
             try:
                 uds_data = self.uds_config.tp.decode_isotp(
-                    received_data=received_data, use_external_snd_rcv_functions=True
+                    received_data=msg, use_external_snd_rcv_functions=True
                 )
                 log.debug(
                     "Received ISO TP data: %s || UDS data: %s",
-                    f"0x{received_data.hex()}",
+                    f"0x{msg.hex()}",
                     self.format_data(uds_data),
                 )
             except Exception as e:

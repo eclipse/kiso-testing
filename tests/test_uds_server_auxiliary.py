@@ -124,7 +124,11 @@ class TestUdsServerAuxiliary:
 
     @pytest.mark.parametrize(
         "cc_receive_return, expected_received_data",
-        [((None, 0xAC), None), ((b"DATA", 0xDC), None), ((b"DATA", 0xAC), b"DATA")],
+        [
+            ({"msg": None, "remote_id": 0xAC}, None),
+            ({"msg": b"DATA", "remote_id": 0xDC}, None),
+            ({"msg": b"DATA", "remote_id": 0xAC}, b"DATA"),
+        ],
     )
     def test_receive(
         self, mocker, uds_server_aux_inst, cc_receive_return, expected_received_data
@@ -215,7 +219,10 @@ class TestUdsServerAuxiliary:
 
     def test__receive_message(self, mocker, uds_server_aux_inst):
         mock_channel = mocker.patch.object(uds_server_aux_inst, "channel")
-        mock_channel.cc_receive.return_value = (b"DATA", uds_server_aux_inst.res_id)
+        mock_channel.cc_receive.return_value = {
+            "msg": b"DATA",
+            "remote_id": uds_server_aux_inst.res_id,
+        }
 
         mock_uds_config = mocker.patch.object(uds_server_aux_inst, "uds_config")
         mock_uds_config.tp.decode_isotp.return_value = [1, 2, 3]
@@ -232,7 +239,10 @@ class TestUdsServerAuxiliary:
 
     def test__receive_message_exception(self, caplog, mocker, uds_server_aux_inst):
         mock_channel = mocker.patch.object(uds_server_aux_inst, "channel")
-        mock_channel.cc_receive.return_value = (b"DATA", uds_server_aux_inst.res_id)
+        mock_channel.cc_receive.return_value = {
+            "msg": b"DATA",
+            "remote_id": uds_server_aux_inst.res_id,
+        }
 
         mock_uds_config = mocker.patch.object(uds_server_aux_inst, "uds_config")
         mock_uds_config.tp.decode_isotp.side_effect = Exception("oopsi")
