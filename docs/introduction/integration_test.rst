@@ -10,6 +10,39 @@ services involved in the tests. The framework can be used for both
 white-box and black-box testing as well as in the integration and system
 testing.
 
+Quality Goals
+-------------
+The framework tries to achieve the following quality goals:
+
++---------------------------+----------------------------------------------------------------------------------------------------+
+| Quality Goal (with prio)  | Scenarios                                                                                          |
++===========================+====================================================================================================+
+| **Portability**           | The framework shall run on linux, windows, macOS                                                   |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall run on a raspberryPI or a regular laptop                                       |
++---------------------------+----------------------------------------------------------------------------------------------------+
+| **Modularity**            | The framework shall allow me to implement complex logic and to run it over any communication port  |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall allow me to add any communication port                                         |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall allow me to use private modules within my tests if it respects its APIs        |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall allow me to define my own test approach                                        |
++---------------------------+----------------------------------------------------------------------------------------------------+
+| **Correctness**           | The framework shall verify that its inputs (test-setup) are correct before performing any test     |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall execute the provided tests always in the same order                            |
++---------------------------+----------------------------------------------------------------------------------------------------+
+| **Usability**             | The framework shall feel familiar for embedded developers                                          |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall feel familiar for system tester                                                |
++---------------------------+----------------------------------------------------------------------------------------------------+
+|                           | The framework shall generate test reports that are human and machine readable                      |
++---------------------------+----------------------------------------------------------------------------------------------------+
+| **Performance** (new)     | The framework shall use only the right/reasonable amount of resources to run (real-time timings)   |
++---------------------------+----------------------------------------------------------------------------------------------------+
+
+
 Design Overview
 ---------------
 
@@ -383,6 +416,15 @@ tune the test collection and at the end ensure the execution of very specific te
 
     pykiso -c configuration_file --variant var1 --variant var2 --branch-level daily --branch-level nightly
 
+In order to utilise the SetUp/TearDown test-suite feature, users have to define a class inheriting from
+BasicTestSuiteSetup (:py:meth:`pykiso.test_coordinator.test_suite.BasicTestSuiteSetup`) or BasicTestSuiteTeardown
+(:py:meth:`pykiso.test_coordinator.test_suite.BasicTestSuiteTeardown`).
+For each of these classes, the following methods test_suite_setUp or test_suite_tearDown must be overridden with
+the behaviour you want to have.
+
+.. note:: Because the python unittest module is used in the background, all methods starting with "def test_" are
+executed automatically
+
 Find below a full example for a test suite/case declaration :
 
 .. code:: python
@@ -399,7 +441,12 @@ Find below a full example for a test suite/case declaration :
   """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=5)
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
-        pass
+        def test_suite_setUp():
+            logging.info("I HAVE RUN THE TEST SUITE SETUP!")
+            if aux1.not_properly_configured():
+                aux1.configure()
+            aux2.configure()
+            callback_registering()
 
   """
   Add test suite teardown fixture, run once at test suite's end.
@@ -413,7 +460,9 @@ Find below a full example for a test suite/case declaration :
   """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], teardown_timeout=5,)
     class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
-        pass
+        def test_suite_tearDown():
+            logging.info("I HAVE RUN THE TEST SUITE TEARDOWN!")
+            callback_unregistering()
 
   """
   Add a test case 1 from test suite 1 using auxiliary 1.
@@ -439,6 +488,7 @@ Find below a full example for a test suite/case declaration :
     )
     class MyTest(pykiso.BasicTest):
         pass
+
 
 
 Implementation of Basic Tests
