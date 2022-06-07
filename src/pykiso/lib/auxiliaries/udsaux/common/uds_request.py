@@ -7,7 +7,6 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-
 """
 uds_request
 ***********
@@ -16,35 +15,36 @@ uds_request
 
 :synopsis: This module contains basics commands functions enums.
 
-.. currentmodule:: util_request
+.. currentmodule:: uds_request
 """
 
 from enum import Enum
 
 
-class ListEnum(list, Enum):
+class TupleEnum(tuple, Enum):
     """Base class for creating enumerated constants that are also
-    subclasses of list.
+    subclasses of tuple.
     """
 
     pass
 
 
 class UDSCommands:
-    """UDS mainstream command"""
+    """Generic UDS commands defined by ISO 14229-1."""
 
-    class ECUReset(ListEnum):
+    class ECUReset(TupleEnum):
         """UDS requests to perform reset on components."""
 
-        ECU_RESET_SW_INSTALLATION_STATE = [0x11, 0x01]
-        FORCE_ECU_RESET = [0x11, 0x02]
-        SOFT_RESET = [0x11, 0x03]
-        SHUTDOWN = [0x11, 0x06]
+        HARD_RESET = (0x11, 0x01)
+        KEY_OFF_ON_RESET = (0x11, 0x02)
+        SOFT_RESET = (0x11, 0x03)
+        ENABLE_RAPID_POWER_SHUTDOWN = (0x11, 0x04)
+        DISABLE_RAPID_POWER_SHUTDOWN = (0x11, 0x05)
 
-    class Session(ListEnum):
+    class Session(TupleEnum):
         """UDS requests to perform session change."""
 
-        DEFAULT_SESSION = [0x10, 0x01]
-        PROGRAMMING_SESSION = [0x10, 0x02]
-        EXTENDED_SESSION = [0x10, 0x03]
-        PROTECTED_SESSION = [0x10, 0x40]
+        DEFAULT_SESSION = (0x10, 0x01)
+        PROGRAMMING_SESSION = (0x10, 0x02)
+        EXTENDED_SESSION = (0x10, 0x03)
+        SAFTEFY_SYSTEM_SESSION = (0x10, 0x04)

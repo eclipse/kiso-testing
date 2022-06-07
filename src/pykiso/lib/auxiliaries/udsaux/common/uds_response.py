@@ -13,21 +13,30 @@ uds_response
 
 :module: uds_response
 
-:synopsis: This module contains negative response codes functions enums.
+:synopsis: This module contains an enum listing the
+    UDS negative response codes and a wrapper around
+    raw UDS responses.
 
 .. currentmodule:: uds_response
 """
 import logging
 from collections import UserList
 from enum import IntEnum
+from typing import List
 
 log = logging.getLogger(__name__)
 
 
 class UdsResponse(UserList):
+    """List wrapper adding attributes relative to a UDS response."""
+
     NEGATIVE_RESPONSE_SID = 0x7F
 
-    def __init__(self, response_data) -> None:
+    def __init__(self, response_data: List[int]) -> None:
+        """Initialize attributes.
+
+        :param response_data: the original response data.
+        """
         super().__init__(response_data)
         self.is_negative = False
         self.nrc = None
@@ -66,9 +75,11 @@ class NegativeResponseCode(IntEnum):
 
     @classmethod
     def _missing_(cls, value: int) -> int:
-        """raise an error if NRC is unknown
+        """Instead of raising a ValueError on a missing member,
+        create a NRC UNKNOWN and return it.
 
-        :raise ValueError: if NRC unknown
+        :param value: missing NRC value.
+        :return: a new NRC member UNKNOWN with the missing value.
         """
         log.warning(f"Unknown NRC: {value}")
         new_member = int.__new__(cls, value)

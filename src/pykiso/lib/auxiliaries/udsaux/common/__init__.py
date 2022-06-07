@@ -7,9 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-from . import uds_auxiliary, uds_server_auxiliary
-from .common import UdsCallback, UdsDownloadCallback
-from .common.uds_request import UDSCommands
-from .common.uds_response import NegativeResponseCode, UdsResponse
-from .uds_auxiliary import UdsAuxiliary
-from .uds_server_auxiliary import UdsServerAuxiliary
+from . import uds_callback, uds_request, uds_response
+from .uds_callback import UdsCallback, UdsDownloadCallback
+from .uds_request import UDSCommands
+from .uds_response import UdsResponse
