@@ -63,16 +63,17 @@ class VISAChannel(CChannel):
         :return: response message from the instrument (read and query requests)
             or an empty string for write requests and if read or query request failed.
         """
-        request_response = ""
+        recv = ""
         try:
             if request == "read":
                 log.debug(f"Reading {self.resource_name} ")
-                request_response = self.resource.read().strip()
+                recv = self.resource.read().strip()
             elif request == "query":
                 log.debug(f"Querying {request_data} to {self.resource_name}")
-                request_response = self.resource.query(request_data).strip()
+                recv = self.resource.query(request_data).strip()
             else:
                 log.warning(f"Unknown request '{request}'!")
+
         except pyvisa.errors.InvalidSession:
             log.exception(
                 f"Request {request}:{request_data} failed! Invalid session (resource might be closed)."
@@ -84,9 +85,10 @@ class VISAChannel(CChannel):
         except Exception as e:
             log.exception(f"Request {request}:{request_data} failed!\n{e}")
         else:
-            log.debug(f"Response received: {request_response}")
+            log.debug(f"Response received: {recv}")
         finally:
-            return str(request_response)
+            response = {"msg": str(recv)}
+            return response
 
     def _cc_send(self, msg: MsgType, raw: bool = False) -> None:
         """Send a write request to the instrument
@@ -111,7 +113,7 @@ class VISAChannel(CChannel):
             expired with a timeout.
         """
         if raw:
-            return self._process_request("read").encode()
+            return {"msg": self._process_request("read")["msg"].encode()}
         else:
             return self._process_request("read")
 
