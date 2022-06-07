@@ -112,8 +112,8 @@ def test_cc_close(constructor_params_serial):
 @pytest.mark.parametrize(
     "constructor_params_serial, raw_value, expected_return",
     [
-        (constructor_params_serial, True, b"read response"),
-        (constructor_params_serial, False, "read response"),
+        (constructor_params_serial, True, {"msg": b"read response"}),
+        (constructor_params_serial, False, {"msg": "read response"}),
     ],
 )
 def test__cc_receive(mocker, constructor_params_serial, raw_value, expected_return):
@@ -135,42 +135,29 @@ def test__process_request(mocker, constructor_params_serial, scpi_cmds, caplog):
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
     # Test when command is normally processed
-    assert (
-        visa_inst._process_request(request="query", request_data=scpi_cmds["example"])
-        == f"command {scpi_cmds['example']} query response"
-    )
+    assert visa_inst._process_request(
+        request="query", request_data=scpi_cmds["example"]
+    ) == {"msg": f"command {scpi_cmds['example']} query response"}
 
     # Test when timeout error occurs
-    assert (
-        visa_inst._process_request(
-            request="query", request_data=scpi_cmds["trigger_timeout_error"]
-        )
-        == ""
-    )
+    assert visa_inst._process_request(
+        request="query", request_data=scpi_cmds["trigger_timeout_error"]
+    ) == {"msg": ""}
 
     # Test when invalid session error occurs
-    assert (
-        visa_inst._process_request(
-            request="query", request_data=scpi_cmds["trigger_invalid_session_error"]
-        )
-        == ""
-    )
+    assert visa_inst._process_request(
+        request="query", request_data=scpi_cmds["trigger_invalid_session_error"]
+    ) == {"msg": ""}
 
     # Test when timeout error occurs
-    assert (
-        visa_inst._process_request(
-            request="query", request_data=scpi_cmds["trigger_other_error"]
-        )
-        == ""
-    )
+    assert visa_inst._process_request(
+        request="query", request_data=scpi_cmds["trigger_other_error"]
+    ) == {"msg": ""}
 
     with caplog.at_level(logging.WARNING):
-        assert (
-            visa_inst._process_request(
-                request="Test", request_data=scpi_cmds["trigger_other_error"]
-            )
-            == ""
-        )
+        assert visa_inst._process_request(
+            request="Test", request_data=scpi_cmds["trigger_other_error"]
+        ) == {"msg": ""}
     assert "Unknown request 'Test'!" in caplog.text
 
 
@@ -207,21 +194,24 @@ def test_query(mocker, constructor_params_serial, scpi_cmds):
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
     # Test when command is normally processed
-    assert (
-        visa_inst.query(query_command=scpi_cmds["example"])
-        == f"command {scpi_cmds['example']} query response"
-    )
+    assert visa_inst.query(query_command=scpi_cmds["example"]) == {
+        "msg": f"command {scpi_cmds['example']} query response"
+    }
 
     # Test when timeout error occurs
-    assert (
-        visa_inst.query(query_command=scpi_cmds["trigger_invalid_session_error"]) == ""
-    )
+    assert visa_inst.query(
+        query_command=scpi_cmds["trigger_invalid_session_error"]
+    ) == {"msg": ""}
 
     # Test when invalid session error occurs
-    assert visa_inst.query(query_command=scpi_cmds["trigger_timeout_error"]) == ""
+    assert visa_inst.query(query_command=scpi_cmds["trigger_timeout_error"]) == {
+        "msg": ""
+    }
 
     # Test when timeout error occurs
-    assert visa_inst.query(query_command=scpi_cmds["trigger_other_error"]) == ""
+    assert visa_inst.query(query_command=scpi_cmds["trigger_other_error"]) == {
+        "msg": ""
+    }
 
 
 # Test of VisaSerial and VisaTcpip connector

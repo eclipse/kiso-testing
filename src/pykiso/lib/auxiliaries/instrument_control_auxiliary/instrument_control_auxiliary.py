@@ -160,7 +160,8 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
         :return: received response from instrument otherwise empty
             string
         """
-        return self.channel.cc_receive(raw=False)
+        response = self.channel.cc_receive(raw=False)
+        return response.get("msg")
 
     def query(self, query_command: str) -> Union[bytes, str]:
         """Send a query request to the instrument. Uses the 'query' method of the
@@ -184,11 +185,13 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
             timeout.
         """
         if hasattr(self.channel, "query"):
-            return self.channel.query(query_command + self.write_termination)
+            response = self.channel.query(query_command + self.write_termination)
+            return response.get("msg")
         else:
             self.channel.cc_send(msg=query_command + self.write_termination, raw=False)
             time.sleep(0.05)
-            return self.channel.cc_receive(raw=False)
+            response = self.channel.cc_receive(raw=False)
+            return response.get("msg")
 
     def _create_auxiliary_instance(self) -> bool:
         """Open the connector.
