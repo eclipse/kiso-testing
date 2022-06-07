@@ -11,17 +11,17 @@
 Handle common communication with device under test
 **************************************************
 
-By default, the integration test framework handles internal messaging
-and control flow using a message format defined in
+When using a Remote TestCase/TestSuite, the integration test framework handles 
+internal messaging and control flow using a message format defined in
 :py:class:`pykiso.Message`. :py:mod:`pykiso.test_message_handler`
-defines the default messaging protocol from a behavioral point of view.
+defines the messaging protocol from a behavioral point of view.
 
 The general procedure is described in handle_basic_interaction context
 manager, but specific _MsgHandler_ classes are  provided with
 :py:class:`TestCaseMsgHandler` and :py:class:`TestSuiteMsgHandler` to
 provide shorthands for the specialised communication from
-:py:class:`pykiso.test_case.BasicTest` and
-:py:class:`pykiso.test_suite.BasicTestSuite`.
+:py:class:`pykiso.test_case.RemoteTest` and
+:py:class:`pykiso.test_suite.RemoteTestSuite`.
 
 
 :module: test_message_handler

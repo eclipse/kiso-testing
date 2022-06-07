@@ -13,7 +13,8 @@ Generic Test
 
 :module: test_case
 
-:synopsis: Basic extensible implementation of a TestCase.
+:synopsis: Basic extensible implementation of a TestCase, and of a Remote
+TestCase for Message Protocol / TestApp usage.
 
 .. currentmodule:: test_case
 
@@ -23,7 +24,7 @@ Generic Test
 import functools
 import logging
 import unittest
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, List, Optional, Union
 
 from .. import message
 from ..cli import get_logging_options, initialize_logging
@@ -112,8 +113,6 @@ def retry_test_case(
 class BasicTest(unittest.TestCase):
     """Base for test-cases."""
 
-    response_timeout: int = 10
-
     def __init__(
         self,
         test_suite_id: int,
@@ -149,11 +148,14 @@ class BasicTest(unittest.TestCase):
         # Save test information
         self.test_suite_id = test_suite_id
         self.test_case_id = test_case_id
-        self.setup_timeout = setup_timeout or BasicTest.response_timeout
-        self.run_timeout = run_timeout or BasicTest.response_timeout
-        self.teardown_timeout = teardown_timeout or BasicTest.response_timeout
         self.test_ids = test_ids
         self.tag = tag
+        if any([setup_timeout, run_timeout, teardown_timeout]) and not isinstance(
+            self, RemoteTest
+        ):
+            log.warning(
+                "BasicTest does not support test timeouts, it will be discarded"
+            )
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
@@ -183,11 +185,69 @@ class BasicTest(unittest.TestCase):
         if options.report_type == "junit":
             initialize_logging(None, options.log_level, options.report_type)
 
+    def setUp(self) -> None:
+        """Startup hook method to execute code before each test method."""
+        pass
+
+    def tearDown(self) -> None:
+        """Closure hook method to execute code after each test method."""
+        pass
+
+
+class RemoteTest(BasicTest):
+    """Base test-cases for Message Protocol / TestApp usage."""
+
+    response_timeout: int = 10
+
+    def __init__(
+        self,
+        test_suite_id: int,
+        test_case_id: int,
+        aux_list: Union[List[AuxiliaryInterface], None],
+        setup_timeout: Union[int, None],
+        run_timeout: Union[int, None],
+        teardown_timeout: Union[int, None],
+        test_ids: Union[dict, None],
+        tag: Union[Dict[str, List[str]], None],
+        args: tuple,
+        kwargs: dict,
+    ):
+        """Initialize TestApp test-case.
+
+        :param test_suite_id: test suite identification number
+        :param test_case_id: test case identification number
+        :param aux_list: list of used auxiliaries
+        :param setup_timeout: maximum time (in seconds) used to wait
+            for a report during setup execution
+        :param run_timeout: maximum time (in seconds) used to wait for
+            a report during test_run execution
+        :param teardown_timeout: the maximum time (in seconds) used to
+            wait for a report during teardown execution
+        :param test_ids: jama references to get the coverage
+            eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
+        :param tag: dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
+        """
+        super().__init__(
+            test_suite_id,
+            test_case_id,
+            aux_list,
+            setup_timeout,
+            run_timeout,
+            teardown_timeout,
+            test_ids,
+            tag,
+            args,
+            kwargs,
+        )
+        self.setup_timeout = setup_timeout or RemoteTest.response_timeout
+        self.run_timeout = run_timeout or RemoteTest.response_timeout
+        self.teardown_timeout = teardown_timeout or RemoteTest.response_timeout
+
     @test_app_interaction(
         message_type=message.MessageCommandType.TEST_CASE_SETUP, timeout_cmd=5
     )
     def setUp(self) -> None:
-        """Hook method for constructing the test fixture."""
+        """Startup hook method to execute code before each test method."""
         pass
 
     @test_app_interaction(
@@ -201,7 +261,7 @@ class BasicTest(unittest.TestCase):
         message_type=message.MessageCommandType.TEST_CASE_TEARDOWN, timeout_cmd=5
     )
     def tearDown(self) -> None:
-        """Hook method for deconstructing the test fixture after testing it."""
+        """Closure hook method to execute code after each test method."""
         pass
 
 
@@ -215,17 +275,16 @@ def define_test_parameters(
     test_ids: Optional[dict] = None,
     tag: Optional[Dict[str, List[str]]] = None,
 ):
-    """Decorator to fill out test parameters of the BasicTest automatically."""
+    """Decorator to fill out test parameters of the BasicTest and RemoteTest automatically."""
 
     def generate_modified_class(DecoratedClass):
-        """Generates the same class but with the test IDs already filled.
-        It works as a partially filled-out call to the __init__ method.
+        """For basic test-case, generates the same class but with the test IDs
+        already filled. It works as a partially filled-out call to the __init__ method.
         """
 
         class NewClass(DecoratedClass):
             """Modified {DecoratedClass.__name__}, with the __init__ method
             already filled out with the following test-parameters:
-
             Suite ID:    {suite_id}
             Case ID:     {case_id}
             Auxiliaries: {auxes}
@@ -262,6 +321,7 @@ def define_test_parameters(
             test_ids=test_ids,
             tag=tag,
         )
+
         # Used to display the current test module in the test result
         NewClass.__module__ = DecoratedClass.__module__
         # Passing the name of the decorated class to the new returned class

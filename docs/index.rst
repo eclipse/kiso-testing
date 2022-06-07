@@ -13,6 +13,7 @@ Welcome to pykiso's documentation!
     api
     examples/index
     advanced_features/index
+    remote_test/remote_test
     robot_framework/robot_framework
 
 Indices and tables

@@ -4,9 +4,7 @@ Pykiso
 Introduction
 ------------
 
-The Integration Test Framework (Pykiso) provides the possibility to write and run
-tests on a HW target. It is built to orchestrate the entities and
-services involved in the tests. The framework can be used for both
+Integration Test Framework (Pykiso) is a framework that can be used for both
 white-box and black-box testing as well as in the integration and system
 testing.
 
@@ -71,8 +69,8 @@ following:
 -  provide the auxiliaries with the matching connectors
 -  generate the list of tests to perform
 -  provide the testcases with the auxiliaries they need
--  verify if the tests can be performed
--  flash and run and synchronize the tests on the auxiliaries
+-  verify if the tests can be performed 
+-  for remote tests (see :ref:`../remote_test/remote_test`) flash and run and synchronize the tests on the auxiliaries
 -  gather the reports and publish the results
 
 Auxiliary
@@ -82,21 +80,14 @@ The **auxiliary** provides to the **test-coordinator** an interface to
 interact with the physical or digital auxiliary target. It is composed
 by 2 blocks:
 
--  physical or digital instance creation / deletion (e.g. flash the
-   *device under test* with the testing software, e.g. Start a docker
-   container)
+-  instance creation / deletion 
 -  connectors to facilitate interaction and communication with the
-   device (e.g. flashing via *JTAG*, messaging with *UART*)
+   device (e.g. messaging with *UART*)
 
-In case of the specific *device under test* auxiliary, we have:
+For example auxiliaries like the one interacting with cloud services,
+we may have:
 
--  As communication channel (**cchannel**) usually *UART*
--  As flashing channel (**flashing**) usually *JTAG*
-
-For other auxiliaries like the one interacting with cloud services,
-maybe we just have:
-
--  A communication channel (**channel**) like *REST*
+-  A communication channel (**cchannel**) like *REST*
 
 Create an Auxiliary
 ^^^^^^^^^^^^^^^^^^^
@@ -111,13 +102,7 @@ Communication Channel
 The Communication Channel - also known as **cchannel** - is the medium
 to communicate with auxiliary target. Example include *UART*, *UDP*,
 *USB*, *REST*,… The communication protocol itself can be auxiliary
-specific. In case of the *device under test*, we have a specific
-communication protocol. Please see the next paragraph.
-
-Flashing
-^^^^^^^^
-
-The Flasher Connectors usually provide only one method, :py:meth:`Flasher.flash`, which will transfer the configured binary file to the target.
+specific.
 
 Create a Connector
 ^^^^^^^^^^^^^^^^^^
@@ -155,204 +140,6 @@ When writing your testcases, the auxiliary will then be available under its defi
 The `pykiso.auxiliaries` is a magic package that only exists in the `pykiso` package after the `TestCoordinator` has processed the config file.
 It will include all *instances* of the defined auxiliares, available at their defined alias.
 
-Message Protocol ( If in used )
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The message protocol is used (but not only) between the *device under
-test* HW and its **test-auxiliary**. The communication pattern is as
-follows:
-
-1. The test manager sends a message that contains a test command to a
-   test participant.
-2. The test participant sends an acknowledgement message back.
-3. The test participant may send a report message.
-4. The test manager replies to a report message with an acknowledgement
-   message.
-
-The message structure is as follow:
-
-::
-
-   0               1               2               3
-   0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |Ver| MT|  Res  |   Msg Token   |   Sub-Type    | Error code    |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Test Section  |  Test Suite   |   Test Case   | Payload length|
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   | Payload (in TLV format)
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-It consist of:
-
-+----------------------------------+--------------------+-------------+
-| Code                             | size (in bytes)    | Explanation |
-+==================================+====================+=============+
-| Ver (Version)                    | 2 bits             | Indicates   |
-|                                  |                    | the version |
-|                                  |                    | of the test |
-|                                  |                    | c           |
-|                                  |                    | oordination |
-|                                  |                    | protocol.   |
-+----------------------------------+--------------------+-------------+
-| MT (Message Type)                | 2 bits             | Indicates   |
-|                                  |                    | the type of |
-|                                  |                    | the         |
-|                                  |                    | message.    |
-+----------------------------------+--------------------+-------------+
-| Res (Reserved)                   | 4 bits             |             |
-+----------------------------------+--------------------+-------------+
-| Msg Token (Message Token)        | 1                  | Arbitrary   |
-|                                  |                    | byte. It    |
-|                                  |                    | must not be |
-|                                  |                    | repeated    |
-|                                  |                    | for 10      |
-|                                  |                    | consecutive |
-|                                  |                    | messages.   |
-|                                  |                    | In the      |
-|                                  |                    | ackn        |
-|                                  |                    | owledgement |
-|                                  |                    | message the |
-|                                  |                    | same token  |
-|                                  |                    | must be     |
-|                                  |                    | used.       |
-+----------------------------------+--------------------+-------------+
-| Sub-Type (Message Sub Type)      | 1                  | Gives more  |
-|                                  |                    | information |
-|                                  |                    | about the   |
-|                                  |                    | message     |
-|                                  |                    | type        |
-+----------------------------------+--------------------+-------------+
-| Error Code                       | 1                  | Error code  |
-|                                  |                    | that can be |
-|                                  |                    | used by the |
-|                                  |                    | auxiliaries |
-|                                  |                    | to forward  |
-|                                  |                    | an error    |
-+----------------------------------+--------------------+-------------+
-| Test Section                     | 1                  | Indicates   |
-|                                  |                    | the test    |
-|                                  |                    | section     |
-|                                  |                    | number      |
-+----------------------------------+--------------------+-------------+
-| Test Suite                       | 1                  | Indicates   |
-|                                  |                    | the test    |
-|                                  |                    | suite       |
-|                                  |                    | number      |
-|                                  |                    | which       |
-|                                  |                    | permits to  |
-|                                  |                    | identify a  |
-|                                  |                    | test suite  |
-|                                  |                    | within a    |
-|                                  |                    | test        |
-|                                  |                    | section     |
-+----------------------------------+--------------------+-------------+
-| Test Case                        | 1                  | Indicates   |
-|                                  |                    | the test    |
-|                                  |                    | case number |
-|                                  |                    | which       |
-|                                  |                    | permits to  |
-|                                  |                    | identify a  |
-|                                  |                    | test case   |
-|                                  |                    | within a    |
-|                                  |                    | test suite  |
-+----------------------------------+--------------------+-------------+
-| Payload Length                   | 1                  | Indicate    |
-|                                  |                    | the length  |
-|                                  |                    | of the      |
-|                                  |                    | payload     |
-|                                  |                    | composed of |
-|                                  |                    | TLV         |
-|                                  |                    | elements.   |
-|                                  |                    | If 0, it    |
-|                                  |                    | means there |
-|                                  |                    | is no       |
-|                                  |                    | payload     |
-+----------------------------------+--------------------+-------------+
-| Payload                          | X                  | Optional,   |
-|                                  |                    | list of     |
-|                                  |                    | TLVs        |
-|                                  |                    | elements.   |
-|                                  |                    | One TLV has |
-|                                  |                    | 1 byte for  |
-|                                  |                    | the *Tag*,  |
-|                                  |                    | 1 byte for  |
-|                                  |                    | the         |
-|                                  |                    | *length*,   |
-|                                  |                    | up to 255   |
-|                                  |                    | bytes for   |
-|                                  |                    | the *Value* |
-+----------------------------------+--------------------+-------------+
-
-The **message type** and **message sub-type** are linked and can take
-the following values:
-
-+---------+---------+---------------------+-------------+-----------+
-| Type    | Type Id | Sub-type            | Sub-type Id | Ex        |
-|         |         |                     |             | planation |
-+=========+=========+=====================+=============+===========+
-| COMMAND | 0       | PING                | 0           | For       |
-|         |         |                     |             | ping-pong |
-|         |         |                     |             | between   |
-|         |         |                     |             | the       |
-|         |         |                     |             | auxiliary |
-|         |         |                     |             | to verify |
-|         |         |                     |             | if a      |
-|         |         |                     |             | comm      |
-|         |         |                     |             | unication |
-|         |         |                     |             | is        |
-|         |         |                     |             | es        |
-|         |         |                     |             | tablished |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_SECTION_SETUP  | 1           |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_SUITE_SETUP    | 2           |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_CASE_SETUP     | 3           |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_SECTION_RUN    | 11          |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_SUITE_RUN      | 12          |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_CASE_RUN       | 13          |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TE                  | 21          |           |
-|         |         | ST_SECTION_TEARDOWN |             |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_SUITE_TEARDOWN | 22          |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_CASE_TEARDOWN  | 23          |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | ABORT               | 99          |           |
-+---------+---------+---------------------+-------------+-----------+
-| REPORT  | 1       | TEST_PASS           | 0           |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_FAILED         | 1           |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | TEST_NOT_IMPLEMENTED| 2           |           |
-+---------+---------+---------------------+-------------+-----------+
-| ACK     | 2       | ACK                 | 0           |           |
-+---------+---------+---------------------+-------------+-----------+
-|         |         | NACK                | 1           |           |
-+---------+---------+---------------------+-------------+-----------+
-| LOG     | 3       | RESERVED            | 0           |           |
-+---------+---------+---------------------+-------------+-----------+
-
-
-The TLV only supported *Tag* are:
-
--  TEST_REPORT = 110
--  FAILURE_REASON = 112
-
-.. _flashing-1:
-
-Flashing
-~~~~~~~~
-
-The flashing is usually needed to put the test-software containing the tests we would like to run into the *Device under test* .
-Flashing is done via a flashing connector, which has to be configured with the correct binary file.
-The flashing connector is in turn called from an appropriate auxiliary (usually in its setup phase).
-
 Usage
 -----
 
@@ -385,15 +172,6 @@ gives access to the following parameters:
 - suite_id : current test suite identification number
 - case_id : current test case identification number (optional for test suite setup and teardown)
 - aux_list : list of used auxiliaries
-
-Based on Message Protocol, users can configure the maximum time (in seconds) used to wait for a report.
-This "timeout" is configurable for each available fixtures :
-
-- setup_timeout : the maximum time (in seconds) used to wait for a report during setup execution (optional)
-- run_timeout : the maximum time (in seconds) used to wait for a report during test_run execution (optional)
-- teardown_timeout : the maximum time (in seconds) used to wait for a report during teardown execution (optional)
-
-.. note:: by default those timeout values are set to 10 seconds.
 
 In order to link the architecture requirement to the test,
 an additional reference can be added into the test_run decorator:
@@ -435,11 +213,8 @@ Find below a full example for a test suite/case declaration :
   -> suite_id : set to 1
   -> case_id : Parameter case_id is not mandatory for setup.
   -> aux_list : used aux1 and aux2 is used
-  -> setup_timeout : time to wait for a report 5 seconds
-  -> run_timeout : Parameter run_timeout is not mandatory for test suite setup.
-  -> teardown_timeout : Parameter run_timeout is not mandatory for test suite setup.
   """
-    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=5)
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
         def test_suite_setUp():
             logging.info("I HAVE RUN THE TEST SUITE SETUP!")
@@ -454,11 +229,8 @@ Find below a full example for a test suite/case declaration :
   -> suite_id : set to 1
   -> case_id : Parameter case_id is not mandatory for setup.
   -> aux_list : used aux1 and aux2 is used
-  -> setup_timeout : Parameter run_timeout is not mandatory for test suite teardown.
-  -> run_timeout : Parameter run_timeout is not mandatory for test suite teardown.
-  -> teardown_timeout : time to wait for a report 5 seconds
   """
-    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], teardown_timeout=5,)
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
         def test_suite_tearDown():
             logging.info("I HAVE RUN THE TEST SUITE TEARDOWN!")
@@ -470,9 +242,6 @@ Find below a full example for a test suite/case declaration :
   -> suite_id : set to 1
   -> case_id : set to 1
   -> aux_list : used aux1 and aux2 is used
-  -> setup_timeout : time to wait for a report 3 seconds during setup
-  -> run_timeout : time to wait for a report 10 seconds during test_run
-  -> teardown_timeout : time to wait for a report 3 seconds during teardown
   -> test_ids: [optional] store the requirements into the report
   -> tag: [optional] dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
   """
@@ -480,9 +249,6 @@ Find below a full example for a test suite/case declaration :
             suite_id=1,
             case_id=1,
             aux_list=[aux1, aux2],
-            setup_timeout=3,
-            run_timeout=10,
-            teardown_timeout=3,
             test_ids={"Component1": ["Req1", "Req2"]},
             tag={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
     )
@@ -510,7 +276,7 @@ Implementation of Basic Tests
   Add test suite setup fixture, run once at test suite's beginning.
   Parameter case_id is not mandatory for setup.
   """
-    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=1, run_timeout=2, teardown_timeout=3)
+    @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
         pass
 
@@ -579,7 +345,7 @@ If you need to have more complex tests, you can do the following:
 -  ``BasicTest`` also contains the following information
    ``test_section_id``, ``test_suite_id``, ``test_case_id``.
 -  Import *logging* or/and *message* (if needed) to communicate with the
-   **auxiliary**
+   **auxiliary**(in that case use RemoteTest instead of BasicTest)
 
 **test_suite_2.py**:
 

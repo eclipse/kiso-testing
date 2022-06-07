@@ -100,7 +100,48 @@ class IntegrationTestSuite(unittest.TestCase):
         (test_suite.BasicTestSuiteTeardown, 1, ["aux2"], None, 3, None),
     ],
 )
-def test_define_test_parameters_on_ts(
+def test_define_test_parameters_on_basic_ts(
+    fixture, suite_id, aux_list, setup_timeout, teardown_timeout, test_ids
+):
+    @test_case.define_test_parameters(
+        suite_id=suite_id,
+        aux_list=aux_list,
+        setup_timeout=setup_timeout,
+        teardown_timeout=teardown_timeout,
+    )
+    class MyTestSuiteFixture(fixture):
+        pass
+
+    ts_fix_inst = MyTestSuiteFixture()
+
+    assert ts_fix_inst.test_suite_id == suite_id
+    assert ts_fix_inst.test_case_id == 0
+    assert ts_fix_inst.test_auxiliary_list == aux_list
+
+
+@pytest.mark.parametrize(
+    "fixture, suite_id, aux_list, setup_timeout, teardown_timeout, test_ids",
+    [
+        (
+            test_suite.RemoteTestSuiteSetup,
+            1,
+            ["aux1"],
+            3,
+            None,
+            {"Component1": ["Req1", "Req2"]},
+        ),
+        (
+            test_suite.RemoteTestSuiteTeardown,
+            1,
+            ["aux2"],
+            None,
+            3,
+            {"Component1": ["Req1", "Req2"]},
+        ),
+        (test_suite.RemoteTestSuiteTeardown, 1, ["aux2"], None, 3, None),
+    ],
+)
+def test_define_test_parameters_on_remote_ts(
     fixture, suite_id, aux_list, setup_timeout, teardown_timeout, test_ids
 ):
     @test_case.define_test_parameters(

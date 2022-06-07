@@ -34,10 +34,13 @@ from .message import Message
 from .test_coordinator import test_case, test_message_handler, test_suite
 from .test_coordinator.test_case import (
     BasicTest,
+    RemoteTest,
     define_test_parameters,
     retry_test_case,
 )
 from .test_coordinator.test_suite import (
     BasicTestSuiteSetup,
     BasicTestSuiteTeardown,
+    RemoteTestSuiteSetup,
+    RemoteTestSuiteTeardown,
 )
