@@ -230,13 +230,15 @@ Find below an example showing its usage, along with a custom callback function d
 
 .. code:: python
 
+    import typing
+
     import pykiso
     from pykiso.auxiliaries import uds_aux
 
     # only used for type-hinting the custom callback
     from pykiso.lib.auxiliaries.udsaux import UdsServerAuxiliary
 
-    def custom_callback(ecu_reset_request: list, aux: UdsServerAuxiliary) -> None:
+    def custom_callback(ecu_reset_request: typing.List[int], aux: UdsServerAuxiliary) -> None:
         """Custom callback example for an ECU reset request.
 
         This simulates a pending response from the server before sending the
@@ -267,6 +269,9 @@ Find below an example showing its usage, along with a custom callback function d
             # - zero-padding the response data until the expected length is reached: 0x620102_44415451_0000
             uds_aux.register_callback(request=0x220102, response_data=b'DATA', data_length=6)
 
+            # register the custom callback defined above
+            uds_aux.register_callback(request=0x1101, callback=custom_callback)
+
         def test_run(self):
             """Actual test."""
             ...
@@ -275,7 +280,7 @@ Find below an example showing its usage, along with a custom callback function d
             """Unregister all callbacks registered by the auxiliary."""
 
             for callback in uds_aux.callbacks:
-                uds_aux.register_callback(callback)
+                uds_aux.unregister_callback(callback)
 
 Accessing UDS callbacks
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -291,6 +296,8 @@ an overview of all previously described features:
 
 .. code:: python
 
+    import typing
+
     import pykiso
     from pykiso.auxiliaries import uds_aux
 
@@ -299,7 +306,7 @@ an overview of all previously described features:
 
     from uds_callback_definition import UDS_CALLBACKS
 
-    def custom_callback(ecu_reset_request: list, aux: UdsServerAuxiliary) -> None:
+    def custom_callback(ecu_reset_request: typing.List[int], aux: UdsServerAuxiliary) -> None:
         """Custom callback example for an ECU reset request.
 
         This simulates a pending response from the server before sending the
@@ -349,4 +356,4 @@ an overview of all previously described features:
             """Unregister all callbacks registered by the auxiliary."""
 
             for callback in uds_aux.callbacks:
-                uds_aux.register_callback(callback)
+                uds_aux.unregister_callback(callback)

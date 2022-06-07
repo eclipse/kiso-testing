@@ -52,9 +52,9 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
 
         :param com: communication channel connector.
         :param config_ini_path: UDS parameter file.
+        :param odx_file_path: ecu diagnostic definition file.
         :param request_id: optional CAN ID used for sending messages.
         :param response_id: optional CAN ID used for receiving messages.
-        :param odx_file_path: ecu diagnostic definition file.
         """
         self.channel = com
         self.odx_file_path = odx_file_path

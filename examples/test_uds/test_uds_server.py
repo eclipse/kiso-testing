@@ -21,6 +21,7 @@ UDS server auxiliary simple example
 
 import logging
 import time
+import typing
 import unittest
 
 import pykiso
@@ -34,7 +35,9 @@ from pykiso.lib.auxiliaries.udsaux import (
 )
 
 
-def custom_callback(ecu_reset_request: list, aux: UdsServerAuxiliary) -> None:
+def custom_callback(
+    ecu_reset_request: typing.List[int], aux: UdsServerAuxiliary
+) -> None:
     """Custom callback example for an ECU reset request.
 
     This simulates a pending response from the server before sending the
@@ -83,6 +86,9 @@ class ExampleUdsServerTest(pykiso.BasicTest):
         uds_aux.register_callback(
             request=0x220102, response_data=b"DATA", data_length=6
         )
+
+        # register the custom callback defined above
+        uds_aux.register_callback(request=0x1101, callback=custom_callback)
 
     def test_run(self):
         """
