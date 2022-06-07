@@ -75,8 +75,11 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :return: True if creation succeeded otherwise False.
         """
-        super()._create_auxiliary_instance()
+        creation_status = super()._create_auxiliary_instance()
+        if not creation_status:
+            return False
         self.uds_config.tp.PADDING_PATTERN = self.CAN_FD_PADDING_PATTERN
+        return True
 
     @staticmethod
     def format_data(uds_data: List[int]) -> str:

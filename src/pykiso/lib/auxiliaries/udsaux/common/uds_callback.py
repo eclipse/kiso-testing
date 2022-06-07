@@ -283,9 +283,10 @@ class UdsDownloadCallback(UdsCallback):
                     time.sleep(1e-4)
                     elapsed_time = time.perf_counter() - block_start_time
                     continue
-                elapsed_time = 0
-                expected_pci = next(transfer_data_pci_sequence)
+                # reset data reception timeout
+                block_start_time, elapsed_time = time.perf_counter(), 0
                 # verify received PCI and increase receive length if one was missed
+                expected_pci = next(transfer_data_pci_sequence)
                 if data[0] != expected_pci:
                     block_data_len += len(data) - 1
                     log.warning(
