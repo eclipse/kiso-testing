@@ -8,6 +8,7 @@
 ##########################################################################
 
 import unittest
+import logging
 from functools import partial
 
 import pytest
@@ -41,6 +42,7 @@ class IntegrationTestCase(unittest.TestCase):
 
         for params in parameters:
             self.init.prepare_default_test_cases(params)
+            self.init.prepare_remote_test_cases(params)
 
         runner = unittest.TextTestRunner()
         result = runner.run(self.init.suite)
@@ -50,7 +52,91 @@ class IntegrationTestCase(unittest.TestCase):
         self.assertEqual(len(result.errors), 0)
         self.assertEqual(len(result.failures), 0)
         self.assertEqual(len(result.skipped), 0)
-        self.assertEqual(result.testsRun, len(parameters))
+        self.assertEqual(result.testsRun, len(parameters * 2))
+
+
+@pytest.mark.parametrize(
+    "suite_id, case_id, aux_list, test_ids, tag, setup_timeout",
+    [
+        (
+            1,
+            1,
+            None,
+            {"Component1": ["Req1", "Req2"]},
+            None,
+            None,
+        ),
+        (
+            1,
+            2,
+            ["aux2"],
+            {"Component1": ["Req1", "Req2"]},
+            None,
+            None,
+        ),
+        (
+            1,
+            3,
+            ["aux3"],
+            {"Component1": ["Req1", "Req2"]},
+            None,
+            None,
+        ),
+        (
+            1,
+            4,
+            ["aux4"],
+            {"Component1": ["Req1", "Req2"]},
+            None,
+            None,
+        ),
+        (
+            1,
+            5,
+            ["aux5", "aux6"],
+            {"Component1": ["Req1", "Req2"]},
+            None,
+            5,
+        ),
+        (1, 5, ["aux1"], None, None, None),
+        (1, 5, ["aux1"], {"Component1": ["Req1"]}, {"variant": ["variant1"]}, 10),
+    ],
+)
+def test_define_test_parameters_on_basic_tc(
+    suite_id,
+    case_id,
+    aux_list,
+    test_ids,
+    tag,
+    setup_timeout,
+    caplog,
+):
+    @test_case.define_test_parameters(
+        suite_id=suite_id,
+        case_id=case_id,
+        aux_list=aux_list,
+        test_ids=test_ids,
+        tag=tag,
+        setup_timeout=setup_timeout,
+    )
+    class MyClass(test_case.BasicTest):
+        pass
+
+    tc_inst = MyClass()
+    assert tc_inst.test_suite_id == suite_id
+    assert tc_inst.test_case_id == case_id
+    aux_list = aux_list or []
+    assert tc_inst.test_auxiliary_list == aux_list
+
+    if setup_timeout is not None:
+        with caplog.at_level(logging.WARNING):
+            assert (
+                "BasicTest does not support test timeouts, it will be discarded"
+                in caplog.text
+            )
+
+    assert tc_inst.test_ids == test_ids
+    assert tc_inst.tag == tag
 
 
 @pytest.mark.parametrize(
@@ -83,7 +169,7 @@ class IntegrationTestCase(unittest.TestCase):
         ),
     ],
 )
-def test_define_test_parameters_on_tc(
+def test_define_test_parameters_on_remote_tc(
     suite_id,
     case_id,
     aux_list,
@@ -103,7 +189,7 @@ def test_define_test_parameters_on_tc(
         test_ids=test_ids,
         tag=tag,
     )
-    class MyClass(test_case.BasicTest):
+    class MyClass(test_case.RemoteTest):
         pass
 
     tc_inst = MyClass()
@@ -130,6 +216,9 @@ def test_setUpClass(mocker):
     )
     mock_init_log = mocker.patch.object(test_case, "initialize_logging")
     test_case.BasicTest.setUpClass()
+    mock_init_log.assert_called_with(None, "ERROR", "junit")
+
+    test_case.RemoteTest.setUpClass()
     mock_init_log.assert_called_with(None, "ERROR", "junit")
 
 
