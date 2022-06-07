@@ -217,6 +217,28 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         )
         self.callbacks[self.format_data(callback.request)] = callback
 
+    def unregister_callback(self, request: Union[str, int, List[int]]) -> None:
+        """Unregister previously registered callback.
+
+        The callback is stored inside the callbacks dictionary under the format
+        `{"0x2E01": UdsCallback()}`_, where the keys are case-sensitive and
+        correspond to the registered requests.
+
+        :param request: request for which the callback was registered as a
+            string ("0x2E01"), an integer (0x2e01) or a list ([0x2e, 0x01]).
+        """
+        if isinstance(request, int):
+            request = list(UdsCallback.int_to_bytes(request))
+        if isinstance(request, list):
+            request = self.format_data(request)
+        with self._callback_lock:
+            try:
+                self._callbacks.pop(request)
+            except KeyError as e:
+                log.error(
+                    f"Could not unregister callback {e}: no such callback registered."
+                )
+
     def _receive_message(self, timeout_in_s: float) -> None:
         """Reception method called by the auxiliary thread. This method received
         data and triggers the registered callbacks according to the received data.

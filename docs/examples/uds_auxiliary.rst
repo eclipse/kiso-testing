@@ -104,7 +104,7 @@ Send UDS Raw Request
   uds-auxiliary stop to acquire and log an error.
 
 The method send_uds_raw method returns a :py:class:`~ebplugins.udsaux.uds_response.UdsResponse` object, which is a subclass of `UserList
-<https://docs.python.org/3/library/collections.html#collections.UserList>`.
+<https://docs.python.org/3/library/collections.html#collections.UserList>`_.
 UserList allow to keep property of the list, meanwhile attributes can be set, for UdsResponse, defined attributes
 refer to the positivity of the response, and its NRC if negative.
 
@@ -285,9 +285,9 @@ UDS read & write data
 .. code:: python
 
     req = {
-            'service': IsoServices.WriteDataByIdentifier,
-            'data': {'parameter': 'MyProduct', 'dataRecord': [('SuperProduct', '12345')]}
-          }
+        'service': IsoServices.WriteDataByIdentifier,
+        'data': {'parameter': 'MyProduct', 'dataRecord': [('SuperProduct', '12345')]}
+    }
 
     resp = uds_aux.send_uds_config(writeProductCode_req)
     return resp

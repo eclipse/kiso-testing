@@ -79,12 +79,14 @@ class UdsCallback:
 
         if isinstance(self.response, int):
             self.response = list(self.int_to_bytes(self.response))
-        elif not self.response:
+        elif self.response is None:
+            # create positive response based on request
             self.response = [
                 self.request[0] + self.POSITIVE_RESPONSE_OFFSET
             ] + self.request[1:]
 
-        if self.response_data:
+        if self.response_data is not None:
+            # convert response_data and append it to the response
             self.response_data = (
                 list(self.int_to_bytes(self.response_data))
                 if isinstance(self.response_data, int)
@@ -92,9 +94,11 @@ class UdsCallback:
             )
             self.response.extend(self.response_data)
 
-        if self.data_length is not None and self.response_data:
-            # pad with zeros to reach the expected length
-            self.response.extend([0x00] * (self.data_length - len(self.response_data)))
+            if self.data_length is not None:
+                # pad with zeros to reach the expected length
+                self.response.extend(
+                    [0x00] * (self.data_length - len(self.response_data))
+                )
 
     def __call__(self, received_request: List[int], aux: UdsServerAuxiliary) -> None:
         """Trigger the callback and increase the call count.

@@ -217,6 +217,43 @@ class TestUdsServerAuxiliary:
 
         assert uds_server_aux_inst._callbacks == expected_callback_dict
 
+    @pytest.mark.parametrize(
+        "callback_to_unregister, expected_callback_key",
+        [
+            pytest.param(
+                [0x10, 0x11, 0xFF],
+                "0x1011FF",
+                id="based on a list of int",
+            ),
+            pytest.param(
+                0x1011FF,
+                "0x1011FF",
+                id="based on an int",
+            ),
+            pytest.param(
+                "0x1011FF",
+                "0x1011FF",
+                id="based on a hex string",
+            ),
+        ],
+    )
+    def test_unregister_callback(
+        self, uds_server_aux_inst, callback_to_unregister, expected_callback_key
+    ):
+        uds_server_aux_inst.register_callback(0x1011FF)
+        assert isinstance(
+            uds_server_aux_inst._callbacks.get(expected_callback_key), UdsCallback
+        )
+
+        uds_server_aux_inst.unregister_callback(callback_to_unregister)
+        assert uds_server_aux_inst._callbacks.get(expected_callback_key) is None
+
+    def test_unregister_callback_not_found(self, uds_server_aux_inst, caplog):
+        with caplog.at_level(logging.ERROR):
+            uds_server_aux_inst.unregister_callback(0x4242)
+
+        assert "Could not unregister callback" in caplog.text
+
     def test__receive_message(self, mocker, uds_server_aux_inst):
         mock_channel = mocker.patch.object(uds_server_aux_inst, "channel")
         mock_channel.cc_receive.return_value = {
@@ -260,7 +297,7 @@ class TestUdsServerAuxiliary:
         assert "oopsi" in caplog.text
         mock_dispatch.assert_not_called()
 
-    def test__dispatch_callback(self, mocker, uds_server_aux_inst):
+    def test__dispatch_callback(self, uds_server_aux_inst):
         callback_mock = MagicMock()
         callback_mock.request = [0x01]
 
