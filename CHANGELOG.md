@@ -9,15 +9,33 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version Unreleased (2022-05-11)
+## Version 0.18.0 (2022-06-07)
 
 #### New Features
 
-*  create base class for test
-*  add flag to make bus error warning switchable for pcan connector
+* create base class for test ([#61](https://github.com/eclipse/kiso-testing/issues/61))
+* make the proxy agnostic of transitioning messages
+* add pykiso to pytest tool ([#62](https://github.com/eclipse/kiso-testing/issues/62))
+* Rework pcan trace configuration in connector
+* Multiple yaml in CLI
+* set up badges
+* Make bus error warnings switchable for pcan
+#### Fixes
 
-## Version 0.17.0 (2022-04-14)
+* point to pykiso-python-uds-alpha for PYPI
+#### Docs
 
+* Add quality goals
+* Make usage of TestSuite elements more visible
+* Add whats new for 0.17.0
+
+Full set of changes: [`0.17.0...0.18.0`](https://github.com/eclipse/kiso-testing/compare/0.17.0...0.18.0)
+
+## Version 0.17.0 (2022-04-26)
+
+#### New Features
+
+* update to new release 0.17.0
 #### Fixes
 
 * use coverage coonfig from pyproject.toml
@@ -28,6 +46,7 @@ invoke changelog
 #### Refactorings
 
 * replace all setuptools-based files with poetry
+* change variant decorator
 * change variant decorator
 #### Docs
 
