@@ -10,4 +10,5 @@ Examples
     instrument_control
     record
     uds_auxiliary
+    uds_server_auxiliary
     pykiso_to_pytest

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.17.0"
+version = "0.18.0"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -45,7 +45,7 @@ robotframework = "3.2.2"
 unittest-xml-reporting = "*"
 click = "*"
 MarkupSafe = "~2.0"
-pykiso-python-uds-alpha = "^2.0.2"
+pykiso-python-uds = "^2.1.0"
 
 [tool.poetry.dev-dependencies]
 auto-changelog = "0.5.3"

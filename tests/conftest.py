@@ -176,6 +176,16 @@ def CustomTestCaseAndSuite(request):
                 suite_id=param[0], case_id=param[1], aux_list=param[2]
             )
             class MyTestCase(test_case.BasicTest):
+                def test_run(self) -> None:
+                    pass
+
+            self.suite.addTest(MyTestCase(methodName="test_run"))
+
+        def prepare_remote_test_cases(self, param):
+            @define_test_parameters(
+                suite_id=param[0], case_id=param[1], aux_list=param[2]
+            )
+            class MyTestCase(test_case.RemoteTest):
                 pass
 
             self.suite.addTest(MyTestCase("test_run"))
@@ -254,3 +264,44 @@ def mock_tp(mocker):
         decode_isotp = lambda *args, **kwargs: [80, 1, 0, 100, 1, 244]
 
     return MockTp()
+
+
+def uds_create_config():
+    cfg = """
+[can]
+interface=peak
+canfd=True
+baudrate=500000
+data_baudrate=2000000
+defaultReqId=0xAB
+defaultResId=0xAC
+
+[uds]
+transportProtocol=CAN
+P2_CAN_Client=5
+P2_CAN_Server=1
+
+[canTp]
+reqId=0xAB
+resId=0xAC
+addressingType=NORMAL
+N_SA=0xFF
+N_TA=0xFF
+N_AE=0xFF
+Mtype=DIAGNOSTICS
+discardNegResp=False
+
+[vector]
+channel=1
+appName=MyApp
+    """
+    return cfg
+
+
+@pytest.fixture
+def tmp_uds_config_ini(tmp_path):
+    uds_folder = tmp_path / "fake_uds"
+    uds_folder.mkdir()
+    config_ini = uds_folder / "_config.ini"
+    config_ini.write_text(uds_create_config())
+    return config_ini

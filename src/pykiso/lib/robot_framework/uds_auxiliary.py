@@ -28,8 +28,8 @@ from uds import IsoServices
 
 from pykiso.lib.robot_framework.aux_interface import RobotAuxInterface
 
+from ..auxiliaries.udsaux.common.uds_response import UdsResponse
 from ..auxiliaries.udsaux.uds_auxiliary import UdsAuxiliary as UdsAux
-from ..auxiliaries.udsaux.uds_response import UdsResponse
 
 
 @library(version="0.1.0")
