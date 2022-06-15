@@ -239,5 +239,4 @@ def execute(
     except Exception:
         log.exception(f'Issue detected in the test-suite: {config["test_suite_list"]}!')
         exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
-    finally:
-        return int(exit_code)
+    return int(exit_code)

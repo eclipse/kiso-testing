@@ -24,17 +24,16 @@ import logging
 import queue
 import threading
 from enum import Enum, unique
-from typing import Any, List
-
-from pykiso import AuxiliaryInterface
+from typing import Any, List, Optional
 
 from ..exceptions import AuxiliaryCreationError
+from ..test_setup.dynamic_loader import PACKAGE
 
 log = logging.getLogger(__name__)
 
 
 @unique
-class AuxState(Enum):
+class AuxCommand(Enum):
 
     CREATE_AUXILIARY = enum.auto()
     DELETE_AUXILIARY = enum.auto()
@@ -60,13 +59,50 @@ class DTAuxiliaryInterface:
         self.name = name
         self.is_proxy_capable = is_proxy_capable
         self.auto_start = auto_start
-        AuxiliaryInterface.initialize_loggers()
+        self.initialize_loggers(activate_log)
         self.lock = threading.RLock()
         self.stop_tx = threading.Event()
         self.stop_rx = threading.Event()
         self.queue_in = queue.Queue()
         self.queue_out = queue.Queue()
+        self.tx_thread = None
+        self.rx_thread = None
         self.recv_timeout = 1
+        self.is_instance = False
+
+    @staticmethod
+    def initialize_loggers(loggers: Optional[List[str]]) -> None:
+        """Deactivate all external loggers except the specified ones.
+
+        :param loggers: list of logger names to keep activated
+        """
+        if loggers is None:
+            loggers = list()
+        # keyword 'all' should keep all loggers to the configured level
+        if "all" in loggers:
+            log.warning(
+                "All loggers are activated, this could lead to performance issues."
+            )
+            return
+        # keep package and auxiliary loggers
+        relevant_loggers = {
+            name: logger
+            for name, logger in logging.root.manager.loggerDict.items()
+            if not (name.startswith(PACKAGE) or name.endswith("auxiliary"))
+            and not isinstance(logger, logging.PlaceHolder)
+        }
+        # keep child loggers
+        childs = [
+            logger
+            for logger in relevant_loggers.keys()
+            for parent in loggers
+            if (logger.startswith(parent) or parent.startswith(logger))
+        ]
+        loggers += childs
+        # keep original level for specified loggers
+        loggers_to_deactivate = set(relevant_loggers) - set(loggers)
+        for logger_name in loggers_to_deactivate:
+            logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     def run_command(
         self,
@@ -106,26 +142,6 @@ class DTAuxiliaryInterface:
                 )
         return response_received
 
-    def delete_instance(self) -> bool:
-        """Stop auxiliary's running tasks and activities.
-
-        :return: True if the auxiliary is deleted otherwise False
-        """
-        log.info(f"deleting instance of auxiliary {self.name}")
-
-        with self.lock:
-            is_deleted = self._delete_auxiliary_instance()
-
-            if not is_deleted:
-                log.error("Unexpected error occured during auxiliary instance deletion")
-
-            # stop each auxiliary's tasks
-            self._stop_tx_task()
-            self._stop_rx_task()
-
-            self.is_instance = False
-            return is_deleted
-
     def create_instance(self) -> bool:
         """Start auxiliary's running tasks and activities.
 
@@ -136,6 +152,10 @@ class DTAuxiliaryInterface:
         log.info(f"Creating instance of auxiliary {self.name}")
 
         with self.lock:
+            # if the current aux is alive don't try to create it again
+            if self.is_instance:
+                return True
+
             is_created = self._create_auxiliary_instance()
 
             if not is_created:
@@ -148,9 +168,35 @@ class DTAuxiliaryInterface:
             self.is_instance = True
             return is_created
 
+    def delete_instance(self) -> bool:
+        """Stop auxiliary's running tasks and activities.
+
+        :return: True if the auxiliary is deleted otherwise False
+        """
+        log.info(f"deleting instance of auxiliary {self.name}")
+
+        with self.lock:
+
+            # if the current aux is not alive don't try to delete it
+            # again
+            if not self.is_instance:
+                return True
+
+            # stop each auxiliary's tasks
+            self._stop_tx_task()
+            self._stop_rx_task()
+
+            is_deleted = self._delete_auxiliary_instance()
+
+            if not is_deleted:
+                log.error("Unexpected error occured during auxiliary instance deletion")
+
+            self.is_instance = False
+            return is_deleted
+
     def _start_tx_task(self) -> None:
         """Start transmission task."""
-        log.info(f"start transmit task {self.name}_tx")
+        log.debug(f"start transmit task {self.name}_tx")
         self.tx_thread = threading.Thread(
             name=f"{self.name}_tx", target=self._transmit_task
         )
@@ -158,7 +204,7 @@ class DTAuxiliaryInterface:
 
     def _start_rx_task(self) -> None:
         """Start reception task."""
-        log.info(f"start reception task {self.name}_tx")
+        log.debug(f"start reception task {self.name}_tx")
         self.rx_thread = threading.Thread(
             name=f"{self.name}_rx", target=self._reception_task
         )
@@ -167,22 +213,25 @@ class DTAuxiliaryInterface:
     def _stop_tx_task(self) -> None:
         """Stop transmission task."""
         log.debug(f"stop transmit task {self.name}_tx")
-        self.run_command(cmd_message=AuxState.DELETE_AUXILIARY)
+        self.queue_in.put((AuxCommand.DELETE_AUXILIARY, None))
         self.stop_tx.set()
         self.tx_thread.join()
+        self.stop_tx.clear()
 
     def _stop_rx_task(self) -> None:
         """Stop reception task."""
         log.debug(f"stop reception task {self.name}_rx")
         self.stop_rx.set()
         self.rx_thread.join()
+        self.stop_rx.clear()
 
     def start(self) -> bool:
         """Force the auxiliary to start all running tasks and
         activities.
 
-        :return: True if the auxiliary is stopped otherwise False
+        :return: True if the auxiliary is started otherwise False
         """
+
         return self.create_instance()
 
     def stop(self) -> bool:
@@ -193,22 +242,21 @@ class DTAuxiliaryInterface:
         return self.delete_instance()
 
     def suspend(self) -> None:
-        """Supend current auxiliary's run."""
-        if self.is_instance:
-            self.delete_instance()
-        else:
-            log.warning(f"Auxiliary '{self.name}' is already stopped")
+        """Supend current auxiliary's run.
+
+        :return: True if the auxiliary is suspend otherwise False
+        """
+        return self.delete_instance()
 
     def resume(self) -> None:
         """Resume current auxiliary's run.
 
         .. warning:: due to the usage of create_instance if an issue
             occurred the exception AuxiliaryCreationError is raised.
+
+        :return: True if the auxiliary is resumed otherwise False
         """
-        if not self.is_instance:
-            self.create_instance()
-        else:
-            log.warning(f"Auxiliary '{self.name}' is already running")
+        return self.create_instance()
 
     def _transmit_task(self) -> None:
         """Auxiliary transmission task.
@@ -217,12 +265,10 @@ class DTAuxiliaryInterface:
         the returned command state to queue_out.
         """
         while not self.stop_tx.is_set():
-
             cmd, data = self.queue_in.get()
-
             # just stop the current Tx thread task when the instance
             # is inteneded to be deleted
-            if cmd == AuxState.DELETE_AUXILIARY:
+            if cmd == AuxCommand.DELETE_AUXILIARY:
                 break
 
             self._run_command(cmd, data)
@@ -235,6 +281,21 @@ class DTAuxiliaryInterface:
         """
         while not self.stop_rx.is_set():
             self._receive_message(timeout_in_s=self.recv_timeout)
+
+    def wait_for_queue_out(self, blocking: bool = False, timeout_in_s: int = 0) -> Any:
+        """Wait for the report of the previous sent test request.
+
+        :param blocking: True: wait for timeout to expire, False: return
+            immediately
+        :param timeout_in_s: if blocking, wait the defined time in
+            seconds
+
+        :return: data contained in the auxiliary's queue_out
+        """
+        try:
+            return self.queue_out.get(blocking, timeout_in_s)
+        except queue.Empty:
+            return None
 
     @abc.abstractmethod
     def _create_auxiliary_instance(self) -> bool:
