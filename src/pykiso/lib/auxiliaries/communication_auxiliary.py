@@ -32,7 +32,7 @@ log = logging.getLogger(__name__)
 class CommunicationAuxiliary(AuxiliaryInterface):
     """Auxiliary used to send raw bytes via a connector instead of pykiso.Messages."""
 
-    def __init__(self, com: CChannel, **kwargs):
+    def __init__(self, com: CChannel, **kwargs: dict) -> None:
         """Constructor.
 
         :param com: CChannel that supports raw communication
