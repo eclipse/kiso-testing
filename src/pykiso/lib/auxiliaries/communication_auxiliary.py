@@ -168,9 +168,10 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         self.queue_tx.put(state)
 
     def _receive_message(self, timeout_in_s: float) -> bytes:
-        """No-op since it's handled in _run_command
+        """Get a message from the associated channel.
 
-        :param timeout_in_s: not used
+        :param timeout_in_s: maximum amount of time (seconds) to wait
+            for a message
 
         :return: received message
         """

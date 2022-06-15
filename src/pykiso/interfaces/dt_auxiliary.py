@@ -34,12 +34,20 @@ log = logging.getLogger(__name__)
 
 @unique
 class AuxCommand(Enum):
+    """Contain all available auxiliary's commands."""
 
+    #: create auxiliary command id
     CREATE_AUXILIARY = enum.auto()
+    #: delete auxiliary command id
     DELETE_AUXILIARY = enum.auto()
 
 
-class DTAuxiliaryInterface:
+class DTAuxiliaryInterface(abc.ABC):
+    """Common interface for all double threaded auxiliary. A so called
+    << double thread>> auxiliary, simply encapsulate two threads one
+    for the reception and one for the transmmission.
+    """
+
     def __init__(
         self,
         name: str = None,

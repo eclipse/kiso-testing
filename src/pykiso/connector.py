@@ -100,8 +100,8 @@ class CChannel(Connector):
         """Send a thread-safe message on the channel and wait for an acknowledgement.
 
         :param msg: message to send
-        :param raw: should the message be converted as pykiso.Message or
-            raw
+        :param raw: should the message be converted as pykiso.Message
+            or sent as it is
         :param kwargs: named arguments
         """
         with self._lock_tx:
@@ -112,11 +112,9 @@ class CChannel(Connector):
 
         :param timeout: time in second to wait for reading a message
         :param raw: should the message be returned as pykiso.Message or
-            raw
+            sent as it is
 
-        :return: Message if successful, None else
-
-        :raise ConnectionRefusedError: when lock acquire failed
+        :return: the received message
         """
         with self._lock_rx:
             return self._cc_receive(timeout=timeout, raw=raw)
@@ -139,7 +137,6 @@ class CChannel(Connector):
         :param raw: send raw message without further work (default: False)
         :param kwargs: named arguments
         """
-        # TODO define exception to raise?
         pass
 
     @abc.abstractmethod
