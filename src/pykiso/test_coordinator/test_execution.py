@@ -29,7 +29,7 @@ import logging
 import time
 import unittest
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import xmlrunner
 
@@ -52,7 +52,9 @@ class ExitCode(enum.IntEnum):
     AUXILIARY_CREATION_FAILED = 4
 
 
-def create_test_suite(test_suite_dict: Dict) -> test_suite.BasicTestSuite:
+def create_test_suite(
+    test_suite_dict: Dict[str, Union[str, int]]
+) -> test_suite.BasicTestSuite:
     """create a test suite based on the config dict
 
     :param test_suite_dict: dict created from config with keys 'suite_dir',
@@ -106,10 +108,9 @@ def apply_variant_filter(
         :return: True if a couple variant/branch_level is found
             otherwise False
         """
-        for variant in variants:
-            for branch in branches:
-                if variant in tc_tags and branch in tc_tags:
-                    return True
+        for variant, branch in itertools.product(variants, branches):
+            if variant in tc_tags and branch in tc_tags:
+                return True
         else:
             return False
 
@@ -164,15 +165,43 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
     return exit_code
 
 
+def collect_test_suites(
+    test_configuration: List[Dict[str, Union[str, int]]],
+    test_filter_pattern: Optional[str] = None,
+) -> List[Optional[test_suite.BasicTestSuite]]:
+    """Collect and load all test suites defined in the test configuration.
+
+    :param test_configuration: list of dictionaries corresponding
+        each to one test suite.
+    :param test_filter_pattern: optional filter pattern to overwrite
+        the one defined in the test suite configuration.
+
+    :return: a list of all loaded test suites
+    """
+    list_of_test_suites = []
+    for test_suite_configuration in test_configuration:
+        try:
+            if test_filter_pattern is not None:
+                test_suite_configuration["test_filter_pattern"] = test_filter_pattern
+            list_of_test_suites.append(create_test_suite(test_suite_configuration))
+        except BaseException as e:
+            log.exception(
+                f"Failed to load test suite {test_suite_configuration['suite_dir']}: {e}"
+            )
+            list_of_test_suites.append(None)
+            break
+    return list_of_test_suites
+
+
 def execute(
-    config: Dict,
+    config: Dict[str, Any],
     report_type: str = "text",
     variants: Optional[tuple] = None,
     branch_levels: Optional[tuple] = None,
     pattern_inject: Optional[str] = None,
     failfast: bool = False,
 ) -> int:
-    """create test environment base on config
+    """Create test environment based on test configuration.
 
     :param config: dict from converted YAML config file
     :param report_type: str to set the type of report wanted, i.e. test
@@ -191,18 +220,12 @@ def execute(
     is_raised = False
 
     try:
-        list_of_test_suites = []
-        for test_suite_configuration in config["test_suite_list"]:
-            try:
-                if pattern_inject is not None:
-                    test_suite_configuration["test_filter_pattern"] = pattern_inject
-                list_of_test_suites.append(create_test_suite(test_suite_configuration))
-            except BaseException:
-                is_raised = True
-                break
-
+        test_suites = collect_test_suites(config["test_suite_list"], pattern_inject)
+        if None in test_suites:
+            test_suites.remove(None)
+            is_raised = True
         # Collect all the tests in one global test suite
-        all_tests_to_run = unittest.TestSuite(list_of_test_suites)
+        all_tests_to_run = unittest.TestSuite(test_suites)
         if variants or branch_levels:
             apply_variant_filter(all_tests_to_run, variants, branch_levels)
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
