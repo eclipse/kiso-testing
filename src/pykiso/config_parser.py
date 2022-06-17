@@ -133,7 +133,11 @@ class YamlLoader(yaml.SafeLoader):
         value = node.value
         config_path_unresolved = Path(value)
         if not config_path_unresolved.is_absolute():
-            config_path = (self._base_dir / config_path_unresolved).resolve()
+            try:
+                config_path = (self._base_dir / config_path_unresolved).resolve()
+            except OSError:
+                # for some rare values a WinError is raised by an invalid path
+                return str(value)
             if config_path.exists():
                 value = config_path
                 logging.debug(
