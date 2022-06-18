@@ -81,6 +81,16 @@ class ConfigRegistry:
         }
 
     @classmethod
+    def get_aux_by_alias(cls, alias: str) -> Any:
+        """Return the associated auxiliary instance to the given alias.
+
+        :param alias: auxiliary's alias
+
+        :return: auxiliary instance created by the dymanic loader
+        """
+        return ConfigRegistry._linker._aux_cache.get_instance(alias)
+
+    @classmethod
     def get_aux_config(cls, name: str) -> dict:
         """Return the registered auxiliary configuration based on his
         name.

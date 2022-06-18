@@ -75,7 +75,6 @@ class TestCaseOverride(pykiso.BasicTest):
             logging.info(f"received data {response}")
             self.assertEqual(response, b"\x02\x04\x06")
 
-
     def tearDown(self):
         """If a fixture is not use just override it like below."""
         logging.info(

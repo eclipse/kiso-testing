@@ -53,6 +53,8 @@ class DTAuxiliaryInterface(abc.ABC):
         name: str = None,
         is_proxy_capable: bool = False,
         activate_log: List[str] = None,
+        tx_task_on=True,
+        rx_task_on=True,
         auto_start: bool = True,
     ) -> None:
         """Initialize auxiliary attributes
@@ -73,6 +75,8 @@ class DTAuxiliaryInterface(abc.ABC):
         self.stop_rx = threading.Event()
         self.queue_in = queue.Queue()
         self.queue_out = queue.Queue()
+        self.tx_task_on = tx_task_on
+        self.rx_task_on = rx_task_on
         self.tx_thread = None
         self.rx_thread = None
         self.recv_timeout = 1
@@ -204,6 +208,10 @@ class DTAuxiliaryInterface(abc.ABC):
 
     def _start_tx_task(self) -> None:
         """Start transmission task."""
+        if self.tx_task_on is False:
+            log.debug("transmit task is not needed, don't start it")
+            return
+
         log.debug(f"start transmit task {self.name}_tx")
         self.tx_thread = threading.Thread(
             name=f"{self.name}_tx", target=self._transmit_task
@@ -212,6 +220,10 @@ class DTAuxiliaryInterface(abc.ABC):
 
     def _start_rx_task(self) -> None:
         """Start reception task."""
+        if self.rx_task_on is False:
+            log.debug("reception task is not needed, don't start it")
+            return
+
         log.debug(f"start reception task {self.name}_tx")
         self.rx_thread = threading.Thread(
             name=f"{self.name}_rx", target=self._reception_task
@@ -220,6 +232,10 @@ class DTAuxiliaryInterface(abc.ABC):
 
     def _stop_tx_task(self) -> None:
         """Stop transmission task."""
+        if self.tx_task_on is False:
+            log.debug("transmit task was not started, so no need to stop it")
+            return
+
         log.debug(f"stop transmit task {self.name}_tx")
         self.queue_in.put((AuxCommand.DELETE_AUXILIARY, None))
         self.stop_tx.set()
@@ -228,6 +244,10 @@ class DTAuxiliaryInterface(abc.ABC):
 
     def _stop_rx_task(self) -> None:
         """Stop reception task."""
+        if self.rx_task_on is False:
+            log.debug("recpetion task was not started, so no need t stop it")
+            return
+
         log.debug(f"stop reception task {self.name}_rx")
         self.stop_rx.set()
         self.rx_thread.join()
@@ -236,6 +256,9 @@ class DTAuxiliaryInterface(abc.ABC):
     def start(self) -> bool:
         """Force the auxiliary to start all running tasks and
         activities.
+
+        .. warning:: due to the usage of create_instance if an issue
+            occurred the exception AuxiliaryCreationError is raised.
 
         :return: True if the auxiliary is started otherwise False
         """
@@ -249,14 +272,14 @@ class DTAuxiliaryInterface(abc.ABC):
         """
         return self.delete_instance()
 
-    def suspend(self) -> None:
+    def suspend(self) -> bool:
         """Supend current auxiliary's run.
 
         :return: True if the auxiliary is suspend otherwise False
         """
         return self.delete_instance()
 
-    def resume(self) -> None:
+    def resume(self) -> bool:
         """Resume current auxiliary's run.
 
         .. warning:: due to the usage of create_instance if an issue

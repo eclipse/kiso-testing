@@ -37,7 +37,9 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
 
         :param com: CChannel that supports raw communication
         """
-        super().__init__(is_proxy_capable=True, **kwargs)
+        super().__init__(
+            is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs
+        )
         self.channel = com
         self.queue_tx = queue.Queue()
 
@@ -58,7 +60,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         timeout_in_s: int = None,
     ) -> bool:
         """Send a request by transmitting it through queue_in and
-        waiting for a response using queue_out.
+        populate queue_tx with the command verdict (successful or not).
 
         :param cmd_message: command to send
         :param cmd_data: data you would like to populate the command
