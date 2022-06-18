@@ -139,9 +139,10 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         log.info("Delete auxiliary instance")
         try:
             self.channel.close()
+            return True
         except Exception:
             log.exception("Unable to close channel communication")
-        return True
+            return False
 
     def _run_command(self, cmd_message: str, cmd_data: bytes = None) -> bool:
         """Run the corresponding command.
