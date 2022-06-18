@@ -82,8 +82,8 @@ class CChannel(Connector):
             self._lock_rx = multiprocessing.RLock()
             self._lock = multiprocessing.Lock()
         else:
-            self._lock_tx = threading.Lock()
-            self._lock_rx = threading.Lock()
+            self._lock_tx = threading.RLock()
+            self._lock_rx = threading.RLock()
             self._lock = threading.Lock()
 
     def open(self) -> None:

@@ -25,11 +25,6 @@ def com_aux_inst(cchannel_inst):
 
 
 @pytest.fixture
-def return_test():
-    return "test"
-
-
-@pytest.fixture
 def com_aux_linker():
     linker = DynamicImportLinker()
     aux_conf = {

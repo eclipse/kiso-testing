@@ -7,135 +7,127 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import multiprocessing
+import threading
+
 import pytest
 
-from pykiso import CChannel, Flasher
+from pykiso.connector import CChannel, Flasher
 
 
 @pytest.fixture
-def rlock_mock(mocker):
-    class R_lock_dict:
-        def __init__(self):
-            self.att = None
+def channel_obj(mocker):
+    class TCChan(CChannel):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
 
-        def acquire(self, Bool: bool):
-            return False
+        _cc_open = mocker.stub(name="_cc_open")
+        _cc_close = mocker.stub(name="_cc_close")
+        _cc_send = mocker.stub(name="_cc_send")
+        _cc_receive = mocker.stub(name="_cc_receive")
 
-        def release(self):
-            return None
-
-        def exists(self):
-            return False
-
-        def is_file(self):
-            return False
-
-    return R_lock_dict()
+    return TCChan
 
 
-def test_connector_exit(mocker, cchannel_inst):
-    mock_close = mocker.patch.object(CChannel, "close")
-    with pytest.raises(TypeError):
-        cchannel_inst.__exit__("test", TypeError, "TEST")
+@pytest.fixture
+def flasher_obj(tmp_file, mocker):
+    class TFlash(Flasher):
+        def __init__(self, *args, **kwargs):
+            super(TFlash, self).__init__(*args, **kwargs)
 
-    mock_close.assert_called()
-
-
-def test_cchan_abstract():
-    """ensure CChannel is not instantiable"""
-    with pytest.raises(TypeError):
-        c = CChannel("will fail")
-
-
-def test_cchan_interface(cchannel_inst, mocker):
-    tracer = mocker.MagicMock()
-    tracer.attach_mock(cchannel_inst._cc_open, "_cc_open")
-    tracer.attach_mock(cchannel_inst._cc_close, "_cc_close")
-    tracer.attach_mock(cchannel_inst._cc_receive, "_cc_receive")
-    tracer.attach_mock(cchannel_inst._cc_send, "_cc_send")
-    with cchannel_inst as ch:
-        ch.cc_send("test", 0)
-        ch.cc_receive(0)
-    expected_calls = [
-        mocker.call._cc_open(),
-        mocker.call._cc_send(msg="test", raw=False),
-        mocker.call._cc_receive(timeout=0, raw=False),
-        mocker.call._cc_close(),
-    ]
-    print(repr(expected_calls))
-    assert expected_calls == tracer.mock_calls
-
-
-def test_cchannel_open_failed(mocker, cchannel_inst, rlock_mock):
-    mocker.patch.object(cchannel_inst, "_lock", rlock_mock)
-    with pytest.raises(ConnectionRefusedError):
-        cchannel_inst.open()
-
-
-def test_cchannel_cc_send_failed(mocker, cchannel_inst, rlock_mock, mock_msg):
-    mocker.patch.object(cchannel_inst, "_lock", rlock_mock)
-    with pytest.raises(ConnectionRefusedError):
-        cchannel_inst.cc_send(mock_msg)
-
-
-def test_cchannel_cc_receive_failed(mocker, cchannel_inst, rlock_mock):
-    mock_acquire = mocker.patch.object(cchannel_inst, "_lock", rlock_mock)
-    with pytest.raises(ConnectionRefusedError):
-        receive_msg = cchannel_inst.cc_receive()
-        mock_acquire.assert_called()
-        assert receive_msg is None
-
-
-def test_flash_abstract():
-    """ensure Flasher is not instantiable"""
-    with pytest.raises(TypeError):
-        f = Flasher("will fail")
-
-
-def test_flasher_interface(flasher_inst, mocker):
-    tracer = mocker.MagicMock()
-    tracer.attach_mock(flasher_inst.open, "open")
-    tracer.attach_mock(flasher_inst.close, "close")
-    tracer.attach_mock(flasher_inst.flash, "flash")
-    with flasher_inst as fl:
-        fl.flash()
-    assert tracer.mock_calls == [
-        mocker.call.open(),
-        mocker.call.flash(),
-        mocker.call.close(),
-    ]
-
-
-def test_flasher_init_failed_type_error(mocker, request):
-    class Mock_flasher(Flasher):
-        def __init__(self, binary, **kwargs):
-            super().__init__(binary, **kwargs)
-
-        flash = mocker.stub(name="flash")
         open = mocker.stub(name="open")
         close = mocker.stub(name="close")
-
-    with pytest.raises(TypeError) as error:
-        Mock_flasher(None)
-
-    assert str(error.value) == "'binary' must be a path-like object, not None"
-
-
-def test_flasher_init_failed_value_error(mocker, rlock_mock):
-    class Mock_flasher(Flasher):
-        def __init__(self, binary, **kwargs):
-            super().__init__(binary, **kwargs)
-
         flash = mocker.stub(name="flash")
-        open = mocker.stub(name="open")
-        close = mocker.stub(name="close")
 
-    mocker_resolve = mocker.patch("pathlib.Path.resolve", return_value=rlock_mock)
+    return TFlash
 
-    with pytest.raises(ValueError) as error:
-        Mock_flasher("test")
-        mocker_resolve.assert_called()
-    assert (
-        str(error.value)
-        == f"'binary' must be a path-like object to an existing file (got {rlock_mock})"
-    )
+
+def test_channel_constructor_thread(channel_obj):
+    cc_inst = channel_obj(name="thread-channel")
+
+    assert cc_inst.name == "thread-channel"
+    assert isinstance(cc_inst._lock_tx, type(threading.RLock()))
+    assert isinstance(cc_inst._lock_rx, type(threading.RLock()))
+    assert isinstance(cc_inst._lock, type(threading.Lock()))
+
+
+def test_channel_constructor_mp(channel_obj):
+
+    cc_inst = channel_obj(processing=True, name="mp-channel")
+
+    assert cc_inst.name == "mp-channel"
+    assert isinstance(cc_inst._lock_tx, type(multiprocessing.RLock()))
+    assert isinstance(cc_inst._lock_rx, type(multiprocessing.RLock()))
+    assert isinstance(cc_inst._lock, type(multiprocessing.Lock()))
+
+
+def test_channel_context_manager(channel_obj):
+    cc_inst = channel_obj(name="thread-channel")
+
+    with cc_inst as inst:
+        pass
+
+    cc_inst._cc_open.assert_called_once()
+    cc_inst._cc_close.assert_called_once()
+
+
+def test_channel_context_manager_exception(mocker, channel_obj):
+    cc_inst = channel_obj(name="thread-channel")
+    mocker.patch.object(cc_inst, "_cc_send", side_effect=ValueError)
+
+    with pytest.raises(ValueError):
+        with cc_inst as inst:
+            inst.cc_send(msg=b"\x01\x02\x03")
+
+
+def test_channel_cc_send(channel_obj):
+    cc_inst = channel_obj(name="thread-channel")
+    cc_inst.cc_send(msg=b"\x01\x02\x03")
+
+    cc_inst._cc_send.assert_called_with(msg=b"\x01\x02\x03", raw=False)
+
+
+def test_channel_cc_receive(channel_obj):
+    cc_inst = channel_obj(name="thread-channel")
+    cc_inst.cc_receive()
+
+    cc_inst._cc_receive.assert_called_with(timeout=0.1, raw=False)
+
+
+def test_channel_invalid_interface():
+    with pytest.raises(TypeError):
+        CChannel()
+
+
+def test_flasher_constructor_binary_missing(flasher_obj):
+    with pytest.raises(TypeError):
+        flash_inst = flasher_obj(name="thread-channel")
+
+
+def test_flasher_constructor_binary_path_invalid(flasher_obj):
+    with pytest.raises(ValueError):
+        flash_inst = flasher_obj(name="thread-channel", binary="super_bynary")
+
+
+def test_flasher_context_manager(mocker, flasher_obj, tmp_file):
+    flash_inst = flasher_obj(name="thread-channel", binary=tmp_file)
+
+    with flash_inst as fl:
+        pass
+
+    flash_inst.open.assert_called_once()
+    flash_inst.close.assert_called_once()
+
+
+def test_flasher_context_manager_exception(mocker, flasher_obj, tmp_file):
+    flash_inst = flasher_obj(name="thread-channel", binary=tmp_file)
+    mocker.patch.object(flash_inst, "flash", side_effect=ValueError)
+
+    with pytest.raises(ValueError):
+        with flash_inst as fl:
+            fl.flash()
+
+
+def test_flasher_invalid_interface():
+    with pytest.raises(TypeError):
+        Flasher()
