@@ -50,7 +50,7 @@ class TestCaseOverride(pykiso.BasicTest):
         # just suspend the current auxiliary execution
         com_aux.suspend()
         time.sleep(2)
-        # just reumse the current auxiliary execution
+        # just resume the current auxiliary execution
         com_aux.resume()
 
     def test_run(self):
@@ -62,26 +62,19 @@ class TestCaseOverride(pykiso.BasicTest):
         )
         # send 20 requests over the connected channel and check if the
         # command was successfully sent
-        for _ in range(10):
+        for _ in range(20):
             req = b"\x02\x04\x06"
             logging.info(f"send request {req} over {com_aux.name}")
             state = com_aux.send_message(req)
-            self.assertEqual(state, True)
-
-            req = b"\x01\x02\x03"
-            state = com_aux.send_message(req)
-            logging.info(f"send message state {state} for data {req}")
+            logging.info(f"request excecution state: {state}")
             self.assertEqual(state, True)
 
         # get the 20 first received messages
-        for _ in range(10):
+        for _ in range(20):
             response = com_aux.receive_message()
             logging.info(f"received data {response}")
             self.assertEqual(response, b"\x02\x04\x06")
 
-            response = com_aux.receive_message()
-            logging.info(f"received data {response}")
-            self.assertEqual(response, b"\x01\x02\x03")
 
     def tearDown(self):
         """If a fixture is not use just override it like below."""
