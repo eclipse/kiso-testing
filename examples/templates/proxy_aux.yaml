@@ -13,7 +13,7 @@ auxiliaries:
       # By default, auto_start flag is set to True and "normal" ITF aux
       # creation mechanism is used.
       auto_start: False
-    type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
+    type: pykiso.lib.auxiliaries.dt_proxy_auxiliary:DTProxyAuxiliary
   aux1:
     connectors:
         com: proxy_com1
@@ -31,10 +31,10 @@ auxiliaries:
 connectors:
   proxy_com1:
     config: ~
-    type: pykiso.lib.connectors.cc_proxy:CCProxy
+    type: pykiso.lib.connectors.cc_dt_proxy:CCDTProxy
   proxy_com2:
     config: ~
-    type: pykiso.lib.connectors.cc_proxy:CCProxy
+    type: pykiso.lib.connectors.cc_dt_proxy:CCDTProxy
   can_channel:
     config:
       interface : 'pcan'

@@ -49,7 +49,6 @@ class TestCaseOverride(pykiso.BasicTest):
 
         # just suspend the current auxiliary execution
         com_aux.suspend()
-        time.sleep(2)
         # just resume the current auxiliary execution
         com_aux.resume()
 
