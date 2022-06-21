@@ -7,6 +7,8 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import threading
+
 import pytest
 
 from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
@@ -22,7 +24,7 @@ from pykiso.test_setup.config_registry import ConfigRegistry
 
 @pytest.fixture(scope="function")
 def robot_proxy_aux(mocker, cchannel_inst):
-    mocker.patch.object(ProxyAux, "run")
+    mocker.patch.object(threading.Thread, "start")
     mocker.patch(
         "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
         return_value={"proxy": ProxyAux(cchannel_inst, [])},
@@ -64,15 +66,6 @@ def test_resume(mocker, robot_proxy_aux, proxy_aux):
     robot_proxy_aux.resume("proxy")
 
     resume_mock.assert_called_once()
-
-
-def robot_mp_proxy_aux(mocker, cchannel_inst):
-    mocker.patch.object(MpProxyAux, "run")
-    mocker.patch(
-        "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
-        return_value={"proxy": MpProxyAux(cchannel_inst, [])},
-    )
-    return ProxyAuxiliary()
 
 
 def test_mp_suspend(mocker, mpproxy_aux):
