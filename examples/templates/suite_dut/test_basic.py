@@ -128,7 +128,7 @@ class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     run_timeout=2,
     teardown_timeout=1,
     test_ids={"Component1": ["Req-01"]},
-    tag={"variant": "variant1"},
+    tag={"variant": ["variant1"]},
 )
 class TestCaseBasic(pykiso.RemoteTest):
     """This test case definition will be executed using base behavior
