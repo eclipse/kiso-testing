@@ -13,6 +13,7 @@ from unittest import TestCase, TestResult
 
 import pytest
 
+import pykiso
 import pykiso.test_coordinator.test_execution
 from pykiso import cli
 from pykiso.config_parser import parse_config
@@ -58,6 +59,32 @@ def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "Ran 0 tests" in output.err
+
+
+@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mocker):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    by specifying a pattern
+
+    Validation criteria:
+        -  run is executed without error
+    """
+    mocker.patch(
+        "pykiso.test_coordinator.test_suite.tc_sort_key", side_effect=Exception
+    )
+
+    cfg = parse_config(tmp_test)
+    ConfigRegistry.register_aux_con(cfg)
+
+    with pytest.raises(pykiso.TestCollectionError):
+        test_execution.collect_test_suites(cfg["test_suite_list"])
+
+    ConfigRegistry.delete_aux_con()
+
+    output = capsys.readouterr()
+    assert "FAIL" not in output.err
+    assert "Ran 0 tests" not in output.err
 
 
 @pytest.mark.parametrize("tmp_test", [("text_aux1", "text_aux2", False)], indirect=True)

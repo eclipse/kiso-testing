@@ -166,23 +166,23 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
 
 
 def collect_test_suites(
-    test_configuration: List[Dict[str, Union[str, int]]],
+    config_test_suite_list: List[Dict[str, Union[str, int]]],
     test_filter_pattern: Optional[str] = None,
 ) -> List[Optional[test_suite.BasicTestSuite]]:
     """Collect and load all test suites defined in the test configuration.
 
-    :param test_configuration: list of dictionaries corresponding
-        each to one test suite.
+    :param config_test_suite_list: list of dictionaries from the configuration
+        file corresponding each to one test suite.
     :param test_filter_pattern: optional filter pattern to overwrite
         the one defined in the test suite configuration.
 
     :raises pykiso.TestCollectionError: if any test case inside one of
         the configured test suites failed to be loaded.
 
-    :return: a list of all loaded test suites
+    :return: a list of all loaded test suites.
     """
     list_of_test_suites = []
-    for test_suite_configuration in test_configuration:
+    for test_suite_configuration in config_test_suite_list:
         try:
             if test_filter_pattern is not None:
                 test_suite_configuration["test_filter_pattern"] = test_filter_pattern
