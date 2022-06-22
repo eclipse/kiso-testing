@@ -107,12 +107,11 @@ def test_show_tag(tmp_test):
     cfg_dict = parse_config(config_file)
     test_cases = get_test_cases(cfg_dict)
     tags = get_test_tags(test_cases)
-    single_config_result = build_result_dict(config_file.name, test_cases, tags)
+    single_config_result = build_result_dict(
+        config_file.name, test_cases, tags, show_test_cases=True
+    )
     all_results = [single_config_result]
-
     table_header, table_data = tabulate_test_information(all_results)
-
-    # breakpoint()
 
     assert table_header == list(expected_table_headers)
     assert table_data == list(expected_table_data)

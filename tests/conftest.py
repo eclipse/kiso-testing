@@ -8,6 +8,7 @@
 ##########################################################################
 
 import itertools
+import shutil
 import subprocess
 import time
 import unittest
@@ -322,23 +323,28 @@ AUX_NAMES = itertools.cycle(
 TestResult.__test__ = False
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def tmp_test(request, tmp_path):
+    # use a common tmp_path for all test modules
+    tmp_base = tmp_path.parent / "tests"
 
     cli.log_options = cli.LogOptions(None, "ERROR", None)
 
     aux1, aux2, should_fail = request.param
-    ts_folder = tmp_path / f"test_suite_{aux1}_{aux2}"
-    ts_folder.mkdir()
+    ts_folder = tmp_base / f"test_suite_{aux1}_{aux2}"
+    ts_folder.mkdir(parents=True)
     tc_file = ts_folder / f"test_{aux1}_{aux2}.py"
     tc_content = create_test_case(aux1, aux2, should_fail)
     tc_file.write_text(tc_content)
 
-    config_file = tmp_path / f"{aux1}_{aux2}.yaml"
+    config_file = tmp_base / f"{aux1}_{aux2}.yaml"
     cfg_content = create_config(aux1, aux2, f"test_suite_{aux1}_{aux2}")
     config_file.write_text(cfg_content)
 
-    return config_file
+    yield config_file
+
+    # and clean it up afterwards
+    shutil.rmtree(str(tmp_base))
 
 
 def create_config(aux1, aux2, suite_dir):
