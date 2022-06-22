@@ -24,10 +24,13 @@ class PykisoError(Exception):
 
 
 class TestCollectionError(PykisoError):
+    """Collection of test cases by the TestLoader failed."""
+
     def __init__(self, test_suite_dir: str) -> None:
         """Initialize attributes.
 
-        :param aux_name: aux alias
+        :param test_suite_dir: path to the test suite in which a test
+            case failed to be loaded.
         """
         self.message = f"Failed to collect test suite '{test_suite_dir}'"
         super().__init__(self.message)
@@ -39,7 +42,7 @@ class AuxiliaryCreationError(PykisoError):
     def __init__(self, aux_name: str) -> None:
         """Initialize attributes.
 
-        :param aux_name: aux alias
+        :param aux_name: configured auxiliary alias.
         """
         self.message = f"Auxiliary {aux_name} failed at instance creation"
         super().__init__(self.message)
