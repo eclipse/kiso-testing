@@ -91,6 +91,7 @@ omit = [
     "*/examples/*",
     "*/setup.py",
     "*/tasks.py",
+    "*/src/pykiso/tool/*",
     "*/src/pykiso/__main__.py",
     "*__init__.py",
 ]

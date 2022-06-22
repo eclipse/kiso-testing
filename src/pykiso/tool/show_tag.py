@@ -212,6 +212,7 @@ def main(
     test_configuration: Tuple[PathType],
     output: Optional[PathType] = None,
     recurse_dir: bool = False,
+    show_tests: bool = False,
 ):
     """Embedded Integration Test Framework - Test tag analysis.
 
@@ -244,7 +245,7 @@ def main(
 
     all_results: List[Dict[str, Any]] = list()
 
-    click.echo("Start analyzing provided configuration file")
+    click.echo("\nStart analyzing provided configuration file...")
     # handle multiple files or folders provided by the user
     for config in test_configuration:
         # get all YAML files passed to the CLI
@@ -269,7 +270,9 @@ def main(
 
             tags = get_test_tags(test_cases)
 
-            single_config_result = build_result_dict(config_file.name, test_cases, tags)
+            single_config_result = build_result_dict(
+                config_file.name, test_cases, tags, show_test_cases=show_tests
+            )
             all_results.append(single_config_result)
 
     table_header, table_data = tabulate_test_information(all_results)
