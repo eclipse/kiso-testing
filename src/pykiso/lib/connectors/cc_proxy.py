@@ -100,7 +100,6 @@ class CCProxy(CChannel):
         :return: raw bytes and source when it exist. if queue timeout
             is reached return None
         """
-
         try:
             return_response = self.queue_out.get(True, self.timeout)
             log.debug(f"received at proxy level : {return_response}")

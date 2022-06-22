@@ -15,11 +15,6 @@ create_instance public method)
 Find below a complete example where during the test, the current pcan
 connector is replaced by a simple CCLoopback:
 
-
-To get the "original" auxiliary back, users have only to invoke the method
-destroy_copy . This simply stops the current copied auxiliary and resumes
-the original one.
-
 .. literalinclude:: ../../examples/templates/suite_proxy/test_proxy.py
     :language: python
     :lines: 22-152

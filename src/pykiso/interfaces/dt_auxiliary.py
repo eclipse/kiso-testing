@@ -63,6 +63,8 @@ class DTAuxiliaryInterface(abc.ABC):
         :param is_proxy_capable: notify if the current auxiliary could
             be (or not) associated to a proxy-auxiliary.
         :param activate_log: loggers to deactivate
+        :param tx_task_on: enable or not the tx thread
+        :param rx_task_on: enable or not the rx thread
         :param auto_start: determine if the auxiliayry is automatically
              started (magic import) or manually (by user)
         """
@@ -292,13 +294,11 @@ class DTAuxiliaryInterface(abc.ABC):
     def _transmit_task(self) -> None:
         """Auxiliary transmission task.
 
-        Simply call the child defined _run_command method and put the
-        the returned command state to queue_out.
+        Simply call the child defined _run_command.
         """
         while not self.stop_tx.is_set():
             cmd, data = self.queue_in.get()
-            # just stop the current Tx thread task when the instance
-            # is inteneded to be deleted
+            # just stop the current Tx thread task
             if cmd == AuxCommand.DELETE_AUXILIARY:
                 break
 
@@ -307,14 +307,15 @@ class DTAuxiliaryInterface(abc.ABC):
     def _reception_task(self) -> None:
         """Auxiliary reception task.
 
-        Simply call the child defined _receive_message method and
-        put the received message in the queue_out.
+        Simply call the child defined _receive_message method.
         """
         while not self.stop_rx.is_set():
             self._receive_message(timeout_in_s=self.recv_timeout)
 
-    def wait_for_queue_out(self, blocking: bool = False, timeout_in_s: int = 0) -> Any:
-        """Wait for the report of the previous sent test request.
+    def wait_for_queue_out(
+        self, blocking: bool = False, timeout_in_s: int = 0
+    ) -> Optional[Any]:
+        """Wait for data from the queue out.
 
         :param blocking: True: wait for timeout to expire, False: return
             immediately
@@ -330,35 +331,36 @@ class DTAuxiliaryInterface(abc.ABC):
 
     @abc.abstractmethod
     def _create_auxiliary_instance(self) -> bool:
-        """Create the auxiliary instance with witch we will communicate.
+        """Common interface call at auxiliary creation.
+
+        This method could be used to e.g initiate the communication
+        using the attached connector.
 
         :return: True - Successfully created / False - Failed by creation
-
-        .. note: Errors should be logged via the logging with the right level
         """
 
     @abc.abstractmethod
     def _delete_auxiliary_instance(self) -> bool:
-        """Delete the auxiliary instance with witch we will communicate.
+        """Common interface call at auxiliary deletion.
+
+        This method could be used to e.g terminate the current running
+        commmunication ...
 
         :return: True - Successfully deleted / False - Failed deleting
-
-        .. note: Errors should be logged via the logging with the right level
         """
 
     @abc.abstractmethod
-    def _run_command(self, cmd_message: Any, cmd_data: bytes = None) -> None:
+    def _run_command(self, cmd_message: Any, cmd_data: Optional[bytes]) -> None:
         """Run a command for the auxiliary.
 
         :param cmd_message: command to send
-
         :param cmd_data: payload data for the command
         """
 
     @abc.abstractmethod
     def _receive_message(self, timeout_in_s: float) -> None:
         """Defines what needs to be done as a receive message. Such as,
-            what do I need to do to receive a message.
+         what do I need to do to receive a message.
 
         :param timeout_in_s: How much time to block on the receive
         """
