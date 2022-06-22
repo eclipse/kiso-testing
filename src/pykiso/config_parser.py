@@ -26,7 +26,7 @@ import os
 import re
 import sys
 from collections import ChainMap
-from io import TextIOWrapper
+from io import TextIOBase
 from pathlib import Path
 from typing import Callable, Dict, List, TextIO, Union
 
@@ -55,7 +55,7 @@ class YamlLoader(yaml.SafeLoader):
 
         :param file: full path to the YAML file to load.
         """
-        if isinstance(file, TextIOWrapper):
+        if isinstance(file, TextIOBase):
             file = file.name
         yaml_file = Path(file).resolve()
         self._base_dir = yaml_file.parent

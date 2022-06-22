@@ -310,16 +310,6 @@ def tmp_uds_config_ini(tmp_path):
     return config_ini
 
 
-AUX_NAMES = itertools.cycle(
-    [
-        ("aux1", "aux2", False),
-        ("aux1", "aux2", False),
-        ("text_aux1", "text_aux2", False),
-        ("fail_aux1", "fail_aux2", True),
-        ("juint_aux1", "juint_aux2", False),
-    ]
-)
-
 TestResult.__test__ = False
 
 
