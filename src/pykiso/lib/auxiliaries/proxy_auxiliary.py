@@ -154,7 +154,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         for aux in aux_list:
             # aux_list can contain a auxiliary instance just grab the
             # channel
-            if isinstance(aux, AuxiliaryInterface):
+            if isinstance(aux, (AuxiliaryInterface, DTAuxiliaryInterface)):
                 self._check_compatibility(aux)
                 channel_inst.append(aux.channel)
                 continue
@@ -287,8 +287,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         try:
             recv_response = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
             received_data = recv_response.get("msg")
-            # if data are received, populate linked proxy connectors
-            # queue out
+            # if data are received, populate connector's queue_out
             if received_data is not None:
                 self.logger.debug(
                     f"received response : data {received_data.hex()} || channel : {self.channel.name}"
