@@ -209,7 +209,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         """
         for channel in channels:
             if not isinstance(channel, CCProxy):
-                raise TypeError(f"Channel {channel}:{channel.name} is not compatible!")
+                raise TypeError(f"Channel {channel} is not compatible!")
 
     def _dispatch_tx_method_to_channels(self) -> None:
         """Attached public run_command method to all connected proxy
