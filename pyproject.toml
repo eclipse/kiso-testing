@@ -67,9 +67,9 @@ sphinx-autodoc-typehints = "*"
 
 [tool.poetry.scripts]
 pykiso = 'pykiso.cli:main'
+pykiso-tags = 'pykiso.tool.show_tag:main'
 instrument-control = 'pykiso.lib.auxiliaries.instrument_control_auxiliary.instrument_control_cli:main'
 pykitest = 'pykiso.tool.pykiso_to_pytest.cli:main'
-show-tag = 'pykiso.tool.show_tag:main'
 
 [tool.pytest.ini_options]
 testpaths = [

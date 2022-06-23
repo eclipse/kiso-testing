@@ -4,7 +4,7 @@
 Show and export test suite tags
 ===============================
 
-The ``show-tag`` CLI utility takes as input YAML configuration files and passively loads
+The ``pykiso-tags`` CLI utility takes as input YAML configuration files and passively loads
 all the specified test suites in order to create a test information table.
 
 This table contains the number of test cases that will be run when providing this
@@ -14,14 +14,14 @@ Another options can be specified and the table can be exported to various format
 
 .. code:: bash
 
-    show-tag --help
+    pykiso-tags --help
 
 
 A minimal invocation of the tool would be:
 
 .. code:: bash
 
-    show-tag -c kiso-testing/examples/dummy.yaml
+    pykiso-tags -c kiso-testing/examples/dummy.yaml
 
 
 Which results in the following output:
