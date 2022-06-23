@@ -187,7 +187,7 @@ class DTAuxiliaryInterface(abc.ABC):
 
         :return: True if the auxiliary is deleted otherwise False
         """
-        log.info(f"deleting instance of auxiliary {self.name}")
+        log.info(f"Deleting instance of auxiliary {self.name}")
 
         with self.lock:
 
@@ -203,7 +203,9 @@ class DTAuxiliaryInterface(abc.ABC):
             is_deleted = self._delete_auxiliary_instance()
 
             if not is_deleted:
-                log.error("Unexpected error occured during auxiliary instance deletion")
+                log.error(
+                    f"Unexpected error occurred during deletion of auxiliary instance {self.name}"
+                )
 
             self.is_instance = False
             return is_deleted

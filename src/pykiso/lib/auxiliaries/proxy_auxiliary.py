@@ -198,8 +198,8 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         """Attached public run_command method to all connected proxy
         channels.
 
-        .. note:: This method use the thread safe method implemented by each proxy
-            channels(attached_tx_callback).
+        .. note:: This method use the thread safe method implemented by
+            each proxy channels(attached_tx_callback).
         """
         for conn in self.proxy_channels:
             conn.attached_tx_callback(self.run_command)

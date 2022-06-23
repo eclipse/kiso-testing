@@ -1,16 +1,16 @@
 Dynamic Configuration
 =====================
 
-In some situation, it is useful to change the in-use auxiliary behavior dynamically.
+In some situation, it can be useful to change the behaviour of the auxiliary in-use dynamically.
 For example, switching for a brand new channel or simply change an attribute value.
 
-Thanks to the common auxiliary interface, user can easily change his auxiliary
+Thanks to the common auxiliary interface, users can easily change their auxiliary
 configuration by simply stop it (call of delete_instance public method) ,access
 it different public attributes, and then just restarts the auxiliary (call of
-create_instance public method)
+the public method ``delete_instance``)
 
 .. warning:: if you are using the original auxiliary instance don't forget to
-    switch back to it initial configuration for the next test cases.
+    switch back to its initial configuration for the next test cases.
 
 Find below a complete example where during the test, the current pcan
 connector is replaced by a simple CCLoopback:
