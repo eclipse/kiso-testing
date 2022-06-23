@@ -14,7 +14,8 @@ Test configuration analysis
 :module: show_tag
 
 :synopsis: Passively load the test suites of YAML configuration files
-    to show their test tags.
+    to show their test tags. Meant to be invoked as ``pykiso-tags``
+    CLI utility.
 
 .. currentmodule:: show_tag
 """
