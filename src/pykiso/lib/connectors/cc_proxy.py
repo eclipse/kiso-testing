@@ -52,13 +52,13 @@ class CCProxy(CChannel):
         self._lock = threading.Lock()
         self._tx_callback = None
 
-    def detached_tx_callback(self) -> None:
+    def detach_tx_callback(self) -> None:
         """Detach the current callback."""
         with self._lock:
             log.warning("reset current attached transmit callback!")
             self._tx_callback = None
 
-    def attached_tx_callback(self, func: Callable) -> None:
+    def attach_tx_callback(self, func: Callable) -> None:
         """Attach to a callback to the _cc_send method.
 
         :param func: function to call when _cc_send is called

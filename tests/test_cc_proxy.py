@@ -42,7 +42,7 @@ def test_cc_send():
         assert kwargs["remote_id"] == 0x500
 
     with CCProxy() as proxy_inst:
-        proxy_inst.attached_tx_callback(tx_func)
+        proxy_inst.attach_tx_callback(tx_func)
         proxy_inst._cc_send(b"\x12\x34\x56", raw=True, remote_id=0x500)
 
 
@@ -75,14 +75,14 @@ def test_cc_receive_timeout():
 def test_detached_tx_callback():
     with CCProxy() as proxy_inst:
         proxy_inst._tx_callback = True
-        proxy_inst.detached_tx_callback()
+        proxy_inst.detach_tx_callback()
         assert proxy_inst._tx_callback is None
 
 
 def test_attached_tx_callback():
     func = lambda x: x
     with CCProxy() as proxy_inst:
-        proxy_inst.attached_tx_callback(func)
+        proxy_inst.attach_tx_callback(func)
         assert proxy_inst._tx_callback == func
 
 
@@ -91,8 +91,8 @@ def test_attached_tx_callback_replace():
     func_2 = lambda x: x + 1
 
     with CCProxy() as proxy_inst:
-        proxy_inst.attached_tx_callback(func_1)
+        proxy_inst.attach_tx_callback(func_1)
         assert proxy_inst._tx_callback == func_1
-        proxy_inst.attached_tx_callback(func_2)
+        proxy_inst.attach_tx_callback(func_2)
         assert proxy_inst._tx_callback != func_1
         assert proxy_inst._tx_callback == func_2

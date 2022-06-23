@@ -39,8 +39,8 @@ def mock_auxiliaries(mocker):
         _cc_close = mocker.stub(name="_cc_close")
         _cc_send = mocker.stub(name="_cc_send")
         _cc_receive = mocker.stub(name="_cc_receive")
-        detached_tx_callback = mocker.stub(name="detached_tx_callback")
-        attached_tx_callback = mocker.stub(name="attached_tx_callback")
+        detach_tx_callback = mocker.stub(name="detach_tx_callback")
+        attach_tx_callback = mocker.stub(name="attach_tx_callback")
 
     class MockAux1:
         def __init__(self, **kwargs):
@@ -275,8 +275,8 @@ def test_dispatch_tx_method_to_channels(cchannel_inst):
     aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
     aux_2 = sys.modules["pykiso.auxiliaries.MockAux2"]
 
-    aux_1.channel.attached_tx_callback.assert_called()
-    aux_2.channel.attached_tx_callback.assert_called()
+    aux_1.channel.attach_tx_callback.assert_called()
+    aux_2.channel.attach_tx_callback.assert_called()
 
 
 @pytest.mark.parametrize(

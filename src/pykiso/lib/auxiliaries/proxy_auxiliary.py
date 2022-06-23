@@ -202,7 +202,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             each proxy channels(attached_tx_callback).
         """
         for conn in self.proxy_channels:
-            conn.attached_tx_callback(self.run_command)
+            conn.attach_tx_callback(self.run_command)
 
     def _create_auxiliary_instance(self) -> bool:
         """Open current associated channel and dispatch tx method.
