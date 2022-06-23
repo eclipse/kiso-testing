@@ -55,6 +55,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 from pykiso import AuxiliaryInterface, CChannel, DTAuxiliaryInterface
+from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_setup.config_registry import ConfigRegistry
 from pykiso.test_setup.dynamic_loader import PACKAGE
 
@@ -155,14 +156,14 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # aux_list can contain a auxiliary instance just grab the
             # channel
             if isinstance(aux, (AuxiliaryInterface, DTAuxiliaryInterface)):
-                self._check_compatibility(aux)
+                self._check_aux_compatibility(aux)
                 channel_inst.append(aux.channel)
                 continue
             # check the system module in order to get the auxiliary
             # instance
             aux_inst = sys.modules.get(f"{PACKAGE}.auxiliaries.{aux}")
             if aux_inst is not None:
-                self._check_compatibility(aux_inst)
+                self._check_aux_compatibility(aux_inst)
                 channel_inst.append(aux_inst.channel)
             # check if the given aux_name is in the available aux
             # alias list
@@ -172,17 +173,20 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
                 )
                 # load it using ConfigRegistry _aux_cache
                 aux_inst = ConfigRegistry.get_aux_by_alias(aux)
-                self._check_compatibility(aux_inst)
+                self._check_aux_compatibility(aux_inst)
                 channel_inst.append(aux_inst.channel)
             # the given auxiliary alias doesn't exist or refer to a
             # invalid one
             else:
                 log.error(f"Auxiliary : {aux} doesn't exist")
+        # Finally just check if auxes/connectors are compatible with
+        # the proxy aux
+        self._check_channels_compatibility(channel_inst)
 
         return tuple(channel_inst)
 
     @staticmethod
-    def _check_compatibility(aux) -> None:
+    def _check_aux_compatibility(aux) -> None:
         """Check if the given auxiliary is proxy compatible.
 
         :param aux: auxiliary instance to check
@@ -191,8 +195,21 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         """
         if not aux.is_proxy_capable:
             raise NotImplementedError(
-                f"Auxiliary {aux} is not compatible with a proxy auxiliary"
+                f"Auxiliary {aux} is not compatible with a proxy auxiliary!"
             )
+
+    @staticmethod
+    def _check_channels_compatibility(channels: List[CChannel]) -> None:
+        """Check if all associated channels are compatible.
+
+        :param channels: all channels collected by the proxy aux
+
+        :raises TypeError: if the connector is not an instance of
+            CCProxy
+        """
+        for channel in channels:
+            if not isinstance(channel, CCProxy):
+                raise TypeError(f"Channel {channel}:{channel.name} is not compatible!")
 
     def _dispatch_tx_method_to_channels(self) -> None:
         """Attached public run_command method to all connected proxy
