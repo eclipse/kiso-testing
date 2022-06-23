@@ -69,7 +69,7 @@ def test_get_yaml_files(tmp_yaml_files):
     recurse, yaml_folder, expected_yaml_files = tmp_yaml_files
     yaml_files = get_yaml_files(yaml_folder, recurse)
 
-    assert yaml_files == expected_yaml_files
+    assert sorted(yaml_files) == sorted(expected_yaml_files)
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
