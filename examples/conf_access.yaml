@@ -3,12 +3,12 @@ auxiliaries:
     connectors:
         com: chan1
     config: null
-    type: ext_lib/example_test_auxiliary.py:ExampleAuxiliary
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
   aux2:
     connectors:
         com:   chan2
         flash: chan3
-    type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
   aux3:
     connectors:
         com:   chan4
@@ -25,7 +25,7 @@ connectors:
     config:
         param_1: "value 1"
         param_2: 2000
-    type: ext_lib/cc_example.py:CCExample
+    type: pykiso.lib.connectors.cc_flasher_example:FlasherExample
 test_suite_list:
 - suite_dir: conf_access
   test_filter_pattern: '*.py'
