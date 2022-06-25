@@ -52,8 +52,6 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
     attribute = dir(module)
     logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
 
-    pass
-
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
 class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
@@ -67,8 +65,6 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     -> aux_list : test suite teardown executed using aux1 and aux2 (see
     yaml configuration file)
     """
-
-    pass
 
 
 @pykiso.define_test_parameters(
@@ -218,5 +214,3 @@ class MyTest3(pykiso.RemoteTest):
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.
     """
-
-    pass

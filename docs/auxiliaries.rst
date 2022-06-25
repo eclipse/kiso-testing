@@ -12,9 +12,6 @@ Included Auxiliaries
 .. automodule:: pykiso.lib.auxiliaries.communication_auxiliary
     :members:
 
-.. automodule:: pykiso.lib.auxiliaries.example_test_auxiliary
-    :members:
-
 .. automodule:: pykiso.lib.auxiliaries.simulated_auxiliary
     :members:
 

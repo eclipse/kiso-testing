@@ -9,3 +9,4 @@ Flashers
 
     flash_jlink
     flash_lauterbach
+    flash_example

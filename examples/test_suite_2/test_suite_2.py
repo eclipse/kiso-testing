@@ -23,8 +23,8 @@ import pykiso
 from pykiso.auxiliaries import aux1, aux2
 
 
-@pykiso.define_test_parameters(suite_id=2, case_id=0, aux_list=[aux1, aux2])
-class SuiteSetup(pykiso.BasicTestSuiteSetup):
+@pykiso.define_test_parameters(suite_id=2, aux_list=[aux1, aux2])
+class Suite2Setup(pykiso.BasicTestSuiteSetup):
     """This test suite setup will be executed using base behavior given
     by BasicTestSuiteTeardown.
 
@@ -39,11 +39,9 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
     yaml configuration file)
     """
 
-    pass
 
-
-@pykiso.define_test_parameters(suite_id=2, case_id=0, aux_list=[aux1, aux2])
-class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+@pykiso.define_test_parameters(suite_id=2, aux_list=[aux1, aux2])
+class Suite2TearDown(pykiso.BasicTestSuiteTeardown):
     """This test suite teardown will be executed using base behavior
     given by BasicTestSuiteTeardown.
 
@@ -57,8 +55,6 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     -> aux_list : test suite teardown executed using aux1 and aux2 (see
     yaml configuration file)
     """
-
-    pass
 
 
 @pykiso.define_test_parameters(
@@ -82,11 +78,9 @@ class MyTest4(pykiso.BasicTest):
     -> tag: [optional] allows the run of subset of tests
     """
 
-    pass
-
 
 @pykiso.define_test_parameters(suite_id=2, case_id=2, aux_list=[aux2])
-class MyTest2(pykiso.BasicTest):
+class MyTest5(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
     given by BasicTest.
 
@@ -98,5 +92,3 @@ class MyTest2(pykiso.BasicTest):
     -> aux_list : test case executed using aux2(see yaml
     configuration file)
     """
-
-    pass
