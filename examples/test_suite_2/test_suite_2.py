@@ -24,7 +24,7 @@ from pykiso.auxiliaries import aux1, aux2
 
 
 @pykiso.define_test_parameters(suite_id=2, aux_list=[aux1, aux2])
-class Suite2Setup(pykiso.BasicTestSuiteSetup):
+class SuiteSetup(pykiso.RemoteTestSuiteSetup):
     """This test suite setup will be executed using base behavior given
     by BasicTestSuiteTeardown.
 
@@ -41,7 +41,7 @@ class Suite2Setup(pykiso.BasicTestSuiteSetup):
 
 
 @pykiso.define_test_parameters(suite_id=2, aux_list=[aux1, aux2])
-class Suite2TearDown(pykiso.BasicTestSuiteTeardown):
+class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     """This test suite teardown will be executed using base behavior
     given by BasicTestSuiteTeardown.
 
@@ -63,7 +63,7 @@ class Suite2TearDown(pykiso.BasicTestSuiteTeardown):
     aux_list=[aux1],
     tag={"variant": ["variant3", "variant2"], "branch_level": ["daily"]},
 )
-class MyTest4(pykiso.BasicTest):
+class MyTest4(pykiso.RemoteTest):
     """This test case definition will be executed using base behavior
     given by BasicTest.
 
@@ -80,7 +80,7 @@ class MyTest4(pykiso.BasicTest):
 
 
 @pykiso.define_test_parameters(suite_id=2, case_id=2, aux_list=[aux2])
-class MyTest5(pykiso.BasicTest):
+class MyTest5(pykiso.RemoteTest):
     """This test case definition will be executed using base behavior
     given by BasicTest.
 

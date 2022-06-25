@@ -30,9 +30,9 @@ side_effect = cycle([False, False, True])
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
-class SuiteSetup(pykiso.BasicTestSuiteSetup):
+class SuiteSetup(pykiso.RemoteTestSuiteSetup):
     """This test suite setup will be executed using base behavior
-    given by BasicTestSuiteSetup.
+    given by RemoteTestSuiteSetup.
 
 
     Using decorator define_test_parameters the following parameters will
@@ -41,22 +41,13 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
     -> suite_id : set to 1
     -> aux_list : test suite setup executed using aux1 and aux2 (see
     yaml configuration file)
-    -> setup_timeout : ITF will wait 2 seconds (maximum) to receive a
-    report from device under test otherwise an abort command is sent.
-
-    If setup_timeout is not given the default timeout value is 10
-    seconds.
     """
-
-    module = importlib.import_module("pykiso.auxiliaries")
-    attribute = dir(module)
-    logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
-class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     """This test suite teardown will be executed using base behavior
-    given by RemoteTestSuiteTeardown.
+    given by RemoteTestSuiteSetup.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test suite teardown :
@@ -168,10 +159,6 @@ class MyTest2(pykiso.RemoteTest):
         This test will be run 3 times in order to test stability (setUp
         and tearDown excluded as the flags are set to False).
         """
-        module = importlib.import_module("pykiso.auxiliaries")
-        attribute = dir(module)
-        logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
-
         logging.info(f"------------suspend auxiliaries run-------------")
         aux3.suspend()
         aux2.suspend()
