@@ -18,8 +18,8 @@ case on ITF side in order to communicate with the device under test
 using TestApp.
 """
 
-import logging
 import importlib
+import logging
 from itertools import cycle
 
 import pykiso
