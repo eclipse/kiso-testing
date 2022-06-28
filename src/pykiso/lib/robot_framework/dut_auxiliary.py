@@ -20,7 +20,7 @@ Testapp binding
 
 """
 
-from typing import List
+from typing import Any, Callable, List, Tuple
 
 from robot.api import logger
 from robot.api.deco import keyword, library
@@ -42,7 +42,7 @@ class DUTAuxiliary(RobotAuxInterface):
 
     ROBOT_LIBRARY_SCOPE = "SUITE"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize attributes."""
         super().__init__(aux_type=DutAux)
         self.test_entity_mapping = {
@@ -56,6 +56,25 @@ class DUTAuxiliary(RobotAuxInterface):
             COMMAND_TYPE.TEST_CASE_TEARDOWN: (RemoteTest, "tearDown"),
         }
 
+    def _get_test_class_info(self, cmd_alias: str) -> Tuple[Any, Callable]:
+        """Retrieve the corresponding couple test class/ test fixture
+        based on the given command name.
+
+        :param cmd_alias: command name or alias (TEST_CASE_RUN,
+            TEST_CASE_SETUP...)
+
+        :return: test class object to insatnciate and fixture name to
+            call
+
+        :raises TypeError: if the given command type doesn't exist
+        """
+        try:
+            command = COMMAND_TYPE[cmd_alias]
+        except KeyError:
+            raise TypeError(f"unknown command type {cmd_alias}")
+
+        return self.test_entity_mapping.get(command)
+
     @keyword(name="Test App")
     def test_app_run(
         self,
@@ -63,27 +82,23 @@ class DUTAuxiliary(RobotAuxInterface):
         test_suite_id: int,
         test_case_id: int,
         aux_list: List[str],
-        timeout_cmd: int = 5,
-        timeout_resp: int = 5,
     ) -> None:
-        """Handle default communication mechanism between test manager and device under test.
+        """Execute the corresponding test fixture using Test App
+        communication protocol.
 
-        :param command_type: message command sub-type (TEST_SECTION_SETUP , TEST_SECTION_RUN, ...)
+        :param command_type: message command sub-type
         :param test_suite_id: select test suite id on dut
         :param test_case_id: select test case id on dut
         :param aux_list: List of selected auxiliary
-        :param timeout_cmd: timeout in seconds for auxiliary run_command
-        :param timeout_resp: timeout in seconds for auxiliary wait_and_get_report
+
+        :raises TypeError: if the given command type doesn't exist
+        :raises Assertion: if an aknowledgment is not received or the
+            report status is failed.
         """
 
         auxiliaries = [self._get_aux(aux) for aux in aux_list]
 
-        test_cls, fixture_alias = self.test_entity_mapping.get(
-            COMMAND_TYPE[command_type]
-        )
-
-        if test_cls is None:
-            raise TypeError(f"unknown command type {command_type}")
+        test_cls, fixture_alias = self._get_test_class_info(command_type)
 
         test_instance = test_cls(
             test_suite_id,
