@@ -69,7 +69,7 @@ following:
 -  provide the auxiliaries with the matching connectors
 -  generate the list of tests to perform
 -  provide the testcases with the auxiliaries they need
--  verify if the tests can be performed 
+-  verify if the tests can be performed
 -  for remote tests (see :ref:`../remote_test/remote_test`) flash and run and synchronize the tests on the auxiliaries
 -  gather the reports and publish the results
 
@@ -80,7 +80,7 @@ The **auxiliary** provides to the **test-coordinator** an interface to
 interact with the physical or digital auxiliary target. It is composed
 by 2 blocks:
 
--  instance creation / deletion 
+-  instance creation / deletion
 -  connectors to facilitate interaction and communication with the
    device (e.g. messaging with *UART*)
 

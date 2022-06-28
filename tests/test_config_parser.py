@@ -7,14 +7,18 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import io
 import logging
 import os
 from collections import namedtuple
 from pathlib import Path
+from textwrap import dedent
+from types import SimpleNamespace
 
 import pytest
+import yaml
 
-from pykiso.config_parser import check_requirements, parse_config
+from pykiso.config_parser import YamlLoader, check_requirements, parse_config
 
 
 @pytest.fixture
@@ -313,6 +317,35 @@ def test_parse_config(tmp_cfg, tmp_path, mocker, caplog):
     assert Path(cfg["connectors"]["chan3"]["config"]["configPath"]) == Path(
         "../invalid:path"
     )
+
+
+def test_parse_config_os_error_on_path(mocker, tmp_path):
+    config_dict = dedent(
+        """\
+        auxiliaries:
+          aux1:
+            config:
+              some_path: NOT/A/PATH
+        """
+    )
+    yaml_file = tmp_path / "my_config.yaml"
+    yaml_file.write_text(config_dict)
+
+    mock_is_key = mocker.patch.object(
+        YamlLoader, "is_key", side_effect=[True, True, True, True, False]
+    )
+    mock_resolve = mocker.patch.object(
+        Path, "resolve", side_effect=[yaml_file, OSError]
+    )
+
+    config_stream = io.StringIO(config_dict)
+    config_stream.name = "my_config"
+
+    cfg = yaml.load(yaml_file, Loader=YamlLoader)
+
+    assert mock_is_key.call_count == 5
+    assert mock_resolve.call_count == 2
+    assert cfg["auxiliaries"]["aux1"]["config"]["some_path"] == "NOT/A/PATH"
 
 
 def test_parse_config_env_var(tmp_cfg_env_var, mocker, tmp_path):

@@ -29,11 +29,11 @@ import logging
 import time
 import unittest
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import xmlrunner
 
-from ..exceptions import AuxiliaryCreationError
+from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from . import test_suite
 from .test_result import BannerTestResult
 from .test_xml_result import XmlTestResult
@@ -52,7 +52,9 @@ class ExitCode(enum.IntEnum):
     AUXILIARY_CREATION_FAILED = 4
 
 
-def create_test_suite(test_suite_dict: Dict) -> test_suite.BasicTestSuite:
+def create_test_suite(
+    test_suite_dict: Dict[str, Union[str, int]]
+) -> test_suite.BasicTestSuite:
     """create a test suite based on the config dict
 
     :param test_suite_dict: dict created from config with keys 'suite_dir',
@@ -106,10 +108,9 @@ def apply_variant_filter(
         :return: True if a couple variant/branch_level is found
             otherwise False
         """
-        for variant in variants:
-            for branch in branches:
-                if variant in tc_tags and branch in tc_tags:
-                    return True
+        for variant, branch in itertools.product(variants, branches):
+            if variant in tc_tags and branch in tc_tags:
+                return True
         else:
             return False
 
@@ -164,45 +165,62 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
     return exit_code
 
 
+def collect_test_suites(
+    config_test_suite_list: List[Dict[str, Union[str, int]]],
+    test_filter_pattern: Optional[str] = None,
+) -> List[Optional[test_suite.BasicTestSuite]]:
+    """Collect and load all test suites defined in the test configuration.
+
+    :param config_test_suite_list: list of dictionaries from the configuration
+        file corresponding each to one test suite.
+    :param test_filter_pattern: optional filter pattern to overwrite
+        the one defined in the test suite configuration.
+
+    :raises pykiso.TestCollectionError: if any test case inside one of
+        the configured test suites failed to be loaded.
+
+    :return: a list of all loaded test suites.
+    """
+    list_of_test_suites = []
+    for test_suite_configuration in config_test_suite_list:
+        try:
+            if test_filter_pattern is not None:
+                test_suite_configuration["test_filter_pattern"] = test_filter_pattern
+            current_test_suite = create_test_suite(test_suite_configuration)
+            list_of_test_suites.append(current_test_suite)
+        except BaseException as e:
+            raise TestCollectionError(test_suite_configuration["suite_dir"]) from e
+    return list_of_test_suites
+
+
 def execute(
-    config: Dict,
+    config: Dict[str, Any],
     report_type: str = "text",
     variants: Optional[tuple] = None,
     branch_levels: Optional[tuple] = None,
     pattern_inject: Optional[str] = None,
     failfast: bool = False,
 ) -> int:
-    """create test environment base on config
+    """Create test environment based on test configuration.
 
     :param config: dict from converted YAML config file
     :param report_type: str to set the type of report wanted, i.e. test
         or junit
-    :param variants: encapsulate user's variant choices
-    :param branch_levels: encapsulate user's branch level choices
+    :param variants: encapsulate user's variant choices.
+    :param branch_levels: encapsulate user's branch level choices.
     :param pattern_inject: optional pattern that will override
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
-    :param failfast: Stop the test run on the first error or failure
+    :param failfast: stop the test run on the first error or failure.
 
-    :return: exit code corresponding to the actual tets exeuciton run
-        state(tests failed, unexpected exception...)
+    :return: exit code corresponding to the result of the test execution
+        (tests failed, unexpected exception, ...)
     """
-    exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
-    is_raised = False
-
     try:
-        list_of_test_suites = []
-        for test_suite_configuration in config["test_suite_list"]:
-            try:
-                if pattern_inject is not None:
-                    test_suite_configuration["test_filter_pattern"] = pattern_inject
-                list_of_test_suites.append(create_test_suite(test_suite_configuration))
-            except BaseException:
-                is_raised = True
-                break
-
-        # Collect all the tests in one global test suite
-        all_tests_to_run = unittest.TestSuite(list_of_test_suites)
+        test_suites = collect_test_suites(config["test_suite_list"], pattern_inject)
+        # Group all the collected test suites in one global test suite
+        all_tests_to_run = unittest.TestSuite(test_suites)
+        # filter test cases based on variant and branch-level options
         if variants or branch_levels:
             apply_variant_filter(all_tests_to_run, variants, branch_levels)
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
@@ -225,12 +243,9 @@ def execute(
             )
             result = test_runner.run(all_tests_to_run)
 
-        # if an exception is raised during test suite collections at least
-        # return exit code ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
-        if is_raised:
-            exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
-        else:
-            exit_code = failure_and_error_handling(result)
+        exit_code = failure_and_error_handling(result)
+    except TestCollectionError:
+        exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
     except AuxiliaryCreationError:
         exit_code = ExitCode.AUXILIARY_CREATION_FAILED
     except KeyboardInterrupt:

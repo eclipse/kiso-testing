@@ -11,7 +11,7 @@
 Handle common communication with device under test
 **************************************************
 
-When using a Remote TestCase/TestSuite, the integration test framework handles 
+When using a Remote TestCase/TestSuite, the integration test framework handles
 internal messaging and control flow using a message format defined in
 :py:class:`pykiso.Message`. :py:mod:`pykiso.test_message_handler`
 defines the messaging protocol from a behavioral point of view.
