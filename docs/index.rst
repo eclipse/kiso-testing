@@ -14,6 +14,7 @@ Welcome to pykiso's documentation!
     examples/index
     advanced_features/index
     remote_test/remote_test
+    tools
     robot_framework/robot_framework
 
 Indices and tables

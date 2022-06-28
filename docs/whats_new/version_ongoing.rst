@@ -1,6 +1,15 @@
 Version ongoing
 ---------------
 
+WARNING
+^^^^^^^
+pykiso_to_pytest will generate none working contest.py until ticket `fix pykiso to pytest <https://github.com/eclipse/kiso-testing/issues/76>`__  is merged and finished.
+
+
+Tool for test suites tags analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+See :ref:`show_tag`
+
 Double Threaded Auxiliary Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Implement a brand new interface using two threads, one for the transmission

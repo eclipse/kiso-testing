@@ -199,17 +199,14 @@ def main(
 
     \f
     :param test_configuration_file: path to the YAML config file
-    :param log_path: path to directory or file to write logs to
+    :param log_path: path to an existing directory or file to write logs to
     :param log_level: any of DEBUG, INFO, WARNING, ERROR
     :param report_type: if "test", the standard report, if "junit", a junit report is generated
     :param variant: allow the user to execute a subset of tests based on variants
     :param branch_level: allow the user to execute a subset of tests based on branch levels
-    :param pattern: overwrite the pattern from the YAML file for easier testdevelopment
+    :param pattern: overwrite the pattern from the YAML file for easier test development
     :param failfast: stop the test run on the first error or failure
     """
-
-    if log_path and Path(log_path).is_file():
-        Path(log_path).unlink()
 
     for config_file in test_configuration_file:
         # Set the logging
