@@ -28,6 +28,11 @@ from . import auxiliary, cli, config_parser, connector, message, types
 from .auxiliary import AuxiliaryCommon
 from .connector import CChannel, Flasher
 from .interfaces.dt_auxiliary import DTAuxiliaryInterface
+from .exceptions import (
+    AuxiliaryCreationError,
+    PykisoError,
+    TestCollectionError,
+)
 from .interfaces.mp_auxiliary import MpAuxiliaryInterface
 from .interfaces.simple_auxiliary import SimpleAuxiliaryInterface
 from .interfaces.thread_auxiliary import AuxiliaryInterface

@@ -1,6 +1,10 @@
 Version ongoing
 ---------------
 
+Tool for test suites tags analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+See :ref:`show_tag`
+
 Double Threaded Auxiliary Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Implement a brand new interface using two threads, one for the transmission
