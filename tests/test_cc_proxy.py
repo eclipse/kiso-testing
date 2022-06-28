@@ -45,17 +45,17 @@ def test_cc_send():
 
 
 @pytest.mark.parametrize(
-    "timeout, raw, raw_response",
+    "timeout, raw_response",
     [
-        (0.200, True, {"msg": b"\x12\x34\x56", "remote_id": None}),
-        (0, False, {"msg": b"\x12", "remote_id": 0x500}),
-        (None, None, {"msg": None, "remote_id": None}),
+        (0.200, {"msg": b"\x12\x34\x56", "remote_id": None}),
+        (0, {"msg": b"\x12", "remote_id": 0x500}),
+        (None, {"msg": None, "remote_id": None}),
     ],
 )
-def test_cc_receive(timeout, raw, raw_response):
+def test_cc_receive(timeout, raw_response):
     with CCProxy() as proxy_inst:
         proxy_inst.queue_out.put(raw_response)
-        resp = proxy_inst._cc_receive(timeout, raw)
+        resp = proxy_inst._cc_receive(timeout)
         assert resp["msg"] == raw_response["msg"]
         assert resp["remote_id"] == raw_response["remote_id"]
 

@@ -151,26 +151,21 @@ class CCSocketCan(CChannel):
             self.logger = None
 
     def _cc_send(
-        self, msg: MessageType, remote_id: int = None, raw: bool = False
+        self,
+        msg: MessageType,
+        remote_id: int = None,
     ) -> None:
         """Send a CAN message at the configured id.
 
-        If remote_id parameter is not given take configured ones, in addition if
-        raw is set to True take the msg parameter as it is otherwise parse it using
-        test entity protocol format.
 
         :param msg: data to send
         :param remote_id: destination can id used
-        :param raw: boolean use to select test entity protocol format
 
         """
         _data = msg
 
         if remote_id is None:
             remote_id = self.remote_id
-
-        if not raw:
-            _data = msg.serialize()
 
         can_msg = can.Message(
             arbitration_id=remote_id,
@@ -184,15 +179,14 @@ class CCSocketCan(CChannel):
         log.debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
 
     def _cc_receive(
-        self, timeout: float = 0.0001, raw: bool = False
+        self,
+        timeout: float = 0.0001,
     ) -> Union[Message, bytes, None]:
         """Receive a can message using configured filters.
 
-        If raw parameter is set to True return received message as it is (bytes)
-        otherwise test entity protocol format is used and Message class type is returned.
+
 
         :param timeout: timeout applied on reception
-        :param raw: boolean use to select test entity protocol format
 
         :return: tuple containing the received data and the source can id
         """
@@ -202,8 +196,7 @@ class CCSocketCan(CChannel):
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data
                 timestamp = received_msg.timestamp
-                if not raw:
-                    payload = Message.parse_packet(payload)
+
                 log.debug(
                     "received CAN Message: {}, {}, {}".format(
                         frame_id, payload, timestamp

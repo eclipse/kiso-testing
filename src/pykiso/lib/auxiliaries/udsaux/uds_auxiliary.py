@@ -47,7 +47,10 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :param extended: True if addressing mode is extended otherwise
             False
         """
-        self.channel._cc_send(msg=data, remote_id=req_id, raw=True)
+        self.channel._cc_send(
+            msg=data,
+            remote_id=req_id,
+        )
 
     def send_uds_raw(
         self,
@@ -90,8 +93,6 @@ class UdsAuxiliary(UdsBaseAuxiliary):
     def check_raw_response_positive(self, resp: UdsResponse) -> Optional[bool]:
         """Check if the response is positive, raise an error if not
 
-        :param resp: raw response of uds request
-
         :raise UnexpectedResponseError: raised when the answer is not the expected one
 
         :return: True if response is positive
@@ -103,8 +104,6 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
     def check_raw_response_negative(self, resp: UdsResponse) -> Optional[bool]:
         """Check if the response is negative, raise an error if not
-
-        :param resp: raw response of uds request
 
         :raise UnexpectedResponseError: raised when the answer is not the expected one
 
@@ -232,7 +231,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :param timeout_in_s: timeout on reception.
         """
 
-        recv_response = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
+        recv_response = self.channel.cc_receive(timeout=timeout_in_s)
         received_data = recv_response.get("msg")
         arbitration_id = recv_response.get("remote_id")
 

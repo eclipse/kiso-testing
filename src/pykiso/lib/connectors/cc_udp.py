@@ -60,34 +60,28 @@ class CCUdp(connector.CChannel):
         """Close the udp socket."""
         self.udp_socket.close()
 
-    def _cc_send(self, msg: bytes or Message, raw: bool = False) -> None:
+    def _cc_send(self, msg: bytes or Message) -> None:
         """Send message using udp socket
 
         :param msg: message to send, should be Message type or bytes.
-        :param raw: if raw is True simply send it as it is, otherwise apply serialization
         """
-        if not raw:
-            msg = msg.serialize()
 
         self.udp_socket.sendto(msg, (self.dest_ip, self.dest_port))
 
     def _cc_receive(
-        self, timeout: float = 0.0000001, raw: bool = False
-    ) -> Dict[str, Union[Message, bytes, None]]:
+        self, timeout: float = 0.0000001
+    ) -> Dict[str, Union[Message, None]]:
         """Read message from socket.
 
         :param timeout: timeout applied on receive event
-        :param raw: if raw is True return raw bytes, otherwise Message type like
 
-        :return: Message or raw bytes if successful, otherwise None
+        :return: Message
         """
         self.udp_socket.settimeout(timeout or self.timeout)
 
         try:
             msg_received, self.source_addr = self.udp_socket.recvfrom(self.max_msg_size)
 
-            if not raw:
-                msg_received = Message.parse_packet(msg_received)
         # catch the errors linked to the socket timeout without blocking
         except BlockingIOError:
             log.debug(f"encountered error while receiving message via {self}")

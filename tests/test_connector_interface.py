@@ -54,12 +54,12 @@ def test_cchan_interface(cchannel_inst, mocker):
     tracer.attach_mock(cchannel_inst._cc_receive, "_cc_receive")
     tracer.attach_mock(cchannel_inst._cc_send, "_cc_send")
     with cchannel_inst as ch:
-        ch.cc_send("test", 0)
+        ch.cc_send("test")
         ch.cc_receive(0)
     expected_calls = [
         mocker.call._cc_open(),
-        mocker.call._cc_send(msg="test", raw=False),
-        mocker.call._cc_receive(timeout=0, raw=False),
+        mocker.call._cc_send(msg="test"),
+        mocker.call._cc_receive(timeout=0),
         mocker.call._cc_close(),
     ]
     print(repr(expected_calls))

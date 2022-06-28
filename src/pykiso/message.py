@@ -244,7 +244,6 @@ class Message:
         :return: itself
         """
         msg = cls()
-
         if (not isinstance(raw_packet, bytes)) and (
             len(raw_packet) < (msg.header_size + msg.crc_byte_size)
         ):

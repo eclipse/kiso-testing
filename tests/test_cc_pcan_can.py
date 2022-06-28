@@ -432,20 +432,21 @@ def test_cc_close_with_exception(
 
 
 @pytest.mark.parametrize(
-    "parameters",
+    "parameters,raw",
     [
-        {"msg": b"\x10\x36", "raw": True, "remote_id": 0x0A},
-        {"msg": b"\x10\x36", "raw": True, "remote_id": None},
-        {"msg": b"\x10\x36", "raw": True, "remote_id": 10},
-        {"msg": b"", "raw": True, "remote_id": 10},
-        {"msg": message_with_tlv, "raw": False, "remote_id": 0x0A},
-        {"msg": message_with_no_tlv, "raw": False, "remote_id": 0x0A},
-        {"msg": message_with_no_tlv},
-        {"msg": message_with_no_tlv, "raw": False, "remote_id": 36},
+        ({"msg": b"\x10\x36", "remote_id": 0x0A}, True),
+        ({"msg": b"\x10\x36", "remote_id": None}, True),
+        ({"msg": b"\x10\x36", "remote_id": 10}, True),
+        ({"msg": b"", "remote_id": 10}, True),
+        ({"msg": message_with_tlv, "remote_id": 0x0A}, False),
+        ({"msg": message_with_no_tlv, "remote_id": 0x0A}, False),
+        ({"msg": message_with_no_tlv}, False),
+        ({"msg": message_with_no_tlv, "remote_id": 36}, False),
     ],
 )
-def test_cc_send(mock_can_bus, parameters, mock_PCANBasic):
-
+def test_cc_send(mock_can_bus, parameters, raw, mock_PCANBasic):
+    if not raw:
+        parameters["msg"] = parameters.get("msg").serialize()
     with CCPCanCan(remote_id=0x0A) as can:
         can._cc_send(**parameters)
 
@@ -454,17 +455,18 @@ def test_cc_send(mock_can_bus, parameters, mock_PCANBasic):
 
 
 @pytest.mark.parametrize(
-    "raw_data, can_id, cc_receive_param,expected_type",
+    "raw_data, can_id, timeout, raw,expected_type",
     [
-        (b"\x40\x01\x03\x00\x01\x02\x03\x00", 0x500, (10, False), Message),
+        (b"\x40\x01\x03\x00\x01\x02\x03\x00", 0x500, 10, False, Message),
         (
             b"\x40\x01\x03\x00\x01\x02\x03\x09\x6e\x02\x4f\x4b\x70\x03\x12\x34\x56",
             0x207,
-            (None, None),
+            None,
+            None,
             Message,
         ),
-        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, (10, True), bytearray),
-        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, (0, True), bytearray),
+        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 10, True, bytearray),
+        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 0, True, bytearray),
     ],
 )
 def test_can_recv(
@@ -472,7 +474,8 @@ def test_can_recv(
     mock_can_bus,
     raw_data,
     can_id,
-    cc_receive_param,
+    timeout,
+    raw,
     expected_type,
     mock_PCANBasic,
 ):
@@ -481,14 +484,15 @@ def test_can_recv(
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
     with CCPCanCan() as can:
-        response = can._cc_receive(*cc_receive_param)
+        response = can._cc_receive(timeout)
 
     msg_received = response.get("msg")
     id_received = response.get("remote_id")
-
+    if not raw:
+        msg_received = Message.parse_packet(msg_received)
     assert isinstance(msg_received, expected_type) == True
     assert id_received == can_id
-    mock_can_bus.Bus.recv.assert_called_once_with(timeout=cc_receive_param[0] or 1e-6)
+    mock_can_bus.Bus.recv.assert_called_once_with(timeout=timeout or 1e-6)
     mock_can_bus.Bus.shutdown.assert_called_once()
 
 
@@ -504,7 +508,7 @@ def test_can_recv_invalid(mocker, mock_can_bus, raw_state, mock_PCANBasic):
     mocker.patch("can.interface.Bus.recv", return_value={"msg": None})
 
     with CCPCanCan() as can:
-        response = can._cc_receive(timeout=0.0001, raw=raw_state)
+        response = can._cc_receive(timeout=0.0001)
 
     assert response["msg"] is None
     assert response.get("remote_id") is None

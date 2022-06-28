@@ -90,7 +90,7 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
         """
         log.debug(f"Sending a write request in {self} for {write_command}")
         # Send the message with the termination character
-        self.channel.cc_send(msg=write_command + self.write_termination, raw=False)
+        self.channel.cc_send(msg=write_command + self.write_termination)
 
         if validation is not None:
             # Check that the writing request was successfully performed on the instrument
@@ -160,7 +160,7 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
         :return: received response from instrument otherwise empty
             string
         """
-        response = self.channel.cc_receive(raw=False)
+        response = self.channel.cc_receive()
         return response.get("msg")
 
     def query(self, query_command: str) -> Union[bytes, str]:
@@ -188,9 +188,9 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
             response = self.channel.query(query_command + self.write_termination)
             return response.get("msg")
         else:
-            self.channel.cc_send(msg=query_command + self.write_termination, raw=False)
+            self.channel.cc_send(msg=query_command + self.write_termination)
             time.sleep(0.05)
-            response = self.channel.cc_receive(raw=False)
+            response = self.channel.cc_receive()
             return response.get("msg")
 
     def _create_auxiliary_instance(self) -> bool:

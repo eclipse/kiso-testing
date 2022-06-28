@@ -263,7 +263,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
             for a message.
         """
         try:
-            recv_response = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
+            recv_response = self.channel.cc_receive(timeout=timeout_in_s)
             received_data = recv_response.get("msg")
             # if data are received, populate connected proxy connectors
             # queue out

@@ -76,9 +76,11 @@ class CCUart(connector.CChannel):
         rawPacket = struct.pack(">H", crc) + rawPacket  # Force big endian notation
         self._send_using_slip(rawPacket)
 
-    def _cc_receive(self, timeout=0.00001, raw=False):
-        if raw:
-            raise NotImplementedError()
+    def _cc_receive(
+        self,
+        timeout=0.00001,
+    ):
+
         self.serial.timeout = timeout or self.timeout
 
         receivingState = self.WAITING_FOR_START

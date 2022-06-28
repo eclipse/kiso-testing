@@ -230,20 +230,15 @@ class CCFdxLauterbach(connector.CChannel):
         # Close Trace32 application
         self.t32_api.T32_Cmd("QUIT".encode("latin-1"))
 
-    def _cc_send(self, msg: Message or bytes, raw: bool = False) -> int:
+    def _cc_send(self, msg: Message or bytes) -> int:
         """Sends a message using FDX channel.
 
         :param msg: message
-        :param raw: boolean precising the message type (encoded or not)
 
         :return: poll length
         """
         log.debug(f"===> {msg}")
         log.debug(f"Sent on channel {self.fdxout}")
-
-        # Encode message if it is raw
-        if not raw:
-            msg = msg.serialize()
 
         # Create and fill the buffer with the message
         buffer = ctypes.pointer(ctypes.create_string_buffer(len(msg)))
@@ -258,11 +253,11 @@ class CCFdxLauterbach(connector.CChannel):
         return poll_len
 
     def _cc_receive(
-        self, timeout: float = 0.1, raw: bool = False
+        self,
+        timeout: float = 0.1,
     ) -> Dict[str, Union[bytes, str, None]]:
         """Receive message using the FDX channel.
 
-        :param raw: boolean precising the message type
 
         :return: message
         """

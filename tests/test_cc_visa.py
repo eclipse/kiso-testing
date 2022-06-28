@@ -178,7 +178,7 @@ def test__cc_send(mocker, constructor_params_serial, scpi_cmds):
     assert visa_inst._cc_send(scpi_cmds["example"]) is None
 
     # Test with bytes input
-    assert visa_inst._cc_send(b"example", raw=True) is None
+    assert visa_inst._cc_send(b"example".decode()) is None
 
 
 @pytest.mark.parametrize(

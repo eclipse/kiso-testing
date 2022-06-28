@@ -119,7 +119,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         """
         req_id = req_id or self.req_id
         data = self._pad_message(data)
-        self.channel._cc_send(msg=data, remote_id=req_id, raw=True)
+        self.channel._cc_send(msg=data, remote_id=req_id)
 
     def receive(self) -> Optional[bytes]:
         """Receive a message through ITF connector. Called inside a thread,
@@ -128,7 +128,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :return: the received message or None.
         """
-        rcv_data = self.channel._cc_receive(timeout=0, raw=True)
+        rcv_data = self.channel._cc_receive(timeout=0)
         msg, arbitration_id = rcv_data.get("msg"), rcv_data.get("remote_id")
         if msg is not None and arbitration_id == self.res_id:
             return msg
@@ -248,7 +248,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :param timeout_in_s: timeout on reception.
         """
-        rcv_data = self.channel.cc_receive(timeout_in_s, raw=True)
+        rcv_data = self.channel.cc_receive(timeout_in_s)
         msg, arbitration_id = rcv_data.get("msg"), rcv_data.get("remote_id")
         if msg is not None and arbitration_id == self.res_id:
             try:

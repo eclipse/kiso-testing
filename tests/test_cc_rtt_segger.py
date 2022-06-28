@@ -262,18 +262,22 @@ def test_rtt_segger_rtt_logger_running(
     ],
 )
 def test_rtt_segger_send(mock_pylink_square_socket, msg_to_send, raw_state):
+    if not raw_state:
+        msg_to_send = msg_to_send.serialize()
     with CCRttSegger() as cc_rtt_inst:
-        cc_rtt_inst._cc_send(msg=msg_to_send, raw=raw_state)
+        cc_rtt_inst._cc_send(msg=msg_to_send)
 
     mock_pylink_square_socket.JLink.rtt_write.assert_called_once()
 
 
-def test_rtt_segger_send_error(mock_pylink_square_socket, caplog):
+def test_rtt_segger_send_error(mock_pylink_square_socket, mocker, caplog):
+
     with CCRttSegger() as cc_rtt_inst:
+        mocker.patch.object(cc_rtt_inst.jlink, "rtt_write", side_effect=Exception)
         with caplog.at_level(
             logging.ERROR,
         ):
-            cc_rtt_inst._cc_send(msg=[0], raw=False)
+            cc_rtt_inst._cc_send(msg=[0])
         assert (
             f"ERROR occurred while sending {len([0])} bytes on buffer {cc_rtt_inst.tx_buffer_idx}"
             in caplog.text

@@ -115,8 +115,9 @@ def test__cc_send(
     """Test _cc_send"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
-
-    socket_connector._cc_send(msg_to_send, is_raw)
+    if not is_raw:
+        msg_to_send = msg_to_send.encode()
+    socket_connector._cc_send(msg_to_send)
     mock_socket.socket.socket.send.assert_called_once_with(expected_sent_message)
 
 
@@ -135,10 +136,10 @@ def test__cc_receive(
     """Test _cc_receive"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
-
-    assert expected_response == socket_connector._cc_receive(
-        timeout=timeout, raw=is_raw
-    )
+    response = socket_connector._cc_receive(timeout=timeout)
+    if not is_raw:
+        response["msg"] = response.get("msg").decode().strip()
+    assert expected_response == response
     socket_connector.socket.settimeout.assert_called_once_with(timeout or 1e-6)
 
 

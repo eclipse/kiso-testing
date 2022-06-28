@@ -61,25 +61,21 @@ class CCUdpServer(connector.CChannel):
         log.info(f"UDP socket closed at address: {self.address}")
         self.udp_socket.close()
 
-    def _cc_send(self, msg: bytes or Message, raw: bool = False) -> None:
+    def _cc_send(self, msg: bytes or Message) -> None:
         """Send back a UDP message to the previous sender.
 
         :param msg: message instance to serialize into bytes
         """
-        if not raw:
-            msg = msg.serialize()
-
         log.debug(f"UDP server send: {msg} at {self.address}")
         self.udp_socket.sendto(msg, self.address)
 
     def _cc_receive(
-        self, timeout=0.0000001, raw: bool = False
+        self,
+        timeout=0.0000001,
     ) -> Dict[str, Union[Message, bytes, None]]:
         """Read message from UDP socket.
 
         :param timeout: timeout applied on receive event
-        :param raw: should the message be returned raw or should it be interpreted as a
-            pykiso.Message?
 
         :return: Message if successful, otherwise none
         """
@@ -88,9 +84,6 @@ class CCUdpServer(connector.CChannel):
 
         try:
             msg_received, self.address = self.udp_socket.recvfrom(self.max_msg_size)
-
-            if not raw:
-                msg_received = Message.parse_packet(msg_received)
 
             log.debug(f"UDP server receives: {msg_received} at {self.address}")
         # catch the errors linked to the socket timeout without blocking

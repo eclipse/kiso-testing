@@ -96,7 +96,7 @@ class CChannel(Connector):
         self._cc_close()
         self._lock.release()
 
-    def cc_send(self, msg: MsgType, raw: bool = False, **kwargs):
+    def cc_send(self, msg: MsgType, **kwargs):
         """Send a thread-safe message on the channel and wait for an acknowledgement.
 
         :param msg: message to send
@@ -106,17 +106,19 @@ class CChannel(Connector):
         """
         # TODO should block be a parameter?
         if self._lock.acquire(False):
-            self._cc_send(msg=msg, raw=raw, **kwargs)
+            self._cc_send(msg=msg, **kwargs)
         else:
             raise ConnectionRefusedError
         self._lock.release()
 
-    def cc_receive(self, timeout: float = 0.1, raw: bool = False) -> dict:
+    def cc_receive(
+        self,
+        timeout: float = 0.1,
+    ) -> dict:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
-        :param raw: should the message be returned raw or should it be interpreted as a
-            pykiso.Message?
+
 
         :return: Message if successful, None else
 
@@ -125,7 +127,7 @@ class CChannel(Connector):
         received_message = None
         if self._lock.acquire(False):
             # Store received message
-            received_message = self._cc_receive(timeout=timeout, raw=raw)
+            received_message = self._cc_receive(timeout=timeout)
         else:
             raise ConnectionRefusedError
         self._lock.release()
@@ -142,22 +144,20 @@ class CChannel(Connector):
         pass
 
     @abc.abstractmethod
-    def _cc_send(self, msg: MsgType, raw: bool = False, **kwargs) -> None:
+    def _cc_send(self, msg: MsgType, **kwargs) -> None:
         """Sends the message on the channel.
 
         :param msg: Message to send out
-        :param raw: send raw message without further work (default: False)
         :param kwargs: named arguments
         """
         # TODO define exception to raise?
         pass
 
     @abc.abstractmethod
-    def _cc_receive(self, timeout: float, raw: bool = False) -> dict:
+    def _cc_receive(self, timeout: float) -> dict:
         """How to receive something from the channel.
 
         :param timeout: Time to wait in second for a message to be received
-        :param raw: send raw message without further work (default: False)
 
         :return: message.Message() - If one received / None - If not
         """

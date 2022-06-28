@@ -118,7 +118,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         """
         if cmd_message == "send":
             try:
-                self.channel.cc_send(msg=cmd_data, raw=True)
+                self.channel.cc_send(msg=cmd_data)
                 return True
             except Exception:
                 log.exception(
@@ -143,7 +143,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         :return: received message
         """
         try:
-            rcv_data = self.channel.cc_receive(timeout=0, raw=True)
+            rcv_data = self.channel.cc_receive(timeout=0)
             msg = rcv_data.get("msg")
             if msg is not None:
                 log.debug(f"received message '{rcv_data}' from {self.channel}")

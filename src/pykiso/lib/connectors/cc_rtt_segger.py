@@ -258,15 +258,14 @@ class CCRttSegger(connector.CChannel):
             self.jlink.close()
             log.info("RTT communication closed")
 
-    def _cc_send(self, msg: Message or bytes, raw: bool = False) -> None:
+    def _cc_send(self, msg: Message or bytes) -> None:
         """Send message using the corresponding RTT buffer.
 
         :param msg: message to send, should be Message type or bytes.
         :param raw: if raw is True simply send it as it is, otherwise apply serialization
         """
         try:
-            if not raw:
-                msg = msg.serialize()
+
             msg = list(msg)
             bytes_written = self.jlink.rtt_write(self.tx_buffer_idx, msg)
             log.debug(

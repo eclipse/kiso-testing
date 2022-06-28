@@ -191,54 +191,74 @@ def test_cc_close(logging_requested, mock_can_bus, mocker):
 
 
 @pytest.mark.parametrize(
-    "parameters",
+    "message,remote_id",
     [
-        (b"\x10\x36", 0x0A, True),
-        (b"\x10\x36", None, True),
-        (b"\x10\x36", 10, True),
-        (b"", 10, True),
-        (message_with_tlv, 0x0A, False),
-        (message_with_no_tlv, 0x0A, False),
-        (message_with_no_tlv,),
+        (
+            b"\x10\x36",
+            0x0A,
+        ),
+        (
+            b"\x10\x36",
+            None,
+        ),
+        (
+            b"\x10\x36",
+            10,
+        ),
+        (
+            b"",
+            10,
+        ),
+        (
+            message_with_tlv,
+            0x0A,
+        ),
+        (
+            message_with_no_tlv,
+            0x0A,
+        ),
+        (message_with_no_tlv, None),
         (message_with_no_tlv, 36),
     ],
 )
-def test_cc_send(mock_can_bus, parameters):
-
+def test_cc_send(mock_can_bus, message, remote_id):
+    if isinstance(message, Message):
+        message = message.serialize()
     with CCSocketCan(remote_id=0x0A) as can:
-        can._cc_send(*parameters)
+        can._cc_send(message, remote_id)
 
     mock_can_bus.Bus.send.assert_called_once()
     mock_can_bus.Bus.shutdown.assert_called_once()
 
 
 @pytest.mark.parametrize(
-    "raw_data, can_id, cc_receive_param,expected_type",
+    "raw_data, can_id, timeout , raw ,expected_type",
     [
-        (b"\x40\x01\x03\x00\x01\x02\x03\x00", 0x500, (10, False), Message),
+        (b"\x40\x01\x03\x00\x01\x02\x03\x00", 0x500, 10, False, Message),
         (
             b"\x40\x01\x03\x00\x01\x02\x03\x09\x6e\x02\x4f\x4b\x70\x03\x12\x34\x56",
             0x207,
-            (None, None),
+            None,
+            None,
             Message,
         ),
-        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, (10, True), bytearray),
-        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, (0, True), bytearray),
+        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 10, True, bytearray),
+        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 0, True, bytearray),
     ],
 )
-def test_can_recv(
-    mocker, mock_can_bus, raw_data, can_id, cc_receive_param, expected_type
-):
+def test_can_recv(mocker, mock_can_bus, raw_data, can_id, timeout, raw, expected_type):
     mock_bus_recv = mocker.patch(
         "can.interface.Bus.recv",
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
     with CCSocketCan() as can:
-        msg_received, id_received = can._cc_receive(*cc_receive_param)
+        msg_received, id_received = can._cc_receive(timeout)
 
+    if not raw and msg_received is not None:
+        msg_received = Message.parse_packet(msg_received)
     assert isinstance(msg_received, expected_type) == True
     assert id_received == can_id
-    mock_can_bus.Bus.recv.assert_called_once_with(timeout=cc_receive_param[0] or 1e-6)
+    mock_can_bus.Bus.recv.assert_called_once_with(timeout=timeout or 1e-6)
     mock_can_bus.Bus.shutdown.assert_called_once()
 
 
@@ -254,8 +274,11 @@ def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
     mocker.patch("can.interface.Bus.recv", return_value=None)
 
     with CCSocketCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001, raw=raw_state)
-
+        msg_received, id_received = can._cc_receive(
+            timeout=0.0001,
+        )
+    if not raw_state and msg_received is not None:
+        msg_received = msg_received.parse_packet()
     assert msg_received == None
     assert id_received == None
 

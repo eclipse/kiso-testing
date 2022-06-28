@@ -21,7 +21,10 @@ Device Under Test Auxiliary
 """
 import logging
 
-from pykiso import AuxiliaryInterface, CChannel, Flasher, message
+from pykiso import AuxiliaryInterface, CChannel, Flasher, Message, message
+from pykiso.lib.connectors.cc_rtt_segger import CCRttSegger
+from pykiso.lib.connectors.cc_tcp_ip import CCTcpip
+from pykiso.lib.connectors.cc_visa import VISAChannel
 
 log = logging.getLogger(__name__)
 
@@ -144,25 +147,28 @@ class DUTAuxiliary(AuxiliaryInterface):
             self._create_auxiliary_instance()
         return result
 
-    def _receive_message(self, timeout_in_s: float) -> message.Message:
+    def _receive_message(
+        self, timeout_in_s: float, raw: bool = True
+    ) -> message.Message:
         """Get message from the device under test.
 
         :param timeout_in_s: Time in ms to wait for one try
+        :param raw: if raw is True the message is raw bytes, otherwise Message type like
 
         :returns: receive message
         """
         # Read message on the channel
-        recv_response = self.channel.cc_receive(timeout_in_s)
-        received_message = recv_response.get("msg")
+        received_message = self._receive_msg(timeout_in_s=timeout_in_s, raw=raw)
         if received_message is not None:
             # Send ack
-            self.channel._cc_send(
-                msg=received_message.generate_ack_message(message.MessageAckType.ACK)
+            msg_to_send = received_message.generate_ack_message(
+                message.MessageAckType.ACK
             )
+            self._send_message(message_to_send=msg_to_send, raw=raw)
             # Return message
             return received_message
 
-    def _send_ping_command(self, timeout: int, tries: int) -> bool:
+    def _send_ping_command(self, timeout: int, tries: int, raw: bool = True) -> bool:
         """Ping Pong test to confirm the communication state.
 
         :param timeout: Time in ms to wait for one try
@@ -174,8 +180,7 @@ class DUTAuxiliary(AuxiliaryInterface):
         is_pong_ack = False
 
         # Empty memory in case target start by sending a message
-        self.channel.cc_receive(timeout=1)
-
+        self._receive_msg(timeout_in_s=1, raw=raw)
         # Try Ping-Pong
         while number_of_tries < tries:
             log.info(f"Ping-Pong try n: {number_of_tries}")
@@ -185,12 +190,11 @@ class DUTAuxiliary(AuxiliaryInterface):
 
             # Send a ping message
             ping_request = message.Message(test_suite=0, test_case=0)
-            self.channel.cc_send(msg=ping_request)
+            self._send_message(message_to_send=ping_request, raw=raw)
 
             # Receive the message
+            pong_response = self._receive_msg(timeout_in_s=timeout, raw=raw)
 
-            recv_response = self.channel.cc_receive(timeout)
-            pong_response = recv_response.get("msg")
             # Validate ping pong
             log.debug(f"ping: {ping_request}")
             log.debug(f"pong: {pong_response}")
@@ -210,7 +214,11 @@ class DUTAuxiliary(AuxiliaryInterface):
         return is_pong_ack
 
     def _send_and_wait_ack(
-        self, message_to_send: message.Message, timeout: int, tries: int
+        self,
+        message_to_send: message.Message,
+        timeout: int,
+        tries: int,
+        raw: bool = False,
     ) -> bool:
         """Send via the channel a message and wait for an acknowledgement.
 
@@ -231,10 +239,9 @@ class DUTAuxiliary(AuxiliaryInterface):
             number_of_tries += 1
 
             # Send the message
-            self.channel.cc_send(msg=message_to_send)
+            self._send_message(message_to_send, raw)
 
-            recv_response = self.channel.cc_receive(timeout)
-            received_message = recv_response.get("msg")
+            received_message = self._receive_msg(timeout, raw)
 
             # Check the outcome
             if received_message is None:
@@ -252,3 +259,44 @@ class DUTAuxiliary(AuxiliaryInterface):
                     )
                     continue  # A NACK got received # TODO later on we should have "not supported" and ignore it than.
         return result
+
+    def _send_message(self, message_to_send: message.Message, raw: bool = False):
+        """Function to modify the message if we want it raw or not.
+
+        :param message_to_send: Message you want to send out
+        :param tries: Number of tries to send the message
+
+        """
+        # We serialize the message if raw is false and we sent it
+        if not raw and isinstance(self.channel, CCTcpip):
+            message_to_send = message_to_send.encode()
+        elif raw and isinstance(self.channel, VISAChannel):
+            message_to_send = message_to_send.decode()
+        elif not raw and isinstance(message_to_send, Message):
+            message_to_send = message_to_send.serialize()
+        # This channel doesn't serialize the message but encode it
+
+        self.channel.cc_send(msg=message_to_send)
+
+    def _receive_msg(self, timeout_in_s: float, raw: bool = False):
+        """Receive the message and return it raw if wanted or a Message and
+        treat the case where the channel is cc_rtt_segger
+
+        :param timeout_in_s: Time in ms to wait for one try
+        :param raw: if raw is True the message is raw bytes, otherwise Message type like
+
+        :returns: receive message
+        """
+        # Those channel treat the messages differently so we keep the raw
+        if isinstance(self.channel, (CCRttSegger, VISAChannel)):
+            recv_response = self.channel.cc_receive(timeout_in_s, raw)
+        else:
+            recv_response = self.channel.cc_receive(timeout_in_s)
+
+        msg_received = recv_response.get("msg")
+        if not raw and msg_received is not None and isinstance(msg_received, bytes):
+            msg_received = Message.parse_packet(msg_received)
+        elif not raw and isinstance(self.channel, CCTcpip):
+            msg_received = msg_received.decode().strip()
+
+        return msg_received

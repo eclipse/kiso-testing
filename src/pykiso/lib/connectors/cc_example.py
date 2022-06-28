@@ -49,20 +49,20 @@ class CCExample(connector.CChannel):
         """Close the channel."""
         log.info("close channel")
 
-    def _cc_send(self, msg: message.Message, raw: bool = False) -> None:
+    def _cc_send(self, msg: message.Message) -> None:
         """Sends the message on the channel.
 
         :param msg: message to send, should be Message type like.
-        :param raw: if raw is false serialize it using Message serialize.
 
-        :raise NotImplementedError: sending raw bytes is not supported.
         """
-        if raw:
-            raise NotImplementedError()
+
         log.debug("Send: {}".format(msg))
         # Exit if ack sent
-        if msg.get_message_type() == message.MessageType.ACK:
-            return
+        if isinstance(msg, message.Message):
+            if msg.get_message_type() == message.MessageType.ACK:
+                return
+        else:
+            msg = message.Message.parse_packet(msg)
 
         # Else save received message
         self.last_received_message = msg.serialize()
@@ -77,19 +77,17 @@ class CCExample(connector.CChannel):
             self.report_requested_message = msg.serialize()
 
     def _cc_receive(
-        self, timeout: float = 0.1, raw: bool = False
+        self,
+        timeout: float = 0.1,
     ) -> Dict[str, Optional[message.Message]]:
         """Reads from the channel - decorator usage for test.
 
         :param timeout: not use
-        :param raw: if raw is false serialize it using Message serialize.
 
-        :raise NotImplementedError: receiving raw bytes is not supported.
 
         :return: Message if successful, otherwise None
         """
-        if raw:
-            raise NotImplementedError()
+
         if self.last_received_message is not None:
             # Transform into ack
             r_message = message.Message.parse_packet(self.last_received_message)

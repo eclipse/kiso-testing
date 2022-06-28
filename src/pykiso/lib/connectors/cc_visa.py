@@ -90,14 +90,11 @@ class VISAChannel(CChannel):
             response = {"msg": str(recv)}
             return response
 
-    def _cc_send(self, msg: MsgType, raw: bool = False) -> None:
+    def _cc_send(self, msg: MsgType) -> None:
         """Send a write request to the instrument
 
         :param msg: message to send
-        :param raw: is the message in a raw format (True) or is it a string (False)?
         """
-        if raw:
-            msg = msg.decode()
 
         log.debug(f"Writing {msg} to {self.resource_name}")
         self.resource.write(msg)
