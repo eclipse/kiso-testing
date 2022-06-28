@@ -15,16 +15,16 @@ auxiliaries:
     type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
 connectors:
   chan1:
-    config: null
+    config:
+      param_1: "value 1"
+      param_2: 2000
     type: ext_lib/cc_example.py:CCExample
   chan2:
     type: ext_lib/cc_example.py:CCExample
   chan4:
     type: ext_lib/cc_example.py:CCExample
   chan3:
-    config:
-        param_1: "value 1"
-        param_2: 2000
+    config: ~
     type: pykiso.lib.connectors.cc_flasher_example:FlasherExample
 test_suite_list:
 - suite_dir: conf_access

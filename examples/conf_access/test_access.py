@@ -67,9 +67,9 @@ class MyTest1(pykiso.BasicTest):
             logging.info("Auxiliary aux2 has a flasher")
 
         # just make a simple assertion in order to raise an error and
-        # stop test execution if a  specific value is not given to chan3
+        # stop test execution if a specific value is not given to chan1
         # connector
-        self.assertEqual(yaml_config.connectors.chan3.config.param_1, "value 1")
+        self.assertEqual(yaml_config.connectors.chan1.config.param_1, "value 1")
 
     def tearDown(self):
         """Just print aux2 configuration and it related connector too."""
@@ -82,10 +82,10 @@ class MyTest1(pykiso.BasicTest):
 
         logging.info("*** print associated connector configuration ***")
         logging.info(
-            f"flasher chan3 param 1: {yaml_config.connectors.chan3.config.param_1}"
+            f"channel chan1 param 1: {yaml_config.connectors.chan1.config.param_1}"
         )
         logging.info(
-            f"flasher chan3 param 2: {yaml_config.connectors.chan3.config.param_2}"
+            f"channel chan1 param 2: {yaml_config.connectors.chan1.config.param_2}"
         )
-        logging.info(f"flasher chan3 type: {yaml_config.connectors.chan3.type}")
+        logging.info(f"channel chan1 type: {yaml_config.connectors.chan1.type}")
         logging.info(f"connector chan2 type: {yaml_config.connectors.chan2.type}")
