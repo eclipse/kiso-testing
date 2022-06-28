@@ -14,7 +14,7 @@ import unittest
 import pytest
 
 from pykiso import CChannel, Flasher, message, test_suite
-from pykiso.lib.auxiliaries import example_test_auxiliary
+from pykiso.lib.auxiliaries import dut_auxiliary
 from pykiso.lib.connectors import cc_example
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
@@ -158,7 +158,7 @@ def CustomTestCaseAndSuite(request):
     class InitTestCaseAndSuite:
         def __init__(self):
             self.channel_in_use = cc_example.CCExample
-            self.auxiliary_in_use = example_test_auxiliary.ExampleAuxiliary
+            self.auxiliary_in_use = dut_auxiliary.DUTAuxiliary
             self.connectors = []
             self.auxiliaries = []
             self.suite = unittest.TestSuite()
