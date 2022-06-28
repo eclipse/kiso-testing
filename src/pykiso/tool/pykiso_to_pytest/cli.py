@@ -121,7 +121,7 @@ def main(filename: str, destination: str):
     template_env.filters["format_value"] = format_value
     template = template_env.get_template("conftest_template.jinja2")
 
-    # Grab import informations -> Channels and Auxiliaries
+    # Grab import information -> Channels and Auxiliaries
     yaml_config_folder = pathlib.Path(filename).resolve().parent
 
     import_info = set()

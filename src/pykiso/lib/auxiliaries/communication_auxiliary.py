@@ -20,25 +20,28 @@ CommunicationAuxiliary
 
 
 """
-
 import logging
-from typing import Optional
+import queue
+from typing import Any, Optional
 
-from pykiso import AuxiliaryInterface, CChannel, Message
+from pykiso import CChannel, DTAuxiliaryInterface, Message
 
 log = logging.getLogger(__name__)
 
 
-class CommunicationAuxiliary(AuxiliaryInterface):
+class CommunicationAuxiliary(DTAuxiliaryInterface):
     """Auxiliary used to send raw bytes via a connector instead of pykiso.Messages."""
 
-    def __init__(self, com: CChannel, **kwargs):
+    def __init__(self, com: CChannel, **kwargs: dict) -> None:
         """Constructor.
 
         :param com: CChannel that supports raw communication
         """
-        super().__init__(is_proxy_capable=True, **kwargs)
+        super().__init__(
+            is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs
+        )
         self.channel = com
+        self.queue_tx = queue.Queue()
 
     def send_message(self, raw_msg: bytes) -> bool:
         """Send a raw message (bytes) via the communication channel.
@@ -47,7 +50,45 @@ class CommunicationAuxiliary(AuxiliaryInterface):
 
         :return: True if command was executed otherwise False
         """
-        return self.run_command("send", raw_msg, timeout_in_s=None)
+        return self.run_command("send", raw_msg)
+
+    def run_command(
+        self,
+        cmd_message: Any,
+        cmd_data: Any = None,
+        blocking: bool = True,
+        timeout_in_s: int = None,
+    ) -> bool:
+        """Send a request by transmitting it through queue_in and
+        populate queue_tx with the command verdict (successful or not).
+
+        :param cmd_message: command to send
+        :param cmd_data: data you would like to populate the command
+            with
+        :param blocking: If you want the command request to be
+            blocking or not
+        :param timeout_in_s: Number of time (in s) you want to wait
+            for an answer
+
+        :return: True if the request is correctly executed otherwise
+            False
+        """
+        with self.lock:
+            log.debug(
+                f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
+            )
+            state = None
+            self.queue_in.put((cmd_message, cmd_data))
+            try:
+                state = self.queue_tx.get(blocking, timeout_in_s)
+                log.debug(
+                    f"command '{cmd_message}' successfully sent for {self.name} aux"
+                )
+            except queue.Empty:
+                log.error(
+                    f"no feedback received regarding request {cmd_message} for {self.name} aux."
+                )
+        return state
 
     def receive_message(
         self, blocking: bool = True, timeout_in_s: float = None
@@ -62,9 +103,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         log.debug(
             f"retrieving message in {self} (blocking={blocking}, timeout={timeout_in_s})"
         )
-        response = self.wait_and_get_report(
-            blocking=blocking, timeout_in_s=timeout_in_s
-        )
+        response = self.wait_for_queue_out(blocking=blocking, timeout_in_s=timeout_in_s)
         log.debug(f"retrieved message '{response}' in {self}")
 
         # if queue.Empty exception is raised None is returned so just
@@ -83,18 +122,16 @@ class CommunicationAuxiliary(AuxiliaryInterface):
     def _create_auxiliary_instance(self) -> bool:
         """Open the connector communication.
 
-        :return: always True
+        :return: True if the channel is correctly opened otherwise False
         """
-        state = False
         log.info("Create auxiliary instance")
         log.info("Enable channel")
         try:
             self.channel.open()
-            state = True
+            return True
         except Exception:
             log.exception("Unable to open channel communication")
-            self.stop()
-        return state
+            return False
 
     def _delete_auxiliary_instance(self) -> bool:
         """Close the connector communication.
@@ -104,11 +141,12 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         log.info("Delete auxiliary instance")
         try:
             self.channel.close()
+            return True
         except Exception:
             log.exception("Unable to close channel communication")
-        return True
+            return False
 
-    def _run_command(self, cmd_message: bytes, cmd_data: bytes = None) -> bool:
+    def _run_command(self, cmd_message: str, cmd_data: bytes = None) -> bool:
         """Run the corresponding command.
 
         :param cmd_message: command type
@@ -116,40 +154,37 @@ class CommunicationAuxiliary(AuxiliaryInterface):
 
         :return: True if command is executed otherwise False
         """
+        state = False
         if cmd_message == "send":
             try:
                 self.channel.cc_send(msg=cmd_data, raw=True)
-                return True
+                state = True
             except Exception:
                 log.exception(
                     f"encountered error while sending message '{cmd_data}' to {self.channel}"
                 )
         elif isinstance(cmd_message, Message):
             log.debug(f"ignored command '{cmd_message} in {self}'")
-            return True
         else:
             log.warning(f"received unknown command '{cmd_message} in {self}'")
-        return False
 
-    def _abort_command(self) -> None:
-        """No-op since we don't wait for ACKs"""
-        pass
+        self.queue_tx.put(state)
 
     def _receive_message(self, timeout_in_s: float) -> bytes:
-        """No-op since it's handled in _run_command
+        """Get a message from the associated channel.
 
-        :param timeout_in_s: not used
+        :param timeout_in_s: maximum amount of time (seconds) to wait
+            for a message
 
         :return: received message
         """
         try:
-            rcv_data = self.channel.cc_receive(timeout=0, raw=True)
+            rcv_data = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
             msg = rcv_data.get("msg")
             if msg is not None:
                 log.debug(f"received message '{rcv_data}' from {self.channel}")
-                return rcv_data
+                self.queue_out.put(rcv_data)
         except Exception:
             log.exception(
                 f"encountered error while receiving message via {self.channel}"
             )
-            return None

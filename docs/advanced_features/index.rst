@@ -5,5 +5,5 @@ Advanced features
     :maxdepth: 2
 
     access_config
-    aux_copies
+    dynamic_conf
     multiprocessing
