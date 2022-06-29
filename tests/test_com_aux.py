@@ -14,22 +14,14 @@ import pytest
 from pykiso import Message
 from pykiso.lib.auxiliaries.communication_auxiliary import (
     CommunicationAuxiliary,
+    queue,
 )
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
 
 @pytest.fixture
-def com_aux_init(cchannel_inst):
-    com_aux = CommunicationAuxiliary(
-        name="mp_aux",
-        com=cchannel_inst,
-    )
-    return com_aux
-
-
-@pytest.fixture
-def return_test():
-    return "test"
+def com_aux_inst(cchannel_inst):
+    return CommunicationAuxiliary(name="com_aux", com=cchannel_inst)
 
 
 @pytest.fixture
@@ -75,125 +67,89 @@ def test_com_aux_messaging(com_aux_linker, caplog):
     )
 
 
-@pytest.mark.parametrize(
-    "side_effect_mock, log_level, expected_log_1, expected_log_2, expected_function_return",
-    [
-        (None, logging.INFO, "Create auxiliary instance", "Enable channel", True),
-        (
-            Exception,
-            logging.ERROR,
-            "Unable to open channel communication",
-            " ",
-            False,
-        ),
-    ],
-)
-def test_create_auxiliary_instance(
-    mocker,
-    com_aux_init,
-    caplog,
-    side_effect_mock,
-    log_level,
-    expected_log_1,
-    expected_log_2,
-    expected_function_return,
-):
-    com_aux_init.logger = logging.Logger("ok")
-    mock_channel = mocker.patch.object(
-        com_aux_init.channel, "open", side_effect=side_effect_mock
-    )
-    with caplog.at_level(log_level):
-        result_create_inst = com_aux_init._create_auxiliary_instance()
-    assert result_create_inst is expected_function_return
-    assert expected_log_1 in caplog.text
-    assert expected_log_2 in caplog.text
-    mock_channel.assert_called()
+def test_create_auxiliary_instance(com_aux_inst):
+    state = com_aux_inst._create_auxiliary_instance()
+
+    com_aux_inst.channel._cc_open.assert_called_once()
+    assert state is True
 
 
-def test_delete_auxiliary_instance_false(mocker, com_aux_init, caplog):
-    com_aux_init.logger = logging.Logger("ok")
-    com_aux_init.channel = None
-    with caplog.at_level(logging.INFO):
-        result_create_inst = com_aux_init._delete_auxiliary_instance()
-    assert result_create_inst is True
-    assert "Delete auxiliary instance" in caplog.text
-    assert "Unable to close channel communication" in caplog.text
+def test_create_auxiliary_instance_exception(mocker, com_aux_inst):
+    mocker.patch.object(com_aux_inst.channel, "open", side_effect=ValueError)
+
+    state = com_aux_inst._create_auxiliary_instance()
+
+    assert state is False
 
 
-@pytest.mark.parametrize(
-    "side_effect_mock, expected_log, expected_function_return",
-    [
-        (None, "", True),
-        (Exception, "encountered error while sending message 'None' to", False),
-    ],
-)
-def test_run_command_valid(
-    mocker,
-    com_aux_init,
-    caplog,
-    side_effect_mock,
-    expected_log,
-    expected_function_return,
-):
-    com_aux_init.logger = logging.Logger("ok")
-    mock_channel = mocker.patch.object(
-        com_aux_init.channel, "cc_send", side_effect=side_effect_mock
-    )
-    with caplog.at_level(logging.INFO):
-        result_create_inst = com_aux_init._run_command("send")
-    assert result_create_inst is expected_function_return
-    assert expected_log in caplog.text
+def test_delete_auxiliary_instance(com_aux_inst):
+    state = com_aux_inst._delete_auxiliary_instance()
+
+    com_aux_inst.channel._cc_close.assert_called_once()
+    assert state is True
 
 
-@pytest.mark.parametrize(
-    "log_level, expected_log, expected_function_return, input_parameters",
-    [
-        (logging.WARNING, "received unknown command ", False, "return_test"),
-        (logging.DEBUG, "ignored command ", True, "mock_msg"),
-    ],
-)
-def test_run_command_notvalid(
-    com_aux_init,
-    caplog,
-    log_level,
-    expected_log,
-    expected_function_return,
-    input_parameters,
-    request,
-):
+def test_delete_auxiliary_instance_exception(mocker, com_aux_inst):
+    mocker.patch.object(com_aux_inst.channel, "close", side_effect=ValueError)
 
-    com_aux_init.logger = logging.Logger("ok")
-    input_parameters = request.getfixturevalue(input_parameters)
+    state = com_aux_inst._delete_auxiliary_instance()
 
-    with caplog.at_level(log_level):
-        result_create_inst = com_aux_init._run_command(input_parameters)
-        assert result_create_inst is expected_function_return
-        assert expected_log + f"'{input_parameters} in {com_aux_init}'" in caplog.text
+    assert state is False
 
 
-def test_receive_message_exception(mocker, com_aux_init, caplog):
-    com_aux_init.logger = logging.Logger("ok")
-    com_aux_init.channel = None
-    with caplog.at_level(logging.ERROR):
-        result_rec_msg = com_aux_init._receive_message(2)
-    assert result_rec_msg is None
-    assert (
-        f"encountered error while receiving message via {com_aux_init.channel}"
-        in caplog.text
+def test_run_command_queue_tx_empty(mocker, com_aux_inst):
+    mocker.patch.object(com_aux_inst, "_run_command", return_value=None)
+
+    state = com_aux_inst.run_command(
+        cmd_message="send", cmd_data=(None), blocking=False, timeout_in_s=0
     )
 
+    assert state is None
 
-def test_receive_message_none(mocker, com_aux_init):
-    mocker.patch.object(com_aux_init, "wait_and_get_report", return_value=None)
-    recv = com_aux_init.receive_message(2)
+
+def test__run_command_exception(mocker, com_aux_inst):
+    mocker.patch.object(com_aux_inst.channel, "cc_send", side_effect=ValueError)
+
+    com_aux_inst._run_command(cmd_message="send", cmd_data=b"\x01\x02\x03")
+    cmd_state = com_aux_inst.queue_tx.get()
+
+    assert cmd_state is False
+
+
+def test__run_command_ignored_command(com_aux_inst):
+    com_aux_inst._run_command(cmd_message=Message(), cmd_data=b"\x01\x02\x03")
+    cmd_state = com_aux_inst.queue_tx.get()
+
+    assert cmd_state is False
+
+
+def test__run_command_unknown_command(com_aux_inst):
+    com_aux_inst._run_command(cmd_message="super_command", cmd_data=b"\x01\x02\x03")
+    cmd_state = com_aux_inst.queue_tx.get()
+
+    assert cmd_state is False
+
+
+def test_receive_message_with_remote_id(mocker, com_aux_inst):
+    ret = {"msg": b"\x01", "remote_id": 0x123}
+
+    mocker.patch.object(com_aux_inst, "wait_for_queue_out", return_value=ret)
+    recv = com_aux_inst.receive_message()
+
+    assert recv == (ret["msg"], ret["remote_id"])
+
+
+def test_receive_message_none(mocker, com_aux_inst):
+    mocker.patch.object(com_aux_inst, "wait_for_queue_out", return_value=None)
+    recv = com_aux_inst.receive_message()
 
     assert recv is None
 
 
-def test_receive_message_with_remote_id(mocker, com_aux_init):
-    ret = {"msg": b"\x01", "remote_id": 0x123}
+def test__receive_message_exception(mocker, com_aux_inst):
+    mocker.patch.object(com_aux_inst.channel, "cc_receive", side_effect=ValueError)
 
-    mocker.patch.object(com_aux_init, "wait_and_get_report", return_value=ret)
-    recv = com_aux_init.receive_message(2)
+    com_aux_inst._receive_message(timeout_in_s=0)
 
-    assert recv == (ret["msg"], ret["remote_id"])
+    with pytest.raises(queue.Empty):
+        com_aux_inst.queue_out.get_nowait()

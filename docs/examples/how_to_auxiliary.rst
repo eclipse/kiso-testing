@@ -28,6 +28,10 @@ possible usage of an auxiliary:
 - The :py:class:`~pykiso.interfaces.simple_auxiliary.SimpleAuxiliaryInterface`
   does not implement any kind of concurrent execution. It is suited for host-based applications where the auxiliary
   initiates every possible action, i.e. the reception of data can always be expected.
+- The :py:class:`~pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface`
+  is a double threaded base auxiliary, where a thread is used for the transmission
+  and a second one for the reception. It is suited for IO-bound tasks where
+  the reception of data cannot be expected.
 
 Execution of an Auxiliary
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,7 +50,11 @@ Concurrent auxiliary execution
 
 The execution of concurrent auxiliaries (i.e. inheriting from :py:class:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface`
 or :py:class:`~pykiso.interfaces.mp_auxiliary.MpAuxiliaryInterface`) is
-handled by the interfaces' :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run>` method.
+handled by the interfaces' :py:meth:`run()<pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run>` method.
+
+In the DTAuxiliaryInterface case, everything related to the tansmission is handled by
+:py:meth:`~pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface._transmit_task` and for the reception
+by :py:meth:`~pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface._reception_task`
 
 Each command execution is handled in a thread-safe way by getting values from an input queue and
 returning the command result in an output queue.
@@ -77,6 +85,20 @@ Each time the execution is entered, the following actions are performed:
 2. Verify if a Message is available for reception
 
   #. Call the auxiliarie's :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._receive_message` method
+  #. If something is returned, put it in the output queue, otherwise repeat this execution cycle.
+
+For an auxiliary based on DTAuxiliaryInterface, the execution is slightly different due to the usage of two threads:
+
+1. Verify if a request is available in the input queue
+
+  #. If the command message is "DELETE_AUXILIARY" the transmit task while loop ends
+
+  #. If the command message is a tuple of 2 elements starting with your custom command type, and then the data to send. This custom command has to be implemented in the :py:meth:`~pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface._run_command` method.
+
+2. Verify if a Message is available for reception
+
+  #. Call the auxiliarie's :py:meth:`~pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface._receive_message` and simpy wait for a message coming from the connector.
+
   #. If something is returned, put it in the output queue, otherwise repeat this execution cycle.
 
 Implement an Auxiliary
@@ -115,6 +137,10 @@ the following methods to be implemented:
   :py:meth:`~pykiso.connector.CChannel.cc_receive` method. The received data can then be decoded according to a particular protocol, matched
   against a previously sent request, or trigger any kind of further processing.
 
+For the concurrent Auxiliary interface :py:class:`~pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface`,
+only one significant difference :
+
+- :py:meth:`~pykiso.interfaces.thread_auxiliary.AuxiliaryInterface._abort_command`: is not mandatory
 
 .. _aux-tutorial-example:
 
@@ -241,6 +267,10 @@ See below an example implementing the basic functionalities of a Thread Auxiliar
                     return received_data
             except Exception:
                 logging.exception(f"Channel {self.channel} failed to receive data")
+
+Regarding a concrete implementation using :py:class:`~pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface`
+take a look to :py:class:`~pykiso.lib.auxiliaries.communication_auxiliary.CommunicationAuxiliary` source code.
+
 
 More examples are available under :py:mod:`pykiso.lib.auxiliaries`.
 

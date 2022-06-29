@@ -32,6 +32,7 @@ from .exceptions import (
     PykisoError,
     TestCollectionError,
 )
+from .interfaces.dt_auxiliary import DTAuxiliaryInterface
 from .interfaces.mp_auxiliary import MpAuxiliaryInterface
 from .interfaces.simple_auxiliary import SimpleAuxiliaryInterface
 from .interfaces.thread_auxiliary import AuxiliaryInterface
