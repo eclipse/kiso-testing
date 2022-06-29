@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 
 class FlasherExample(Flasher):
-    """A Flasher adapter for testing."""
+    """A Flasher adapter for testing purpose only."""
 
     def __init__(self, name: str, **kwargs) -> None:
         """Constructor.
