@@ -346,14 +346,14 @@ def create_config(aux1, aux2, suite_dir):
     connectors:
         com: chan1
     config: null
-    type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
   """
         + aux2
         + """:
     connectors:
         com:   chan2
         flash: chan3
-    type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
 connectors:
   chan1:
     config: null
@@ -361,9 +361,8 @@ connectors:
   chan2:
     type: pykiso.lib.connectors.cc_example:CCExample
   chan3:
-    config:
-        configKey: "config value"
-    type: pykiso.lib.connectors.cc_example:CCExample
+    config: null
+    type: pykiso.lib.connectors.cc_flasher_example:FlasherExample
 test_suite_list:
 - suite_dir: """
         + suite_dir
