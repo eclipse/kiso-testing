@@ -143,6 +143,7 @@ def restart_aux(func: Callable) -> Callable:
             False
         """
         state = func(self, *arg, **kwargs)
+
         # restart the whole auxiliary to have a brand new connection
         # with the DUT
         if state is False:
@@ -222,8 +223,8 @@ class DUTAuxiliary(DTAuxiliaryInterface):
         )
 
     @retry_command(tries=2)
-    @check_acknowledgement
     @restart_aux
+    @check_acknowledgement
     def send_abort_command(self, timeout: int):
         """Send abort command to the DUT.
 
@@ -365,9 +366,19 @@ class DUTAuxiliary(DTAuxiliaryInterface):
         """
         recv = self.channel.cc_receive(timeout_in_s)
         response = recv.get("msg")
+
+        if response is None:
+            return
+
         # If a message was received just automatically acknowledge it
         # and populate the queue_out
-        if response is not None:
+        if response.msg_type != MESSAGE_TYPE.ACK:
             ack_cmd = response.generate_ack_message(message.MessageAckType.ACK)
-            self.channel.cc_send(msg=ack_cmd, raw=False)
-            self.queue_out.put(response)
+            try:
+                self.channel.cc_send(msg=ack_cmd, raw=False)
+            except Exception:
+                log.exception(
+                    f"encountered error while sending acknowledge message for {response}!"
+                )
+
+        self.queue_out.put(response)

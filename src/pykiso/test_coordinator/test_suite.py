@@ -94,7 +94,7 @@ class BaseTestSuite(unittest.TestCase):
         log.critical(info_to_print)
 
         # Send aborts to corresponding auxiliary
-        if aux.send_abort_command() is not True:
+        if aux.send_abort_command(timeout=10) is not True:
             log.critical(f"Error occurred during abort command on auxiliary {aux}")
 
         self.fail(info_to_print)
