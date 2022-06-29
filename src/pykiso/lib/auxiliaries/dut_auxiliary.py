@@ -299,6 +299,10 @@ class DUTAuxiliary(DTAuxiliaryInterface):
             log.info(f"Logging message received from {self.name}: {response}")
             return False
 
+        if response.get_message_type() == MESSAGE_TYPE.ACK:
+            log.warning(f"ACK message received from {self.name}: {response}")
+            return False
+
         log.warning(f"Message type unknown received from {self.name}: {response}")
         return False
 
