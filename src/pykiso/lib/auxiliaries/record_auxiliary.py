@@ -26,7 +26,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from pykiso import CChannel
 from pykiso.interfaces.dt_auxiliary import (
@@ -34,7 +34,6 @@ from pykiso.interfaces.dt_auxiliary import (
     close_connector,
     open_connector,
 )
-
 
 log = logging.getLogger(__name__)
 
@@ -137,7 +136,6 @@ class RecordAuxiliary(DTAuxiliaryInterface):
         """
         self._data.set_data(data)
 
-    @open_connector
     def _create_auxiliary_instance(self) -> bool:
         """Open the connector and start running receive thread
         if is_active is set.
@@ -145,17 +143,33 @@ class RecordAuxiliary(DTAuxiliaryInterface):
         :return: True if successful
         """
 
-        log.info("Auxiliary instance created")
+        log.info("Create auxiliary instance")
+        log.info("Enable channel")
+
+        try:
+            if not self.is_active:
+                self.channel.open()
+        except Exception:
+            log.exception("Error encountered during channel creation.")
+            return False
         return True
 
-    @close_connector
     def _delete_auxiliary_instance(self) -> bool:
         """Close connector and stop receive thread when is_active flag
         is set.
 
         :return: always True
         """
-        log.info("Auxiliary instance deleted")
+        log.info("Delete auxiliary instance")
+
+        self.stop_recording()
+
+        try:
+            if not self.is_active:
+                self.channel.close()
+        except Exception:
+            log.exception("Unable to close Channel.")
+
         return True
 
     def receive(self) -> None:
@@ -488,12 +502,12 @@ class RecordAuxiliary(DTAuxiliaryInterface):
 
     def _run_command(self, cmd_message: Any, cmd_data: Optional[bytes]) -> None:
         """Not used.
-        
+
         Simply respect the interface.
         """
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """Not used.
-        
+
         Simply respect the interface.
         """

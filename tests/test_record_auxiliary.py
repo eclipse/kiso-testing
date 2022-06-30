@@ -79,7 +79,7 @@ def test_constructor(
 def test_instance_passive(mocker, mock_channel):
     mocker.patch.object(threading.Thread, "start")
     record_aux = RecordAuxiliary(mock_channel, is_active=False)
-    assert record_aux._create_auxiliary_instance()
+    assert record_aux.create_instance()
     mock_channel.open.assert_called_once()
     record_aux.stop()
     mock_channel.close.assert_called_once()
