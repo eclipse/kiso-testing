@@ -35,3 +35,7 @@ DUT Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^
 refactor/redesign of the device under test auxiliary to fit with the brand new double
 threaded auxiliary interface
+
+Acroname Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
