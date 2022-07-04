@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -18,7 +18,7 @@ Virtual Communication Channel for tests
 """
 
 import logging
-from typing import Optional, Union
+from typing import Dict, Optional
 
 from pykiso import connector, message
 
@@ -78,7 +78,7 @@ class CCExample(connector.CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.1, raw: bool = False
-    ) -> Union[message.Message, None]:
+    ) -> Dict[str, Optional[message.Message]]:
         """Reads from the channel - decorator usage for test.
 
         :param timeout: not use
@@ -99,7 +99,7 @@ class CCExample(connector.CChannel):
             self.last_received_message = None
             # Return the ACK
             log.debug("Receive: {}".format(r_message))
-            return r_message
+            return {"msg": r_message}
         elif self.report_requested_message is not None:
             # Transform message to ACK
             r_message = message.Message.parse_packet(self.report_requested_message)
@@ -109,4 +109,6 @@ class CCExample(connector.CChannel):
             self.report_requested_message = None
             # Return REPORT
             log.debug("Receive: {}".format(r_message))
-            return r_message
+            return {"msg": r_message}
+        else:
+            return {"msg": None}

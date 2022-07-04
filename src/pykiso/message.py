@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -133,9 +133,6 @@ class Message:
 
         :param error_code: Error value
         :type error_code: integer
-
-        :param test_section: Section value
-        :type test_section: integer
 
         :param test_suite: Suite value
         :type test_suite: integer

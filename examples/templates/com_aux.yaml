@@ -3,6 +3,8 @@ auxiliaries:
   com_aux:
     connectors:
         com: loopback_channel
+    config:
+      auto_start: False
     type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
 #__________________________ Connectors section _________________________
 connectors:

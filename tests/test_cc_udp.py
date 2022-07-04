@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import logging
 import socket
 
 import pytest
@@ -113,25 +114,32 @@ def test_udp_send_valid(mock_udp_socket, msg_to_send, raw_state):
 
 
 @pytest.mark.parametrize(
-    "raw_state",
+    "expected_exception",
     [
-        True,
-        False,
+        BlockingIOError,
+        socket.timeout,
+        BaseException,
     ],
 )
-def test_udp_recv_invalid(mocker, mock_udp_socket, raw_state):
+def test_udp_recv_invalid(mocker, mock_udp_socket, expected_exception, caplog):
     """Test message _cc_receive method using context manager from Connector class.
 
     Validation criteria:
      - NotImplementedError raised
     """
-    mocker.patch("socket.socket.recvfrom", return_value=None)
+    mocker.patch("socket.socket.recvfrom", side_effect=expected_exception)
 
     with CCUdp("120.0.0.7", 5005) as udp_inst:
-        msg_received = udp_inst._cc_receive(timeout=0.0000001, raw=raw_state)
+        with caplog.at_level(
+            logging.DEBUG,
+        ):
+            msg_received = udp_inst._cc_receive(timeout=0.0000001)
+        assert (
+            f"encountered error while receiving message via {udp_inst}" in caplog.text
+        )
 
-    assert msg_received == None
-    assert udp_inst.source_addr == None
+    assert msg_received["msg"] is None
+    assert udp_inst.source_addr is None
 
 
 @pytest.mark.parametrize(
@@ -166,7 +174,8 @@ def test_udp_recv_valid(
     with CCUdp("120.0.0.7", 5005) as udp_inst:
         msg_received = udp_inst._cc_receive(*cc_receive_param)
 
-    assert isinstance(msg_received, expected_type) == True
+    assert isinstance(msg_received, dict)
+    assert isinstance(msg_received["msg"], expected_type)
     assert udp_inst.source_addr == raw_data[1]
     mock_udp_socket.socket.settimeout.assert_called_once_with(
         cc_receive_param[0] or 1e-6

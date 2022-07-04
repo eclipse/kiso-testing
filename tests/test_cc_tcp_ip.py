@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -123,10 +123,10 @@ def test__cc_send(
 @pytest.mark.parametrize(
     "constructor_params, expected_response, timeout, is_raw",
     [
-        (constructor_params, example_response, 5, False),
-        (constructor_params, example_response.encode(), 5, True),
-        (constructor_params, example_response.encode(), 0, True),
-        (constructor_params, example_response.encode(), None, True),
+        (constructor_params, {"msg": example_response}, 5, False),
+        (constructor_params, {"msg": example_response.encode()}, 5, True),
+        (constructor_params, {"msg": example_response.encode()}, 0, True),
+        (constructor_params, {"msg": example_response.encode()}, None, True),
     ],
 )
 def test__cc_receive(
@@ -145,7 +145,7 @@ def test__cc_receive(
 @pytest.mark.parametrize(
     "constructor_params, expected_response, is_raw",
     [
-        (constructor_params, example_response, False),
+        (constructor_params, {"msg": example_response}, False),
     ],
 )
 def test__cc_receive_with_errors(
@@ -158,4 +158,4 @@ def test__cc_receive_with_errors(
     # using max_msg_size attribute tu trigger exceptions in mock
     for err in errors_to_catch:
         socket_connector.max_msg_size = err
-        assert socket_connector._cc_receive() == ""
+        assert socket_connector._cc_receive() == {"msg": None}

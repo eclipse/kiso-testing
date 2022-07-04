@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -87,7 +87,9 @@ class SimulatedAuxiliary(AuxiliaryInterface):
         """
         responses = []
 
-        msg = self.channel.cc_receive(timeout_in_s)
+        recv_response = self.channel.cc_receive(timeout_in_s)
+
+        msg = recv_response.get("msg")
 
         # don't advance simulation if no message or ACK has been received
         if msg is None or msg.msg_type == ACK:

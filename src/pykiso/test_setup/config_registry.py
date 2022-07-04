@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -79,6 +79,27 @@ class ConfigRegistry:
             for alias, inst in all_auxes.items()
             if isinstance(inst, aux_type)
         }
+
+    @classmethod
+    def get_aux_by_alias(cls, alias: str) -> Any:
+        """Return the associated auxiliary instance to the given alias.
+
+        :param alias: auxiliary's alias
+
+        :return: auxiliary instance created by the dymanic loader
+        """
+        return ConfigRegistry._linker._aux_cache.get_instance(alias)
+
+    @classmethod
+    def get_aux_config(cls, name: str) -> dict:
+        """Return the registered auxiliary configuration based on his
+        name.
+
+        :param name: auxiliary alias
+
+        :return: auxiliary's configuration (yaml content)
+        """
+        return ConfigRegistry._linker._aux_cache.configs[name]
 
     @classmethod
     def get_auxes_alias(cls) -> list:

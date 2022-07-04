@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -160,7 +160,8 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
         :return: received response from instrument otherwise empty
             string
         """
-        return self.channel.cc_receive(raw=False)
+        response = self.channel.cc_receive(raw=False)
+        return response.get("msg")
 
     def query(self, query_command: str) -> Union[bytes, str]:
         """Send a query request to the instrument. Uses the 'query' method of the
@@ -184,11 +185,13 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
             timeout.
         """
         if hasattr(self.channel, "query"):
-            return self.channel.query(query_command + self.write_termination)
+            response = self.channel.query(query_command + self.write_termination)
+            return response.get("msg")
         else:
             self.channel.cc_send(msg=query_command + self.write_termination, raw=False)
             time.sleep(0.05)
-            return self.channel.cc_receive(raw=False)
+            response = self.channel.cc_receive(raw=False)
+            return response.get("msg")
 
     def _create_auxiliary_instance(self) -> bool:
         """Open the connector.
@@ -226,6 +229,7 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
                 log.info("Using default output channel.")
         except Exception:
             log.exception("Unable to safely open the instrument.")
+            return False
         return True
 
     def _delete_auxiliary_instance(self) -> bool:

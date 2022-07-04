@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -7,17 +7,12 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import logging
-import sys
-
 import pytest
 
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.robot_framework.communication_auxiliary import (
     ComAux,
     CommunicationAuxiliary,
 )
-from pykiso.test_setup.config_registry import ConfigRegistry
 
 
 @pytest.fixture

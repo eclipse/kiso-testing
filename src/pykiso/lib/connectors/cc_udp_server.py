@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -25,7 +25,7 @@ Communication Channel via UDP server
 """
 import logging
 import socket
-from typing import Union
+from typing import Dict, Union
 
 from pykiso import Message, connector
 
@@ -74,7 +74,7 @@ class CCUdpServer(connector.CChannel):
 
     def _cc_receive(
         self, timeout=0.0000001, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[Message, bytes, None]]:
         """Read message from UDP socket.
 
         :param timeout: timeout applied on receive event
@@ -96,12 +96,12 @@ class CCUdpServer(connector.CChannel):
         # catch the errors linked to the socket timeout without blocking
         except BlockingIOError:
             log.debug(f"encountered error while receiving message via {self}")
-            return None
+            return {"msg": None}
         except socket.timeout:
             log.debug(f"encountered error while receiving message via {self}")
-            return None
+            return {"msg": None}
         except BaseException:
             log.exception(f"encountered error while receiving message via {self}")
-            return None
+            return {"msg": None}
 
-        return msg_received
+        return {"msg": msg_received}

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -32,17 +32,17 @@ from pykiso.auxiliaries import aux1, aux2
     case_id=2,
     aux_list=[aux1],
 )
-class TestCaseOverride(pykiso.BasicTest):
+class TestCaseOverride(pykiso.RemoteTest):
     """In this test case we will simply re-implement test_run, setUp,
     tearDown methods to re-define the default Test-App behavior of ITF
-    BasicTest.
+    RemoteTest.
     """
 
     def setUp(self):
         """Let's say, we want to suspend aux2, execute default
         implemented setup test (for aux1) and resume the paused aux2.
         """
-        # call BasicTest base class setup method
+        # call RemoteTest base class setup method
         super().setUp()
         # make some extra logging and suspend aux2
         logging.info("------------suspend aux2 run-------------")

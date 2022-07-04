@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -20,6 +20,7 @@ Loopback CChannel
 """
 
 from collections import deque
+from typing import Dict
 
 from pykiso import CChannel
 from pykiso.types import MsgType
@@ -52,7 +53,7 @@ class CCLoopback(CChannel):
         """
         self._loopback_buffer.append(msg)
 
-    def _cc_receive(self, timeout: float, raw: bool = True) -> MsgType:
+    def _cc_receive(self, timeout: float, raw: bool = True) -> Dict[str, MsgType]:
         """Read message by simply removing an element from the left side of deque.
 
         :param timeout: timeout applied on receive event
@@ -61,6 +62,7 @@ class CCLoopback(CChannel):
         :return: Message or raw bytes if successful, otherwise None
         """
         try:
-            return self._loopback_buffer.popleft()
+            recv_msg = self._loopback_buffer.popleft()
+            return {"msg": recv_msg}
         except IndexError:
-            return None
+            return {"msg": None}

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import logging
 import socket
 
 import pytest
@@ -138,8 +139,40 @@ def test_udp_server_recv_valid(
     with CCUdpServer("120.0.0.7", 5005) as udp_server:
         msg_received = udp_server._cc_receive(*cc_receive_param)
 
-    assert isinstance(msg_received, expected_type) == True
+    assert isinstance(msg_received, dict)
+    assert isinstance(msg_received["msg"], expected_type)
     mock_udp_socket.socket.settimeout.assert_called_once_with(
         cc_receive_param[0] or 1e-6
     )
     mock_udp_socket.socket.recvfrom.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "side_effect_mock",
+    [
+        BlockingIOError,
+        socket.timeout,
+        BaseException,
+    ],
+)
+def test_udp_recv_invalid(mocker, mock_udp_socket, side_effect_mock, caplog):
+    """Test message _cc_receive method using context manager from Connector class.
+
+    Validation criteria:
+     - correct Exception is catched
+     - correct log message
+     - return is None
+    """
+    mocker.patch("socket.socket.recvfrom", side_effect=side_effect_mock)
+
+    with CCUdpServer("120.0.0.7", 5005) as udp_server:
+        with caplog.at_level(
+            logging.DEBUG,
+        ):
+            msg_received = udp_server._cc_receive(timeout=0.0000001)
+        assert (
+            f"encountered error while receiving message via {udp_server}" in caplog.text
+        )
+
+    assert msg_received["msg"] is None
+    assert udp_server.address is None

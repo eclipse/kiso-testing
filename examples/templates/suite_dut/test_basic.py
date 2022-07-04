@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -79,9 +79,9 @@ from pykiso.auxiliaries import aux1, aux2
 
 # Add test suite setup fixture, run once at test suite's beginning.
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], setup_timeout=2)
-class SuiteSetup(pykiso.BasicTestSuiteSetup):
+class SuiteSetup(pykiso.RemoteTestSuiteSetup):
     """This test suite setup will be executed using base behavior
-    given by BasicTestSuiteSetup class and test_suite_setUp method.
+    given by RemoteTestSuiteSetup class and test_suite_setUp method.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test suite setup :
@@ -100,9 +100,9 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
 
 # Add test suite teardown fixture, run once at test suite's end.
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2], teardown_timeout=2)
-class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     """This test suite setup will be executed using base behavior
-    given by BasicTestSuiteTeardown class and test_suite_tearDown
+    given by RemoteTestSuiteTeardown class and test_suite_tearDown
     method.
 
     Using decorator define_test_parameters the following parameters will
@@ -128,11 +128,11 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     run_timeout=2,
     teardown_timeout=1,
     test_ids={"Component1": ["Req-01"]},
-    variant=["variant1"],
+    tag={"variant": ["variant1"]},
 )
-class TestCaseBasic(pykiso.BasicTest):
+class TestCaseBasic(pykiso.RemoteTest):
     """This test case definition will be executed using base behavior
-    given by BasicTest class and setUp, test_run, tearDown methods
+    given by RemoteTest class and setUp, test_run, tearDown methods
 
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp, test_run and tearDown:

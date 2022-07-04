@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import itertools
 import struct
 import unittest
 
@@ -78,6 +79,7 @@ class MessageTest(unittest.TestCase):
             TlvKnownTags.TEST_REPORT: "OK",
             TlvKnownTags.FAILURE_REASON: b"\x12\x34\x56",
         }
+        message_mod.msg_cnt = itertools.cycle(range(256))
         message_for_test = Message(
             msg_type=MessageType.COMMAND,
             sub_type=MessageCommandType.TEST_CASE_SETUP,

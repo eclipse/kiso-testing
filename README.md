@@ -1,3 +1,14 @@
+[![License](https://img.shields.io/badge/Licence-Eclipse%20Public%20License%202.0-lightgrey)](https://opensource.org/licenses/EPL-2.0)
+[![Platforms](https://img.shields.io/badge/Platforms-win64%20linux64%20osx64-lightgrey)]()
+[![Supported python version](https://img.shields.io/pypi/pyversions/pykiso)]()
+[![Build status](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.eclipse.org%2Fkiso-testing%2Fjob%2Fkiso-testing%2Fjob%2Fmaster%2F)](https://ci.eclipse.org/kiso-testing/job/kiso-testing/job/master/)
+[![Documentation Status](https://readthedocs.org/projects/kiso-testing/badge/?version=latest)](https://kiso-testing.readthedocs.io/en/latest/?badge=latest)
+[![Test results](https://img.shields.io/jenkins/tests?compact_message&failed_label=failed&jobUrl=https%3A%2F%2Fci.eclipse.org%2Fkiso-testing%2Fjob%2Fkiso-testing%2Fjob%2Fmaster%2F&passed_label=passed&skipped_label=skipped)](https://ci.eclipse.org/kiso-testing/job/kiso-testing/job/master/)
+[![codecov](https://codecov.io/gh/eclipse/kiso-testing/branch/master/graph/badge.svg?token=IBKQ700ABS)](https://codecov.io/gh/eclipse/kiso-testing)
+[![Code quality](https://img.shields.io/lgtm/grade/python/github/eclipse/kiso-testing)]()
+[![Last commit](https://img.shields.io/github/last-commit/eclipse/kiso-testing)]()
+[![Commits since latest version](https://img.shields.io/github/commits-since/eclipse/kiso-testing/latest/master)]()
+
 # PyKiso
 
 ![Optional Text](./docs/images/pykiso_logo.png)
@@ -16,22 +27,21 @@ The project will contain:
 
 ## Requirements ##
 
-* Python 3.6+
-* pip/pipenv (used to get the rest of the requirements)
+* Python 3.7+
+* pip/poetry (used to get the rest of the requirements)
 
 ## Install ##
 
 ```bash
-cd kiso-testing
-pip install .
+pip install pykiso
 ```
 
-[Pipenv](https://github.com/pypa/pipenv) is more appropriate for developers as it automatically creates virtual environments.
+[Poetry](https://python-poetry.org/) is more appropriate for developers as it automatically creates virtual environments.
 
 ```bash
 cd kiso-testing
-pipenv install --dev
-pipenv shell
+poetry install
+poetry shell
 ```
 
 ### Pre-Commit
@@ -40,6 +50,8 @@ To improve code-quality, a configuration of [pre-commit](https://pre-commit.com/
 The following pre-commit hooks are used:
 
 - black
+- flake8
+- isort
 - trailing-whitespace
 - end-of-file-fixer
 - check-docstring-first
@@ -47,8 +59,6 @@ The following pre-commit hooks are used:
 - check-added-large-files
 - check-yaml
 - debug-statements
-- flake8
-- isort
 
 If you don't have pre-commit installed, you can get it using pip:
 
@@ -61,6 +71,42 @@ Start using the hooks with
 ```bash
 pre-commit install
 ```
+
+## Commit message convention
+
+Commits are sorted into multiple categories based on keywords that can occur at any position as part of the commit message.
+[Category] Keywords
+* [BREAKING CHANGES] BREAKING CHANGE
+* [Features] feat:
+* [Fixes] fix:
+* [Docs] docs:
+* [Styles] style:
+* [Refactors] refactor!:
+* [Performances] perf:
+* [Tests] test:
+* [Build] build:
+* [Ci] ci:
+Each commit is considered only once according to the order of the categories listed above. Merge commits are ignored.
+
+The tool commitizen can help you to create commits which follows these standards.
+```bash
+# if not yet installed:
+pip install -U commitizen==2.20.4
+# helps you to create a commit:
+cz commit
+# or use equivalent short variant:
+cz c
+```
+
+## Generate Changelog
+
+After you installed the dev dependencies from the pipfile you are able to
+autogenerate the Changelog.
+
+```bash
+invoke changelog
+```
+
 ## Usage ##
 
 Once installed the application is bound to `pykiso`, it can be called with the following arguments:
@@ -91,6 +137,8 @@ Options:
   --junit                         enables the generation of a junit report
   --text                          default, test results are only displayed in
                                   the console
+  --failfast                      stop the test run on the first error or
+                                  failure
 ```
 
 Suitable config files are available in the `examples` folder.
@@ -112,15 +160,3 @@ or
 ```bash
 pytest
 ```
-
-## List of limitations / todos for the python side
-
-* [ ] **When the auxiliary does not answer (ping or else), GenericTest.BasicTest.cleanup_and_skip() call will result in a lock and break the framework.**
-* [ ] No test-section will be executed, needs to be removed later.
-* [x] test configuration files need to be reworked
-* [x] Names & configurations in the *cfg file json* are character precise class names & associated parameters.
-* [ ] Spelling mistakes need to be fixed!  _*ongoing*_
-* [ ] Add verbosity parameters to pass to the unittest framework to get more details about the test.
-* [x] **Add result parsing for Jenkins (see: https://stackoverflow.com/questions/11241781/python-unittests-in-jenkins).**
-* [x] Create a python package
-* [ ] and host it on pip.

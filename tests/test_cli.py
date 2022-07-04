@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -9,10 +9,18 @@
 
 import logging
 import os
+import pathlib
+from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 
 from pykiso import cli
+
+
+@pytest.fixture()
+def runner():
+    return CliRunner()
 
 
 @pytest.mark.parametrize(
@@ -28,6 +36,9 @@ def test_initialize_logging(mocker, path, level, expected_level, report_type):
     mocker.patch("logging.Logger.addHandler")
     mocker.patch("logging.FileHandler.__init__", return_value=None)
     flush_mock = mocker.patch("logging.StreamHandler.flush", return_value=None)
+
+    if path:
+        path = Path(path)
 
     logger = cli.initialize_logging(path, level, report_type)
 
@@ -49,3 +60,16 @@ def test_get_logging_options():
     assert options is not None
     assert options.log_level == "ERROR"
     assert options.report_type is None
+
+
+def test_main(runner):
+    runner.invoke(
+        cli.main,
+        [
+            "pykiso",
+            "-c",
+            "examples/acroname.yaml",
+            "-c",
+            "examples/acroname.yaml",
+        ],
+    )

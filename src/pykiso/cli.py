@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -20,17 +20,19 @@ Integration Test Framework
 
 """
 import collections
+import itertools
 import logging
 import pprint
 import sys
 import time
 from pathlib import Path
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Tuple
 
 import click
 
 from . import __version__
 from .config_parser import parse_config
+from .global_config import Grabber
 from .test_coordinator import test_execution
 from .test_setup.config_registry import ConfigRegistry
 from .types import PathType
@@ -76,7 +78,7 @@ def initialize_logging(
         if log_path.is_dir():
             fname = time.strftime("%Y-%m-%d_%H-%M-test.log")
             log_path = log_path / fname
-        file_handler = logging.FileHandler(log_path, "w+")
+        file_handler = logging.FileHandler(log_path, "a+")
         file_handler.setFormatter(log_format)
         file_handler.setLevel(levels[log_level])
         root_logger.addHandler(file_handler)
@@ -123,6 +125,7 @@ def get_logging_options() -> LogOptions:
     "--test-configuration-file",
     required=True,
     type=click.Path(exists=True, dir_okay=False, readable=True),
+    multiple=True,
     help="path to the test configuration file (in YAML format)",
 )
 @click.option(
@@ -185,10 +188,16 @@ def get_logging_options() -> LogOptions:
     type=click.Path(writable=True),
     help="file path for the output step report",
 )
+@click.option(
+    "--failfast",
+    is_flag=True,
+    help="stop the test run on the first error or failure",
+)
 @click.argument("pattern", required=False)
 @click.version_option(__version__)
+@Grabber.grab_cli_config
 def main(
-    test_configuration_file: PathType,
+    test_configuration_file: Tuple[PathType],
     log_path: PathType = None,
     log_level: str = "INFO",
     report_type: str = "text",
@@ -197,6 +206,7 @@ def main(
     step_report: bool = False,
     step_report_output: PathType = "step_report.html",
     pattern: Optional[str] = None,
+    failfast: bool = False,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -204,32 +214,40 @@ def main(
 
     \f
     :param test_configuration_file: path to the YAML config file
-    :param log_path: path to directory or file to write logs to
+    :param log_path: path to an existing directory or file to write logs to
     :param log_level: any of DEBUG, INFO, WARNING, ERROR
     :param report_type: if "test", the standard report, if "junit", a junit report is generated
     :param variant: allow the user to execute a subset of tests based on variants
     :param branch_level: allow the user to execute a subset of tests based on branch levels
     :param step_report: generate the step report
     :param step_report_output: file path for the output step report
-    :param pattern: overwrite the pattern from the YAML file for easier testdevelopment
+    :param pattern: overwrite the pattern from the YAML file for easier test development
+    :param failfast: stop the test run on the first error or failure
     """
-    # Set the logging
-    logger = initialize_logging(log_path, log_level, report_type)
-    # Get YAML configuration
-    cfg_dict = parse_config(test_configuration_file)
-    # Run tests
-    logger.debug("cfg_dict:\n{}".format(pprint.pformat(cfg_dict)))
 
-    ConfigRegistry.register_aux_con(cfg_dict)
+    for config_file in test_configuration_file:
+        # Set the logging
+        logger = initialize_logging(log_path, log_level, report_type)
+        # Get YAML configuration
+        cfg_dict = parse_config(config_file)
+        # Run tests
+        logger.debug("cfg_dict:\n{}".format(pprint.pformat(cfg_dict)))
 
-    exit_code = test_execution.execute(
-        cfg_dict,
-        report_type,
-        variant,
-        branch_level,
-        step_report,
-        step_report_output,
-        pattern,
-    )
-    ConfigRegistry.delete_aux_con()
+        ConfigRegistry.register_aux_con(cfg_dict)
+
+        exit_code = test_execution.execute(
+            cfg_dict,
+            report_type,
+            variant,
+            branch_level,
+            step_report,
+            step_report_output,
+            pattern,
+            failfast
+        )
+        ConfigRegistry.delete_aux_con()
+        for handler in logging.getLogger().handlers:
+            if isinstance(handler, logging.FileHandler):
+                logging.getLogger().removeHandler(handler)
+
     sys.exit(exit_code)

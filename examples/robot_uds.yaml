@@ -1,0 +1,15 @@
+auxiliaries:
+  uds_aux:
+    connectors:
+        com: can_channel
+    config:
+      odx_file_path: null
+      config_ini_path: 'examples/test_uds/config.ini'
+    type: pykiso.lib.auxiliaries.udsaux.uds_auxiliary:UdsAuxiliary
+connectors:
+  can_channel:
+    config:
+      interface : 'pcan'
+      channel: 'PCAN_USBBUS1'
+      state: 'ACTIVE'
+    type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan

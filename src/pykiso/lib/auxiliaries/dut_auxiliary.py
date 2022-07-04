@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -60,14 +60,12 @@ class DUTAuxiliary(AuxiliaryInterface):
         # Flash the device if flash connector provided
         if self.flash is not None and not self._is_suspend:
             log.info("Flash target")
-
             try:
                 with self.flash as flasher:
                     flasher.flash()
-
-            # Catch if the flash is successful else stop the thread
             except Exception as e:
-                log.exception(f"Error raise during flashing : {e}")
+                # stop the thread if the flashing failed
+                log.exception(f"Error occurred during flashing : {e}")
                 log.fatal("Stopping the auxiliary")
                 self.stop()
                 return False  # Prevent to open channels by returning error state
@@ -153,16 +151,16 @@ class DUTAuxiliary(AuxiliaryInterface):
 
         :returns: receive message
         """
-
         # Read message on the channel
-        received_message = self.channel.cc_receive(timeout_in_s)
+        recv_response = self.channel.cc_receive(timeout_in_s)
+        received_message = recv_response.get("msg")
         if received_message is not None:
             # Send ack
             self.channel._cc_send(
                 msg=received_message.generate_ack_message(message.MessageAckType.ACK)
             )
-        # Return message
-        return received_message
+            # Return message
+            return received_message
 
     def _send_ping_command(self, timeout: int, tries: int) -> bool:
         """Ping Pong test to confirm the communication state.
@@ -190,8 +188,9 @@ class DUTAuxiliary(AuxiliaryInterface):
             self.channel.cc_send(msg=ping_request)
 
             # Receive the message
-            pong_response = self.channel.cc_receive(timeout)
 
+            recv_response = self.channel.cc_receive(timeout)
+            pong_response = recv_response.get("msg")
             # Validate ping pong
             log.debug(f"ping: {ping_request}")
             log.debug(f"pong: {pong_response}")
@@ -234,8 +233,8 @@ class DUTAuxiliary(AuxiliaryInterface):
             # Send the message
             self.channel.cc_send(msg=message_to_send)
 
-            # Wait until we get something back
-            received_message = self.channel.cc_receive(timeout)
+            recv_response = self.channel.cc_receive(timeout)
+            received_message = recv_response.get("msg")
 
             # Check the outcome
             if received_message is None:

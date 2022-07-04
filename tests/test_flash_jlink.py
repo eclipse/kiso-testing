@@ -1,11 +1,13 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
+
+from pathlib import Path
 
 import pytest
 
@@ -32,12 +34,25 @@ def mock_jlink(mocker):
         flash_file = mocker.stub(name="flash_file")
 
     class MockJLib:
-        def __init__(self, lib=None):
+        def __init__(self, lib=None, **kwargs):
             pass
 
     mocker.patch.object(pylink, "JLink", new=MockJLink)
     mocker.patch.object(pylink, "Library", new=MockJLib)
     return pylink
+
+
+@pytest.mark.parametrize(
+    "return_value",
+    [True, False],
+)
+def test_open(mocker, tmp_file, mock_jlink, return_value):
+    Jlink_inst = JLinkFlasher(tmp_file)
+    Jlink_inst.lib = Path()
+    Jlink_inst.xml_path = "test_xml"
+    mock_exist = mocker.patch.object(Path, "exists", return_value=return_value)
+    Jlink_inst.open()
+    mock_exist.assert_called()
 
 
 def test_jlink_flasher(tmp_file, mock_jlink):

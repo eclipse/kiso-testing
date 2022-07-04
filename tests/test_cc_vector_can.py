@@ -1,11 +1,13 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
+
+import logging
 
 import can as python_can
 import pytest
@@ -16,12 +18,7 @@ from pykiso.lib.connectors.cc_vector_can import (
     can,
     detect_serial_number,
 )
-from pykiso.message import (
-    MessageAckType,
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.message import MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",
@@ -80,6 +77,37 @@ def mock_can_bus(mocker):
                 "bitrate": 500000,
                 "data_bitrate": 2000000,
                 "fd": True,
+                "enable_brs": False,
+                "app_name": None,
+                "can_filters": None,
+                "is_extended_id": False,
+            },
+        ),
+        (
+            {
+                "bustype": "vector",
+                "poll_interval": 0.01,
+                "rx_queue_size": 524288,
+                "serial": None,
+                "channel": 3,
+                "bitrate": 500000,
+                "data_bitrate": 2000000,
+                "fd": False,
+                "enable_brs": True,
+                "app_name": None,
+                "can_filters": None,
+                "is_extended_id": False,
+            },
+            {
+                "bustype": "vector",
+                "poll_interval": 0.01,
+                "rx_queue_size": 524288,
+                "serial": None,
+                "channel": 3,
+                "bitrate": 500000,
+                "data_bitrate": 2000000,
+                "fd": False,
+                "enable_brs": True,
                 "app_name": None,
                 "can_filters": None,
                 "is_extended_id": False,
@@ -87,9 +115,11 @@ def mock_can_bus(mocker):
         ),
     ],
 )
-def test_constructor(constructor_params, expected_config):
+def test_constructor(constructor_params, expected_config, caplog):
     param = constructor_params.values()
-    can_inst = CCVectorCan(*param)
+
+    with caplog.at_level(logging.WARNING):
+        can_inst = CCVectorCan(*param)
 
     assert can_inst.bustype == expected_config["bustype"]
     assert can_inst.channel == expected_config["channel"]
@@ -105,6 +135,9 @@ def test_constructor(constructor_params, expected_config):
     assert can_inst.is_extended_id == expected_config["is_extended_id"]
     assert can_inst.can_filters == expected_config["can_filters"]
     assert can_inst.timeout == 1e-6
+
+    if not can_inst.fd and can_inst.enable_brs:
+        assert "Bitrate switch will have no effect" in caplog.text
 
 
 def test_cc_open(mock_can_bus):
@@ -127,21 +160,21 @@ def test_cc_close(mock_can_bus):
 @pytest.mark.parametrize(
     "parameters",
     [
-        (b"\x10\x36", 0x0A, True),
-        (b"\x10\x36", None, True),
-        (b"\x10\x36", 10, True),
-        (b"", 10, True),
-        (message_with_tlv, 0x0A, False),
-        (message_with_no_tlv, 0x0A, False),
-        (message_with_no_tlv,),
-        (message_with_no_tlv, 36),
+        {"msg": b"\x10\x36", "raw": True, "remote_id": 0x0A},
+        {"msg": b"\x10\x36", "raw": True, "remote_id": None},
+        {"msg": b"\x10\x36", "raw": True, "remote_id": 10},
+        {"msg": b"", "raw": True, "remote_id": 10},
+        {"msg": message_with_tlv, "raw": False, "remote_id": 0x0A},
+        {"msg": message_with_no_tlv, "raw": False, "remote_id": 0x0A},
+        {"msg": message_with_no_tlv},
+        {"msg": message_with_no_tlv, "raw": False, "remote_id": 36},
     ],
 )
 def test_cc_send(mock_can_bus, parameters):
 
     with CCVectorCan() as can:
         can.remote_id = 0x500
-        can._cc_send(*parameters)
+        can._cc_send(**parameters)
 
     mock_can_bus.Bus.send.assert_called_once()
     mock_can_bus.Bus.shutdown.assert_called_once()
@@ -169,7 +202,10 @@ def test_can_recv(
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
     with CCVectorCan() as can:
-        msg_received, id_received = can._cc_receive(*cc_receive_param)
+        response = can._cc_receive(*cc_receive_param)
+
+    msg_received = response.get("msg")
+    id_received = response.get("remote_id")
 
     assert isinstance(msg_received, expected_type) == True
     assert id_received == can_id
@@ -178,21 +214,27 @@ def test_can_recv(
 
 
 @pytest.mark.parametrize(
-    "raw_state",
+    "raw_state, side_effect_value, expected_log",
     [
-        True,
-        False,
+        (True, None, ""),
+        (False, BaseException, "encountered error while receiving message via"),
     ],
 )
-def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
+def test_can_recv_invalid(
+    mocker, mock_can_bus, raw_state, side_effect_value, caplog, expected_log
+):
 
-    mocker.patch("can.interface.Bus.recv", return_value=None)
+    mocker.patch(
+        "can.interface.Bus.recv", return_value=None, side_effect=side_effect_value
+    )
 
-    with CCVectorCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001, raw=raw_state)
+    with caplog.at_level(logging.ERROR):
+        with CCVectorCan() as can:
+            response = can._cc_receive(timeout=0.0001, raw=raw_state)
 
-    assert msg_received == None
-    assert id_received == None
+    assert response["msg"] is None
+    assert response.get("remote_id") is None
+    assert expected_log in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -19,11 +19,13 @@ Communication auxiliary usage example
 """
 
 import logging
+import time
 
 import pykiso
 
 # as usual import your auxiliairies
 from pykiso.auxiliaries import com_aux
+from pykiso.lib.connectors.cc_raw_loopback import CCLoopback
 
 
 @pykiso.define_test_parameters(
@@ -38,7 +40,17 @@ class TestCaseOverride(pykiso.BasicTest):
 
     def setUp(self):
         """If a fixture is not use just override it like below."""
-        pass
+        logging.info(
+            f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------"
+        )
+        # due to the fact that auto_start flag is set to False, this let
+        # the user to start the auxiliary on demand using start method
+        com_aux.start()
+
+        # just suspend the current auxiliary execution
+        com_aux.suspend()
+        # just resume the current auxiliary execution
+        com_aux.resume()
 
     def test_run(self):
         """Thanks to the usage of dev cc_raw_loopback, let's try to send
@@ -47,14 +59,23 @@ class TestCaseOverride(pykiso.BasicTest):
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
-        # send a some bytes
-        com_aux.send_message(b"\x01\x02\x03")
-        # receive some bytes and check if it was our previous sent
-        # message
-        response = com_aux.receive_message()
-        logging.info(f"received message: {response}")
-        self.assertEqual(response, b"\x01\x02\x03")
+        # send 20 requests over the connected channel and check if the
+        # command was successfully sent
+        for _ in range(20):
+            req = b"\x02\x04\x06"
+            logging.info(f"send request {req} over {com_aux.name}")
+            state = com_aux.send_message(req)
+            logging.info(f"request excecution state: {state}")
+            self.assertEqual(state, True)
+
+        # get the 20 first received messages
+        for _ in range(20):
+            response = com_aux.receive_message()
+            logging.info(f"received data {response}")
+            self.assertEqual(response, b"\x02\x04\x06")
 
     def tearDown(self):
         """If a fixture is not use just override it like below."""
-        pass
+        logging.info(
+            f"--------------- TEARDOWN: {self.test_suite_id}, {self.test_case_id} ---------------"
+        )

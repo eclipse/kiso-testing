@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2021 Robert Bosch GmbH
+# Copyright (c) 2010-2022 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -54,7 +54,6 @@ def _communication_send_check(serial_port, baud):
     message_to_send = message.Message(
         msg_type=message.MessageType.ACK,
         sub_type=message.MessageAckType.ACK,
-        test_section=1,
         test_suite=2,
         test_case=3,
     )
@@ -83,7 +82,6 @@ def _communication_receive_check(timeout, expected_timeout, serial_port, baud):
     message_sent = message.Message(
         msg_type=message.MessageType.COMMAND,
         sub_type=message.MessageCommandType.TEST_CASE_SETUP,
-        test_section=1,
         test_suite=2,
         test_case=3,
     )
