@@ -20,51 +20,20 @@ Testapp binding
 
 """
 
-from typing import List
+from typing import Any, Callable, List, Tuple
 
 from robot.api import logger
 from robot.api.deco import keyword, library
 
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
-from pykiso.message import MessageCommandType, MessageReportType, MessageType
-from pykiso.test_coordinator.test_message_handler import (
-    handle_basic_interaction,
+from pykiso.test_coordinator.test_case import RemoteTest
+from pykiso.test_coordinator.test_suite import (
+    RemoteTestSuiteSetup,
+    RemoteTestSuiteTeardown,
 )
 
+from ..auxiliaries.dut_auxiliary import COMMAND_TYPE
 from ..auxiliaries.dut_auxiliary import DUTAuxiliary as DutAux
 from .aux_interface import RobotAuxInterface
-
-
-class TestEntity:
-    """Dummy Class to use handle_basic_interaction from test_message_handler."""
-
-    def __init__(
-        self,
-        test_suite_id: int,
-        test_case_id: int,
-        aux_list: List[AuxiliaryInterface],
-    ):
-        """Initialize generic test-case
-
-        :param test_suite_id: test suite identification number
-        :param test_case_id: test case identification number
-        :param aux_list: list of used aux_list"""
-
-        self.test_suite_id = test_suite_id
-        self.test_case_id = test_case_id
-        self.test_auxiliary_list = aux_list
-
-    def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str):
-        """Cleanup auxiliary and log reasons.
-
-        :param aux: corresponding auxiliary to abort
-        :param info_to_print: A message you want to print while cleaning up the test
-        """
-        logger.error(info_to_print)
-
-        # Send aborts to corresponding auxiliary
-        if aux.abort_command() is not True:
-            logger.error(f"Error occurred during abort command on auxiliary {aux}")
 
 
 @library(version="0.0.1")
@@ -73,9 +42,38 @@ class DUTAuxiliary(RobotAuxInterface):
 
     ROBOT_LIBRARY_SCOPE = "SUITE"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize attributes."""
         super().__init__(aux_type=DutAux)
+        self.test_entity_mapping = {
+            COMMAND_TYPE.TEST_SUITE_SETUP: (RemoteTestSuiteSetup, "test_suite_setUp"),
+            COMMAND_TYPE.TEST_SUITE_TEARDOWN: (
+                RemoteTestSuiteTeardown,
+                "test_suite_tearDown",
+            ),
+            COMMAND_TYPE.TEST_CASE_SETUP: (RemoteTest, "setUp"),
+            COMMAND_TYPE.TEST_CASE_RUN: (RemoteTest, "test_run"),
+            COMMAND_TYPE.TEST_CASE_TEARDOWN: (RemoteTest, "tearDown"),
+        }
+
+    def _get_test_class_info(self, cmd_alias: str) -> Tuple[Any, Callable]:
+        """Retrieve the corresponding couple test class/ test fixture
+        based on the given command name.
+
+        :param cmd_alias: command name or alias (TEST_CASE_RUN,
+            TEST_CASE_SETUP...)
+
+        :return: test class object to insatnciate and fixture name to
+            call
+
+        :raises TypeError: if the given command type doesn't exist
+        """
+        try:
+            command = COMMAND_TYPE[cmd_alias]
+        except KeyError:
+            raise TypeError(f"unknown command type {cmd_alias}")
+
+        return self.test_entity_mapping.get(command)
 
     @keyword(name="Test App")
     def test_app_run(
@@ -84,35 +82,37 @@ class DUTAuxiliary(RobotAuxInterface):
         test_suite_id: int,
         test_case_id: int,
         aux_list: List[str],
-        timeout_cmd: int = 5,
-        timeout_resp: int = 5,
     ) -> None:
-        """Handle default communication mechanism between test manager and device under test.
+        """Execute the corresponding test fixture using Test App
+        communication protocol.
 
-        :param command_type: message command sub-type (TEST_SECTION_SETUP , TEST_SECTION_RUN, ...)
+        :param command_type: message command sub-type
         :param test_suite_id: select test suite id on dut
         :param test_case_id: select test case id on dut
         :param aux_list: List of selected auxiliary
-        :param timeout_cmd: timeout in seconds for auxiliary run_command
-        :param timeout_resp: timeout in seconds for auxiliary wait_and_get_report
+
+        :raises TypeError: if the given command type doesn't exist
+        :raises Assertion: if an aknowledgment is not received or the
+            report status is failed.
         """
 
         auxiliaries = [self._get_aux(aux) for aux in aux_list]
 
-        test_entity = TestEntity(test_suite_id, test_case_id, auxiliaries)
+        test_cls, fixture_alias = self._get_test_class_info(command_type)
 
-        with handle_basic_interaction(
-            test_entity,
-            MessageCommandType[command_type],
-            timeout_cmd,
-            timeout_resp,
-        ) as report_infos:
+        test_instance = test_cls(
+            test_suite_id,
+            test_case_id,
+            auxiliaries,
+            setup_timeout=None,
+            run_timeout=None,
+            teardown_timeout=None,
+            test_ids=None,
+            tag=None,
+            args=(),
+            kwargs={},
+        )
 
-            for _, report_msg, log_level_func, log_msg in report_infos:
-                log_level_func(log_msg)
+        fixture_func = getattr(test_instance, fixture_alias)
 
-                if report_msg.get_message_type() == MessageType.REPORT:
-
-                    if not report_msg.sub_type == MessageReportType.TEST_PASS:
-                        # Raise assertion to make test red in robotframework
-                        raise AssertionError(f"Test Failed:{log_msg}")
+        fixture_func()

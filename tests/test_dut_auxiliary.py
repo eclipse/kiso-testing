@@ -8,429 +8,389 @@
 ##########################################################################
 
 import logging
+import threading
 
 import pytest
 
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
-from pykiso.lib.auxiliaries.dut_auxiliary import DUTAuxiliary
-from pykiso.lib.connectors.cc_rtt_segger import CCRttSegger
-from pykiso.message import Message, MessageType
-from pykiso.types import MsgType
+from pykiso.exceptions import AuxiliaryCreationError
+from pykiso.lib.auxiliaries.dut_auxiliary import (
+    COMMAND_TYPE,
+    MESSAGE_TYPE,
+    REPORT_TYPE,
+    DUTAuxiliary,
+    message,
+    queue,
+)
 
 
-class MockCChanel:
-    def __init__(self, msg: Message = None):
-        self.msg = msg
+@pytest.fixture
+def aux_inst(cchannel_inst, flasher_inst):
+    return DUTAuxiliary(name="dut_aux", com=cchannel_inst, flash=flasher_inst)
 
-    def open(self):
-        pass
 
-    def close(self):
-        pass
+def test_aux_constructor(aux_inst):
+    aux_inst.tx_task_on is True
+    aux_inst.rx_task_on is True
+    aux_inst.is_proxy_capable is False
+    aux_inst.current_cmd is None
 
-    def _cc_open(self):
-        pass
 
-    def _cc_close(self):
-        pass
+def test_create_auxiliary_instance(aux_inst):
+    state = aux_inst._create_auxiliary_instance()
 
-    def _cc_send(self, msg: MsgType, raw: bool = False):
-        pass
+    aux_inst.flash.open.assert_called_once()
+    aux_inst.flash.flash.assert_called_once()
+    aux_inst.flash.close.assert_called_once()
+    aux_inst.channel._cc_open.assert_called_once()
+    assert state is True
 
-    def _cc_receive(self, timeout: float = 0.1, raw: bool = False):
-        return {"msg": self.msg}
 
-    def cc_send(self, msg: MsgType, raw: bool = False):
-        pass
+def test_create_auxiliary_instance_flasher_fail(mocker, aux_inst):
+    mocker.patch.object(aux_inst.flash, "open", side_effect=AssertionError)
 
-    def cc_receive(self, timeout: float = 0.1, raw: bool = False):
-        return {"msg": self.msg}
+    state = aux_inst._create_auxiliary_instance()
 
+    assert state is False
 
-class MockFlasher:
-    def __init__(self, is_flashed=True):
-        self.is_flashed = is_flashed
 
-    def __enter__(self):
-        self.open()
-        return self
+def test_create_auxiliary_instance_channel_fail(mocker, aux_inst):
+    mocker.patch.object(aux_inst.channel, "_cc_open", side_effect=AssertionError)
 
-    def __exit__(self, typ, value, traceback):
-        self.close()
-        if value is not None:
-            raise value
+    state = aux_inst._create_auxiliary_instance()
 
-    def open(self):
-        if not self.is_flashed:
-            raise Exception("An exception occurred in open method")
-        else:
-            pass
+    assert state is False
 
-    def close(self):
-        pass
 
-    def flash(self):
-        if not self.is_flashed:
-            raise Exception("An exception occurred in close method")
-        else:
-            pass
+def test_delete_auxiliary_instance(aux_inst):
+    state = aux_inst._delete_auxiliary_instance()
 
+    aux_inst.channel._cc_close.assert_called_once()
+    assert state is True
 
-def test_dut_auxiliary_init(mocker):
-    """Test the constructor with the connector and the flasher"""
-    com = MockCChanel()
-    flash = MockFlasher()
 
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com, flash)
+def test_delete_auxiliary_instance_channel_fail(mocker, aux_inst):
+    mocker.patch.object(aux_inst.channel, "_cc_close", side_effect=AssertionError)
 
-    assert not auxiliary.is_proxy_capable
-    assert auxiliary.channel == com
-    assert auxiliary.flash == flash
-    assert not auxiliary._is_suspend
+    state = aux_inst._delete_auxiliary_instance()
 
+    assert state is False
 
-def test_dut_auxiliary_init_com_only(mocker):
-    """Test the constructor with the connector only"""
 
-    com = MockCChanel()
+def test_create_instance(mocker, aux_inst):
+    start_mock = mocker.patch.object(threading.Thread, "start")
+    ping_mock = mocker.patch.object(aux_inst, "send_ping_command", return_value=True)
 
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
+    state = aux_inst.create_instance()
 
-    assert auxiliary.channel == com
-    assert auxiliary.flash is None
+    start_mock.assert_called()
+    ping_mock.assert_called_once()
+    assert state is True
 
 
-def test_create_auxiliary_instance(mocker):
-    """Test create the auxiliary instance with success with the connector and the flasher"""
+def test_create_instance_fail(mocker, aux_inst):
+    mocker.patch.object(aux_inst.flash, "open", side_effect=AssertionError)
 
-    com = MockCChanel()
-    flash = MockFlasher()
+    with pytest.raises(AuxiliaryCreationError):
+        aux_inst.create_instance()
 
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com, flash)
 
-    mocker.patch.object(DUTAuxiliary, "_send_ping_command", return_value=True)
-    is_instantiated = auxiliary._create_auxiliary_instance()
+def test_send_ping_command(mocker, aux_inst):
+    aux_inst.queue_out.put("something")
+    match_mock = mocker.patch.object(
+        message.Message, "check_if_ack_message_is_matching", return_value=True
+    )
+    run_mock = mocker.patch.object(aux_inst, "run_command", return_value=True)
 
-    assert is_instantiated is True
+    state = aux_inst.send_ping_command(timeout=10)
 
+    match_mock.assert_called_once()
+    run_mock.assert_called_once_with(
+        cmd_message=aux_inst.current_cmd, cmd_data=None, blocking=True, timeout_in_s=10
+    )
+    assert aux_inst.current_cmd.msg_type == MESSAGE_TYPE.COMMAND
+    assert aux_inst.current_cmd.sub_type == COMMAND_TYPE.PING
+    assert state is True
 
-def test_create_auxiliary_instance_fail_ping_pong(mocker):
-    """Test fail to create the auxiliary instance with the connector and the flasher due to ping-pong"""
 
-    com = MockCChanel()
-    flash = MockFlasher()
+def test_send_ping_command_no_ack(mocker, aux_inst):
+    mocker.patch.object(aux_inst, "run_command", return_value=None)
 
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com, flash)
+    state = aux_inst.send_ping_command(timeout=10)
 
-    mocker.patch.object(DUTAuxiliary, "_send_ping_command", return_value=False)
-    is_instantiated = auxiliary._create_auxiliary_instance()
+    assert state is False
 
-    assert is_instantiated is False
 
+def test_send_ping_command_failed_ack(mocker, aux_inst):
+    mocker.patch.object(
+        message.Message, "check_if_ack_message_is_matching", return_value=False
+    )
+    mocker.patch.object(aux_inst, "run_command", return_value=True)
 
-def test_create_auxiliary_instance_fail_flash(mocker):
-    """Test fail to create the auxiliary instance with the connector and the flasher due to flash"""
+    state = aux_inst.send_ping_command(timeout=10)
 
-    com = MockCChanel()
-    flash = MockFlasher(is_flashed=False)
+    assert state is False
 
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com, flash)
 
-    mocker.patch.object(DUTAuxiliary, "_send_ping_command", return_value=True)
-    is_instantiated = auxiliary._create_auxiliary_instance()
+def test_send_abord_command(mocker, aux_inst):
+    match_mock = mocker.patch.object(
+        message.Message, "check_if_ack_message_is_matching", return_value=True
+    )
+    run_mock = mocker.patch.object(aux_inst, "run_command", return_value=True)
+    mock_create = mocker.patch.object(aux_inst, "create_instance")
+    mock_delete = mocker.patch.object(aux_inst, "delete_instance")
 
-    assert is_instantiated is False
+    state = aux_inst.send_abort_command(timeout=5)
 
+    match_mock.assert_called_once()
+    mock_create.assert_not_called()
+    mock_delete.assert_not_called()
+    run_mock.assert_called_once_with(
+        cmd_message=aux_inst.current_cmd, cmd_data=None, blocking=True, timeout_in_s=5
+    )
+    assert aux_inst.current_cmd.msg_type == MESSAGE_TYPE.COMMAND
+    assert aux_inst.current_cmd.sub_type == COMMAND_TYPE.ABORT
+    assert state is True
 
-def test_create_auxiliary_instance_com_only(mocker):
-    """Test create the auxiliary instance with success with the connector only"""
 
-    com = MockCChanel()
+def test_send_abord_command_no_ack(mocker, aux_inst):
+    mocker.patch.object(aux_inst, "run_command", return_value=None)
+    mock_create = mocker.patch.object(aux_inst, "create_instance")
+    mock_delete = mocker.patch.object(aux_inst, "delete_instance")
 
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
+    state = aux_inst.send_abort_command(timeout=5)
 
-    mocker.patch.object(DUTAuxiliary, "_send_ping_command", return_value=True)
-    is_instantiated = auxiliary._create_auxiliary_instance()
+    mock_create.assert_called()
+    mock_delete.assert_called()
+    assert state is False
 
-    assert is_instantiated is True
 
+def test_send_ping_command_failed_ack(mocker, aux_inst):
+    mocker.patch.object(aux_inst, "run_command", return_value=True)
+    mock_create = mocker.patch.object(aux_inst, "create_instance")
+    mock_delete = mocker.patch.object(aux_inst, "delete_instance")
+    mocker.patch.object(
+        message.Message, "check_if_ack_message_is_matching", return_value=False
+    )
 
-def test_create_auxiliary_instance_com_only_fail_ping_pong(mocker):
-    """Test fail to create the auxiliary instance with the connector only due to ping-pong"""
+    state = aux_inst.send_abort_command(timeout=10)
 
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(DUTAuxiliary, "_send_ping_command", return_value=False)
-    is_instantiated = auxiliary._create_auxiliary_instance()
-
-    assert is_instantiated is False
-
-
-def test_delete_auxiliary_instance(mocker):
-    """Test delete the auxiliary"""
-
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    assert auxiliary._delete_auxiliary_instance() is True
-
-
-def test_run_command(mocker):
-    """Test run command"""
-
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(DUTAuxiliary, "_send_and_wait_ack", return_value=True)
-    assert auxiliary._run_command(Message()) is True
-
-
-def test_run_command_send_and_wait_ack_fail(mocker):
-    """Test run command fail"""
-
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(DUTAuxiliary, "_send_and_wait_ack", return_value=False)
-    assert auxiliary._run_command(Message()) is False
-
-
-def test_abort_command(mocker):
-    """Test abort command"""
-
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(DUTAuxiliary, "_send_and_wait_ack", return_value=True)
-    assert auxiliary._abort_command() is True
-
-
-def test_abort_command_fail(mocker):
-    """Test run command fail"""
-
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(DUTAuxiliary, "_send_and_wait_ack", return_value=False)
-    mocker.patch.object(DUTAuxiliary, "_delete_auxiliary_instance", return_value=None)
-    mocker.patch.object(DUTAuxiliary, "_create_auxiliary_instance", return_value=None)
-
-    assert auxiliary._abort_command() is False
-
-
-def test_receive_message(mocker):
-    """Test receive message"""
-
-    receive_msg = {"msg": Message()}
-    com = MockCChanel(receive_msg["msg"])
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(Message, "generate_ack_message", return_value=True)
-
-    assert auxiliary._receive_message(1) == receive_msg["msg"]
-
-
-def test_receive_message_fail(mocker):
-    """Test receive message fail"""
-
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(Message, "generate_ack_message", return_value=True)
-
-    assert auxiliary._receive_message(1) is None
-
-
-def test_ping_pong(mocker):
-    """Test ping-pong"""
-
-    receive_msg = {"msg": Message(msg_type=MessageType.ACK)}
-    com = MockCChanel(receive_msg)
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(Message, "check_if_ack_message_is_matching", return_value=True)
-
-    assert auxiliary._send_ping_command(1, 1) is True
-
-
-def test_ping_pong_fail(mocker):
-    """Test ping-pong fail"""
-
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(Message, "check_if_ack_message_is_matching", return_value=False)
-
-    assert auxiliary._send_ping_command(1, 1) is False
-
-
-def test_ping_pong_fail_wrong_message(mocker):
-    """Test ping-pong fail"""
-
-    com = MockCChanel(msg=Message())
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(Message, "check_if_ack_message_is_matching", return_value=False)
-
-    assert auxiliary._send_ping_command(1, 1) is False
-
-
-def test__send_and_wait_ack(mocker):
-    """Test send and wait ack"""
-
-    msg = Message()
-    com = MockCChanel(msg=msg)
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(Message, "check_if_ack_message_is_matching", return_value=True)
-
-    assert auxiliary._send_and_wait_ack(msg, 2, 1) is True
-
-
-def test__send_and_wait_ack_fail_check(mocker):
-    """Test send and wait ack fail due to check"""
-
-    msg = Message()
-    com = MockCChanel(msg=msg)
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    mocker.patch.object(Message, "check_if_ack_message_is_matching", return_value=False)
-
-    assert auxiliary._send_and_wait_ack(msg, 2, 1) is False
-
-
-def test__send_and_wait_ack_fail_receive(mocker):
-    """Test send and wait ack fail due to receiving nothing"""
-
-    msg = Message()
-    com = MockCChanel()
-
-    mocker.patch.object(AuxiliaryInterface, "start")
-    auxiliary = DUTAuxiliary("connector", com)
-
-    assert auxiliary._send_and_wait_ack(msg, 2, 1) is False
-
-
-def test_resume(mocker):
-    """Test if resume method call correctly handle _is_suspend flag."""
-    mocker.patch.object(AuxiliaryInterface, "start")
-    mock_create_inst = mocker.patch.object(AuxiliaryInterface, "create_instance")
-
-    auxiliary = DUTAuxiliary("channel", "flasher")
-    auxiliary.resume()
-
-    assert not auxiliary._is_suspend
-    mock_create_inst.assert_called_once()
-
-
-def test_resume_with_error(mocker, caplog):
-    """Test if resume method log an error when a issue is previously
-    detected in _create_auxiliary_instance method or is_instance is not
-    False."""
-    mocker.patch.object(AuxiliaryInterface, "start")
-
-    auxiliary = DUTAuxiliary("channel", "flasher")
-    auxiliary.is_instance = True
-    auxiliary.resume()
-
-    assert "is already running" in caplog.text
-
-
-def test_suspend(mocker):
-    """Test if suspend method call correctly handle _is_suspend flag."""
-    mocker.patch.object(AuxiliaryInterface, "start")
-    mock_del_inst = mocker.patch.object(AuxiliaryInterface, "delete_instance")
-
-    auxiliary = DUTAuxiliary("channel", "flasher")
-    auxiliary.is_instance = True
-    auxiliary.suspend()
-
-    assert auxiliary._is_suspend
-    mock_del_inst.assert_called_once()
-
-
-def test_suspend_with_error(mocker, caplog):
-    """Test if suspend method log an error when auxiliary instance is
-    invalid (is_instance to False)"""
-    mocker.patch.object(AuxiliaryInterface, "start")
-
-    auxiliary = DUTAuxiliary("channel", "flasher")
-    auxiliary.suspend()
-
-    assert "is already stopped" in caplog.text
+    mock_create.assert_called()
+    mock_delete.assert_called()
+    assert state is False
 
 
 @pytest.mark.parametrize(
-    "logger_names, loggers_to_activate, expected_level",
+    "command",
     [
-        (["pylink", "pylink.jlink"], ["pylink", "pylink.jlink"], logging.DEBUG),
-        (["pylink", "pylink.jlink"], None, logging.WARNING),
-        (["pylink", "pylink.jlink"], ["pylink"], logging.DEBUG),
-        (["pylink", "pylink.jlink"], ["pylink.jlink"], logging.DEBUG),
-        (["pylink", "pylink.jlink"], ["all"], logging.DEBUG),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_SETUP)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_SETUP)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_RUN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_RUN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_TEARDOWN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_TEARDOWN)),
     ],
 )
-def test_initialize_loggers(mocker, logger_names, loggers_to_activate, expected_level):
-    """Test the logger activation from AuxiliaryInterface"""
+def test_send_fixture_command(mocker, aux_inst, command):
+    run_mock = mocker.patch.object(aux_inst, "run_command", return_value=True)
+    match_mock = mocker.patch.object(
+        message.Message, "check_if_ack_message_is_matching", return_value=True
+    )
 
-    mocker.patch.object(AuxiliaryInterface, "start")
-    mocker.patch.object(CCRttSegger, "_cc_open")
-    connector = CCRttSegger()
+    state = aux_inst.send_fixture_command(command, timeout=10)
 
-    for logger_name in logger_names:
-        logging.getLogger(logger_name).setLevel(logging.DEBUG)
-
-    auxiliary = DUTAuxiliary(com=connector, activate_log=loggers_to_activate)
-
-    for logger_name in logger_names:
-        assert logging.getLogger(logger_name).level == expected_level
+    run_mock.assert_called_once()
+    match_mock.assert_called_once()
+    run_mock.assert_called_once_with(
+        cmd_message=command, cmd_data=None, blocking=True, timeout_in_s=10
+    )
+    assert state is True
 
 
-def test_initialize_loggers_default(mocker):
-    """Test the default logger activation from AuxiliaryInterface"""
+@pytest.mark.parametrize(
+    "command",
+    [
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_SETUP)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_SETUP)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_RUN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_RUN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_TEARDOWN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_TEARDOWN)),
+    ],
+)
+def test_send_fixture_command_not_ack(mocker, aux_inst, command):
+    mocker.patch.object(aux_inst, "run_command", return_value=None)
 
-    aux_log = logging.getLogger("my_auxiliary")
-    pykiso_log = logging.getLogger("pykiso.test_suite.dynamic_loader")
+    state = aux_inst.send_fixture_command(command, timeout=10)
 
-    mocker.patch.object(AuxiliaryInterface, "start")
+    assert state is False
 
-    aux_log.setLevel(logging.DEBUG)
-    pykiso_log.setLevel(logging.DEBUG)
 
-    auxiliary = DUTAuxiliary(activate_log=None)
+@pytest.mark.parametrize(
+    "command",
+    [
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_SETUP)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_SETUP)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_RUN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_RUN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_TEARDOWN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_TEARDOWN)),
+    ],
+)
+def test_send_ping_command_failed_ack(mocker, aux_inst, command):
+    match_mock = mocker.patch.object(
+        message.Message, "check_if_ack_message_is_matching", return_value=False
+    )
+    run_mock = mocker.patch.object(aux_inst, "run_command", return_value=True)
 
-    assert aux_log.level == logging.DEBUG
-    assert pykiso_log.level == logging.DEBUG
+    state = aux_inst.send_fixture_command(command, timeout=10)
+
+    run_mock.assert_called()
+    match_mock.assert_called()
+    assert state is False
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        (message.Message(MESSAGE_TYPE.REPORT, REPORT_TYPE.TEST_PASS)),
+        (message.Message(MESSAGE_TYPE.REPORT, REPORT_TYPE.TEST_FAILED)),
+        (message.Message(MESSAGE_TYPE.REPORT, REPORT_TYPE.TEST_NOT_IMPLEMENTED)),
+        (message.Message(MESSAGE_TYPE.REPORT, 10)),
+    ],
+)
+def test_evaluate_response_report(aux_inst, response):
+    state = aux_inst.evaluate_response(response)
+
+    assert state is True
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_SETUP)),
+        (message.Message(MESSAGE_TYPE.ACK, COMMAND_TYPE.TEST_CASE_SETUP)),
+        (message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_SUITE_RUN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_RUN)),
+        (message.Message(MESSAGE_TYPE.ACK, COMMAND_TYPE.TEST_SUITE_TEARDOWN)),
+        (message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_CASE_TEARDOWN)),
+    ],
+)
+def test_evaluate_response_other_types(aux_inst, response):
+    state = aux_inst.evaluate_response(response)
+
+    assert state is False
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        (message.Message(MESSAGE_TYPE.REPORT, REPORT_TYPE.TEST_PASS)),
+        (message.Message(MESSAGE_TYPE.REPORT, REPORT_TYPE.TEST_FAILED)),
+        (message.Message(MESSAGE_TYPE.REPORT, REPORT_TYPE.TEST_NOT_IMPLEMENTED)),
+        (message.Message(MESSAGE_TYPE.REPORT, 10)),
+    ],
+)
+def test_wait_and_get_report(aux_inst, response):
+    aux_inst.queue_out.put(response)
+    report = aux_inst.wait_and_get_report(blocking=False, timeout_in_s=0)
+
+    assert report == response
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_SETUP)),
+        (message.Message(MESSAGE_TYPE.ACK, COMMAND_TYPE.TEST_CASE_SETUP)),
+        (message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_SUITE_RUN)),
+        (message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_CASE_RUN)),
+        (message.Message(MESSAGE_TYPE.ACK, COMMAND_TYPE.TEST_SUITE_TEARDOWN)),
+        (message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_CASE_TEARDOWN)),
+    ],
+)
+def test_evaluate_response_not_a_report(aux_inst, response):
+    aux_inst.queue_out.put(response)
+
+    report = aux_inst.wait_and_get_report(blocking=False, timeout_in_s=0)
+
+    assert report is None
+
+
+def test_wait_and_get_report_queue_empty(aux_inst):
+    report = aux_inst.wait_and_get_report(blocking=False, timeout_in_s=0)
+
+    assert report is None
+
+
+def test__run_command(mocker, aux_inst):
+    send_mock = mocker.patch.object(aux_inst.channel, "_cc_send")
+
+    aux_inst._run_command(cmd_message="abcde", cmd_data=None)
+
+    send_mock.assert_called_with(msg="abcde", raw=False)
+
+
+def test__run_command_exception(mocker, aux_inst, caplog):
+    send_mock = mocker.patch.object(
+        aux_inst.channel, "_cc_send", side_effect=AssertionError
+    )
+
+    aux_inst._run_command(cmd_message=None, cmd_data=None)
+
+    assert "encountered error" in caplog.text
+
+
+def test__receive_message(mocker, aux_inst):
+    response = message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_SUITE_RUN)
+    send_mock = mocker.patch.object(aux_inst.channel, "_cc_send")
+    recv_mock = mocker.patch.object(
+        aux_inst.channel, "_cc_receive", return_value={"msg": response}
+    )
+
+    aux_inst._receive_message(timeout_in_s=0)
+
+    send_mock.assert_called_once()
+    recv_mock.assert_called_once()
+    assert aux_inst.queue_out.get_nowait() == response
+
+
+def test__receive_message_no_response(mocker, aux_inst):
+    send_mock = mocker.patch.object(aux_inst.channel, "_cc_send")
+    recv_mock = mocker.patch.object(
+        aux_inst.channel, "_cc_receive", return_value={"msg": None}
+    )
+
+    aux_inst._receive_message(timeout_in_s=0)
+
+    send_mock.assert_not_called()
+
+    with pytest.raises(queue.Empty):
+        aux_inst.queue_out.get_nowait()
+
+
+def test__receive_message_failed_ack(mocker, aux_inst):
+    response = message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_SUITE_RUN)
+    send_mock = mocker.patch.object(
+        aux_inst.channel, "_cc_send", side_effect=AttributeError
+    )
+    recv_mock = mocker.patch.object(
+        aux_inst.channel, "_cc_receive", return_value={"msg": response}
+    )
+
+    aux_inst._receive_message(timeout_in_s=0)
+
+    recv_mock.assert_called_once()
+    assert aux_inst.queue_out.get_nowait() == response
+
+
+def test__receive_message_response_is_ack(mocker, aux_inst):
+    response = message.Message(MESSAGE_TYPE.ACK)
+    send_mock = mocker.patch.object(aux_inst.channel, "_cc_send")
+    recv_mock = mocker.patch.object(
+        aux_inst.channel, "_cc_receive", return_value={"msg": response}
+    )
+
+    aux_inst._receive_message(timeout_in_s=0)
+
+    send_mock.assert_not_called()
+    assert aux_inst.queue_out.get_nowait() == response

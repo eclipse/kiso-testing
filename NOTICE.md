@@ -81,6 +81,10 @@ PyVISA-py 0.5.2
 
  * License: MIT
 
+tabulate 0.8.10
+
+ * License: MIT
+
 ## Cryptography
 
 Content may contain encryption software. The country in which you are currently

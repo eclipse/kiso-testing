@@ -17,13 +17,15 @@ Thread based Auxiliary Interface
 
 .. currentmodule:: thread_auxiliary
 
-"""
+.. warning :: AuxiliaryInterface will be deprecated in a few releases!
 
+"""
 import abc
 import logging
 import queue
 import threading
 import time
+import warnings
 from typing import List, Optional
 
 from pykiso.auxiliary import AuxiliaryCommon
@@ -33,6 +35,10 @@ from ..exceptions import AuxiliaryCreationError
 from ..types import MsgType
 
 log = logging.getLogger(__name__)
+
+warnings.warn(
+    "AuxiliaryInterface will be deprecated in a few releases!", category=FutureWarning
+)
 
 
 # Ensure lock and queue unique reference: needed because python will do
