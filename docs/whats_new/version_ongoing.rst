@@ -18,7 +18,8 @@ and one for the reception.
 Proxy Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^
 refactor code of the proxy auxiliary to fit with the brand new double threaded
-auxiliary interface
+auxiliary interface.
+Add useful decorators for common behaviors open_connector, close_connector, flash_target.
 
 CCProxy channel adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -28,4 +29,9 @@ double threaded auxiliary interface
 Communication Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 refactor code of the communication auxiliary to fit with the brand new double
+threaded auxiliary interface
+
+DUT Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^
+refactor/redesign of the device under test auxiliary to fit with the brand new double
 threaded auxiliary interface

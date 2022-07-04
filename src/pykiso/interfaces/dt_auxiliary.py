@@ -20,11 +20,12 @@ Double Threaded based Auxiliary Interface
 """
 import abc
 import enum
+import functools
 import logging
 import queue
 import threading
 from enum import Enum, unique
-from typing import Any, List, Optional
+from typing import Any, Callable, List, Optional
 
 from ..exceptions import AuxiliaryCreationError
 from ..test_setup.dynamic_loader import PACKAGE
@@ -346,7 +347,7 @@ class DTAuxiliaryInterface(abc.ABC):
         """Common interface call at auxiliary deletion.
 
         This method could be used to e.g terminate the current running
-        commmunication ...
+        communication...
 
         :return: True - Successfully deleted / False - Failed deleting
         """
@@ -366,3 +367,93 @@ class DTAuxiliaryInterface(abc.ABC):
 
         :param timeout_in_s: How much time to block on the receive
         """
+
+
+def open_connector(func: Callable) -> Callable:
+    """Open current associated auxiliary's channel.
+
+    :param func: decorated method
+
+    :return: inner decorated function
+    """
+
+    @functools.wraps(func)
+    def inner_open(self, *arg, **kwargs) -> bool:
+        """Open the channel.
+
+        :param args: positional arguments
+        :param kwargs: named arguments
+
+        :return: True if everything was successful otherwise False
+        """
+        log.info("Open channel")
+        try:
+            self.channel.open()
+            return func(self, *arg, **kwargs)
+        except Exception:
+            log.exception("Unable to open channel communication")
+            return False
+
+    return inner_open
+
+
+def close_connector(func: Callable) -> Callable:
+    """Close current associated auxiliary's channel.
+
+    :param func: decorated method
+
+    :return: inner decorated function
+    """
+
+    @functools.wraps(func)
+    def inner_close(self, *arg, **kwargs) -> bool:
+        """Close the channel.
+
+        :param args: positional arguments
+        :param kwargs: named arguments
+
+        :return: True if everything was successful otherwise False
+        """
+        log.info("Close channel")
+        try:
+            self.channel.close()
+            return func(self, *arg, **kwargs)
+        except Exception:
+            log.exception("Unable to close channel communication")
+            return False
+
+    return inner_close
+
+
+def flash_target(func: Callable) -> Callable:
+    """Flash firmware on the target, using associated auxiliary's
+    flasher channel.
+
+    :param func: decorated method
+
+    :return: inner decorated function
+    """
+
+    @functools.wraps(func)
+    def inner_flash(self, *arg, **kwargs) -> bool:
+        """Flash the device under test.
+
+        :param args: positional arguments
+        :param kwargs: named arguments
+
+        :return: True if everything was successful otherwise False
+        """
+        if self.flash is None and not self.is_instance:
+            log.debug("No flasher configured!")
+            return func(self, *arg, **kwargs)
+
+        try:
+            log.info("Flash target")
+            with self.flash as flasher:
+                flasher.flash()
+            return func(self, *arg, **kwargs)
+        except Exception:
+            log.exception("Error occurred during flashing")
+            return False
+
+    return inner_flash
