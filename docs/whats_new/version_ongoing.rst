@@ -29,3 +29,8 @@ Communication Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 refactor code of the communication auxiliary to fit with the brand new double
 threaded auxiliary interface
+
+Tester Present Sender
+^^^^^^^^^^^^^^^^^^^^^
+Add a context manager, tester present sender, to keep a UDS session open for
+more than 5 seconds

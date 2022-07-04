@@ -9,6 +9,7 @@
 ##########################################################################
 
 import logging
+from time import sleep
 from unittest import mock
 
 import pytest
@@ -44,7 +45,6 @@ class TestUdsAuxiliary:
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
-
         TestUdsAuxiliary.uds_aux_instance_odx = UdsAuxiliary(
             ccpcan_inst, tmp_uds_config_ini, "odx"
         )
@@ -317,3 +317,13 @@ class TestUdsAuxiliary:
 
         assert resp.is_negative is True
         assert resp.nrc == NegativeResponseCode.CONDITIONS_NOT_CORRECT
+
+    def test_tester_present_sender(self, uds_raw_aux_inst, mocker):
+
+        send_mock = mocker.patch.object(uds_raw_aux_inst, "transmit")
+
+        with uds_raw_aux_inst.tester_present_sender(0.1):
+            sleep(0.3)
+
+        send_mock.assert_called_with(b"\x3E\x00", uds_raw_aux_inst.req_id)
+        assert send_mock.call_count == 3
