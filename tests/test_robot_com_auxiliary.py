@@ -36,6 +36,24 @@ def test_send_message(mocker, communication_aux_instance):
     send_msg_mock.assert_called_once()
 
 
+def test_clear_buffer(mocker, communication_aux_instance):
+    clear_buffer_mock = mocker.patch.object(ComAux, "clear_buffer")
+
+    communication_aux_instance.clear_buffer("itf_com_aux")
+
+    clear_buffer_mock.assert_called_once()
+
+
+def test_start_stop_recording(communication_aux_instance):
+    communication_aux_instance.start_recording_received_messages()
+    flag = communication_aux_instance.queueing_event.is_set()
+    assert flag is True
+
+    communication_aux_instance.stop_recording_received_messages()
+    flag = communication_aux_instance.queueing_event.is_set()
+    assert flag is False
+
+
 def test_get_message_without_source(mocker, communication_aux_instance):
     receive_msg_mock = mocker.patch.object(
         ComAux, "receive_message", return_value=b"\x01\x02\x03"

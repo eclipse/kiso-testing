@@ -38,4 +38,17 @@ See :ref:`uds_auxiliary`
 
 RTT connector log folder creation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 RTT connector now creates a log folder if it does not exist instead of throwing an error.
+
+Communication Auxiliary
+^^^^^^^^^^^^^^^^^^^^^^^
+To save on memory, the communication auxiliary does not collect received messages automatically anymore.
+The functionality is now available with the context manager ``collect_messages``.
+
+See :ref:`examples/templates/suite_com/test_com.py`
+
+The collected messages by the Communication auxiliary can still be cleared with the API method
+:py:meth`~pykiso.lib.auxiliaries.communication_auxiliary.CommunicationAuxiliary.clear_buffer`
+
+See :ref:`communication_auxiliary`

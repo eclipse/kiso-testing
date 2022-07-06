@@ -19,7 +19,7 @@ Communication auxiliary plugin
 .. currentmodule:: communication_auxiliary
 
 """
-
+import threading
 from typing import Tuple, Union
 
 from robot.api import logger
@@ -40,6 +40,7 @@ class CommunicationAuxiliary(RobotAuxInterface):
     def __init__(self):
         """Initialize attributes."""
         super().__init__(aux_type=ComAux)
+        self.queueing_event = threading.Event()
 
     @keyword(name="Send message")
     def send_message(
@@ -60,9 +61,31 @@ class CommunicationAuxiliary(RobotAuxInterface):
         logger.info(f"send message {raw_msg} using {aux_alias}")
         return state
 
+    @keyword(name="Start Recording Received Messages")
+    def start_recording_received_messages(self) -> None:
+        """Start recording received com_aux messages"""
+
+        self.queueing_event.set()
+
+    @keyword(name="Stop Recording Received Messages")
+    def stop_recording_received_messages(self) -> None:
+        """Stop recording received com_aux messages"""
+
+        self.queueing_event.clear()
+
+    @keyword(name="Clear Buffer")
+    def clear_buffer(self, aux_alias: str) -> None:
+        """Clear buffer from old stacked objects"""
+
+        aux = self._get_aux(aux_alias)
+        aux.clear_buffer()
+
     @keyword(name="Receive message")
     def receive_message(
-        self, aux_alias: str, blocking: bool = True, timeout_in_s: float = None
+        self,
+        aux_alias: str,
+        blocking: bool = True,
+        timeout_in_s: float = None,
     ) -> Union[list, Tuple[list, int]]:
         """Return a raw received message from the queue.
 
