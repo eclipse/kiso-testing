@@ -29,6 +29,13 @@ import pathlib
 import sys
 import types
 
+# TODO: remove it after all auxes are adapted to DTAuxiliaryInterface
+#################################################################################
+import pykiso
+
+#################################################################################
+
+
 PACKAGE = __package__.split(".")[0]
 
 __all__ = ["DynamicImportLinker"]
@@ -251,7 +258,16 @@ class AuxiliaryCache(ModuleCache):
         # due to the simple aux interface test if start method is part
         # of the current auxiliary
         start_method = getattr(inst, "start", None)
-        if not inst.is_instance and auto_start:
+
+        # TODO: remove it after all auxes are adapted to DTAuxiliaryInterface
+        #################################################################################
+        is_dt = isinstance(inst, pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface)
+        if not inst.is_instance and auto_start and is_dt:
+            inst.create_instance()
+            log.debug(f"called create_instance on {name}")
+        #################################################################################
+
+        elif not inst.is_instance and auto_start:
             # if auxiliary is type of thread
             if start_method is not None:
                 inst.start()

@@ -24,7 +24,12 @@ import logging
 import queue
 from typing import Any, Optional
 
-from pykiso import CChannel, DTAuxiliaryInterface, Message
+from pykiso import CChannel, Message
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+    open_connector,
+)
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +47,24 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         )
         self.channel = com
         self.queue_tx = queue.Queue()
+
+    @open_connector
+    def _create_auxiliary_instance(self) -> bool:
+        """Open the connector communication.
+
+        :return: True if the channel is correctly opened otherwise False
+        """
+        log.info("Auxiliary instance created")
+        return True
+
+    @close_connector
+    def _delete_auxiliary_instance(self) -> bool:
+        """Close the connector communication.
+
+        :return: always True
+        """
+        log.info("Auxiliary instance deleted")
+        return True
 
     def send_message(self, raw_msg: bytes) -> bool:
         """Send a raw message (bytes) via the communication channel.
@@ -118,33 +141,6 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         if remote_id is not None:
             return (msg, remote_id)
         return msg
-
-    def _create_auxiliary_instance(self) -> bool:
-        """Open the connector communication.
-
-        :return: True if the channel is correctly opened otherwise False
-        """
-        log.info("Create auxiliary instance")
-        log.info("Enable channel")
-        try:
-            self.channel.open()
-            return True
-        except Exception:
-            log.exception("Unable to open channel communication")
-            return False
-
-    def _delete_auxiliary_instance(self) -> bool:
-        """Close the connector communication.
-
-        :return: always True
-        """
-        log.info("Delete auxiliary instance")
-        try:
-            self.channel.close()
-            return True
-        except Exception:
-            log.exception("Unable to close channel communication")
-            return False
 
     def _run_command(self, cmd_message: str, cmd_data: bytes = None) -> bool:
         """Run the corresponding command.
