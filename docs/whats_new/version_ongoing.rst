@@ -39,3 +39,7 @@ threaded auxiliary interface
 Record Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 adapt the record auxiliary to fit with the brand new double threaded auxiliary interface
+
+Acroname Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
