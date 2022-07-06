@@ -94,6 +94,7 @@ omit = [
     "*/src/pykiso/tool/*",
     "*/src/pykiso/__main__.py",
     "*/src/pykiso/interfaces/thread_auxiliary.py",
+    "*/src/pykiso/lib/auxiliaries/acroname_auxiliary.py",
     "*__init__.py",
 ]
 
