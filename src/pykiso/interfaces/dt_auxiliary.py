@@ -45,7 +45,7 @@ class AuxCommand(Enum):
 
 class DTAuxiliaryInterface(abc.ABC):
     """Common interface for all double threaded auxiliary. A so called
-    << double thread>> auxiliary, simply encapsulate two threads one
+    << double threaded >> auxiliary, simply encapsulate two threads one
     for the reception and one for the transmmission.
     """
 
