@@ -43,3 +43,7 @@ adapt the record auxiliary to fit with the brand new double threaded auxiliary i
 Acroname Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
+
+Agnostic CCSocketCan
+^^^^^^^^^^^^^^^^^^^^
+correct CCSocketCan return type in order to be agnostic (return a dictionary instead of tuple)

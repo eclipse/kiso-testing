@@ -193,27 +193,27 @@ def test_cc_close(logging_requested, mock_can_bus, mocker):
 @pytest.mark.parametrize(
     "parameters",
     [
-        (b"\x10\x36", 0x0A, True),
-        (b"\x10\x36", None, True),
-        (b"\x10\x36", 10, True),
-        (b"", 10, True),
-        (message_with_tlv, 0x0A, False),
-        (message_with_no_tlv, 0x0A, False),
-        (message_with_no_tlv,),
-        (message_with_no_tlv, 36),
+        {"msg": b"\x10\x36", "remoet_id": 0x0A, "raw": True},
+        {"msg": b"\x10\x36", "remoet_id": None, "raw": True},
+        {"msg": b"\x10\x36", "remoet_id": 10, "raw": True},
+        {"msg": b"", "remoet_id": 10, "raw": True},
+        {"msg": message_with_tlv, "remoet_id": 0x0A, "raw": False},
+        {"msg": message_with_no_tlv, "remoet_id": 0x0A, "raw": False},
+        {"msg": message_with_no_tlv},
+        {"msg": message_with_no_tlv, "remoet_id": 36, "raw": False},
     ],
 )
 def test_cc_send(mock_can_bus, parameters):
 
     with CCSocketCan(remote_id=0x0A) as can:
-        can._cc_send(*parameters)
+        can._cc_send(**parameters)
 
     mock_can_bus.Bus.send.assert_called_once()
     mock_can_bus.Bus.shutdown.assert_called_once()
 
 
 @pytest.mark.parametrize(
-    "raw_data, can_id, cc_receive_param,expected_type",
+    "raw_data, can_id, cc_receive_param, expected_type",
     [
         (b"\x40\x01\x03\x00\x01\x02\x03\x00", 0x500, (10, False), Message),
         (
@@ -234,10 +234,10 @@ def test_can_recv(
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
     with CCSocketCan() as can:
-        msg_received, id_received = can._cc_receive(*cc_receive_param)
+        recv_msg = can._cc_receive(*cc_receive_param)
 
-    assert isinstance(msg_received, expected_type) == True
-    assert id_received == can_id
+    assert isinstance(recv_msg["msg"], expected_type)
+    assert recv_msg["remote_id"] == can_id
     mock_can_bus.Bus.recv.assert_called_once_with(timeout=cc_receive_param[0] or 1e-6)
     mock_can_bus.Bus.shutdown.assert_called_once()
 
@@ -254,39 +254,29 @@ def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
     mocker.patch("can.interface.Bus.recv", return_value=None)
 
     with CCSocketCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001, raw=raw_state)
+        recv_msg = can._cc_receive(timeout=0.0001, raw=raw_state)
 
-    assert msg_received == None
-    assert id_received == None
+    assert recv_msg["msg"] is None
+    assert recv_msg.get("remote_id") is None
 
 
-def test_can_recv_exception(caplog, mocker, mock_can_bus):
+def test_can_recv_exception(mocker, mock_can_bus):
 
-    mocker.patch("can.interface.Bus.recv", side_effect=Exception())
-
-    logging.getLogger("pykiso.lib.connectors.cc_socket_can.cc_socket_can.log")
+    mocker.patch("can.interface.Bus.recv", side_effect=ValueError)
 
     with CCSocketCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001)
+        recv_msg = can._cc_receive(timeout=0.0001)
 
-    assert msg_received == None
-    assert id_received == None
-    assert "Exception" in caplog.text
+    assert recv_msg["msg"] is None
+    assert recv_msg.get("remote_id") is None
 
 
-def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus):
+def test_can_recv_can_error_exception(mocker, mock_can_bus):
 
-    mocker.patch(
-        "can.interface.Bus.recv", side_effect=python_can.CanError("Invalid Message")
-    )
+    mocker.patch("can.interface.Bus.recv", side_effect=python_can.CanError)
 
-    logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
+    with CCSocketCan() as can:
+        recv_msg = can._cc_receive(timeout=0.0001)
 
-    with caplog.at_level(logging.DEBUG):
-
-        with CCSocketCan() as can:
-            msg_received, id_received = can._cc_receive(timeout=0.0001)
-
-    assert msg_received == None
-    assert id_received == None
-    assert "encountered can error: Invalid Message" in caplog.text
+    assert recv_msg["msg"] is None
+    assert recv_msg.get("remote_id") is None

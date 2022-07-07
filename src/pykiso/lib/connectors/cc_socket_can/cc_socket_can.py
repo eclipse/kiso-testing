@@ -150,9 +150,7 @@ class CCSocketCan(CChannel):
             del self.logger
             self.logger = None
 
-    def _cc_send(
-        self, msg: MessageType, remote_id: int = None, raw: bool = False
-    ) -> None:
+    def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
         If remote_id parameter is not given take configured ones, in addition if
@@ -165,6 +163,7 @@ class CCSocketCan(CChannel):
 
         """
         _data = msg
+        remote_id = kwargs.get("remote_id")
 
         if remote_id is None:
             remote_id = self.remote_id
@@ -209,12 +208,12 @@ class CCSocketCan(CChannel):
                         frame_id, payload, timestamp
                     )
                 )
-                return payload, frame_id
+                return {"msg": payload, "remote_id": frame_id}
             else:
-                return None, None
+                return {"msg": None}
         except can.CanError as can_error:
             log.debug(f"encountered can error: {can_error}")
-            return None, None
+            return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
-            return None, None
+            return {"msg": None}
