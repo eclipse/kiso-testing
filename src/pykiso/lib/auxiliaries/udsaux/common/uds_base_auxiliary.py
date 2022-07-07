@@ -26,7 +26,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Union
 
-from uds import Uds, createUdsConnection
+from uds import Config, Uds, createUdsConnection
 
 from pykiso.connector import CChannel
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
@@ -46,6 +46,8 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
         odx_file_path: Optional[Union[Path, str]] = None,
         request_id: Optional[int] = None,
         response_id: Optional[int] = None,
+        tp_layer: dict = None,
+        uds_layer: dict = None,
         **kwargs,
     ):
         """Initialize attributes.
@@ -60,17 +62,17 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
         self.odx_file_path = odx_file_path
         if odx_file_path:
             self.odx_file_path = Path(odx_file_path)
-
         self.config_ini_path = Path(config_ini_path)
 
         config = configparser.ConfigParser()
         config.read(self.config_ini_path)
 
-        self.req_id = request_id or int(config.get("can", "defaultReqId"), 16)
-        self.res_id = response_id or int(config.get("can", "defaultResId"), 16)
+        self.req_id = request_id or int(config.get("canTp", "reqId"), 16)
+        self.res_id = response_id or int(config.get("canTp", "resId"), 16)
 
         self.uds_config_enable = False
         self.uds_config = None
+        self.layer_config = (tp_layer, uds_layer)
 
         super().__init__(is_proxy_capable=True, **kwargs)
 
@@ -84,27 +86,16 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
             log.info("Create auxiliary instance")
             log.info("Enable channel")
             self.channel.open()
+            tp_conf, uds_conf = self.layer_config
+            Config.load_com_layer_config(tp_conf, uds_conf)
 
-            if self.odx_file_path:
-                log.info("Create Uds Config connection with ODX")
-                self.uds_config_enable = True
-                self.uds_config = createUdsConnection(
-                    self.odx_file_path,
-                    "",
-                    configPath=self.config_ini_path,
-                    connector=self.channel, 
-                    reqId=self.req_id,
-                    resId=self.res_id,
-                )
-            else:
-                log.info("Create Uds Config connection without ODX")
-                self.uds_config_enable = False
-                self.uds_config = Uds(
-                    configPath=self.config_ini_path,
-                    connector=self.channel,
-                    reqId=self.req_id,
-                    resId=self.res_id,
-                )
+            self.uds_config = Uds(
+                self.odx_file_path,
+                connector=self.channel,
+                reqId=self.req_id,
+                resId=self.res_id,
+            )
+
             if hasattr(self, "transmit"):
                 self.uds_config.tp.overwrite_transmit_method(self.transmit)
             if hasattr(self, "receive"):
