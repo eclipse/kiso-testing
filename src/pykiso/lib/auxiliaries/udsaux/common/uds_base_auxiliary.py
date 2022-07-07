@@ -85,24 +85,6 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
             log.info("Enable channel")
             self.channel.open()
 
-            channel_name = self.channel.__class__.__name__.lower()
-
-            if "vectorcan" in channel_name:
-                interface = "vector"
-                bus = self.channel.bus
-            elif "pcan" in channel_name:
-                interface = "peak"
-                bus = self.channel.bus
-            elif "socketcan" in channel_name:
-                interface = "socketcan"
-                bus = self.channel.bus
-            elif "ccproxy" in channel_name:
-                # Just fake python-uds (when proxy auxiliary is used),
-                # by setting bus to True no channel creation is
-                # performed
-                bus = True
-                interface = "peak"
-
             if self.odx_file_path:
                 log.info("Create Uds Config connection with ODX")
                 self.uds_config_enable = True
@@ -110,8 +92,7 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
                     self.odx_file_path,
                     "",
                     configPath=self.config_ini_path,
-                    bus=bus,
-                    interface=interface,
+                    connector=self.channel, 
                     reqId=self.req_id,
                     resId=self.res_id,
                 )
@@ -120,8 +101,7 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
                 self.uds_config_enable = False
                 self.uds_config = Uds(
                     configPath=self.config_ini_path,
-                    bus=bus,
-                    interface=interface,
+                    connector=self.channel,
                     reqId=self.req_id,
                     resId=self.res_id,
                 )
@@ -141,6 +121,5 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
         :return: always True
         """
         log.info("Delete auxiliary instance")
-        self.uds_config.disconnect()
         self.channel.close()
         return True
