@@ -44,32 +44,6 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
     errors = uds_exceptions
 
-    def __init__(
-        self,
-        com: CChannel,
-        config_ini_path: Union[Path, str],
-        odx_file_path: Optional[Union[Path, str]] = None,
-        request_id: Optional[int] = None,
-        response_id: Optional[int] = None,
-        **kwargs,
-    ):
-        """Initialize attributes.
-
-        :param com: communication channel connector.
-        :param config_ini_path: UDS parameter file.
-        :param odx_file_path: ecu diagnostic definition file.
-        :param request_id: optional CAN ID used for sending messages.
-        :param response_id: optional CAN ID used for receiving messages.
-        """
-        super().__init__(
-            com,
-            config_ini_path,
-            odx_file_path,
-            request_id,
-            response_id,
-            **kwargs,
-        )
-
     def transmit(self, data: bytes, req_id: int, extended: bool = False) -> None:
         """Transmit a message through ITF connector. This method is a
         substitute to transmit method present in python-uds package.
@@ -256,7 +230,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             log.error("No uds config found")
             return
 
-    def sender_run(self, period: float, stop_event: threading.Event) -> None:
+    def _sender_run(self, period: int, stop_event: threading.Event) -> None:
         """send tester present at defined period until stopped
 
         :param period: period in seconds to use for the cyclic sending of tester present
@@ -267,7 +241,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             time.sleep(period)
 
     @contextmanager
-    def tester_present_sender(self, period: float = 4) -> None:
+    def tester_present_sender(self, period: int = 4) -> None:
         """Context manager that continuously sends tester present messages via UDS
 
         :param period: period in seconds to use for the cyclic sending of tester present
@@ -275,14 +249,16 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         stop_event = threading.Event()
         sender = threading.Thread(
             name="TesterPresentSender",
-            target=self.sender_run,
+            target=self._sender_run,
             args=(period, stop_event),
         )
+        sender.start()
         try:
-            yield sender.start()
+            yield sender
         finally:
-            stop_event.set()
-            sender.join()
+            if sender.is_alive() is True:
+                stop_event.set()
+                sender.join()
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """This method is only used to populate the python-uds reception
@@ -310,6 +286,3 @@ class UdsAuxiliary(UdsBaseAuxiliary):
     def _run_command(self, cmd_message, cmd_data=None) -> Union[dict, bytes, bool]:
         """Not used."""
         pass
-
-    def _get_instance(self):
-        return self

@@ -305,5 +305,6 @@ UDS tester present sender
 
 .. code:: python
 
-    with uds_aux.tester_present_sender(3):
+    # start sending tester present messages every 3 seconds until the context manager is exited
+    with uds_aux.tester_present_sender(period=3):
         # Perform uds commands here

@@ -62,7 +62,7 @@ class ExampleUdsTest(pykiso.BasicTest):
         a Tester Present, to signal to the device that the client is still present.
         """
         # Sends Tester Present every 5 seconds
-        with uds_aux.tester_present_sender(4):
+        with uds_aux.tester_present_sender(period=5):
             time.sleep(6)
             # Go into safety system session
             uds_aux.send_uds_raw([0x10, 0x04])
