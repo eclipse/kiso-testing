@@ -9,12 +9,6 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version Unreleased (2022-06-30)
-
-#### New Features
-
-* add a tester present sender to uds auxiliary
-
 ## Version 0.18.0 (2022-06-07)
 
 #### New Features

@@ -299,7 +299,7 @@ UDS read & write data
 UDS tester present sender
 -------------------------
 
-|In order for any session to be kept open, a tester presence frame has to be send every 5 seconds.
+|In order for any diagnostic session to be kept open, a tester presence frame has to be send every 5 seconds.
 |For this purpose, the tester present sender context manager can be use, it will send the tester
 |present frame at the period given, allowing to keep the session open for more than 5 seconds.
 

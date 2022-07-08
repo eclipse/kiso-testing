@@ -21,7 +21,7 @@ uds_auxiliary
 import logging
 import threading
 import time
-from functools import partial
+from contextlib import contextmanager
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -61,7 +61,6 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :param request_id: optional CAN ID used for sending messages.
         :param response_id: optional CAN ID used for receiving messages.
         """
-        self.tester_present_sender = partial(TesterPresentSender, self)
         super().__init__(
             com,
             config_ini_path,
@@ -257,6 +256,34 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             log.error("No uds config found")
             return
 
+    def sender_run(self, period: float, stop_event: threading.Event) -> None:
+        """send tester present at defined period until stopped
+
+        :param period: period to use for the cyclic sending of tester present
+        :param stop_event:
+        """
+        while not stop_event.is_set():
+            self.send_uds_raw(UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE)
+            time.sleep(period)
+
+    @contextmanager
+    def tester_present_sender(self, period: float = 4) -> None:
+        """Context manager that continuously sends tester present messages via UDS
+
+        :param period: period to use for the cyclic sending of tester present
+        """
+        stop_event = threading.Event()
+        sender = threading.Thread(
+            name="TesterPresentSender",
+            target=self.sender_run,
+            args=(period, stop_event),
+        )
+        try:
+            yield sender.start()
+        finally:
+            stop_event.set()
+            sender.join()
+
     def _receive_message(self, timeout_in_s: float) -> None:
         """This method is only used to populate the python-uds reception
         buffer. When a message is received, invoke python-uds configured
@@ -286,35 +313,3 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
     def _get_instance(self):
         return self
-
-
-class TesterPresentSender(threading.Thread):
-    """Self that continuously sends tester present messages via UDS"""
-
-    TESTER_PRESENT_SEND = b"\x3E\x00"
-
-    def __init__(self, uds_aux: UdsAuxiliary, period: float = 4):
-        """Constructor
-
-        :param period: period to use for the cyclic sending of tester present
-        :param uds_aux: auxiliary used to send tester present
-        """
-        self.uds_aux = uds_aux
-        self.period = period
-        self.stop_event = threading.Event()
-        super().__init__(name="TesterPresentSender")
-
-    def run(self):
-        """send tester present at defined period until stopped"""
-        while not self.stop_event.is_set():
-            self.uds_aux.transmit(self.TESTER_PRESENT_SEND, self.uds_aux.req_id)
-            time.sleep(self.period)
-
-    def __enter__(self):
-        """Start the thread."""
-        self.start()
-        return self
-
-    def __exit__(self, *args, **kwargs):
-        """Stop the thread."""
-        self.stop_event.set()

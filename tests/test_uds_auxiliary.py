@@ -14,6 +14,7 @@ from unittest import mock
 
 import pytest
 
+from pykiso.lib.auxiliaries.udsaux.common import UDSCommands
 from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
     NegativeResponseCode,
     UdsResponse,
@@ -320,10 +321,12 @@ class TestUdsAuxiliary:
 
     def test_tester_present_sender(self, uds_raw_aux_inst, mocker):
 
-        send_mock = mocker.patch.object(uds_raw_aux_inst, "transmit")
+        send_mock = mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
 
         with uds_raw_aux_inst.tester_present_sender(0.1):
             sleep(0.3)
 
-        send_mock.assert_called_with(b"\x3E\x00", uds_raw_aux_inst.req_id)
+        send_mock.assert_called_with(
+            UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE
+        )
         assert send_mock.call_count == 3
