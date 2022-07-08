@@ -54,7 +54,12 @@ import time
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-from pykiso import AuxiliaryInterface, CChannel, DTAuxiliaryInterface
+from pykiso import AuxiliaryInterface, CChannel
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+    open_connector,
+)
 from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_setup.config_registry import ConfigRegistry
 from pykiso.test_setup.dynamic_loader import PACKAGE
@@ -221,35 +226,26 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         for conn in self.proxy_channels:
             conn.attach_tx_callback(self.run_command)
 
+    @open_connector
     def _create_auxiliary_instance(self) -> bool:
         """Open current associated channel and dispatch tx method.
 
         :return: if channel creation is successful return True otherwise
             False
         """
-        try:
-            log.info("Create auxiliary instance")
-            log.info("Enable channel")
-            self.channel.open()
-            self._dispatch_tx_method_to_channels()
-            return True
-        except Exception:
-            log.exception("Error encouting during channel creation")
-            return False
+        self._dispatch_tx_method_to_channels()
+        log.info("Auxiliary instance created")
+        return True
 
+    @close_connector
     def _delete_auxiliary_instance(self) -> bool:
         """Close current associated channel.
 
         :return: if channel deletion is successful return True otherwise
             False
         """
-        log.info("Delete auxiliary instance")
-        try:
-            self.channel.close()
-            return True
-        except Exception:
-            log.exception("Error encouting during channel closure")
-            return False
+        log.info("Auxiliary instance deleted")
+        return True
 
     def run_command(self, conn: CChannel, *args: tuple, **kwargs: dict) -> None:
         """Transmit an incoming request from a linked proxy channel

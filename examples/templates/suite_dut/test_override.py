@@ -66,7 +66,7 @@ class TestCaseOverride(pykiso.RemoteTest):
             test_case=self.test_case_id,
         )
 
-        state = aux1.run_command(awesome_message, blocking=True, timeout_in_s=10)
+        state = aux1.send_fixture_command(awesome_message, timeout=10)
 
         self.assertEqual(state, True)
 

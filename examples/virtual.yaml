@@ -8,7 +8,7 @@ auxiliaries:
     connectors:
         com: chan1
     config: null
-    type: pykiso.lib.auxiliaries.example_test_auxiliary:ExampleAuxiliary
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
 connectors:
   chan1:
     config: {dest_ip : '127.0.0.1', dest_port: 5005}

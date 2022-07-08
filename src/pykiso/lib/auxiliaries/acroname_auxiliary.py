@@ -19,12 +19,12 @@ Acroname Control Auxiliary
 
 """
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 import brainstem
 from brainstem.result import Result
 
-from pykiso import SimpleAuxiliaryInterface
+from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface
 from pykiso.types import MsgType
 
 log = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ ERROR_MESSAGES = {
 }
 
 
-class AcronameAuxiliary(SimpleAuxiliaryInterface):
+class AcronameAuxiliary(DTAuxiliaryInterface):
     """Auxiliary used to control acroname usb hubs"""
 
     MICROVOLT_TO_UNIT = {
@@ -90,7 +90,9 @@ class AcronameAuxiliary(SimpleAuxiliaryInterface):
 
         :param serial_number: serial number to connect to as hex string. Example "0x66F4859B"
         """
-        super().__init__(**kwargs)
+        super().__init__(
+            is_proxy_capable=False, tx_task_on=False, rx_task_on=False, **kwargs
+        )
         self.serial_number = (
             int(serial_number, 16) if isinstance(serial_number, str) else serial_number
         )
@@ -234,3 +236,15 @@ class AcronameAuxiliary(SimpleAuxiliaryInterface):
         result = self.stem.usb.setPortCurrentLimit(port, micro_volt_value)
         self.eval_result(result)
         return result
+
+    def _run_command(self, cmd_message: Any, cmd_data: Optional[bytes]) -> None:
+        """Not used.
+
+        Simply respect the interface.
+        """
+
+    def _receive_message(self, timeout_in_s: float) -> None:
+        """Not used.
+
+        Simply respect the interface.
+        """

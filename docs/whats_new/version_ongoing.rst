@@ -18,7 +18,8 @@ and one for the reception.
 Proxy Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^
 refactor code of the proxy auxiliary to fit with the brand new double threaded
-auxiliary interface
+auxiliary interface.
+Add useful decorators for common behaviors open_connector, close_connector, flash_target.
 
 CCProxy channel adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,7 +31,21 @@ Communication Auxiliary adaption
 refactor code of the communication auxiliary to fit with the brand new double
 threaded auxiliary interface
 
+DUT Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^
+refactor/redesign of the device under test auxiliary to fit with the brand new double
+threaded auxiliary interface
+
+Record Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the record auxiliary to fit with the brand new double threaded auxiliary interface
+
+Acroname Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
+
 Tester Present Sender
 ^^^^^^^^^^^^^^^^^^^^^
 Add a context manager, tester present sender, to keep a UDS session open for
 more than 5 seconds
+
