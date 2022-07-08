@@ -259,8 +259,8 @@ class UdsAuxiliary(UdsBaseAuxiliary):
     def sender_run(self, period: float, stop_event: threading.Event) -> None:
         """send tester present at defined period until stopped
 
-        :param period: period to use for the cyclic sending of tester present
-        :param stop_event:
+        :param period: period in seconds to use for the cyclic sending of tester present
+        :param stop_event: event to set to stop the sending of tester present
         """
         while not stop_event.is_set():
             self.send_uds_raw(UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE)
@@ -270,7 +270,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
     def tester_present_sender(self, period: float = 4) -> None:
         """Context manager that continuously sends tester present messages via UDS
 
-        :param period: period to use for the cyclic sending of tester present
+        :param period: period in seconds to use for the cyclic sending of tester present
         """
         stop_event = threading.Event()
         sender = threading.Thread(
