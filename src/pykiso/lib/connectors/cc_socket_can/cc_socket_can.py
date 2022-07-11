@@ -23,7 +23,7 @@ import logging
 import platform
 import time
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict
 
 import can
 import can.bus
@@ -184,7 +184,7 @@ class CCSocketCan(CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.0001, raw: bool = False
-    ) -> Union[Message, bytes, None]:
+    ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
         If raw parameter is set to True return received message as it is (bytes)

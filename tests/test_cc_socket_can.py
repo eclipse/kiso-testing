@@ -193,14 +193,14 @@ def test_cc_close(logging_requested, mock_can_bus, mocker):
 @pytest.mark.parametrize(
     "parameters",
     [
-        {"msg": b"\x10\x36", "remoet_id": 0x0A, "raw": True},
-        {"msg": b"\x10\x36", "remoet_id": None, "raw": True},
-        {"msg": b"\x10\x36", "remoet_id": 10, "raw": True},
-        {"msg": b"", "remoet_id": 10, "raw": True},
-        {"msg": message_with_tlv, "remoet_id": 0x0A, "raw": False},
-        {"msg": message_with_no_tlv, "remoet_id": 0x0A, "raw": False},
+        {"msg": b"\x10\x36", "remote_id": 0x0A, "raw": True},
+        {"msg": b"\x10\x36", "remote_id": None, "raw": True},
+        {"msg": b"\x10\x36", "remote_id": 10, "raw": True},
+        {"msg": b"", "remote_id": 10, "raw": True},
+        {"msg": message_with_tlv, "remote_id": 0x0A, "raw": False},
+        {"msg": message_with_no_tlv, "remote_id": 0x0A, "raw": False},
         {"msg": message_with_no_tlv},
-        {"msg": message_with_no_tlv, "remoet_id": 36, "raw": False},
+        {"msg": message_with_no_tlv, "remote_id": 36, "raw": False},
     ],
 )
 def test_cc_send(mock_can_bus, parameters):
