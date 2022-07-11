@@ -20,7 +20,7 @@ CAN Communication Channel using Vector hardware
 """
 
 import logging
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import can
 import can.bus
@@ -149,8 +149,7 @@ class CCVectorCan(CChannel):
         log.debug(f"sent CAN Message: {can_msg}")
 
     def _cc_receive(
-        self,
-        timeout=0.0001,
+        self, timeout=0.0001, size: Optional[int] = None
     ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 

@@ -20,6 +20,7 @@ Device Under Test Auxiliary
 
 """
 import logging
+from typing import Optional
 
 from pykiso import AuxiliaryInterface, CChannel, Flasher, Message, message
 from pykiso.lib.connectors.cc_rtt_segger import CCRttSegger
@@ -268,17 +269,15 @@ class DUTAuxiliary(AuxiliaryInterface):
 
         """
         # We serialize the message if raw is false and we sent it
-        if not raw and isinstance(self.channel, CCTcpip):
-            message_to_send = message_to_send.encode()
-        elif raw and isinstance(self.channel, VISAChannel):
-            message_to_send = message_to_send.decode()
-        elif not raw and isinstance(message_to_send, Message):
+        if not raw and isinstance(message_to_send, Message):
             message_to_send = message_to_send.serialize()
         # This channel doesn't serialize the message but encode it
 
         self.channel.cc_send(msg=message_to_send)
 
-    def _receive_msg(self, timeout_in_s: float, raw: bool = False):
+    def _receive_msg(
+        self, timeout_in_s: float, raw: bool = False, size: Optional[int] = None
+    ):
         """Receive the message and return it raw if wanted or a Message and
         treat the case where the channel is cc_rtt_segger
 
@@ -288,10 +287,13 @@ class DUTAuxiliary(AuxiliaryInterface):
         :returns: receive message
         """
         # Those channel treat the messages differently so we keep the raw
-        if isinstance(self.channel, (CCRttSegger, VISAChannel)):
+        if isinstance(self.channel, (CCRttSegger)) and not raw:
+            size = Message().header_size
+
+        if isinstance(self.channel, (VISAChannel)):
             recv_response = self.channel.cc_receive(timeout_in_s, raw)
         else:
-            recv_response = self.channel.cc_receive(timeout_in_s)
+            recv_response = self.channel.cc_receive(timeout_in_s, size=size)
 
         msg_received = recv_response.get("msg")
         if not raw and msg_received is not None and isinstance(msg_received, bytes):

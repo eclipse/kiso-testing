@@ -24,7 +24,7 @@ import enum
 import logging
 import subprocess
 import time
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from pykiso import connector
 from pykiso.message import Message
@@ -253,8 +253,7 @@ class CCFdxLauterbach(connector.CChannel):
         return poll_len
 
     def _cc_receive(
-        self,
-        timeout: float = 0.1,
+        self, timeout: float = 0.1, size: Optional[int] = None
     ) -> Dict[str, Union[bytes, str, None]]:
         """Receive message using the FDX channel.
 

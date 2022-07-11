@@ -326,7 +326,7 @@ class CCPCanCan(CChannel):
         log.debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
 
     def _cc_receive(
-        self, timeout: float = 0.0001
+        self, timeout: float = 0.0001, size: int = None
     ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 

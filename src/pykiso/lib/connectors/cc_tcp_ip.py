@@ -20,7 +20,7 @@ Communication Channel via socket
 """
 import logging
 import socket
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from pykiso import CChannel
 
@@ -70,13 +70,11 @@ class CCTcpip(CChannel):
 
         :param msg: message to send
         """
-
         log.debug(f"Sending {msg} via socket to {self.dest_ip}")
         self.socket.send(msg)
 
     def _cc_receive(
-        self,
-        timeout=0.01,
+        self, timeout=0.01, size: Optional[int] = None
     ) -> Dict[str, Union[bytes, str, None]]:
         """Read message from socket.
 

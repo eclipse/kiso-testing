@@ -20,7 +20,7 @@ Loopback CChannel
 """
 
 from collections import deque
-from typing import Dict
+from typing import Dict, Optional
 
 from pykiso import CChannel
 from pykiso.types import MsgType
@@ -56,8 +56,7 @@ class CCLoopback(CChannel):
         self._loopback_buffer.append(msg)
 
     def _cc_receive(
-        self,
-        timeout: float,
+        self, timeout: float, size: Optional[int] = None
     ) -> Dict[str, MsgType]:
         """Read message by simply removing an element from the left side of deque.
 

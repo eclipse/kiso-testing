@@ -25,7 +25,7 @@ Communication Channel via UDP server
 """
 import logging
 import socket
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from pykiso import Message, connector
 
@@ -70,8 +70,7 @@ class CCUdpServer(connector.CChannel):
         self.udp_socket.sendto(msg, self.address)
 
     def _cc_receive(
-        self,
-        timeout=0.0000001,
+        self, timeout=0.0000001, size: Optional[int] = None
     ) -> Dict[str, Union[Message, bytes, None]]:
         """Read message from UDP socket.
 

@@ -26,7 +26,7 @@ has to be used with a so called proxy auxiliary.
 import logging
 import queue
 from multiprocessing import Queue
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from pykiso import Message
 from pykiso.connector import CChannel
@@ -72,7 +72,9 @@ class CCProxy(CChannel):
         log.debug(f"put at proxy level: {args} {kwargs}")
         self.queue_in.put((args, kwargs))
 
-    def _cc_receive(self, timeout: float = 0.1) -> ProxyReturn:
+    def _cc_receive(
+        self, timeout: float = 0.1, size: Optional[int] = None
+    ) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
 
         :param timeout: not used
