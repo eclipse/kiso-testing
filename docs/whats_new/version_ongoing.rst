@@ -43,3 +43,7 @@ adapt the record auxiliary to fit with the brand new double threaded auxiliary i
 Acroname Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
+
+Instrument Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the instrument auxiliary to fit with the brand new double threaded auxiliary interface
