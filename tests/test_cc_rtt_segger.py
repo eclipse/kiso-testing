@@ -296,19 +296,21 @@ def test_rtt_segger_send_error(mock_pylink_square_socket, mocker, caplog):
 def test_rtt_segger_receive(
     mocker, mock_pylink_square_socket, timeout, raw, expected_return
 ):
-
+    size = Message().header_size if not raw else None
     with CCRttSegger() as cc_rtt_inst:
-        response = cc_rtt_inst._cc_receive(timeout=timeout, raw=raw)
-
+        response = cc_rtt_inst._cc_receive(timeout=timeout, size=size)
     assert isinstance(response, dict)
-    assert isinstance(response["msg"], expected_return)
+    assert isinstance(
+        response["msg"] if raw else Message.parse_packet(response["msg"]),
+        expected_return,
+    )
 
 
 def test_rtt_segger_timeout(mocker, mock_pylink_square_socket):
     mocker.patch("pylink.JLink.rtt_read", return_value=[])
 
     with CCRttSegger() as cc_rtt_inst:
-        response = cc_rtt_inst._cc_receive(timeout=0.010, raw=True)
+        response = cc_rtt_inst._cc_receive(timeout=0.010)
 
     assert response["msg"] == None
 

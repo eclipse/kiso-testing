@@ -8,6 +8,7 @@
 ##########################################################################
 
 import logging
+from typing import Optional
 
 import pytest
 
@@ -37,13 +38,17 @@ class MockCChanel:
     def _cc_send(self, msg: MsgType, raw: bool = False):
         pass
 
-    def _cc_receive(self, timeout: float = 0.1, raw: bool = False):
+    def _cc_receive(
+        self, timeout: float = 0.1, raw: bool = False, size: Optional[int] = None
+    ):
         return {"msg": self.msg}
 
     def cc_send(self, msg: MsgType, raw: bool = False):
         pass
 
-    def cc_receive(self, timeout: float = 0.1, raw: bool = False):
+    def cc_receive(
+        self, timeout: float = 0.1, raw: bool = False, size: Optional[int] = None
+    ):
         return {"msg": self.msg}
 
 

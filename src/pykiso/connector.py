@@ -23,6 +23,7 @@ import abc
 import multiprocessing
 import pathlib
 import threading
+from typing import Optional
 
 from .types import MsgType, PathType
 
@@ -111,10 +112,7 @@ class CChannel(Connector):
             raise ConnectionRefusedError
         self._lock.release()
 
-    def cc_receive(
-        self,
-        timeout: float = 0.1,
-    ) -> dict:
+    def cc_receive(self, timeout: float = 0.1, size: Optional[int] = None) -> dict:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
@@ -127,7 +125,7 @@ class CChannel(Connector):
         received_message = None
         if self._lock.acquire(False):
             # Store received message
-            received_message = self._cc_receive(timeout=timeout)
+            received_message = self._cc_receive(timeout=timeout, size=size)
         else:
             raise ConnectionRefusedError
         self._lock.release()
@@ -154,7 +152,7 @@ class CChannel(Connector):
         pass
 
     @abc.abstractmethod
-    def _cc_receive(self, timeout: float) -> dict:
+    def _cc_receive(self, timeout: float, size: Optional[int] = None) -> dict:
         """How to receive something from the channel.
 
         :param timeout: Time to wait in second for a message to be received

@@ -102,22 +102,17 @@ class VISAChannel(CChannel):
         log.debug(f"Writing {msg} to {self.resource_name}")
         self.resource.write(msg)
 
-    def _cc_receive(
-        self, timeout: float = 0.1, raw: bool = False, size: Optional[int] = None
-    ) -> str:
+    def _cc_receive(self, timeout: float = 0.1, size: Optional[int] = None) -> str:
         """Send a read request to the instrument
 
         :param timeout: time in second to wait for reading a message
-        :param raw: should the message be returned raw or should it be interpreted as a
-            pykiso.Message?
+
 
         :return: the received response message, or an empty string if the request
             expired with a timeout.
         """
-        if raw:
-            return {"msg": self._process_request("read")["msg"].encode()}
-        else:
-            return self._process_request("read")
+
+        return self._process_request("read")
 
     def query(self, query_command: str) -> str:
         """Send a query request to the instrument

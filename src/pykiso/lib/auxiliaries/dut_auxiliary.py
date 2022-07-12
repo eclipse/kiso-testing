@@ -290,15 +290,13 @@ class DUTAuxiliary(AuxiliaryInterface):
         if isinstance(self.channel, (CCRttSegger)) and not raw:
             size = Message().header_size
 
-        if isinstance(self.channel, (VISAChannel)):
-            recv_response = self.channel.cc_receive(timeout_in_s, raw)
-        else:
-            recv_response = self.channel.cc_receive(timeout_in_s, size=size)
-
+        recv_response = self.channel.cc_receive(timeout_in_s, size=size)
         msg_received = recv_response.get("msg")
-        if not raw and msg_received is not None and isinstance(msg_received, bytes):
-            msg_received = Message.parse_packet(msg_received)
-        elif not raw and isinstance(self.channel, CCTcpip):
-            msg_received = msg_received.decode().strip()
 
+        if not raw and isinstance(self.channel, CCTcpip):
+            msg_received = msg_received.decode().strip()
+        elif raw and isinstance(self.channel, VISAChannel):
+            msg_received.encode()
+        elif not raw and msg_received is not None and isinstance(msg_received, bytes):
+            msg_received = Message.parse_packet(msg_received)
         return msg_received

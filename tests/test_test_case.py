@@ -7,8 +7,8 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import unittest
 import logging
+import unittest
 from functools import partial
 
 import pytest

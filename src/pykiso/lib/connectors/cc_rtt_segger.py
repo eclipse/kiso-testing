@@ -262,7 +262,6 @@ class CCRttSegger(connector.CChannel):
         """Send message using the corresponding RTT buffer.
 
         :param msg: message to send, should be Message type or bytes.
-        :param raw: if raw is True simply send it as it is, otherwise apply serialization
         """
         try:
 
@@ -280,12 +279,11 @@ class CCRttSegger(connector.CChannel):
             )
 
     def _cc_receive(
-        self, timeout: float = 0.1, raw: bool = False, size: Optional[int] = None
+        self, timeout: float = 0.1, size: Optional[int] = None
     ) -> Dict[str, Union[Message, bytes, None]]:
         """Read message from the corresponding RTT buffer.
 
         :param timeout: timeout applied on receive event
-        :param raw: if raw is True return raw bytes, otherwise Message type like
 
         :return: Message or raw bytes if successful, otherwise None
         """

@@ -12,6 +12,7 @@ import pytest
 import pyvisa
 
 from pykiso.lib.connectors import cc_visa
+from pykiso.message import Message
 
 constructor_params_serial = {"serial_port": 4, "baud_rate": 9600}
 constructor_params_tcpip = {
@@ -116,10 +117,14 @@ def test_cc_close(constructor_params_serial):
         (constructor_params_serial, False, {"msg": "read response"}),
     ],
 )
-def test__cc_receive(mocker, constructor_params_serial, raw_value, expected_return):
+def test_cc_receive(mocker, constructor_params_serial, raw_value, expected_return):
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
-    assert visa_inst._cc_receive(raw=raw_value) == expected_return
+    message_received = visa_inst._cc_receive()
+    if raw_value:
+        message_received["msg"] = message_received["msg"].encode()
+
+    assert message_received == expected_return
 
 
 @pytest.mark.parametrize(

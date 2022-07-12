@@ -59,7 +59,7 @@ def test_cchan_interface(cchannel_inst, mocker):
     expected_calls = [
         mocker.call._cc_open(),
         mocker.call._cc_send(msg="test"),
-        mocker.call._cc_receive(timeout=0),
+        mocker.call._cc_receive(timeout=0, size=None),
         mocker.call._cc_close(),
     ]
     print(repr(expected_calls))
