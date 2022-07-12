@@ -15,34 +15,19 @@ Double Threaded Auxiliary Interface
 Implement a brand new interface using two threads, one for the transmission
 and one for the reception.
 
-Proxy Auxiliary adaption
-^^^^^^^^^^^^^^^^^^^^^^^^
-refactor code of the proxy auxiliary to fit with the brand new double threaded
-auxiliary interface.
-Add useful decorators for common behaviors open_connector, close_connector, flash_target.
+Currently adapted modules:
+- Proxy Auxiliary
+- CCProxy channel
+- Communication Auxiliary
+- DUT Auxiliary
+- Record Auxiliary
+- Acroname Auxiliary
 
-CCProxy channel adaption
-^^^^^^^^^^^^^^^^^^^^^^^^
-Add thread-safe callback subscription mechanism to fit with the brand new
-double threaded auxiliary interface
+There is not API changes, therefor, as user, your tests should not be affected.
 
-Communication Auxiliary adaption
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-refactor code of the communication auxiliary to fit with the brand new double
-threaded auxiliary interface
-
-DUT Auxiliary adaption
-^^^^^^^^^^^^^^^^^^^^^^
-refactor/redesign of the device under test auxiliary to fit with the brand new double
-threaded auxiliary interface
-
-Record Auxiliary adaption
-^^^^^^^^^^^^^^^^^^^^^^^^^
-adapt the record auxiliary to fit with the brand new double threaded auxiliary interface
-
-Acroname Auxiliary adaption
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
+Agnostic CCSocketCan
+^^^^^^^^^^^^^^^^^^^^
+Incompatibilities with the agnostic proxy are now resolved. You should be able to use it again.
 
 RTT connector log folder creation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
