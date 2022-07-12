@@ -31,4 +31,4 @@ Incompatibilities with the agnostic proxy are now resolved. You should be able t
 
 RTT connector log folder creation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-RTT connector now create a log folder if it does not exist instead of throwing an error
+RTT connector now creates a log folder if it does not exist instead of throwing an error
