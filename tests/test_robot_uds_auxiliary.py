@@ -8,9 +8,12 @@
 # Robert Bosch GmbH.
 ##########################################################################
 
+from time import sleep
+
 import pytest
 
 from pykiso import AuxiliaryInterface
+from pykiso.lib.auxiliaries.udsaux.common import UDSCommands
 from pykiso.lib.robot_framework.uds_auxiliary import (
     IsoServices,
     UdsAux,
@@ -170,3 +173,13 @@ def test_check_response_negative(robot_uds_aux, uds_aux):
     )
 
     assert ret is True
+
+
+def test_tester_present_sender(mocker, robot_uds_aux, uds_aux):
+    send_mock = mocker.patch.object(uds_aux, "send_uds_raw")
+    mocker.patch("time.sleep", return_value=None)
+
+    robot_uds_aux.start_tester_present_sender(1, "uds_aux")
+    robot_uds_aux.stop_tester_present_sender()
+
+    send_mock.assert_called_with(UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE)
