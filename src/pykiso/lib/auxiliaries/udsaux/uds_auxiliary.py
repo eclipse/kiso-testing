@@ -22,13 +22,10 @@ import logging
 import threading
 import time
 from contextlib import contextmanager
-from pathlib import Path
-from typing import List, Optional, Union
+from typing import Iterator, List, Optional, Union
 
 import can
 from uds import IsoServices
-
-from pykiso.connector import CChannel
 
 from .common import uds_exceptions
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
@@ -241,7 +238,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             time.sleep(period)
 
     @contextmanager
-    def tester_present_sender(self, period: int = 4) -> None:
+    def tester_present_sender(self, period: int = 4) -> Iterator[None]:
         """Context manager that continuously sends tester present messages via UDS
 
         :param period: period in seconds to use for the cyclic sending of tester present
@@ -252,13 +249,11 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             target=self._sender_run,
             args=(period, stop_event),
         )
-        sender.start()
         try:
-            yield sender
+            yield sender.start()
         finally:
-            if sender.is_alive() is True:
-                stop_event.set()
-                sender.join()
+            stop_event.set()
+            sender.join()
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """This method is only used to populate the python-uds reception
