@@ -43,3 +43,7 @@ adapt the record auxiliary to fit with the brand new double threaded auxiliary i
 Acroname Auxiliary adaption
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
+
+RTT connector log folder creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RTT connector now create a log folder if it does not exist instead of throwing an error
