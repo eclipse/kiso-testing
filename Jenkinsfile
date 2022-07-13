@@ -73,6 +73,20 @@ pipeline
                 sh 'poetry run pykiso -c examples/dummy.yaml --junit'
             }
         }
+        stage('Run Zephyr test')
+        {
+            steps
+            {
+                sh '''mkdir zephyr-project
+                    cd zephyr-project
+                    west init .
+                    west update
+                    west zephyr-export
+                    cd ..
+                    pykiso -c examples/zephyr.yaml --log-level DEBUG || true
+                '''
+            }
+        }
         stage('Generate documentation')
         {
             steps {
