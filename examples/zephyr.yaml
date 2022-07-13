@@ -1,0 +1,23 @@
+auxiliaries:
+  # Zephyr test auxiliary
+  zephyr_aux:
+    config:
+      # Path to twister tool, will default to "twister"
+      twister_path: twister
+      # The location of the Zephyr test project
+      test_directory: ./test_zephyr/zephyr_test_project
+      # The name of the test in the test directory
+      test_name: testing.ztest
+      # Wait for test start on target when started
+      wait_for_start: True
+      activate_log :
+        - all
+    type: pykiso.lib.auxiliaries.zephyr:ZephyrTestAuxiliary
+connectors:
+  chan1:
+    config: null
+    type: ext_lib/cc_example.py:CCExample
+test_suite_list:
+- suite_dir: ./test_zephyr
+  test_filter_pattern: '*.py'
+  test_suite_id: 1
