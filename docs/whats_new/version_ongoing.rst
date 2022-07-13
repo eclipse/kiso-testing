@@ -28,3 +28,7 @@ There is not API changes, therefor, as user, your tests should not be affected.
 Agnostic CCSocketCan
 ^^^^^^^^^^^^^^^^^^^^
 Incompatibilities with the agnostic proxy are now resolved. You should be able to use it again.
+
+RTT connector log folder creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RTT connector now creates a log folder if it does not exist instead of throwing an error
