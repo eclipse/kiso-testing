@@ -34,13 +34,17 @@ import enum
 import logging
 import time
 import unittest
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import xmlrunner
 
+import pykiso
+
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from . import test_suite
+from .assert_step_report import assert_decorator, generate_step_report, StepReportData
 from .test_result import BannerTestResult
 from .test_xml_result import XmlTestResult
 
@@ -142,6 +146,30 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
     return exit_code
 
 
+def enable_step_report(all_tests_to_run: unittest.suite.TestSuite) -> None:
+    """Decorate all assert method from Test-Case
+
+        This will allow to save the assert inputs in
+        order to generate the step-report
+
+    :param all_tests_to_run: a dict containing all testsuites and testcases
+    """
+    # Step report header fed during test
+    base_suite = test_suite.flatten(all_tests_to_run)
+    for tc in base_suite:
+        # for any test, show ITF version
+        tc.step_report = StepReportData(header = OrderedDict({"ITF version": pykiso.__version__}))
+
+        # Decorate All assert method
+        assert_method_list = [
+            method for method in dir(tc) if method.startswith("assert")
+        ]
+        for method_name in assert_method_list:
+            # Get method from name
+            method = getattr(tc, method_name)
+            # Add decorator to the existing method
+            setattr(tc, method_name, assert_decorator(method))
+
 def collect_test_suites(
     config_test_suite_list: List[Dict[str, Union[str, int]]],
     test_filter_pattern: Optional[str] = None,
@@ -174,6 +202,8 @@ def execute(
     config: Dict[str, Any],
     report_type: str = "text",
     user_tags: Optional[Dict[str, List[str]]] = None,
+    step_report: bool = False,
+    step_report_output: str = "step_report.html",
     pattern_inject: Optional[str] = None,
     failfast: bool = False,
 ) -> int:
@@ -183,6 +213,8 @@ def execute(
     :param report_type: str to set the type of report wanted, i.e. test
         or junit
     :param user_tags: test case tags to execute
+    :param step_report: generate the step report
+    :param step_report_output: file path for the output step report
     :param pattern_inject: optional pattern that will override
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
@@ -198,6 +230,10 @@ def execute(
         # filter test cases based on variant and branch-level options
         if user_tags:
             apply_tag_filter(all_tests_to_run, user_tags)
+        # Enable step report
+        if step_report:
+            enable_step_report(all_tests_to_run)
+
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
         if report_type == "junit":
             junit_report_name = time.strftime("TEST-pykiso-%Y-%m-%d_%H-%M-%S.xml")
@@ -217,6 +253,10 @@ def execute(
                 resultclass=BannerTestResult, failfast=failfast
             )
             result = test_runner.run(all_tests_to_run)
+
+        # Generate the html step report
+        if step_report:
+            generate_step_report(result, step_report_output)
 
         exit_code = failure_and_error_handling(result)
     except TestCollectionError:

@@ -11,6 +11,10 @@ Welcome to pykiso's documentation!
     getting_started/index
     whats_new/index
     api
+    instrument_control
+    acroname_control
+    record
+    step_report
     examples/index
     advanced_features/index
     remote_test/remote_test
