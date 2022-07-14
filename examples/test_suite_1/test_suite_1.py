@@ -30,9 +30,9 @@ side_effect = cycle([False, False, True])
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
-class SuiteSetup(pykiso.BasicTestSuiteSetup):
+class SuiteSetup(pykiso.RemoteTestSuiteSetup):
     """This test suite setup will be executed using base behavior
-    given by BasicTestSuiteSetup.
+    given by RemoteTestSuiteSetup.
 
 
     Using decorator define_test_parameters the following parameters will
@@ -41,24 +41,13 @@ class SuiteSetup(pykiso.BasicTestSuiteSetup):
     -> suite_id : set to 1
     -> aux_list : test suite setup executed using aux1 and aux2 (see
     yaml configuration file)
-    -> setup_timeout : ITF will wait 2 seconds (maximum) to receive a
-    report from device under test otherwise an abort command is sent.
-
-    If setup_timeout is not given the default timeout value is 10
-    seconds.
     """
-
-    module = importlib.import_module("pykiso.auxiliaries")
-    attribute = dir(module)
-    logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
-
-    pass
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
-class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
+class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     """This test suite teardown will be executed using base behavior
-    given by RemoteTestSuiteTeardown.
+    given by RemoteTestSuiteSetup.
 
     Using decorator define_test_parameters the following parameters will
     be applied on test suite teardown :
@@ -67,8 +56,6 @@ class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
     -> aux_list : test suite teardown executed using aux1 and aux2 (see
     yaml configuration file)
     """
-
-    pass
 
 
 @pykiso.define_test_parameters(
@@ -160,8 +147,9 @@ class MyTest2(pykiso.RemoteTest):
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.
     """
+
     @pykiso.retry_test_case(
-        max_try=1, rerun_setup=False, rerun_teardown=False, stability_test=True
+        max_try=3, rerun_setup=False, rerun_teardown=False, stability_test=True
     )
     def test_run(self):
         """In this case the default test_run method is called using the
@@ -171,10 +159,6 @@ class MyTest2(pykiso.RemoteTest):
         This test will be run 3 times in order to test stability (setUp
         and tearDown excluded as the flags are set to False).
         """
-        module = importlib.import_module("pykiso.auxiliaries")
-        attribute = dir(module)
-        logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
-
         logging.info(f"------------suspend auxiliaries run-------------")
         aux3.suspend()
         aux2.suspend()
@@ -217,62 +201,3 @@ class MyTest3(pykiso.RemoteTest):
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.
     """
-
-    pass
-
-
-@pykiso.define_test_parameters(suite_id=1, case_id=4, aux_list=[aux1])
-class MyTest4(pykiso.BasicTest):
-    """This test is used for the step report example.
-
-    To generate it, add --junit --step-report flags:
-        pykiso -c ./examples/dummy.yaml --junit --step-report
-    """
-
-    def setUp(self):
-        """Hook method from unittest in order to execute code before test
-        case run. In this case the default setUp method is overridden.
-        """
-        logging.info(
-            f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
-        self.step_report_current_table = "first"
-        device_on = True
-        self.step_report_message = "smth"
-        self.assertTrue(device_on, msg="Check my device is ready")
-        voltage = 3.8
-        self.step_report_current_table = "second"
-        self.assertAlmostEqual(voltage, 4, delta=1, msg="err")
-        # additional data can be shown in the step-report
-
-
-    def test_run(self):
-
-        self.step_report_header["brc"] = "1231"
-
-        """Here is my test description which will be showed in the step-report"""
-        logging.info(
-            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
-        kiso_is_great = False
-        self.step_report_continue_on_error = True
-        self.assertTrue(kiso_is_great, "Some verification")
-        wrong_placement = "123"
-        self.step_report_continue_on_error = False
-        self.assertEqual(
-            "123",
-            wrong_placement,
-            "Variable name not found because data_in/data_expected order inverted",
-        )
-        assert self.step_report_succeed == True
-        logging.info(f"I HAVE RUN 0.1.1 for variant {self.variant}!")
-
-    def tearDown(self):
-        """Hook method from unittest in order to execute code after the test case ran.
-        In this case the default tearDown method is overridden.
-        """
-        logging.info(
-            f"--------------- TEARDOWN: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
-        teardown_has_started = True
-        self.assertTrue(teardown_has_started, "Another Example")

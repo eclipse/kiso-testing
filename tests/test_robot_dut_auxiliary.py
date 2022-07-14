@@ -9,81 +9,127 @@
 
 import pytest
 
-from pykiso.lib.robot_framework.dut_auxiliary import DutAux, DUTAuxiliary
-from pykiso.message import MessageReportType, MessageType
+from pykiso.lib.robot_framework.dut_auxiliary import (
+    COMMAND_TYPE,
+    DutAux,
+    DUTAuxiliary,
+    RemoteTest,
+    RemoteTestSuiteSetup,
+    RemoteTestSuiteTeardown,
+)
+from pykiso.message import Message, MessageReportType, MessageType
+
+RemoteTest.__test__ = False
+RemoteTestSuiteSetup.__test__ = False
+RemoteTestSuiteTeardown.__test__ = False
 
 
 @pytest.fixture
-def dut_aux_instance(mocker):
-    mocker.patch(
-        "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run", return_value=None
-    )
+def mock_dut_aux(mocker, cchannel_inst):
+    class MockDutAux(DutAux):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+        send_ping_command = mocker.stub(name="send_ping_command")
+        send_fixture_command = mocker.stub(name="send_fixture_command")
+        send_abort_command = mocker.stub(name="send_abort_command")
+        wait_and_get_report = mocker.stub(name="send_abort_command")
+
+    return MockDutAux
+
+
+@pytest.fixture
+def aux_instance(mocker, mock_dut_aux, cchannel_inst):
+
     mocker.patch(
         "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
-        return_value={"itf_com_aux": DutAux("channel")},
+        return_value={"itf_com_aux": mock_dut_aux(com=cchannel_inst)},
     )
     return DUTAuxiliary()
 
 
-class MockReportMsg:
-    def __init__(self, report_type, message_type):
-        self.sub_type = report_type
-        self.message_type = message_type
+@pytest.mark.parametrize(
+    "command, test_cls, fixture_alias",
+    [
+        ("TEST_SUITE_SETUP", RemoteTestSuiteSetup, "test_suite_setUp"),
+        ("TEST_SUITE_TEARDOWN", RemoteTestSuiteTeardown, "test_suite_tearDown"),
+        ("TEST_CASE_SETUP", RemoteTest, "setUp"),
+        ("TEST_CASE_RUN", RemoteTest, "test_run"),
+        ("TEST_CASE_TEARDOWN", RemoteTest, "tearDown"),
+    ],
+)
+def test_get_test_class_info(aux_instance, command, test_cls, fixture_alias):
 
-    def get_message_type(self):
-        return self.message_type
+    info = aux_instance._get_test_class_info(command)
+
+    assert info == (test_cls, fixture_alias)
 
 
-def test_run_ok(mocker, dut_aux_instance):
+def test_get_test_class_info_unknown_command(aux_instance):
 
-    mocked_report = MockReportMsg(MessageReportType.TEST_PASS, MessageType.REPORT)
+    with pytest.raises(TypeError):
+        aux_instance._get_test_class_info("feel like I am a nice command")
 
-    mock_report_infos = [(None, mocked_report, lambda *args: None, "Test OK")]
 
-    mock_client = mocker.patch(
-        "pykiso.lib.robot_framework.dut_auxiliary.handle_basic_interaction"
+@pytest.mark.parametrize(
+    "command",
+    [
+        ("TEST_SUITE_SETUP"),
+        ("TEST_SUITE_TEARDOWN"),
+        ("TEST_CASE_SETUP"),
+        ("TEST_CASE_RUN"),
+        ("TEST_CASE_TEARDOWN"),
+    ],
+)
+def test_app_run(mocker, aux_instance, command):
+    report = Message(
+        msg_type=MessageType.REPORT,
+        sub_type=MessageReportType.TEST_PASS,
+        test_suite=1,
+        test_case=1,
     )
-    mock_client.return_value.__enter__.return_value = mock_report_infos
+    mock_dut = aux_instance._get_aux("itf_com_aux")
+    mocker.patch.object(mock_dut, "send_fixture_command", return_value=True)
+    mocker.patch.object(mock_dut, "wait_and_get_report", return_value=report)
 
-    dut_aux_instance.test_app_run(
-        "TEST_CASE_RUN", 1, 1, ["itf_com_aux"], timeout_cmd=0, timeout_resp=0
+    aux_instance.test_app_run(
+        command, test_suite_id=1, test_case_id=1, aux_list=["itf_com_aux"]
     )
 
+    mock_dut = aux_instance._get_aux("itf_com_aux")
 
-def test_run_failed(mocker, dut_aux_instance):
+    mock_dut.send_fixture_command.assert_called_once()
+    mock_dut.wait_and_get_report.assert_called_once()
 
-    mocked_report = MockReportMsg(MessageReportType.TEST_FAILED, MessageType.REPORT)
 
-    mock_report_infos = [
-        (None, mocked_report, lambda *args: None, "Something went wrong")
-    ]
-
-    mock_client = mocker.patch(
-        "pykiso.lib.robot_framework.dut_auxiliary.handle_basic_interaction"
+def test_app_run_report_failed(mocker, aux_instance):
+    report = Message(
+        msg_type=MessageType.REPORT,
+        sub_type=MessageReportType.TEST_FAILED,
+        test_suite=1,
+        test_case=1,
     )
-    mock_client.return_value.__enter__.return_value = mock_report_infos
+    mock_dut = aux_instance._get_aux("itf_com_aux")
+    mocker.patch.object(mock_dut, "send_fixture_command", return_value=True)
+    mocker.patch.object(mock_dut, "wait_and_get_report", return_value=report)
 
-    with pytest.raises(AssertionError) as excinfo:
-        dut_aux_instance.test_app_run(
-            "TEST_CASE_RUN", 1, 1, ["itf_com_aux"], timeout_cmd=0, timeout_resp=0
+    with pytest.raises(AssertionError):
+        aux_instance.test_app_run(
+            "TEST_SUITE_SETUP",
+            test_suite_id=1,
+            test_case_id=1,
+            aux_list=["itf_com_aux"],
         )
-    assert "Something went wrong" in str(excinfo.value)
 
 
-def test_run_not_implemented(mocker, dut_aux_instance):
+def test_app_run_not_ack(mocker, aux_instance):
+    mock_dut = aux_instance._get_aux("itf_com_aux")
+    mocker.patch.object(mock_dut, "send_fixture_command", return_value=False)
 
-    mocked_report = MockReportMsg(
-        MessageReportType.TEST_NOT_IMPLEMENTED, MessageType.REPORT
-    )
-
-    mock_report_infos = [(None, mocked_report, lambda *args: None, "Not implemented")]
-    mock_client = mocker.patch(
-        "pykiso.lib.robot_framework.dut_auxiliary.handle_basic_interaction"
-    )
-    mock_client.return_value.__enter__.return_value = mock_report_infos
-
-    with pytest.raises(AssertionError) as excinfo:
-        dut_aux_instance.test_app_run(
-            "TEST_CASE_RUN", 1, 1, ["itf_com_aux"], timeout_cmd=0, timeout_resp=0
+    with pytest.raises(AssertionError):
+        aux_instance.test_app_run(
+            "TEST_SUITE_SETUP",
+            test_suite_id=1,
+            test_case_id=1,
+            aux_list=["itf_com_aux"],
         )
-    assert "Not implemented" in str(excinfo.value)

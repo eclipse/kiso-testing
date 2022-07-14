@@ -15,14 +15,16 @@ The project maintains the following source code repositories:
 ## Contributors
 
 Thanks goes to these wonderful people (sorted by last name):
-
- * Daniel Buehler
- * Sebastian Fischer
- * Damien Kayser
- * Sebastian Clerson
- * Yoann Garcia
- * Uwe Lang
- * Loic Riegel
+ * Buehler Daniel
+ * Clerson Sebastian
+ * Fischer Sebastian
+ * Garcia Yoann
+ * Kayser Damien
+ * Kotulla Sebastian
+ * Lang Uwe
+ * Riegel Loic
+ * Riolet Teddy
+ * Thomas Julien
 
 ## Copyright
 
@@ -41,45 +43,57 @@ SPDX-License-Identifier: EPL-2.0
 
 There is none direct hosted 3rd party content nevertheless, important dependencies are downloaded via poetry.
 
-Python 3.8.2
+Python 3.10.0
 
  * License: PSF LICENSE
 
-pyserial 3.4
+pyserial 3.5
 
  * License: BSD-3-Clause
 
-timeout-decorator 0.4.1
-
- * License: MIT
-
-click 8.0.1
+click 7.1.2
 
  * License: BSD-3-Clause
 
-pyyaml 5.3.1
+pyyaml 6.0
 
  * License: MIT
 
-pylink-square 0.6.1
+pylink-square 0.12.0
 
  * License: Apache License 2.0
 
-unittest-xml-reporting 3.0.4
+unittest-xml-reporting 3.2.0
 
  * License: BSD License
 
-robotframework 4.0.3
+robotframework 3.2.2
 
 * License: Apache License 2.0
 
-PyVISA 1.11.3
+PyVISA 1.12.0
 
  * License: MIT
 
-PyVISA-py 0.5.2
+PyVISA-py 0.5.3
 
  * License: MIT
+
+tabulate 0.8.9
+
+ * License: MIT
+
+python-can 4.0.0
+
+ * License: LGPL-3.0 license
+
+pykiso-python-uds 2.1.0
+
+ * License: MIT
+
+MarkupSafe 2.0.1
+
+ * License: BSD-3-Clause license
 
 ## Cryptography
 
