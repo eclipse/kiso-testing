@@ -35,3 +35,7 @@ Add a context manager, tester present sender, that send cyclic tester present
 frames to keep UDS session alive more than 5 seconds
 
 See :ref:`uds_auxiliary`
+
+RTT connector log folder creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RTT connector now creates a log folder if it does not exist instead of throwing an error.
