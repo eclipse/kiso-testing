@@ -23,6 +23,7 @@ import logging
 from typing import Optional
 
 from pykiso import AuxiliaryInterface, CChannel, Flasher, Message, message
+from pykiso.lib.connectors.cc_example import CCExample
 from pykiso.lib.connectors.cc_rtt_segger import CCRttSegger
 from pykiso.lib.connectors.cc_tcp_ip import CCTcpip
 from pykiso.lib.connectors.cc_visa import VISAChannel
@@ -149,7 +150,7 @@ class DUTAuxiliary(AuxiliaryInterface):
         return result
 
     def _receive_message(
-        self, timeout_in_s: float, raw: bool = True
+        self, timeout_in_s: float, raw: bool = False
     ) -> message.Message:
         """Get message from the device under test.
 
@@ -165,11 +166,13 @@ class DUTAuxiliary(AuxiliaryInterface):
             msg_to_send = received_message.generate_ack_message(
                 message.MessageAckType.ACK
             )
+            if not isinstance(msg_to_send, message.Message):
+                print(msg_to_send)
             self._send_message(message_to_send=msg_to_send, raw=raw)
             # Return message
-            return received_message
+        return received_message
 
-    def _send_ping_command(self, timeout: int, tries: int, raw: bool = True) -> bool:
+    def _send_ping_command(self, timeout: int, tries: int, raw: bool = False) -> bool:
         """Ping Pong test to confirm the communication state.
 
         :param timeout: Time in ms to wait for one try
@@ -268,11 +271,14 @@ class DUTAuxiliary(AuxiliaryInterface):
         :param tries: Number of tries to send the message
 
         """
-        # We serialize the message if raw is false and we sent it
-        if not raw and isinstance(message_to_send, Message):
-            message_to_send = message_to_send.serialize()
-        # This channel doesn't serialize the message but encode it
 
+        # We serialize the message if raw is false and we sent it$
+        if isinstance(self.channel, CCExample):
+            pass
+        elif not raw and isinstance(message_to_send, Message):
+            message_to_send = message_to_send.serialize()
+
+        # This channel doesn't serialize the message but encode it
         self.channel.cc_send(msg=message_to_send)
 
     def _receive_msg(

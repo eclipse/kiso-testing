@@ -252,7 +252,7 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         pass
 
     @abc.abstractmethod
-    def _receive_message(self, timeout_in_s: float) -> MsgType:
+    def _receive_message(self, timeout_in_s: float, raw: bool = False) -> MsgType:
         """Defines what needs to be done as a receive message. Such as,
             what do I need to do to receive a message.
 
