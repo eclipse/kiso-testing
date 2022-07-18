@@ -1,14 +1,14 @@
 Remote Test
 ===========
 
-With the remote test approach, the idea is to execute tests on the targeted hardware to enable 
+With the remote test approach, the idea is to execute tests on the targeted hardware to enable
 the developer to practice test-driven-development directly on the target.
 
 
 Test Coordinator
 ~~~~~~~~~~~~~~~~
 
-In the case of remote tests usage, the **test-coordinator** will still perform the same task 
+In the case of remote tests usage, the **test-coordinator** will still perform the same task
 but will also:
 
 -  verify if the tests can be performed
@@ -24,10 +24,10 @@ For the remote test approach, auxiliaries should be composed by 2 blocks:
    container)
 -  connectors to facilitate interaction and communication with the
    device (e.g. flashing via *JTAG*, messaging with *UART*)
-  
+
 One example of implementation of such an auxiliary is the *device under test* auxiliary used with the TestApp.
 In this specific case we have:
- 
+
   -  As communication channel (**cchannel**) usually *UART*
   -  As flashing channel (**flashing**) usually *JTAG*
 
@@ -43,13 +43,14 @@ In case of the *device under test*, we have a specific communication protocol. P
 Flashing
 ^^^^^^^^
 
-The Flasher Connectors usually provide only one method, :py:meth:`Flasher.flash`, which will transfer the configured binary file to the target.
+The Flasher Connectors usually provide only one method, :py:meth:`~pykiso.connector.Flasher.flash`,
+which will transfer the configured binary file to the target.
 
 
 .. _flashing-1:
 
 
-Message Protocol 
+Message Protocol
 ~~~~~~~~~~~~~~~~
 
 The message protocol is used (but not only) between the *device under
@@ -250,7 +251,7 @@ The flashing connector is in turn called from an appropriate auxiliary (usually 
 Implementation of Remote Tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For remote tests, RemoteTestCase / RemoteTestSuite should be used instead of BasicTestCase / BasicTestSuite, based on Message Protocol, 
+For remote tests, RemoteTestCase / RemoteTestSuite should be used instead of BasicTestCase / BasicTestSuite, based on Message Protocol,
 users can configure the maximum time (in seconds) used to wait for a report.
 This "timeout" is configurable for each available fixtures :
 
@@ -322,7 +323,7 @@ Find below a full example for a test suite/case declaration in case the Message 
 Config File for remote tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For details see :ref:`../getting_started/config_file`.
+For details see :ref:`config_file`.
 
 Find below an example of config for used for remote testing (is that case using *device under test* auxiliary)
 
