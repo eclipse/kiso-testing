@@ -295,3 +295,16 @@ UDS read & write data
 |In the same way, read_data takes one argument : parameter.
 |Parameter is a string that contain the name of the data that is to be read. API must return dictionary with either
 |data associated to the read parameter, or NRC.
+
+UDS tester present sender
+-------------------------
+
+|In order for any diagnostic session to be kept open, a tester presence frame has to be sent every 5 seconds.
+|For this purpose, the tester present sender context manager can be used, it will send the tester
+|present frame at the period given, allowing you to keep the session open for more than 5 seconds.
+
+.. code:: python
+
+    # start sending tester present messages every 3 seconds until the context manager is exited
+    with uds_aux.tester_present_sender(period=3):
+        # Perform uds commands here
