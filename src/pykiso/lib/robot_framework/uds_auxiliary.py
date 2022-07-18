@@ -165,7 +165,7 @@ class UdsAuxiliary(RobotAuxInterface):
         aux = self._get_aux(aux_alias)
         return aux.write_data(parameter, value)
 
-    @keyword(name="Start tester present sender")
+    @keyword(name="Start tester present with ${period} seconds ${aux_alias} ")
     def start_tester_present_sender(self, period: int, aux_alias) -> None:
         """Start to continuously sends tester present messages via UDS
 
@@ -180,7 +180,7 @@ class UdsAuxiliary(RobotAuxInterface):
         )
         self.sender.start()
 
-    @keyword(name="Stop tester present sender")
+    @keyword(name="Stop tester present")
     def stop_tester_present_sender(self) -> None:
         """Stop to continuously sends tester present messages via UDS"""
         self.sender_stop_event.set()

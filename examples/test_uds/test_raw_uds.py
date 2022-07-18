@@ -57,8 +57,8 @@ class ExampleUdsTest(pykiso.BasicTest):
         the control unit automatically exits the current session and returns to the
         "Default Session" back, and might go to sleep mode.
 
-        To avoid this issue if test steps take too long between uds commands, the
-        context manager tester present sender can be use. It will send at a define period
+        To avoid this issue, if test steps take too long between uds commands the
+        context manager tester present sender can be used. It will send at a defined period
         a Tester Present, to signal to the device that the client is still present.
         """
         # Sends Tester Present every 5 seconds

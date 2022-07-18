@@ -31,6 +31,7 @@ Incompatibilities with the agnostic proxy are now resolved. You should be able t
 
 Tester Present Sender
 ^^^^^^^^^^^^^^^^^^^^^
-Add a context manager, tester present sender, to keep a UDS session open for
-more than 5 seconds
+Add a context manager, tester present sender, that send cyclic tester present
+frames to keep UDS session alive more than 5 seconds
+
 See :ref:`uds_auxiliary`
