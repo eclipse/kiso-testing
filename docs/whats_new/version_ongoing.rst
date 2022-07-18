@@ -32,5 +32,9 @@ Incompatibilities with the agnostic proxy are now resolved. You should be able t
 Tester Present Sender
 ^^^^^^^^^^^^^^^^^^^^^
 Add a context manager, tester present sender, to keep a UDS session open for
-more than 5 seconds
+more than 5 seconds.
 See :ref:`uds_auxiliary`
+
+RTT connector log folder creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RTT connector now creates a log folder if it does not exist instead of throwing an error.
