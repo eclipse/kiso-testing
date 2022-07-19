@@ -26,7 +26,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Union
 
-from uds import Config, Uds, createUdsConnection
+from uds import Config, Uds
 
 from pykiso.connector import CChannel
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
@@ -42,7 +42,6 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
     def __init__(
         self,
         com: CChannel,
-        config_ini_path: Union[Path, str],
         odx_file_path: Optional[Union[Path, str]] = None,
         request_id: Optional[int] = None,
         response_id: Optional[int] = None,
@@ -60,16 +59,8 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
         """
         self.channel = com
         self.odx_file_path = odx_file_path
-        if odx_file_path:
-            self.odx_file_path = Path(odx_file_path)
-        self.config_ini_path = Path(config_ini_path)
-
-        config = configparser.ConfigParser()
-        config.read(self.config_ini_path)
-
-        self.req_id = request_id or int(config.get("canTp", "reqId"), 16)
-        self.res_id = response_id or int(config.get("canTp", "resId"), 16)
-
+        self.req_id = tp_layer.get("req_id")
+        self.res_id = tp_layer.get("res_id")
         self.uds_config_enable = False
         self.uds_config = None
         self.layer_config = (tp_layer, uds_layer)

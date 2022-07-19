@@ -7,7 +7,6 @@ auxiliaries:
       # and instead of using send_uds_raw method use the send_uds_config
       # for a more human readable command
       odx_file_path: null
-      config_ini_path: 'examples/test_uds/config.ini'
       uds_layer:
         transport_protocol: 'CAN'
         p2_can_client: 5
