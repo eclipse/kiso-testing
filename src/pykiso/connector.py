@@ -116,7 +116,7 @@ class CChannel(Connector):
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
-
+        :param size: size of the message to receive
 
         :return: Message if successful, None else
 

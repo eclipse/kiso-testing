@@ -272,13 +272,14 @@ class DUTAuxiliary(AuxiliaryInterface):
 
         """
 
-        # We serialize the message if raw is false and we sent it$
+        # We serialize the message if raw is false and we sent it
+        # The connector CCexample await a Message and not a Bytes so we do nothing
         if isinstance(self.channel, CCExample):
             pass
         elif not raw and isinstance(message_to_send, Message):
             message_to_send = message_to_send.serialize()
 
-        # This channel doesn't serialize the message but encode it
+        # So we send the Message or the bytes
         self.channel.cc_send(msg=message_to_send)
 
     def _receive_msg(
@@ -289,16 +290,16 @@ class DUTAuxiliary(AuxiliaryInterface):
 
         :param timeout_in_s: Time in ms to wait for one try
         :param raw: if raw is True the message is raw bytes, otherwise Message type like
-
+        :param size: size of the message to read
         :returns: receive message
         """
-        # Those channel treat the messages differently so we keep the raw
+        # For the CCrttSegger we define the size of the message to receive
         if isinstance(self.channel, (CCRttSegger)) and not raw:
             size = Message().header_size
-
+        # We get the message
         recv_response = self.channel.cc_receive(timeout_in_s, size=size)
         msg_received = recv_response.get("msg")
-
+        # Some channel does differently so we separate case
         if not raw and isinstance(self.channel, CCTcpip):
             msg_received = msg_received.decode().strip()
         elif raw and isinstance(self.channel, VISAChannel):
