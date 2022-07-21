@@ -19,7 +19,10 @@ uds_auxiliary
 
 """
 import logging
-from typing import List, Optional, Union
+import threading
+import time
+from contextlib import contextmanager
+from typing import Iterator, List, Optional, Union
 
 import can
 from uds import IsoServices
@@ -222,6 +225,34 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         else:
             log.error("No uds config found")
             return
+
+    def _sender_run(self, period: int, stop_event: threading.Event) -> None:
+        """send tester present at defined period until stopped
+
+        :param period: period in seconds to use for the cyclic sending of tester present
+        :param stop_event: event to set to stop the sending of tester present
+        """
+        while not stop_event.is_set():
+            self.send_uds_raw(UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE)
+            time.sleep(period)
+
+    @contextmanager
+    def tester_present_sender(self, period: int = 4) -> Iterator[None]:
+        """Context manager that continuously sends tester present messages via UDS
+
+        :param period: period in seconds to use for the cyclic sending of tester present
+        """
+        stop_event = threading.Event()
+        sender = threading.Thread(
+            name="TesterPresentSender",
+            target=self._sender_run,
+            args=(period, stop_event),
+        )
+        try:
+            yield sender.start()
+        finally:
+            stop_event.set()
+            sender.join()
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """This method is only used to populate the python-uds reception

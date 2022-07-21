@@ -125,6 +125,8 @@ class CCRttSegger(connector.CChannel):
         if self.rtt_log_path is not None:
             self.rtt_log_buffer_size = 0
             self.rtt_log_path = Path(rtt_log_path)
+            # if log folder does not exists create it during process
+            self.rtt_log_path.mkdir(parents=True, exist_ok=True)
             rtt_fh = logging.FileHandler(self.rtt_log_path / "rtt.log")
             rtt_fh.setLevel(logging.DEBUG)
             self.rtt_log.setLevel(logging.DEBUG)

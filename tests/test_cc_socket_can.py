@@ -283,33 +283,23 @@ def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
     assert id_received == None
 
 
-def test_can_recv_exception(caplog, mocker, mock_can_bus):
+def test_can_recv_exception(mocker, mock_can_bus):
 
-    mocker.patch("can.interface.Bus.recv", side_effect=Exception())
-
-    logging.getLogger("pykiso.lib.connectors.cc_socket_can.cc_socket_can.log")
+    mocker.patch("can.interface.Bus.recv", side_effect=ValueError)
 
     with CCSocketCan() as can:
-        msg_received, id_received = can._cc_receive(timeout=0.0001)
+        recv_msg = can._cc_receive(timeout=0.0001)
 
-    assert msg_received == None
-    assert id_received == None
-    assert "Exception" in caplog.text
+    assert recv_msg["msg"] is None
+    assert recv_msg.get("remote_id") is None
 
 
-def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus):
+def test_can_recv_can_error_exception(mocker, mock_can_bus):
 
-    mocker.patch(
-        "can.interface.Bus.recv", side_effect=python_can.CanError("Invalid Message")
-    )
+    mocker.patch("can.interface.Bus.recv", side_effect=python_can.CanError)
 
-    logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
+    with CCSocketCan() as can:
+        recv_msg = can._cc_receive(timeout=0.0001)
 
-    with caplog.at_level(logging.DEBUG):
-
-        with CCSocketCan() as can:
-            msg_received, id_received = can._cc_receive(timeout=0.0001)
-
-    assert msg_received == None
-    assert id_received == None
-    assert "encountered can error: Invalid Message" in caplog.text
+    assert recv_msg["msg"] is None
+    assert recv_msg.get("remote_id") is None

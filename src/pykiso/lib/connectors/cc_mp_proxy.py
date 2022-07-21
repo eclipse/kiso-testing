@@ -24,23 +24,32 @@ has to be used with a so called proxy auxiliary.
 """
 
 import logging
-from multiprocessing import Queue
+import multiprocessing
+import queue
+from typing import Dict, Optional, Union
 
-from pykiso.lib.connectors.cc_proxy import CCProxy
+from pykiso import Message
+from pykiso.connector import CChannel
 
 log = logging.getLogger(__name__)
 
+ProxyReturn = Union[
+    Dict[str, Union[bytes, int]],
+    Dict[str, Union[bytes, None]],
+    Dict[str, Union[Message, None]],
+    Dict[str, Union[None, None]],
+]
 
-class CCMpProxy(CCProxy):
+
+class CCMpProxy(CChannel):
     """Multiprocessing Proxy CChannel for multi auxiliary usage."""
 
     def __init__(self, **kwargs):
         """Initialize attributes."""
-
         super().__init__(**kwargs)
         # instantiate directly both queue_in and queue_out
-        self.queue_in = Queue()
-        self.queue_out = Queue()
+        self.queue_in = multiprocessing.Queue()
+        self.queue_out = multiprocessing.Queue()
         self.timeout = 1
 
     def _cc_open(self) -> None:
@@ -60,3 +69,30 @@ class CCMpProxy(CCProxy):
         works even if suspend or resume is called.
         """
         log.debug("Close proxy channel")
+
+    def _cc_send(self, *args: tuple, **kwargs: dict) -> None:
+        """Populate the queue in of the proxy connector.
+
+        :param args: tuple containing positionnal arguments
+        :param kwargs: dictionary containing named arguments
+        """
+        log.debug(f"put at proxy level: {args} {kwargs}")
+        self.queue_in.put((args, kwargs))
+
+    def _cc_receive(
+        self, timeout: float = 0.1, size: Optional[int] = None
+    ) -> ProxyReturn:
+        """Depopulate the queue out of the proxy connector.
+
+        :param timeout: not used
+
+
+        :return: bytes and source when it exist. if queue timeout
+            is reached return None
+        """
+        try:
+            return_response = self.queue_out.get(True, self.timeout)
+            log.debug(f"received at proxy level : {return_response}")
+            return return_response
+        except queue.Empty:
+            return {"msg": None}

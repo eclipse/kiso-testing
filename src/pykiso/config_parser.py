@@ -26,7 +26,7 @@ import os
 import re
 import sys
 from collections import ChainMap
-from io import TextIOWrapper
+from io import TextIOBase
 from pathlib import Path
 from typing import Callable, Dict, List, TextIO, Union
 
@@ -55,7 +55,7 @@ class YamlLoader(yaml.SafeLoader):
 
         :param file: full path to the YAML file to load.
         """
-        if isinstance(file, TextIOWrapper):
+        if isinstance(file, TextIOBase):
             file = file.name
         yaml_file = Path(file).resolve()
         self._base_dir = yaml_file.parent
@@ -133,7 +133,11 @@ class YamlLoader(yaml.SafeLoader):
         value = node.value
         config_path_unresolved = Path(value)
         if not config_path_unresolved.is_absolute():
-            config_path = (self._base_dir / config_path_unresolved).resolve()
+            try:
+                config_path = (self._base_dir / config_path_unresolved).resolve()
+            except OSError:
+                # for some rare values a WinError is raised by an invalid path
+                return str(value)
             if config_path.exists():
                 value = config_path
                 logging.debug(

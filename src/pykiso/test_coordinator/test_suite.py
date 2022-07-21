@@ -94,7 +94,7 @@ class BaseTestSuite(unittest.TestCase):
         log.critical(info_to_print)
 
         # Send aborts to corresponding auxiliary
-        if aux.abort_command() is not True:
+        if aux.send_abort_command(timeout=10) is not True:
             log.critical(f"Error occurred during abort command on auxiliary {aux}")
 
         self.fail(info_to_print)
@@ -375,19 +375,17 @@ def tc_sort_key(tc):
 
     :return: key for :py:func:`sorted`
 
-    :raise: any exception that occurs during test loading
+    :raises: any exception that occurs during test loading
     """
-    try:
-        fix_ind = 0
-        if isinstance(tc, (BasicTestSuiteSetup, RemoteTestSuiteSetup)):
-            fix_ind = -1
-        elif isinstance(tc, (BasicTestSuiteTeardown, RemoteTestSuiteTeardown)):
-            fix_ind = 1
-        elif isinstance(tc, unittest.loader._FailedTest):
-            raise tc._exception
-        return (fix_ind, tc.test_suite_id, tc.test_case_id)
-    except BaseException:
-        log.exception("Issue detected during test suite initialization!")
+    fix_ind = 0
+    if isinstance(tc, (BasicTestSuiteSetup, RemoteTestSuiteSetup)):
+        fix_ind = -1
+    elif isinstance(tc, (BasicTestSuiteTeardown, RemoteTestSuiteTeardown)):
+        fix_ind = 1
+    elif isinstance(tc, unittest.loader._FailedTest):
+        # breakpoint()
+        raise tc._exception
+    return (fix_ind, tc.test_suite_id, tc.test_case_id)
 
 
 def flatten(it):

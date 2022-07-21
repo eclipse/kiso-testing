@@ -7,14 +7,17 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import itertools
+import shutil
 import subprocess
 import time
 import unittest
+from unittest import TestResult
 
 import pytest
 
-from pykiso import CChannel, Flasher, message, test_suite
-from pykiso.lib.auxiliaries import example_test_auxiliary
+from pykiso import CChannel, Flasher, cli, message, test_suite
+from pykiso.lib.auxiliaries import dut_auxiliary
 from pykiso.lib.connectors import cc_example
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
@@ -158,7 +161,7 @@ def CustomTestCaseAndSuite(request):
     class InitTestCaseAndSuite:
         def __init__(self):
             self.channel_in_use = cc_example.CCExample
-            self.auxiliary_in_use = example_test_auxiliary.ExampleAuxiliary
+            self.auxiliary_in_use = dut_auxiliary.DUTAuxiliary
             self.connectors = []
             self.auxiliaries = []
             self.suite = unittest.TestSuite()
@@ -305,3 +308,133 @@ def tmp_uds_config_ini(tmp_path):
     config_ini = uds_folder / "_config.ini"
     config_ini.write_text(uds_create_config())
     return config_ini
+
+
+TestResult.__test__ = False
+
+
+@pytest.fixture(scope="function")
+def tmp_test(request, tmp_path):
+    # use a common tmp_path for all test modules
+    tmp_base = tmp_path.parent / "tests"
+
+    cli.log_options = cli.LogOptions(None, "ERROR", None)
+
+    aux1, aux2, should_fail = request.param
+    ts_folder = tmp_base / f"test_suite_{aux1}_{aux2}"
+    ts_folder.mkdir(parents=True)
+    tc_file = ts_folder / f"test_{aux1}_{aux2}.py"
+    tc_content = create_test_case(aux1, aux2, should_fail)
+    tc_file.write_text(tc_content)
+
+    config_file = tmp_base / f"{aux1}_{aux2}.yaml"
+    cfg_content = create_config(aux1, aux2, f"test_suite_{aux1}_{aux2}")
+    config_file.write_text(cfg_content)
+
+    yield config_file
+
+    # and clean it up afterwards
+    shutil.rmtree(str(tmp_base))
+
+
+def create_config(aux1, aux2, suite_dir):
+    cfg = (
+        """auxiliaries:
+  """
+        + aux1
+        + """:
+    connectors:
+        com: chan1
+    config: null
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+  """
+        + aux2
+        + """:
+    connectors:
+        com:   chan2
+        flash: chan3
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+connectors:
+  chan1:
+    config: null
+    type: pykiso.lib.connectors.cc_example:CCExample
+  chan2:
+    type: pykiso.lib.connectors.cc_example:CCExample
+  chan3:
+    config: null
+    type: pykiso.lib.connectors.cc_flasher_example:FlasherExample
+test_suite_list:
+- suite_dir: """
+        + suite_dir
+        + """
+  test_filter_pattern: '*.py'
+  test_suite_id: 1
+    """
+    )
+    return cfg
+
+
+def create_test_case(aux1, aux2, should_fail):
+    error = "assert False" if should_fail else "pass"
+    tc = (
+        """
+import pykiso
+import logging
+
+from pykiso.auxiliaries import """
+        + aux1
+        + """, """
+        + aux2
+        + """
+
+
+@pykiso.define_test_parameters(
+    suite_id=1,
+    tag={"variant": ["variant1"], "branch_level": ["daily", "nightly"]},
+    aux_list=["""
+        + aux1
+        + ","
+        + aux2
+        + """])
+class SuiteSetup(pykiso.RemoteTestSuiteSetup):
+    pass
+
+
+@pykiso.define_test_parameters(suite_id=1,
+    tag={"variant": ["variant2"], "branch_level": ["daily", "nightly"]},
+    aux_list=["""
+        + aux1
+        + ","
+        + aux2
+        + """])
+class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
+    pass
+
+
+@pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=["""
+        + aux1
+        + """])
+class MyTest(pykiso.RemoteTest):
+    def test_run(self):
+        logging.info("I HAVE RUN 0.1.1!")
+        """
+        + error
+        + """
+
+@pykiso.define_test_parameters(suite_id=1, case_id=2, aux_list=["""
+        + aux2
+        + """])
+class MyTest2(pykiso.BasicTest):
+    def test_run(self):
+        pass
+
+
+@pykiso.define_test_parameters(suite_id=1, case_id=3, aux_list=["""
+        + aux1
+        + """])
+class MyTest3(pykiso.BasicTest):
+    def test_run(self):
+        pass
+    """
+    )
+    return tc

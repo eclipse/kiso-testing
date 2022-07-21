@@ -7,41 +7,43 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import multiprocessing
-import queue
-
 import pytest
 
-from pykiso.lib.connectors.cc_proxy import CCProxy, Queue
+from pykiso.lib.connectors.cc_proxy import CCProxy, queue
+
+
+def test_constructor():
+    proxy_inst = CCProxy()
+
+    assert proxy_inst._tx_callback is None
+    assert proxy_inst.queue_out is None
+    assert proxy_inst.timeout == 1
 
 
 def test_cc_open():
     with CCProxy() as proxy_inst:
-        assert isinstance(proxy_inst.queue_in, type(Queue()))
-        assert isinstance(proxy_inst.queue_out, type(Queue()))
-        assert proxy_inst.timeout == 1
+        assert isinstance(proxy_inst.queue_out, queue.Queue)
 
 
 def test_cc_close():
     proxy_inst = CCProxy()
-    proxy_inst._cc_open()
-    proxy_inst.queue_in.put(b"\x01\x02")
-    proxy_inst.queue_out.put(b"\x01\x02")
-    proxy_inst._cc_close()
+    proxy_inst.open()
+    old_out = proxy_inst.queue_out
+    proxy_inst.close()
 
-    assert isinstance(proxy_inst.queue_in, type(Queue()))
-    assert isinstance(proxy_inst.queue_out, type(Queue()))
-    assert proxy_inst.queue_in.empty()
-    assert proxy_inst.queue_out.empty()
+    assert proxy_inst.queue_out != old_out
 
 
 def test_cc_send():
-    with CCProxy() as proxy_inst:
-        proxy_inst._cc_send(b"\x12\x34\x56", raw=True, remote_id=0x500)
-        arg, kwargs = proxy_inst.queue_in.get()
-        assert arg[0] == b"\x12\x34\x56"
+    def tx_func(con, *args, **kwargs):
+        assert isinstance(con, CCProxy)
+        assert args[0] == b"\x12\x34\x56"
         assert kwargs["raw"] == True
         assert kwargs["remote_id"] == 0x500
+
+    with CCProxy() as proxy_inst:
+        proxy_inst.attach_tx_callback(tx_func)
+        proxy_inst._cc_send(b"\x12\x34\x56", raw=True, remote_id=0x500)
 
 
 @pytest.mark.parametrize(
@@ -64,5 +66,32 @@ def test_cc_receive_timeout():
     with CCProxy() as proxy_inst:
         proxy_inst.timeout = 0.01
         response = proxy_inst._cc_receive()
+
         assert response["msg"] is None
         assert response.get("remote_id") is None
+
+
+def test_detached_tx_callback():
+    with CCProxy() as proxy_inst:
+        proxy_inst._tx_callback = True
+        proxy_inst.detach_tx_callback()
+        assert proxy_inst._tx_callback is None
+
+
+def test_attached_tx_callback():
+    func = lambda x: x
+    with CCProxy() as proxy_inst:
+        proxy_inst.attach_tx_callback(func)
+        assert proxy_inst._tx_callback == func
+
+
+def test_attached_tx_callback_replace():
+    func_1 = lambda x: x
+    func_2 = lambda x: x + 1
+
+    with CCProxy() as proxy_inst:
+        proxy_inst.attach_tx_callback(func_1)
+        assert proxy_inst._tx_callback == func_1
+        proxy_inst.attach_tx_callback(func_2)
+        assert proxy_inst._tx_callback != func_1
+        assert proxy_inst._tx_callback == func_2

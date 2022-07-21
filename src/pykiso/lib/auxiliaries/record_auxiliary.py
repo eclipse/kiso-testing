@@ -26,9 +26,14 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from pykiso import CChannel, SimpleAuxiliaryInterface
+from pykiso import CChannel
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+    open_connector,
+)
 
 log = logging.getLogger(__name__)
 
@@ -62,7 +67,7 @@ class StringIOHandler(io.StringIO):
             self.write(data)
 
 
-class RecordAuxiliary(SimpleAuxiliaryInterface):
+class RecordAuxiliary(DTAuxiliaryInterface):
     """Auxiliary used to record a connectors receive channel."""
 
     LOG_HEADER = "Received data :"
@@ -94,8 +99,9 @@ class RecordAuxiliary(SimpleAuxiliaryInterface):
         :param manual_start_record: flag to not start recording on
             auxiliary creation
         """
-        self.is_proxy_capable = True
-        super().__init__(**kwargs)
+        super().__init__(
+            is_proxy_capable=True, tx_task_on=False, rx_task_on=False, **kwargs
+        )
         self.channel = com
         self.is_active = is_active
         self.timeout = timeout
@@ -493,3 +499,15 @@ class RecordAuxiliary(SimpleAuxiliaryInterface):
             time.sleep(interval)
         logging.info(f"Received message after {(time.time() - start):.1f}s")
         return True
+
+    def _run_command(self, cmd_message: Any, cmd_data: Optional[bytes]) -> None:
+        """Not used.
+
+        Simply respect the interface.
+        """
+
+    def _receive_message(self, timeout_in_s: float) -> None:
+        """Not used.
+
+        Simply respect the interface.
+        """

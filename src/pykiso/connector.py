@@ -72,45 +72,39 @@ class Connector(abc.ABC):
 class CChannel(Connector):
     """Abstract class for coordination channel."""
 
-    def __init__(self, processing=False, **kwargs):
-        """constructor"""
+    def __init__(self, processing=False, **kwargs: dict) -> None:
+        """Constructor.
+
+        :param processing: if multiprocessing object is used.
+        """
         super().__init__(**kwargs)
         if processing:
-            self._lock = multiprocessing.RLock()
+            self._lock_tx = multiprocessing.RLock()
+            self._lock_rx = multiprocessing.RLock()
+            self._lock = multiprocessing.Lock()
         else:
-            self._lock = threading.RLock()
+            self._lock_tx = threading.RLock()
+            self._lock_rx = threading.RLock()
+            self._lock = threading.Lock()
 
     def open(self) -> None:
-        """Open a thread-safe channel.
-
-        :raise ConnectionRefusedError: when lock acquire failed
-        """
-        # If we successfully lock the channel, open it
-        if self._lock.acquire(False):
+        """Open a thread-safe channel."""
+        with self._lock:
             self._cc_open()
-        else:
-            raise ConnectionRefusedError
 
     def close(self) -> None:
         """Close a thread-safe channel."""
-        # Close channel and release lock
-        self._cc_close()
-        self._lock.release()
+        with self._lock:
+            self._cc_close()
 
-    def cc_send(self, msg: MsgType, **kwargs):
+    def cc_send(self, msg: MsgType, **kwargs) -> None:
         """Send a thread-safe message on the channel and wait for an acknowledgement.
 
         :param msg: message to send
         :param kwargs: named arguments
-
-        :raise ConnectionRefusedError: when lock acquire failed
         """
-        # TODO should block be a parameter?
-        if self._lock.acquire(False):
+        with self._lock_tx:
             self._cc_send(msg=msg, **kwargs)
-        else:
-            raise ConnectionRefusedError
-        self._lock.release()
 
     def cc_receive(self, timeout: float = 0.1, size: Optional[int] = None) -> dict:
         """Read a thread-safe message on the channel and send an acknowledgement.
@@ -118,26 +112,18 @@ class CChannel(Connector):
         :param timeout: time in second to wait for reading a message
         :param size: size of the message to receive
 
-        :return: Message if successful, None else
-
-        :raise ConnectionRefusedError: when lock acquire failed
+        :return: the received message
         """
-        received_message = None
-        if self._lock.acquire(False):
-            # Store received message
-            received_message = self._cc_receive(timeout=timeout, size=size)
-        else:
-            raise ConnectionRefusedError
-        self._lock.release()
-        return received_message
+        with self._lock_rx:
+            return self._cc_receive(timeout=timeout, size=size)
 
     @abc.abstractmethod
-    def _cc_open(self):
+    def _cc_open(self) -> None:
         """Open the channel."""
         pass
 
     @abc.abstractmethod
-    def _cc_close(self):
+    def _cc_close(self) -> None:
         """Close the channel."""
         pass
 
@@ -148,7 +134,6 @@ class CChannel(Connector):
         :param msg: Message to send out
         :param kwargs: named arguments
         """
-        # TODO define exception to raise?
         pass
 
     @abc.abstractmethod

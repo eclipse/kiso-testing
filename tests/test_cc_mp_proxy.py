@@ -7,11 +7,9 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import multiprocessing
-
 import pytest
 
-from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
+from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy, multiprocessing, queue
 
 
 def test_constructor():
@@ -32,3 +30,39 @@ def test_queue_reference():
     # check if the same references of both queue in/out is used
     assert con_inst.queue_in == start_queue_in
     assert con_inst.queue_out == start_queue_out
+
+
+def test_cc_send():
+    with CCMpProxy() as proxy_inst:
+        proxy_inst._cc_send(b"\x12\x34\x56", remote_id=0x500)
+        arg, kwargs = proxy_inst.queue_in.get()
+
+        assert arg[0] == b"\x12\x34\x56"
+        assert kwargs["remote_id"] == 0x500
+
+
+@pytest.mark.parametrize(
+    "timeout, raw, raw_response",
+    [
+        (0.200, True, {"msg": b"\x12\x34\x56", "remote_id": None}),
+        (0, False, {"msg": b"\x12", "remote_id": 0x500}),
+        (None, None, {"msg": None, "remote_id": None}),
+    ],
+)
+def test_cc_receive(timeout, raw, raw_response):
+    with CCMpProxy() as proxy_inst:
+        proxy_inst.queue_out.put(raw_response)
+        resp = proxy_inst._cc_receive(timeout)
+        if not raw:
+            resp["msg"] = resp["msg"].parse_packet()
+        assert resp["msg"] == raw_response["msg"]
+        assert resp["remote_id"] == raw_response["remote_id"]
+
+
+def test_cc_receive_timeout():
+    with CCMpProxy() as proxy_inst:
+        proxy_inst.timeout = 0.01
+        response = proxy_inst._cc_receive()
+
+        assert response["msg"] is None
+        assert response.get("remote_id") is None

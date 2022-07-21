@@ -23,16 +23,20 @@ import logging
 import queue
 import re
 import time
-from typing import List, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
-from pykiso import CChannel, SimpleAuxiliaryInterface
+from pykiso import CChannel
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+)
 
 from .lib_scpi_commands import LibSCPI
 
 log = logging.getLogger(__name__)
 
 
-class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
+class InstrumentControlAuxiliary(DTAuxiliaryInterface):
     """Auxiliary used to communicate via a VISA connector using the SCPI
     protocol.
     """
@@ -54,7 +58,9 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
         :param output_channel: output channel to use on the instrument
             currently in use (if more than one)
         """
-        super().__init__(**kwargs)
+        super().__init__(
+            is_proxy_capable=False, tx_task_on=False, rx_task_on=False, **kwargs
+        )
         self.channel = com
         self.instrument = instrument
         self.write_termination = write_termination
@@ -232,14 +238,23 @@ class InstrumentControlAuxiliary(SimpleAuxiliaryInterface):
             return False
         return True
 
+    @close_connector
     def _delete_auxiliary_instance(self) -> bool:
-        """Close the connector.
+        """Close the connector communication.
 
-        :return: always True
+        :return: True if the connectors is closed otherwise False
         """
-        log.info("Delete auxiliary instance")
-        try:
-            self.channel.close()
-        except Exception:
-            log.exception("Unable to close the instrument.")
+        log.info("Auxiliary instance deleted")
         return True
+
+    def _run_command(self, cmd_message: Any, cmd_data: Optional[bytes]) -> None:
+        """Not used.
+
+        Simply respect the interface.
+        """
+
+    def _receive_message(self, timeout_in_s: float) -> None:
+        """Not used.
+
+        Simply respect the interface.
+        """

@@ -19,24 +19,149 @@ Device Under Test Auxiliary
 .. currentmodule:: dut_auxiliary
 
 """
-import logging
-from typing import Optional
+from __future__ import annotations
 
-from pykiso import AuxiliaryInterface, CChannel, Flasher, Message, message
+import functools
+import logging
+import queue
+from typing import Callable, Optional
+
+from pykiso import CChannel, Flasher, Message, message
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+    flash_target,
+    open_connector,
+)
 from pykiso.lib.connectors.cc_example import CCExample
 from pykiso.lib.connectors.cc_rtt_segger import CCRttSegger
 from pykiso.lib.connectors.cc_tcp_ip import CCTcpip
 from pykiso.lib.connectors.cc_visa import VISAChannel
+from pykiso.types import MsgType
 
 log = logging.getLogger(__name__)
 
+MESSAGE_TYPE = message.MessageType
+COMMAND_TYPE = message.MessageCommandType
+REPORT_TYPE = message.MessageReportType
 
-class DUTAuxiliary(AuxiliaryInterface):
+
+def retry_command(tries: int) -> Callable:
+    """Force to resend the command a define number of times in case of
+    failure.
+
+    :param tries: maximum number of try to get the acknowledgement from
+        the DUT
+
+    :return: inner decorator function
+    """
+
+    def inner_retry(func: Callable) -> Callable:
+        """Inner decorator function.
+
+        :param func: decorated method
+
+        :return: decorator inner function
+        """
+
+        @functools.wraps(func)
+        def handle_ack(*arg: tuple, **kwargs: dict) -> bool:
+            """Based on the run_command method return, just resend the
+            command.
+
+            :param arg: positional arguments
+            :param kwargs: named arguments
+
+            :return: True if the command was acknowledged otherwise
+                False
+            """
+            for idx in range(tries):
+                log.info(f"command try n: {idx}")
+                if func(*arg, **kwargs):
+                    return True
+            return False
+
+        return handle_ack
+
+    return inner_retry
+
+
+def check_acknowledgement(func: Callable) -> Callable:
+    """Check ifthe DUT has acknowledge the previous sent command.
+
+    :param func: decorated method
+
+    :return: decorator inner function
+    """
+
+    def inner_check(self, *arg: tuple, **kwargs: dict) -> bool:
+        """Check if an ACK message was received and if the token is
+        valid.
+
+        :param self: aux instance
+        :param arg: positional arguments
+        :param kwargs: named arguments
+
+        :return: True if the command was acknowledged otherwise
+            False
+        """
+        response = func(self, *arg, **kwargs)
+
+        # nothing was received
+        if response is None:
+            log.error("Nothing received from the DUT for the current request!")
+            return False
+
+        is_ack = self.current_cmd.check_if_ack_message_is_matching(response)
+
+        # invalid token or received message not type of ACK
+        if is_ack is False:
+            log.warning(f"Received {response} not matching {self.current_cmd}!")
+            return False
+
+        log.info("Command was acknowledged by the DUT!")
+        return True
+
+    return inner_check
+
+
+def restart_aux(func: Callable) -> Callable:
+    """Force he auxiliary restart if the command is not acknowledge
+
+    :param func: decorated method
+
+    :return: decorator inner function
+    """
+
+    def inner_start(self, *arg: tuple, **kwargs: dict) -> bool:
+        """Based on the run_command method return, force the auxiliary
+        to create a brand new communication stream with the DUT (call of
+        delete/create instance).
+
+        :param self: aux instance
+        :param arg: positional arguments
+        :param kwargs: named arguments
+
+        :return: True if the command was acknowledged otherwise
+            False
+        """
+        state = func(self, *arg, **kwargs)
+
+        # restart the whole auxiliary to have a brand new connection
+        # with the DUT
+        if state is False:
+            self.delete_instance()
+            self.create_instance()
+        return state
+
+    return inner_start
+
+
+class DUTAuxiliary(DTAuxiliaryInterface):
     """Device Under Test(DUT) auxiliary implementation."""
 
     def __init__(
         self,
-        name: str = None,
         com: CChannel = None,
         flash: Flasher = None,
         **kwargs,
@@ -47,263 +172,240 @@ class DUTAuxiliary(AuxiliaryInterface):
         :param com: Communication connector
         :param flash: flash connector
         """
-        super().__init__(name=name, **kwargs)
+        super().__init__(
+            is_proxy_capable=False, tx_task_on=True, rx_task_on=True, **kwargs
+        )
         self.channel = com
         self.flash = flash
-        self._is_suspend = False
-        log.debug(f"com is {com}")
-        log.debug(f"flash is {flash}")
+        self.current_cmd = None
 
+    @retry_command(tries=1)
+    @check_acknowledgement
+    def send_ping_command(self, timeout: int) -> bool:
+        """Send ping command to the DUT.
+
+        :param timeout: how long to wait for an acknowledgement from the
+            DUT (seconds)
+
+        :return: True if the command is acknowledged otherwise False
+        """
+
+        # TODO: remove it when DUT start sending message at start-up
+        # clean the reception queue due to a bug on embedded TestApp,
+        while not self.queue_out.empty():
+            self.queue_out.get_nowait()
+
+        self.current_cmd = message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.PING)
+        log.info(f"send ping request: {self.current_cmd}")
+        return self.run_command(
+            cmd_message=self.current_cmd,
+            cmd_data=None,
+            blocking=True,
+            timeout_in_s=timeout,
+        )
+
+    @retry_command(tries=2)
+    @check_acknowledgement
+    def send_fixture_command(self, command: message.Message, timeout: int) -> bool:
+        """Send command related to test execution (test case setup,
+        test case run...) to the DUT.
+
+        :param command: command to execute on DUT side
+        :param timeout: how long to wait for an acknowledgement from the
+            DUT (seconds)
+
+        :return: True if the command is acknowledged otherwise False
+        """
+        self.current_cmd = command
+        log.info(f"send request: {self.current_cmd}")
+        return self.run_command(
+            cmd_message=self.current_cmd,
+            cmd_data=None,
+            blocking=True,
+            timeout_in_s=timeout,
+        )
+
+    @retry_command(tries=2)
+    @restart_aux
+    @check_acknowledgement
+    def send_abort_command(self, timeout: int):
+        """Send abort command to the DUT.
+
+        .. warning:: if the DUT doesn't acknowledge to the abort command
+            the auxiliary is restarted, a brand new connection is
+            established
+
+        :param timeout: how long to wait for an acknowledgement from the
+            DUT (seconds)
+
+        :return: True if the command is acknowledged otherwise False
+        """
+        self.current_cmd = message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.ABORT)
+        log.info(f"send abort request: {self.current_cmd}")
+        return self.run_command(
+            cmd_message=self.current_cmd,
+            cmd_data=None,
+            blocking=True,
+            timeout_in_s=timeout,
+        )
+
+    def create_instance(self) -> bool:
+        """Create DUT auxiliary instance.
+
+        Overridden from base interface in order to use the TX and RX
+        tasks, and not duplicate auxiliary method.
+        Execute directly the ping-pong to initiate the communication
+        with the DUT.
+
+        :return: True if the auxiliary is created and ping-pong
+            successful otherwise False
+
+        :raises AuxiliaryCreationError: if instance creation failed
+        """
+        super().create_instance()
+        return self.send_ping_command(timeout=2)
+
+    @flash_target
+    @open_connector
     def _create_auxiliary_instance(self) -> bool:
         """Create auxiliary instance flash and connect.
 
         :return: True if everything was successful otherwise False
         """
+        log.info("Auxiliary instance created")
+        return True
 
-        log.info("Create auxiliary instance")
-
-        # Flash the device if flash connector provided
-        if self.flash is not None and not self._is_suspend:
-            log.info("Flash target")
-            try:
-                with self.flash as flasher:
-                    flasher.flash()
-            except Exception as e:
-                # stop the thread if the flashing failed
-                log.exception(f"Error occurred during flashing : {e}")
-                log.fatal("Stopping the auxiliary")
-                self.stop()
-                return False  # Prevent to open channels by returning error state
-
-        # Enable the communication through the connector
-        log.info("Open channel communication")
-        return_code = False
-        try:
-            self.channel.open()
-        except Exception:
-            log.exception("Unable to open channel communication")
-            self.stop()
-        else:
-            # Ping-pong test
-            return_code = self._send_ping_command(2, 1)
-
-        # Return output
-        return return_code
-
+    @close_connector
     def _delete_auxiliary_instance(self) -> bool:
         """Close the connector communication.
 
         :return: always True
         """
-
-        log.info("Close the DUT auxiliary instance")
-        self.channel.close()
+        log.info("Auxiliary instance deleted")
         return True
 
-    def suspend(self) -> None:
-        """Suspend DutAuxiliary's run.
+    def evaluate_response(self, response: message.Message) -> bool:
+        """Evaluate if the received message is knowned and type of
+        report.
 
-        Set _is_suspend flag to True to avoid a re-flash sequence.
+        .. note:: if a log message type is received just log it
+
+        :param response: reeceived response
+
+        :return: True if the response is a report otherwise False
         """
-        self._is_suspend = True
-        super().suspend()
+        if response.get_message_type() == MESSAGE_TYPE.REPORT:
+            self.evaluate_report(report_msg=response)
+            return True
 
-    def resume(self) -> None:
-        """Resume DutAuxiliary's run.
+        if response.get_message_type() == MESSAGE_TYPE.LOG:
+            log.info(f"Logging message received from {self.name}: {response}")
+            return False
 
-        Set _is_suspend flag to False in order to re-activate flash
-        sequence in case of e.g. a futur abort command.
+        if response.get_message_type() == MESSAGE_TYPE.ACK:
+            log.warning(f"ACK message received from {self.name}: {response}")
+            return False
+
+        log.warning(f"Message type unknown received from {self.name}: {response}")
+        return False
+
+    def evaluate_report(self, report_msg: message.Message) -> None:
+        """Evaluate the report type and log the appropriated message.
+
+        :param report_msg: reeceived report message
         """
-        self._is_suspend = False
-        super().resume()
+        if report_msg.get_message_sub_type() == REPORT_TYPE.TEST_FAILED:
+            log.error(
+                f"Report with verdict FAILED received from {self.name} : {report_msg}"
+            )
+        elif report_msg.get_message_sub_type() == REPORT_TYPE.TEST_PASS:
+            log.info(
+                f"Report with verdict PASS received from {self.name} : {report_msg}"
+            )
+
+        elif report_msg.get_message_sub_type() == REPORT_TYPE.TEST_NOT_IMPLEMENTED:
+            log.warning(
+                f"Report with verdict NOT IMPLEMENTED from {self.name} : {report_msg}"
+            )
+        else:
+            log.error(f"Report type unknown received from {self.name} : {report_msg}")
+
+    def wait_and_get_report(
+        self, blocking: bool = False, timeout_in_s: int = 0
+    ) -> Optional[message.Message]:
+        """Wait for the report coming from the DUT.
+
+        :param blocking: True: wait for timeout to expire, False: return
+             immediately
+        :param timeout_in_s: if blocking, wait the defined time in
+            seconds
+
+        :return: if a report is received return it otherwise None
+        """
+        try:
+            is_report = False
+            while not is_report:
+                response = self.queue_out.get(blocking, timeout_in_s)
+                is_report = self.evaluate_response(response)
+            return response
+        except queue.Empty:
+            return None
 
     def _run_command(
-        self, cmd_message: message.Message, cmd_data: bytes = None
-    ) -> bool:
-        """Run a command for the auxiliary.
+        self, cmd_message: message.Message, cmd_data: bytes = None, raw: bool = False
+    ) -> None:
+        """Simply send the given command using the associated channel.
 
-        :param cmd_message: command in form of a message to run
-        :param cmd_data: payload data for the command
-
-        :return: True - Successfully received bv the instance / False - Failed sending
+        :param cmd_message: command to send
+        :param cmd_data: not use
         """
+        try:
+            # We serialize the message if raw is false and we sent it
+            # The connector CCexample await a Message and not a Bytes so we do nothing
+            if isinstance(self.channel, CCExample):
+                pass
+            elif not raw and isinstance(cmd_message, Message):
+                cmd_message = cmd_message.serialize()
 
-        log.info(f"Send test request: {cmd_message}")
-        return self._send_and_wait_ack(cmd_message, 2, 2)
-
-    def _abort_command(self) -> bool:
-        """Send an abort command and reset the auxiliary if needed.
-
-        :return: True if ACK is received otherwise False
-        """
-
-        log.info("Send abort request")
-        # Try a soft abort
-        msg = message.Message(
-            message.MessageType.COMMAND, message.MessageCommandType.ABORT
-        )  # TODO verify if this generation can happened somewhere else
-        result = self._send_and_wait_ack(msg, 2, 2)
-        # If not successful, do hard reset
-        if result is False:
-            self._delete_auxiliary_instance()
-            self._create_auxiliary_instance()
-        return result
+            # So we send the Message or the bytes
+            self.channel.cc_send(msg=cmd_message)
+        except Exception:
+            log.exception(
+                f"encountered error while sending message '{cmd_message}' to {self.channel}"
+            )
 
     def _receive_message(
-        self, timeout_in_s: float, raw: bool = False
-    ) -> message.Message:
+        self, timeout_in_s: float, raw: bool = False, size: Optional[int] = None
+    ) -> None:
         """Get message from the device under test.
 
-        :param timeout_in_s: Time in ms to wait for one try
-        :param raw: if raw is True the message is raw bytes, otherwise Message type like
-
-        :returns: receive message
-        """
-        # Read message on the channel
-        received_message = self._receive_msg(timeout_in_s=timeout_in_s, raw=raw)
-        if received_message is not None:
-            # Send ack
-            msg_to_send = received_message.generate_ack_message(
-                message.MessageAckType.ACK
-            )
-            if not isinstance(msg_to_send, message.Message):
-                print(msg_to_send)
-            self._send_message(message_to_send=msg_to_send, raw=raw)
-            # Return message
-        return received_message
-
-    def _send_ping_command(self, timeout: int, tries: int, raw: bool = False) -> bool:
-        """Ping Pong test to confirm the communication state.
-
-        :param timeout: Time in ms to wait for one try
-        :param tries: Number of tries to send the message
-
-        :return: True if the target answer
-        """
-        number_of_tries = 0
-        is_pong_ack = False
-
-        # Empty memory in case target start by sending a message
-        self._receive_msg(timeout_in_s=1, raw=raw)
-        # Try Ping-Pong
-        while number_of_tries < tries:
-            log.info(f"Ping-Pong try n: {number_of_tries}")
-
-            # Increase number of tries
-            number_of_tries += 1
-
-            # Send a ping message
-            ping_request = message.Message(test_suite=0, test_case=0)
-            self._send_message(message_to_send=ping_request, raw=raw)
-
-            # Receive the message
-            pong_response = self._receive_msg(timeout_in_s=timeout, raw=raw)
-
-            # Validate ping pong
-            log.debug(f"ping: {ping_request}")
-            log.debug(f"pong: {pong_response}")
-            # testing if is tuple instance to avoid infinite loop when
-            # DUT auxiliary is bounded with a proxy auxiliary
-            if pong_response is not None and not isinstance(pong_response, tuple):
-                if ping_request.check_if_ack_message_is_matching(pong_response):
-                    log.info("Ping-Pong succeed")
-                    is_pong_ack = True
-                    break
-                else:
-                    log.warning(
-                        f"Received {pong_response} not matching {ping_request}!"
-                    )
-                    continue  # A NACK got received # TODO later on we should have "not supported" and ignore it than.
-
-        return is_pong_ack
-
-    def _send_and_wait_ack(
-        self,
-        message_to_send: message.Message,
-        timeout: int,
-        tries: int,
-        raw: bool = False,
-    ) -> bool:
-        """Send via the channel a message and wait for an acknowledgement.
-
-        :param message_to_send: Message you want to send out
-        :param timeout: Time in ms to wait for one try
-        :param tries: Number of tries to send the message
-
-        :returns: True - Ack, False - Nack
-        """
-
-        number_of_tries = 0
-        result = False
-
-        while number_of_tries < tries:
-            log.info(f"Run send try n: {number_of_tries}")
-
-            # Increase number of tries
-            number_of_tries += 1
-
-            # Send the message
-            self._send_message(message_to_send, raw)
-
-            received_message = self._receive_msg(timeout, raw)
-
-            # Check the outcome
-            if received_message is None:
-                continue  # Next try will occur
-            else:
-                log.debug(f"message_to_send  {message_to_send}")
-                log.debug(f"received_message {received_message}")
-                if message_to_send.check_if_ack_message_is_matching(received_message):
-                    log.info(f"{message_to_send} sent")
-                    result = True
-                    break
-                else:
-                    log.warning(
-                        f"Received {received_message} not matching with {message_to_send}!"
-                    )
-                    continue  # A NACK got received # TODO later on we should have "not supported" and ignore it than.
-        return result
-
-    def _send_message(self, message_to_send: message.Message, raw: bool = False):
-        """Function to modify the message if we want it raw or not.
-
-        :param message_to_send: Message you want to send out
-        :param tries: Number of tries to send the message
-
-        """
-
-        # We serialize the message if raw is false and we sent it
-        # The connector CCexample await a Message and not a Bytes so we do nothing
-        if isinstance(self.channel, CCExample):
-            pass
-        elif not raw and isinstance(message_to_send, Message):
-            message_to_send = message_to_send.serialize()
-
-        # So we send the Message or the bytes
-        self.channel.cc_send(msg=message_to_send)
-
-    def _receive_msg(
-        self, timeout_in_s: float, raw: bool = False, size: Optional[int] = None
-    ):
-        """Receive the message and return it raw if wanted or a Message and
-        treat the case where the channel is cc_rtt_segger
-
-        :param timeout_in_s: Time in ms to wait for one try
-        :param raw: if raw is True the message is raw bytes, otherwise Message type like
-        :param size: size of the message to read
-        :returns: receive message
+        :param timeout_in_s: Time in seconds to wait for an answer
         """
         # For the CCrttSegger we define the size of the message to receive
         if isinstance(self.channel, (CCRttSegger)) and not raw:
             size = Message().header_size
         # We get the message
         recv_response = self.channel.cc_receive(timeout_in_s, size=size)
-        msg_received = recv_response.get("msg")
+        response = recv_response.get("msg")
         # Some channel does differently so we separate case
         if not raw and isinstance(self.channel, CCTcpip):
-            msg_received = msg_received.decode().strip()
+            response = response.decode().strip()
         elif raw and isinstance(self.channel, VISAChannel):
-            msg_received.encode()
-        elif not raw and msg_received is not None and isinstance(msg_received, bytes):
-            msg_received = Message.parse_packet(msg_received)
-        return msg_received
+            response.encode()
+        elif not raw and response is not None and isinstance(response, bytes):
+            response = Message.parse_packet(response)
+
+        if response is None:
+            return
+
+        # If a message was received just automatically acknowledge it
+        # and populate the queue_out
+        if response.msg_type != MESSAGE_TYPE.ACK:
+            ack_cmd = response.generate_ack_message(message.MessageAckType.ACK)
+            try:
+                self.channel.cc_send(msg=ack_cmd, raw=False)
+            except Exception:
+                log.exception(
+                    f"encountered error while sending acknowledge message for {response}!"
+                )
+        self.queue_out.put(response)

@@ -12,3 +12,17 @@ Go in default session
     ${response} =  Send uds raw    \x10\x01    uds_aux
 
     Log  ${response}
+
+Use tester present sender
+    [Documentation]    If no communication is exchanged with the client for more than 5
+    ...                seconds the control unit automatically exits the current session and
+    ...                returns to the "Default Session" back, and might go to sleep mode.
+    ...
+    ...                To avoid this issue, if test steps take too long between uds commands,
+    ...                the tester present sender can be used. It will send
+    ...                at a defined period a Tester Present, to signal to the device that
+    ...                the client is still present.
+
+    Start tester present with    1  seconds    uds_aux
+    ${response} =  Send uds raw    \x10\x03    uds_aux
+    Stop tester present

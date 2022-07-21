@@ -55,13 +55,19 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 from pykiso import AuxiliaryInterface, CChannel
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+    open_connector,
+)
+from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_setup.config_registry import ConfigRegistry
 from pykiso.test_setup.dynamic_loader import PACKAGE
 
 log = logging.getLogger(__name__)
 
 
-class ProxyAuxiliary(AuxiliaryInterface):
+class ProxyAuxiliary(DTAuxiliaryInterface):
     """Proxy auxiliary for multi auxiliaries communication handling."""
 
     def __init__(
@@ -77,11 +83,17 @@ class ProxyAuxiliary(AuxiliaryInterface):
 
         :param com: Communication connector
         :param aux_list: list of auxiliary's alias
+        :param activate_trace: log all received messages in a
+            dedicated trace file or not
+        :param trace_dir: where to place the trace
+        :param trace_name: trace's file name
         """
+        super().__init__(
+            is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs
+        )
         self.channel = com
-        self.logger = ProxyAuxiliary._init_trace(activate_trace, trace_dir, trace_name)
+        self.logger = self._init_trace(activate_trace, trace_dir, trace_name)
         self.proxy_channels = self.get_proxy_con(aux_list)
-        super().__init__(**kwargs)
 
     @staticmethod
     def _init_trace(
@@ -132,9 +144,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
 
         return logger
 
-    def get_proxy_con(
-        self, aux_list: List[Union[str, AuxiliaryInterface]]
-    ) -> Tuple[AuxiliaryInterface]:
+    def get_proxy_con(self, aux_list: List[Union[str]]) -> Tuple:
         """Retrieve all connector associated to all given existing Auxiliaries.
 
         If auxiliary alias exists but auxiliary instance was not created
@@ -150,15 +160,15 @@ class ProxyAuxiliary(AuxiliaryInterface):
         for aux in aux_list:
             # aux_list can contain a auxiliary instance just grab the
             # channel
-            if isinstance(aux, AuxiliaryInterface):
-                self._check_compatibility(aux)
+            if isinstance(aux, (AuxiliaryInterface, DTAuxiliaryInterface)):
+                self._check_aux_compatibility(aux)
                 channel_inst.append(aux.channel)
                 continue
             # check the system module in order to get the auxiliary
             # instance
             aux_inst = sys.modules.get(f"{PACKAGE}.auxiliaries.{aux}")
             if aux_inst is not None:
-                self._check_compatibility(aux_inst)
+                self._check_aux_compatibility(aux_inst)
                 channel_inst.append(aux_inst.channel)
             # check if the given aux_name is in the available aux
             # alias list
@@ -167,18 +177,21 @@ class ProxyAuxiliary(AuxiliaryInterface):
                     f"Auxiliary : {aux} is not using import magic mechanism (pre-loaded)"
                 )
                 # load it using ConfigRegistry _aux_cache
-                aux_inst = ConfigRegistry._linker._aux_cache.get_instance(aux)
-                self._check_compatibility(aux_inst)
+                aux_inst = ConfigRegistry.get_aux_by_alias(aux)
+                self._check_aux_compatibility(aux_inst)
                 channel_inst.append(aux_inst.channel)
             # the given auxiliary alias doesn't exist or refer to a
             # invalid one
             else:
                 log.error(f"Auxiliary : {aux} doesn't exist")
+        # Finally just check if auxes/connectors are compatible with
+        # the proxy aux
+        self._check_channels_compatibility(channel_inst)
 
         return tuple(channel_inst)
 
     @staticmethod
-    def _check_compatibility(aux: AuxiliaryInterface) -> None:
+    def _check_aux_compatibility(aux) -> None:
         """Check if the given auxiliary is proxy compatible.
 
         :param aux: auxiliary instance to check
@@ -187,54 +200,79 @@ class ProxyAuxiliary(AuxiliaryInterface):
         """
         if not aux.is_proxy_capable:
             raise NotImplementedError(
-                f"Auxiliary {aux} is not compatible with a proxy auxiliary"
+                f"Auxiliary {aux} is not compatible with a proxy auxiliary!"
             )
 
-    def _create_auxiliary_instance(self) -> bool:
-        """Open current associated channel.
+    @staticmethod
+    def _check_channels_compatibility(channels: List[CChannel]) -> None:
+        """Check if all associated channels are compatible.
 
-        :return: if channel creation is successful return True otherwise false
+        :param channels: all channels collected by the proxy aux
+
+        :raises TypeError: if the connector is not an instance of
+            CCProxy
         """
-        try:
-            log.info("Create auxiliary instance")
-            log.info("Enable channel")
-            self.channel.open()
-            return True
-        except Exception as e:
-            log.exception(f"Error encouting during channel creation, reason : {e}")
-            self.stop()
-            return False
+        for channel in channels:
+            if not isinstance(channel, CCProxy):
+                raise TypeError(f"Channel {channel} is not compatible!")
 
+    def _dispatch_tx_method_to_channels(self) -> None:
+        """Attached public run_command method to all connected proxy
+        channels.
+
+        .. note:: This method use the thread safe method implemented by
+            each proxy channels(attached_tx_callback).
+        """
+        for conn in self.proxy_channels:
+            conn.attach_tx_callback(self.run_command)
+
+    @open_connector
+    def _create_auxiliary_instance(self) -> bool:
+        """Open current associated channel and dispatch tx method.
+
+        :return: if channel creation is successful return True otherwise
+            False
+        """
+        self._dispatch_tx_method_to_channels()
+        log.info("Auxiliary instance created")
+        return True
+
+    @close_connector
     def _delete_auxiliary_instance(self) -> bool:
         """Close current associated channel.
 
-        :return: always True
+        :return: if channel deletion is successful return True otherwise
+            False
         """
-        try:
-            log.info("Delete auxiliary instance")
-            self.channel.close()
-        except Exception as e:
-            log.exception(f"Error encouting during channel closure, reason : {e}")
-        finally:
-            return True
+        log.info("Auxiliary instance deleted")
+        return True
 
-    def _run_command(self) -> None:
-        """Run all commands present in each proxy connectors queue in
-        by sending it over current associated CChannel.
+    def run_command(self, conn: CChannel, *args: tuple, **kwargs: dict) -> None:
+        """Transmit an incoming request from a linked proxy channel
+        to the proxy auxiliary's channel.
+
+        :param conn: current proxy channel instance which the command
+            comes from
+        :param args: postional arguments
+        :param args: named arguments
+        """
+        with self.lock:
+            self._run_command(conn, *args, **kwargs)
+
+    def _run_command(self, conn: CChannel, *args: tuple, **kwargs: dict) -> None:
+        """Send the request coming from the given proxy channel and
+        dispatch it to the other linked proxy channels.
+
+        :param conn: current proxy channel instance which the command
+            comes from
+        :param args: postional arguments
+        :param args: named arguments
 
         In addition, all commands are dispatch to others auxiliaries
         using proxy connector queue out.
         """
-        for conn in self.proxy_channels:
-            if not conn.queue_in.empty():
-                args, kwargs = conn.queue_in.get()
-                message = kwargs.get("msg")
-                if message is not None:
-                    self._dispatch_command(
-                        con_use=conn,
-                        **kwargs,
-                    )
-                self.channel._cc_send(*args, **kwargs)
+        self.channel.cc_send(*args, **kwargs)
+        self._dispatch_command(con_use=conn, **kwargs)
 
     def _dispatch_command(self, con_use: CChannel, **kwargs: dict):
         """Dispatch the current command to others connected auxiliaries.
@@ -242,31 +280,29 @@ class ProxyAuxiliary(AuxiliaryInterface):
         This action is performed by populating the queue out from each
         proxy connectors.
 
-        :param con_use: current proxy connector where the command comes
-            from
+        :param con_use: current proxy channel instance which the command
+            comes from
         :param kwargs: named arguments
         """
         for conn in self.proxy_channels:
             if conn != con_use:
                 conn.queue_out.put(kwargs)
 
-    def _abort_command(self) -> None:
-        """Not Used."""
-        return True
-
     def _receive_message(self, timeout_in_s: float = 0) -> None:
-        """When no request are sent this method is called by AuxiliaryInterface run
-        method. At each message received, this method will populate each
-        proxy connectors queue out.
+        """Get a message from the associated channel and dispatch it to
+        the liked proxy channels.
 
-        :param timeout_in_s: maximum amount of time in second to wait
-            for a message.
+        .. note:: this method is called by the rx thread task from the
+            inherit interface class
+
+
+        :param timeout_in_s: maximum amount of time (seconds) to wait
+            for a message
         """
         try:
             recv_response = self.channel.cc_receive(timeout=timeout_in_s)
             received_data = recv_response.get("msg")
-            # if data are received, populate connected proxy connectors
-            # queue out
+            # if data are received, populate connector's queue_out
             if received_data is not None:
                 self.logger.debug(
                     f"received response : data {received_data.hex()} || channel : {self.channel.name}"
@@ -277,43 +313,3 @@ class ProxyAuxiliary(AuxiliaryInterface):
             log.exception(
                 f"encountered error while receiving message via {self.channel}"
             )
-
-    def run(self) -> None:
-        """Run function of the auxiliary thread"""
-        while not self.stop_event.is_set():
-            # Step 1: Check if a request is available & process it
-            request = ""
-            # Check if a request was received
-            if not self.queue_in.empty():
-                request = self.queue_in.get_nowait()
-            # Process the request
-            if request == "create_auxiliary_instance" and not self.is_instance:
-                # Call the internal instance creation method
-                return_code = self._create_auxiliary_instance()
-                # Based on the result set status:
-                self.is_instance = return_code
-                # Enqueue the result for the request caller
-                self.queue_out.put(return_code)
-            elif request == "delete_auxiliary_instance" and self.is_instance:
-                # Call the internal instance delete method
-                return_code = self._delete_auxiliary_instance()
-                # Based on the result set status:
-                self.is_instance = not return_code
-                # Enqueue the result for the request caller
-                self.queue_out.put(return_code)
-            elif request != "":
-                # A request was received but could not be processed
-                log.warning(f"Unknown request '{request}', will not be processed!")
-                log.warning(f"Aux status: {self.__dict__}")
-
-            # Step 2: Send stack command and propagate them to others connected auxiliaires
-            # and check if something was received if instance was created
-            if self.is_instance:
-                self._run_command()
-                self._receive_message(timeout_in_s=0)
-
-        # Thread stop command was set
-        log.info("{} was stopped".format(self))
-        # Delete auxiliary external instance if not done
-        if self.is_instance:
-            self._delete_auxiliary_instance()

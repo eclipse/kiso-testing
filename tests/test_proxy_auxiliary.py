@@ -1,11 +1,11 @@
-# ##########################################################################
-# # Copyright (c) 2010-2022 Robert Bosch GmbH
-# # This program and the accompanying materials are made available under the
-# # terms of the Eclipse Public License 2.0 which is available at
-# # http://www.eclipse.org/legal/epl-2.0.
-# #
-# # SPDX-License-Identifier: EPL-2.0
-# ##########################################################################
+##########################################################################
+# Copyright (c) 2010-2022 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
 
 import logging
 import queue
@@ -14,31 +14,34 @@ import threading
 
 import pytest
 
-from pykiso.connector import CChannel
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.auxiliaries.proxy_auxiliary import (
+    CCProxy,
     ConfigRegistry,
+    DTAuxiliaryInterface,
     ProxyAuxiliary,
     log,
 )
 
 AUX_LIST_NAMES = ["MockAux1", "MockAux2"]
 AUX_LIST_INCOMPATIBLE = ["MockAux3"]
+CHANNEL_LIST_INCOMPATIBLE = ["MockAux4"]
 
 
 @pytest.fixture
-def mock_auxiliaries(mocker):
-    class MockProxyCChannel(CChannel):
+def mock_auxiliaries(mocker, cchannel_inst):
+    class MockProxyCChannel(CCProxy):
         def __init__(self, name=None, *args, **kwargs):
+            super().__init__(*args, **kwargs)
             self.name = name
             self.queue_in = queue.Queue()
             self.queue_out = queue.Queue()
-            super(MockProxyCChannel, self).__init__(*args, **kwargs)
 
         _cc_open = mocker.stub(name="_cc_open")
         _cc_close = mocker.stub(name="_cc_close")
         _cc_send = mocker.stub(name="_cc_send")
         _cc_receive = mocker.stub(name="_cc_receive")
+        detach_tx_callback = mocker.stub(name="detach_tx_callback")
+        attach_tx_callback = mocker.stub(name="attach_tx_callback")
 
     class MockAux1:
         def __init__(self, **kwargs):
@@ -55,16 +58,22 @@ def mock_auxiliaries(mocker):
             self.channel = MockProxyCChannel("test-cc-proxy")
             self.is_proxy_capable = False
 
+    class MockAux4:
+        def __init__(self, **kwargs):
+            self.channel = cchannel_inst
+            self.is_proxy_capable = True
+
     sys.modules["pykiso.auxiliaries.MockAux1"] = MockAux1()
     sys.modules["pykiso.auxiliaries.MockAux2"] = MockAux2()
     sys.modules["pykiso.auxiliaries.MockAux3"] = MockAux3()
+    sys.modules["pykiso.auxiliaries.MockAux4"] = MockAux4()
 
     return MockProxyCChannel()
 
 
 @pytest.fixture
 def mock_aux_interface(mocker, mock_auxiliaries):
-    class MockAuxInterface(AuxiliaryInterface):
+    class MockAuxInterface(DTAuxiliaryInterface):
         def __init__(self, param_1=None, param_2=None, **kwargs):
             self.param_1 = param_1
             self.param_2 = param_2
@@ -78,7 +87,6 @@ def mock_aux_interface(mocker, mock_auxiliaries):
         _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
         _delete_auxiliary_instance.return_value = False
         _run_command = mocker.stub(name="_run_command")
-        _abort_command = mocker.stub(name="_abort_command")
         _receive_message = mocker.stub(name="_receive_message")
 
     sys.modules["pykiso.auxiliaries.MockAuxInterface"] = MockAuxInterface()
@@ -87,37 +95,10 @@ def mock_aux_interface(mocker, mock_auxiliaries):
 
 
 def test_constructor(mocker, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
-
     proxy_inst = ProxyAuxiliary(cchannel_inst, [])
 
     assert isinstance(proxy_inst.proxy_channels, tuple)
     assert len(proxy_inst.proxy_channels) == 0
-
-
-def test_auto_start_disable(mocker, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mock_inst_creation = mocker.patch.object(ProxyAuxiliary, "create_instance")
-    mock_start = mocker.patch.object(threading.Thread, "start")
-
-    proxy_inst = ProxyAuxiliary(cchannel_inst, [], auto_start=False)
-
-    assert not proxy_inst.is_alive()
-
-    proxy_inst.start()
-
-    mock_inst_creation.assert_called_once()
-    mock_start.assert_called_once()
-
-
-def test_auto_start_already_running(mocker, cchannel_inst):
-    mock_is_alive = mocker.patch.object(threading.Thread, "is_alive", return_value=True)
-
-    proxy_inst = ProxyAuxiliary(cchannel_inst, [], auto_start=False)
-    proxy_inst.start()
-
-    mock_is_alive.assert_called_once()
-    assert proxy_inst.is_instance is False
 
 
 @pytest.mark.parametrize(
@@ -147,17 +128,16 @@ def test_init_trace_not_activate(mocker):
 
 
 def test_get_proxy_con_valid(mocker, cchannel_inst, mock_aux_interface):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(ProxyAuxiliary, "_check_compatibility")
+    mocker.patch.object(ProxyAuxiliary, "_check_aux_compatibility")
+    mocker.patch.object(ProxyAuxiliary, "_check_channels_compatibility")
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES, mock_aux_interface])
 
     assert len(proxy_inst.proxy_channels) == 3
-    assert all(isinstance(items, CChannel) for items in proxy_inst.proxy_channels)
+    assert all(isinstance(items, CCProxy) for items in proxy_inst.proxy_channels)
 
 
 def test_get_proxy_con_invalid(mocker, caplog, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
 
     mocker.patch.object(ConfigRegistry, "get_auxes_alias")
 
@@ -170,9 +150,8 @@ def test_get_proxy_con_invalid(mocker, caplog, cchannel_inst):
 
 
 def test_get_proxy_con_pre_load(mocker, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
-
     mocker.patch.object(ConfigRegistry, "get_auxes_alias", return_value="later_aux")
+    mocker.patch.object(ProxyAuxiliary, "_check_channels_compatibility")
 
     class Linker:
         def __init__(self):
@@ -195,59 +174,54 @@ def test_get_proxy_con_pre_load(mocker, cchannel_inst):
     assert isinstance(proxy_inst.proxy_channels[0], bool)
 
 
-def test_check_compatibility_exception(mocker, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
+def test_check_aux_compatibility_exception(mocker, cchannel_inst):
 
     with pytest.raises(NotImplementedError):
-        proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_INCOMPATIBLE])
+        ProxyAuxiliary(cchannel_inst, [*AUX_LIST_INCOMPATIBLE])
 
 
-@pytest.mark.parametrize(
-    "side_effect_value, stop_event_set, expected_function_return",
-    [
-        (None, False, True),
-        (ValueError(), True, False),
-    ],
-)
-def test_create_auxiliary_instance_valid(
-    mocker, cchannel_inst, side_effect_value, stop_event_set, expected_function_return
-):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "open", side_effect=side_effect_value)
+def test_check_channels_compatibility_exception(mocker, cchannel_inst):
 
+    with pytest.raises(TypeError):
+        ProxyAuxiliary(cchannel_inst, [*CHANNEL_LIST_INCOMPATIBLE])
+
+
+def test_create_auxiliary_instance(mocker, cchannel_inst):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+    dispatch = mocker.patch.object(proxy_inst, "_dispatch_tx_method_to_channels")
+
     state = proxy_inst._create_auxiliary_instance()
 
-    assert state is expected_function_return
-    assert proxy_inst.stop_event.is_set() is stop_event_set
-
-
-@pytest.mark.parametrize(
-    "side_effect_value, log_level, expected_log",
-    [
-        (None, logging.INFO, "Delete auxiliary instance"),
-        (ValueError(), logging.ERROR, "Error encouting during channel closure"),
-    ],
-)
-def test_delete_auxiliary_instance(
-    mocker, caplog, cchannel_inst, side_effect_value, log_level, expected_log
-):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "close", side_effect=side_effect_value)
-
-    with caplog.at_level(log_level):
-        proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
-        state = proxy_inst._delete_auxiliary_instance()
-
-    assert expected_log in caplog.text
+    dispatch.assert_called_once()
+    proxy_inst.channel._cc_open.assert_called_once()
     assert state is True
 
 
-def test_abort_command(mocker, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    proxy_inst = ProxyAuxiliary(cchannel_inst, [])
-    ret_state = proxy_inst._abort_command()
-    assert ret_state is True
+def test_create_auxiliary_instance_exception(mocker, cchannel_inst):
+    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+    mocker.patch.object(proxy_inst.channel, "_cc_open", side_effect=ValueError)
+
+    state = proxy_inst._create_auxiliary_instance()
+
+    assert state is False
+
+
+def test_delete_auxiliary_instance(cchannel_inst):
+    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+
+    state = proxy_inst._delete_auxiliary_instance()
+
+    proxy_inst.channel._cc_close.assert_called_once()
+    assert state is True
+
+
+def test_delete_auxiliary_instance_exception(mocker, cchannel_inst):
+    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+    mocker.patch.object(proxy_inst.channel, "_cc_close", side_effect=ValueError)
+
+    state = proxy_inst._delete_auxiliary_instance()
+
+    assert state is False
 
 
 @pytest.mark.parametrize(
@@ -257,11 +231,10 @@ def test_abort_command(mocker, cchannel_inst):
         {"msg": b"\x12\x34\x56\x12\x34\x56", "remote_id": None},
     ],
 )
-def test_receive_message_valid(mocker, cchannel_inst, mock_auxiliaries, response):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", return_value=response)
-
+def test_receive_message_valid(mocker, mock_auxiliaries, cchannel_inst, response):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+    mocker.patch.object(proxy_inst.channel, "cc_receive", return_value=response)
+
     proxy_inst._receive_message()
 
     link_aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
@@ -283,11 +256,10 @@ def test_receive_message_valid(mocker, cchannel_inst, mock_auxiliaries, response
     assert source_2 == response["remote_id"]
 
 
-def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", return_value={"msg": None})
-
+def test_receive_message_no_message(mocker, mock_auxiliaries, cchannel_inst):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+    mocker.patch.object(proxy_inst.channel, "cc_receive", return_value={"msg": None})
+
     proxy_inst._receive_message()
 
     link_aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
@@ -297,15 +269,29 @@ def test_receive_message_no_message(mocker, cchannel_inst, mock_auxiliaries):
     assert link_aux_2.channel.queue_out.empty()
 
 
-def test_receive_message_exception(mocker, caplog, cchannel_inst):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mocker.patch.object(CChannel, "cc_receive", side_effect=ValueError())
+def test_receive_message_exception(mocker, mock_auxiliaries, cchannel_inst):
+    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+    mocker.patch.object(proxy_inst.channel, "cc_receive", return_value=ValueError())
 
-    with caplog.at_level(logging.ERROR):
-        proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
-        proxy_inst._receive_message()
+    proxy_inst._receive_message()
 
-    assert "encountered error while receiving message via" in caplog.text
+    link_aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
+    link_aux_2 = sys.modules["pykiso.auxiliaries.MockAux2"]
+
+    assert link_aux_1.channel.queue_out.empty()
+    assert link_aux_2.channel.queue_out.empty()
+
+
+def test_dispatch_tx_method_to_channels(cchannel_inst):
+    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+
+    proxy_inst._dispatch_tx_method_to_channels()
+
+    aux_1 = sys.modules["pykiso.auxiliaries.MockAux1"]
+    aux_2 = sys.modules["pykiso.auxiliaries.MockAux2"]
+
+    aux_1.channel.attach_tx_callback.assert_called()
+    aux_2.channel.attach_tx_callback.assert_called()
 
 
 @pytest.mark.parametrize(
@@ -316,9 +302,7 @@ def test_receive_message_exception(mocker, caplog, cchannel_inst):
         {"msg": b"\x12\x34\x12\x34\x56", "remote_id": None},
     ],
 )
-def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, req):
-    mocker.patch.object(ProxyAuxiliary, "run")
-
+def test_dispatch_command(mocker, mock_auxiliaries, cchannel_inst, req):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
 
     conn_use = sys.modules["pykiso.auxiliaries.MockAux1"].channel
@@ -335,54 +319,32 @@ def test_dispatch_command(mocker, cchannel_inst, mock_auxiliaries, req):
     assert r_id == req["remote_id"]
 
 
-def test_run_command(mocker, cchannel_inst, mock_auxiliaries):
-    mocker.patch.object(ProxyAuxiliary, "run")
-    mock_dispatch = mocker.patch.object(ProxyAuxiliary, "_dispatch_command")
-
+@pytest.mark.parametrize(
+    "req",
+    [
+        {"msg": b"\x12\x34\x56", "remote_id": 0x545},
+        {"msg": b"\x12\x34", "remote_id": 0x001},
+        {"msg": b"\x12\x34\x12\x34\x56", "remote_id": None},
+    ],
+)
+def test__run_command(mocker, cchannel_inst, req):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
+    dispatch = mocker.patch.object(proxy_inst, "_dispatch_command")
 
-    conn_1 = sys.modules["pykiso.auxiliaries.MockAux2"].channel
-    conn_2 = sys.modules["pykiso.auxiliaries.MockAux1"].channel
+    conn_not_use = sys.modules["pykiso.auxiliaries.MockAux2"].channel
 
-    command_1 = ((), {"msg": b"\x12\x34\x56", "remote_id": 0x512})
-    command_2 = ((), {"msg": b"\x12", "remote_id": None})
-    command_3 = ((), {"msg": b"\x12\x34\x56\x78", "remote_id": 0x56})
+    proxy_inst._run_command(conn_not_use, **req)
 
-    conn_1.queue_in.put(command_1)
-    conn_1.queue_in.put(command_2)
-    conn_2.queue_in.put(command_3)
-
-    proxy_inst._run_command()
-    proxy_inst._run_command()
-
-    mock_dispatch.assert_called()
-    proxy_inst.channel._cc_send.assert_called_with(
-        msg=command_2[1]["msg"], remote_id=command_2[1]["remote_id"]
-    )
+    dispatch.assert_called_with(con_use=conn_not_use, **req)
+    proxy_inst.channel._cc_send.assert_called()
 
 
-def test_run(mocker, cchannel_inst, mock_auxiliaries):
-    mock_create = mocker.patch.object(
-        ProxyAuxiliary, "_create_auxiliary_instance", return_value=True
-    )
-    mock_delete = mocker.patch.object(
-        ProxyAuxiliary, "_delete_auxiliary_instance", return_value=True
-    )
-    mock_run_cmd = mocker.patch.object(ProxyAuxiliary, "_run_command")
-    mock_recv = mocker.patch.object(ProxyAuxiliary, "_receive_message")
-
-    # Start the Proxy's thread
+def test_run_command(mocker, cchannel_inst):
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES])
-    proxy_inst.start()
-    proxy_inst.create_instance()
+    _run = mocker.patch.object(proxy_inst, "_run_command")
 
-    assert proxy_inst.is_instance is True
-    mock_create.assert_called_once()
+    conn_use = sys.modules["pykiso.auxiliaries.MockAux1"].channel
+    req = {"msg": b"\x12\x34\x56", "remote_id": 0x545}
+    proxy_inst.run_command(conn_use, **req)
 
-    proxy_inst.delete_instance()
-    proxy_inst.stop()
-
-    assert proxy_inst.is_instance is False
-    mock_delete.assert_called_once()
-    mock_run_cmd.assert_called()
-    mock_recv.assert_called()
+    _run.assert_called_with(conn_use, **req)
