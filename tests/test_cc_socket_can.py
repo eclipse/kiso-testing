@@ -225,7 +225,7 @@ def test_cc_send(mock_can_bus, message, remote_id):
     if isinstance(message, Message):
         message = message.serialize()
     with CCSocketCan(remote_id=0x0A) as can:
-        can._cc_send(message, remote_id)
+        can._cc_send(message, remote_id=remote_id)
 
     mock_can_bus.Bus.send.assert_called_once()
     mock_can_bus.Bus.shutdown.assert_called_once()
@@ -252,11 +252,13 @@ def test_can_recv(mocker, mock_can_bus, raw_data, can_id, timeout, raw, expected
         return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
     )
     with CCSocketCan() as can:
-        msg_received, id_received = can._cc_receive(timeout)
+        response = can._cc_receive(timeout)
+        msg_received = response.get("msg")
+        id_received = response.get("remote_id")
 
     if not raw and msg_received is not None:
         msg_received = Message.parse_packet(msg_received)
-    assert isinstance(msg_received, expected_type) == True
+    assert isinstance(msg_received, expected_type)
     assert id_received == can_id
     mock_can_bus.Bus.recv.assert_called_once_with(timeout=timeout or 1e-6)
     mock_can_bus.Bus.shutdown.assert_called_once()
@@ -274,13 +276,15 @@ def test_can_recv_invalid(mocker, mock_can_bus, raw_state):
     mocker.patch("can.interface.Bus.recv", return_value=None)
 
     with CCSocketCan() as can:
-        msg_received, id_received = can._cc_receive(
+        response = can._cc_receive(
             timeout=0.0001,
         )
+        msg_received = response.get("msg")
+        id_received = response.get("remote_id")
     if not raw_state and msg_received is not None:
         msg_received = msg_received.parse_packet()
-    assert msg_received == None
-    assert id_received == None
+    assert msg_received is None
+    assert id_received is None
 
 
 def test_can_recv_exception(mocker, mock_can_bus):

@@ -326,7 +326,7 @@ def test__run_command(mocker, aux_inst):
 
     aux_inst._run_command(cmd_message="abcde", cmd_data=None)
 
-    send_mock.assert_called_with(msg="abcde", raw=False)
+    send_mock.assert_called_with(msg="abcde")
 
 
 def test__run_command_exception(mocker, aux_inst, caplog):

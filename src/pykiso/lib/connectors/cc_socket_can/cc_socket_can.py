@@ -23,7 +23,7 @@ import logging
 import platform
 import time
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import can
 import can.bus
@@ -176,7 +176,7 @@ class CCSocketCan(CChannel):
         log.debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
 
     def _cc_receive(
-        self, timeout: float = 0.0001
+        self, timeout: float = 0.0001, size: Optional[int] = None
     ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 

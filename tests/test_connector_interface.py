@@ -84,14 +84,14 @@ def test_channel_cc_send(channel_obj):
     cc_inst = channel_obj(name="thread-channel")
     cc_inst.cc_send(msg=b"\x01\x02\x03")
 
-    cc_inst._cc_send.assert_called_with(msg=b"\x01\x02\x03", raw=False)
+    cc_inst._cc_send.assert_called_with(msg=b"\x01\x02\x03")
 
 
 def test_channel_cc_receive(channel_obj):
     cc_inst = channel_obj(name="thread-channel")
     cc_inst.cc_receive()
 
-    cc_inst._cc_receive.assert_called_with(timeout=0.1, raw=False)
+    cc_inst._cc_receive.assert_called_with(timeout=0.1, size=None)
 
 
 def test_channel_invalid_interface():

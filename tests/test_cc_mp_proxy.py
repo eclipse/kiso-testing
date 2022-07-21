@@ -9,6 +9,7 @@
 
 import pytest
 
+from pykiso import message
 from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy, multiprocessing, queue
 
 
@@ -53,7 +54,7 @@ def test_cc_receive(timeout, raw, raw_response):
     with CCMpProxy() as proxy_inst:
         proxy_inst.queue_out.put(raw_response)
         resp = proxy_inst._cc_receive(timeout)
-        if not raw:
+        if not raw and isinstance(resp["msg"], message.Message):
             resp["msg"] = resp["msg"].parse_packet()
         assert resp["msg"] == raw_response["msg"]
         assert resp["remote_id"] == raw_response["remote_id"]
