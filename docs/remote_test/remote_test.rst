@@ -43,7 +43,8 @@ In case of the *device under test*, we have a specific communication protocol. P
 Flashing
 ^^^^^^^^
 
-The Flasher Connectors usually provide only one method, :py:meth:`Flasher.flash`, which will transfer the configured binary file to the target.
+The Flasher Connectors usually provide only one method, :py:meth:`~pykiso.connector.Flasher.flash`,
+which will transfer the configured binary file to the target.
 
 
 .. _flashing-1:
@@ -322,7 +323,7 @@ Find below a full example for a test suite/case declaration in case the Message 
 Config File for remote tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For details see :ref:`../getting_started/config_file`.
+For details see :ref:`config_file`.
 
 Find below an example of config for used for remote testing (is that case using *device under test* auxiliary)
 
