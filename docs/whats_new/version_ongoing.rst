@@ -39,3 +39,11 @@ See :ref:`uds_auxiliary`
 RTT connector log folder creation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 RTT connector now creates a log folder if it does not exist instead of throwing an error.
+
+Configurable waiting for send_uds_raw
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To avoid extra waiting time during long/heavy UDS data exchange(flashing) expose
+the parameter tpWaitTime from kiso-testing-python-uds for uds auxilary send_uds_raw
+method
+
+See :ref:`uds_auxiliary`

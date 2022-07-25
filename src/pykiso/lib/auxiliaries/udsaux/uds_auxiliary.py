@@ -56,11 +56,14 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         self,
         msg_to_send: Union[bytes, List[int], tuple],
         timeout_in_s: float = 6,
+        tp_waiting_time: int = 0.010,
     ) -> Union[UdsResponse, bool]:
         """Send a UDS diagnostic request to the target ECU and check response.
 
         :param msg_to_send: can uds raw bytes to be sent
         :param timeout_in_s: not used
+        :param tp_waiting_time: the number of seconds to wait for a
+            consecutive frame
 
         :raise ResponseNotReceivedError: raised when no answer has been received
         :raise Exception: raised when the raw message could not be send properly
@@ -73,7 +76,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             log.info(
                 f"UDS request to send '{['0x{:02X}'.format(i) for i in msg_to_send]}'"
             )
-            resp = self.uds_config.send(msg_to_send)
+            resp = self.uds_config.send(msg_to_send, tpWaitTime=tp_waiting_time)
         except Exception:
             log.exception("Error while sending uds raw request")
             return False
@@ -119,7 +122,9 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         return True
 
     def send_uds_config(
-        self, msg_to_send: dict, timeout_in_s: float = 6
+        self,
+        msg_to_send: dict,
+        timeout_in_s: float = 6,
     ) -> Union[dict, bool]:
         """Send UDS config to the target ECU.
 

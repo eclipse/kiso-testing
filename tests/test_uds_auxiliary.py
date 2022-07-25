@@ -113,8 +113,9 @@ class TestUdsAuxiliary:
         uds_odx_aux_inst.uds_config = mock_uds_config
         uds_odx_aux_inst.POSITIVE_RESPONSE_OFFSET = 0x40
 
-        resp = uds_odx_aux_inst.send_uds_raw([0x10, 0x03])
+        resp = uds_odx_aux_inst.send_uds_raw([0x10, 0x03], tp_waiting_time=0.010)
 
+        mock_uds_config.send.assert_called_with([0x10, 0x03], tpWaitTime=0.010)
         assert resp == [0x50, 0x03]
 
     def test_send_uds_raw_resp_empty_list(self, mock_uds_config, uds_odx_aux_inst):
