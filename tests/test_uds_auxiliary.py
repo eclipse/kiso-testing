@@ -9,17 +9,17 @@
 # ##########################################################################
 
 # import logging
-from time import sleep
-from unittest import mock
+# from time import sleep
+# from unittest import mock
 
 # import pytest
 
-from pykiso.lib.auxiliaries.udsaux.common import UDSCommands
-from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
-    NegativeResponseCode,
-    UdsResponse,
-)
-from pykiso.lib.auxiliaries.udsaux.uds_auxiliary import UdsAuxiliary
+# from pykiso.lib.auxiliaries.udsaux.common import UDSCommands
+# from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
+#     NegativeResponseCode,
+#     UdsResponse,
+# )
+# from pykiso.lib.auxiliaries.udsaux.uds_auxiliary import UdsAuxiliary
 
 
 # class TestUdsAuxiliary:
@@ -319,13 +319,13 @@ from pykiso.lib.auxiliaries.udsaux.uds_auxiliary import UdsAuxiliary
 #         assert resp.is_negative is True
 #         assert resp.nrc == NegativeResponseCode.CONDITIONS_NOT_CORRECT
 
-    def test_tester_present_sender(self, uds_raw_aux_inst, mocker):
-        mocker.patch("time.sleep", return_value=None)
-        send_mock = mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
+    # def test_tester_present_sender(self, uds_raw_aux_inst, mocker):
+    #     mocker.patch("time.sleep", return_value=None)
+    #     send_mock = mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
 
-        with uds_raw_aux_inst.tester_present_sender(1):
-            sleep(3)
+    #     with uds_raw_aux_inst.tester_present_sender(1):
+    #         sleep(3)
 
-        send_mock.assert_called_with(
-            UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE
-        )
+    #     send_mock.assert_called_with(
+    #         UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE
+    #     )
