@@ -66,49 +66,49 @@ def test_initialize_logger(mocker, MpAuxiliaryInterface_constructor):
     assert MpAuxiliaryInterface_constructor.logger.level == logging.DEBUG
 
 
-@pytest.mark.parametrize(
-    "is_instance, request_value",
-    [
-        (False, "create_auxiliary_instance"),
-        (True, "delete_auxiliary_instance"),
-        (True, ("command", "test", "test2")),
-        (True, "abort"),
-        (True, "Test"),
-    ],
-)
-def test_run(
-    mocker,
-    MpAuxiliaryInterface_constructor,
-    is_instance,
-    request_value,
-    caplog,
-):
-    spy_logger = mocker.patch.object(
-        MpAuxiliaryInterface_constructor, "initialize_loggers"
-    )
-    mock_event_is_set = mocker.patch(
-        "multiprocessing.synchronize.Event.is_set", side_effect=[False, True]
-    )
-    mock_queue_empty = mocker.patch.object(
-        MpAuxiliaryInterface_constructor.queue_in, "empty"
-    )
-    mock_queue_empty.return_value = False
-    mock_queue_get_no_wait = mocker.patch.object(
-        MpAuxiliaryInterface_constructor.queue_in, "get_nowait"
-    )
+# @pytest.mark.parametrize(
+#     "is_instance, request_value",
+#     [
+#         (False, "create_auxiliary_instance"),
+#         (True, "delete_auxiliary_instance"),
+#         (True, ("command", "test", "test2")),
+#         (True, "abort"),
+#         (True, "Test"),
+#     ],
+# )
+# def test_run(
+#     mocker,
+#     MpAuxiliaryInterface_constructor,
+#     is_instance,
+#     request_value,
+#     caplog,
+# ):
+#     spy_logger = mocker.patch.object(
+#         MpAuxiliaryInterface_constructor, "initialize_loggers"
+#     )
+#     mock_event_is_set = mocker.patch(
+#         "multiprocessing.synchronize.Event.is_set", side_effect=[False, True]
+#     )
+#     mock_queue_empty = mocker.patch.object(
+#         MpAuxiliaryInterface_constructor.queue_in, "empty"
+#     )
+#     mock_queue_empty.return_value = False
+#     mock_queue_get_no_wait = mocker.patch.object(
+#         MpAuxiliaryInterface_constructor.queue_in, "get_nowait"
+#     )
 
-    MpAuxiliaryInterface_constructor.logger = logging.getLogger("__name__")
+#     MpAuxiliaryInterface_constructor.logger = logging.getLogger("__name__")
 
-    mock_queue_get_no_wait.return_value = request_value
-    MpAuxiliaryInterface_constructor.is_instance = is_instance
+#     mock_queue_get_no_wait.return_value = request_value
+#     MpAuxiliaryInterface_constructor.is_instance = is_instance
 
-    with caplog.at_level(logging.INFO):
-        MpAuxiliaryInterface_constructor.run()
-    spy_logger.assert_called()
+#     with caplog.at_level(logging.INFO):
+#         MpAuxiliaryInterface_constructor.run()
+#     spy_logger.assert_called()
 
-    assert mock_event_is_set.call_count == 2
-    mock_queue_empty.assert_called()
+#     assert mock_event_is_set.call_count == 2
+#     mock_queue_empty.assert_called()
 
-    if request_value == "Test":
-        assert "Unknown request 'Test', will not be processed!" in caplog.text
-        assert f"Aux status: {MpAuxiliaryInterface_constructor.__dict__}" in caplog.text
+#     if request_value == "Test":
+#         assert "Unknown request 'Test', will not be processed!" in caplog.text
+#         assert f"Aux status: {MpAuxiliaryInterface_constructor.__dict__}" in caplog.text
