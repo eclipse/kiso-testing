@@ -96,7 +96,7 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         :return: verdict on instance deletion, False if everything was
             fine otherwise True(instance was not deleted correctly)
         """
-        if self.lock.acquire() and self.is_alive:
+        if self.lock.acquire() and self.is_alive():
             # Trigger the internal requests
             self.queue_in.put("delete_auxiliary_instance")
             # Wait until the request was processed
@@ -173,7 +173,6 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
                 self.logger.warning(
                     f"Unknown request '{request}', will not be processed!"
                 )
-                self.logger.warning(f"Aux status: {self.__dict__}")
 
             # Step 2: Check if something was received from the aux instance if instance was created
             if self.is_instance:
