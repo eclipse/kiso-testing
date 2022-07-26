@@ -23,7 +23,7 @@ import logging
 import platform
 import time
 from pathlib import Path
-from typing import Union, Dict
+from typing import Dict, Union
 
 import can
 import can.bus

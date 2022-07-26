@@ -7,9 +7,9 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 import logging
-import threading
 import queue
 import sys
+import threading
 from pathlib import Path
 
 import pytest
