@@ -364,44 +364,134 @@ def test_empty_queue(mocker, mock_mp_proxy_aux):
     assert spy_get.call_count == 2
 
 
-# @pytest.mark.parametrize(
-#     "is_instance, request_value",
-#     [
-#         (False, "create_auxiliary_instance"),
-#         (True, "delete_auxiliary_instance"),
-#         (False, "Test"),
-#     ],
-# )
-# def test_run(
-#     mocker,
-#     mock_mp_proxy_aux,
-#     is_instance,
-#     request_value,
-#     caplog,
-# ):
-#     mock_init_logger = mocker.patch.object(mock_mp_proxy_aux, "initialize_loggers")
-#     mock_mp_proxy_aux.logger = logging.getLogger(__name__)
-#     mock_event_init_trace = mocker.patch.object(mock_mp_proxy_aux, "_init_trace")
-#     mock_event_is_set = mocker.patch(
-#         "multiprocessing.synchronize.Event.is_set", side_effect=[False, True]
-#     )
-#     mock_queue_empty = mocker.patch.object(mock_mp_proxy_aux.queue_in, "empty")
-#     mock_queue_empty.return_value = False
-#     mock_queue_get_no_wait = mocker.patch.object(
-#         mock_mp_proxy_aux.queue_in, "get_nowait"
-#     )
-#     mock_queue_get_no_wait.return_value = request_value
-#     mock_mp_proxy_aux.is_instance = is_instance
-#     with caplog.at_level(logging.INFO):
-#         mock_mp_proxy_aux.run()
-#     mock_init_logger.assert_called()
-#     assert mock_event_is_set.call_count == 2
-#     mock_queue_empty.assert_called()
-#     mock_queue_get_no_wait.assert_called()
-#     mock_event_init_trace.assert_called()
-#     if request_value == "Test":
-#         assert f"Unknown request 'Test', will not be processed!" in caplog.text
-#         assert f"Aux status: {mock_mp_proxy_aux.__dict__}" in caplog.text
+def test_run_create_auxiliary_instance_command(mocker, mp_proxy_auxiliary_inst):
+    mock_logger = mocker.patch.object(mp_proxy_auxiliary_inst, "initialize_loggers")
+    mock_trace = mocker.patch.object(mp_proxy_auxiliary_inst, "_init_trace")
+    mock_empty = mocker.patch.object(
+        mp_proxy_auxiliary_inst.queue_in, "empty", return_value=False
+    )
+    mock_wait = mocker.patch.object(
+        mp_proxy_auxiliary_inst.queue_in,
+        "get_nowait",
+        return_value="create_auxiliary_instance",
+    )
+    mock_create = mocker.patch.object(
+        mp_proxy_auxiliary_inst, "_create_auxiliary_instance", return_value=True
+    )
+    mock_put = mocker.patch.object(
+        mp_proxy_auxiliary_inst.queue_out, "put", side_effect=ValueError
+    )
 
-#     logging.error(f"{ [thread.name for thread in threading.enumerate()]}")
-#     assert 1==2
+    with pytest.raises(ValueError):
+        mp_proxy_auxiliary_inst.run()
+        mock_logger.assert_called_once()
+        mock_trace.assert_called_once()
+        mock_create.assert_called_once()
+        mock_wait.assert_called_once()
+        mock_put.assert_called_with(True)
+
+
+def test_run_delete_auxiliary_instance_command(mocker, mp_proxy_auxiliary_inst):
+    mp_proxy_auxiliary_inst.is_instance = True
+    mock_logger = mocker.patch.object(mp_proxy_auxiliary_inst, "initialize_loggers")
+    mock_trace = mocker.patch.object(mp_proxy_auxiliary_inst, "_init_trace")
+    mock_empty = mocker.patch.object(
+        mp_proxy_auxiliary_inst.queue_in, "empty", return_value=False
+    )
+    mock_wait = mocker.patch.object(
+        mp_proxy_auxiliary_inst.queue_in,
+        "get_nowait",
+        return_value="delete_auxiliary_instance",
+    )
+    mock_delete = mocker.patch.object(
+        mp_proxy_auxiliary_inst, "_delete_auxiliary_instance", return_value=True
+    )
+    mock_put = mocker.patch.object(
+        mp_proxy_auxiliary_inst.queue_out, "put", side_effect=ValueError
+    )
+
+    with pytest.raises(ValueError):
+        mp_proxy_auxiliary_inst.run()
+        mock_logger.assert_called_once()
+        mock_trace.assert_called_once()
+        mock_delete.assert_called_once()
+        mock_wait.assert_called_once()
+        mock_put.assert_called_with(True)
+
+
+def test_run_unknown_command(mocker, mp_proxy_auxiliary_inst):
+    mp_proxy_auxiliary_inst.is_instance = True
+    mp_proxy_auxiliary_inst.initialize_loggers()
+    mock_empty = mocker.patch.object(
+        mp_proxy_auxiliary_inst.queue_in, "empty", return_value=False
+    )
+    mock_trace = mocker.patch.object(mp_proxy_auxiliary_inst, "_init_trace")
+    mock_wait = mocker.patch.object(
+        mp_proxy_auxiliary_inst.queue_in,
+        "get_nowait",
+        return_value=("fake_coammnd", "supr_command", 1),
+    )
+    mock_warning = mocker.patch.object(
+        mp_proxy_auxiliary_inst.logger, "warning", side_effect=ValueError
+    )
+
+    with pytest.raises(ValueError):
+        mp_proxy_auxiliary_inst.run()
+        mock_warning.assert_called_once()
+        mock_trace.assert_called_once()
+        mock_wait.assert_called_once()
+
+
+def test_run_receive_message(mocker, mp_proxy_auxiliary_inst):
+    mp_proxy_auxiliary_inst.is_instance = True
+    mock_trace = mocker.patch.object(mp_proxy_auxiliary_inst, "_init_trace")
+    mock_cmd = mocker.patch.object(mp_proxy_auxiliary_inst, "_run_command")
+    mock_recv = mocker.patch.object(
+        mp_proxy_auxiliary_inst, "_receive_message", side_effect=ValueError
+    )
+
+    with pytest.raises(ValueError):
+        mp_proxy_auxiliary_inst.run()
+        mock_recv.assert_called_with(timeout_in_s=0)
+        mock_cmd.assert_called_once()
+
+
+def test_run_free_cpu_usage(mocker, mp_proxy_auxiliary_inst):
+    mock_sleep = mocker.patch("time.sleep", side_effect=ValueError)
+    mock_trace = mocker.patch.object(mp_proxy_auxiliary_inst, "_init_trace")
+
+    with pytest.raises(ValueError):
+        mp_proxy_auxiliary_inst.run()
+        mock_sleep.assert_called_with(0.050)
+
+
+def test_run_stop_command_running_instance(mocker, mp_proxy_auxiliary_inst):
+    mp_proxy_auxiliary_inst.is_instance = True
+    mock_set = mocker.patch.object(
+        mp_proxy_auxiliary_inst.stop_event, "is_set", return_value=True
+    )
+    mock_trace = mocker.patch.object(mp_proxy_auxiliary_inst, "_init_trace")
+    mock_delete = mocker.patch.object(
+        mp_proxy_auxiliary_inst, "_delete_auxiliary_instance", return_value=True
+    )
+
+    mp_proxy_auxiliary_inst.run()
+
+    mock_delete.assert_called_once()
+    mock_set.assert_called_once()
+
+
+def test_run_stop_command_not_running_instance(mocker, mp_proxy_auxiliary_inst):
+    mp_proxy_auxiliary_inst.is_instance = False
+    mock_set = mocker.patch.object(
+        mp_proxy_auxiliary_inst.stop_event, "is_set", return_value=True
+    )
+    mock_trace = mocker.patch.object(mp_proxy_auxiliary_inst, "_init_trace")
+    mock_delete = mocker.patch.object(
+        mp_proxy_auxiliary_inst, "_delete_auxiliary_instance"
+    )
+
+    mp_proxy_auxiliary_inst.run()
+
+    mock_delete.assert_not_called()
+    mock_set.assert_called_once()
