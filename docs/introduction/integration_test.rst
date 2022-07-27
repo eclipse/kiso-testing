@@ -206,8 +206,14 @@ In order to utilise the SetUp/TearDown test-suite feature, users have to define 
 For each of these classes, the following methods ``test_suite_setUp`` or ``test_suite_tearDown`` must be
 overridden with the behaviour you want to have.
 
-.. note:: Because the python unittest module is used in the background,
-  all methods starting with ``"def test_"`` are executed automatically.
+.. note::
+  | Because the python unittest module is used in the background, all methods
+  | starting with "def test_" are executed automatically
+
+.. note::
+  If a test in SuiteSetup raises an exception, all tests which belong to the
+  same suite_id will be skipped.
+
 
 Find below a full example for a test suite/case declaration :
 
