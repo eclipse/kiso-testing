@@ -9,10 +9,19 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version 0.18.0 (2022-06-07)
+## Version Unreleased (2022-07-28)
+
+#### Fixes
+
+* skip suite tests when setup fails
+
+Full set of changes: [`0.18.0...5b6f029`](https://github.com/eclipse/kiso-testing/compare/0.18.0...5b6f029)
+
+## Version 0.18.0 (2022-06-08)
 
 #### New Features
 
+* make release 0.18.0 ([#72](https://github.com/eclipse/kiso-testing/issues/72))
 * create base class for test ([#61](https://github.com/eclipse/kiso-testing/issues/61))
 * make the proxy agnostic of transitioning messages
 * add pykiso to pytest tool ([#62](https://github.com/eclipse/kiso-testing/issues/62))
