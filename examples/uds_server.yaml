@@ -3,10 +3,23 @@ auxiliaries:
     connectors:
         com: can_channel
     config:
+      # you can sepcify your odx file by using odx_file_path parameter
+      # and instead of using send_uds_raw method use the send_uds_config
+      # for a more human readable command
       odx_file_path: null
-      request_id: 0x123
-      response_id: 0x321
-      config_ini_path: ./examples/test_uds/config.ini
+      uds_layer:
+        transport_protocol: 'CAN'
+        p2_can_client: 5
+        p2_can_server: 1
+      tp_layer:
+        req_id: 0x123
+        res_id: 0x321
+        addressing_type: 'NORMAL'
+        n_sa: 0xFF
+        n_ta: 0xFF
+        n_ae: 0xFF
+        m_type: 'DIAGNOSTICS'
+        discard_neg_resp: False
     type: pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary:UdsServerAuxiliary
 connectors:
   can_channel:

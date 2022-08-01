@@ -29,12 +29,17 @@ from typing import Optional, Union
 from uds import Config, Uds
 
 from pykiso.connector import CChannel
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+    open_connector,
+)
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
 
 
-class UdsBaseAuxiliary(AuxiliaryInterface):
+class UdsBaseAuxiliary(DTAuxiliaryInterface):
     """Base Auxiliary class for handling UDS protocol."""
 
     POSITIVE_RESPONSE_OFFSET = 0x40
@@ -65,8 +70,11 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
         self.uds_config = None
         self.layer_config = (tp_layer, uds_layer)
 
-        super().__init__(is_proxy_capable=True, **kwargs)
+        super().__init__(
+            is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs
+        )
 
+    @open_connector
     def _create_auxiliary_instance(self) -> bool:
         """Open current associated channel.
 
@@ -74,9 +82,6 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
             otherwise false
         """
         try:
-            log.info("Create auxiliary instance")
-            log.info("Enable channel")
-            self.channel.open()
             tp_conf, uds_conf = self.layer_config
             Config.load_com_layer_config(tp_conf, uds_conf)
 
@@ -93,15 +98,14 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
                 self.uds_config.tp.overwrite_receive_method(self.receive)
             return True
         except Exception:
-            log.exception("Error during channel creation")
-            self.stop()
+            log.exception("An error occurred during kiso-python-uds initialization")
             return False
 
+    @close_connector
     def _delete_auxiliary_instance(self) -> bool:
         """Close current associated channel.
 
         :return: always True
         """
-        log.info("Delete auxiliary instance")
-        self.channel.close()
+        log.info("Auxiliary instance deleted")
         return True

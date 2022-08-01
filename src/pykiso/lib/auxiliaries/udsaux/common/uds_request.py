@@ -33,7 +33,7 @@ class UDSCommands:
     """Generic UDS commands defined by ISO 14229-1."""
 
     class TesterPresent(TupleEnum):
-        "UDS requests to signal to the device that the client is still present"
+        """UDS requests to signal to the device that the client is still present"""
         TESTER_PRESENT = (0x3E, 0x00)
         TESTER_PRESENT_NO_RESPONSE = (0x3E, 0x80)
 
