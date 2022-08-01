@@ -272,7 +272,6 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
 
     def _abort_command(self) -> None:
         """Not Used."""
-        return True
 
     def _receive_message(self, timeout_in_s: float = 0) -> None:
         """When no request are sent this method is called by
@@ -327,8 +326,6 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
                 self.logger.warning(
                     f"Unknown request '{request}', will not be processed!"
                 )
-                self.logger.warning(f"Aux status: {self.__dict__}")
-
             # Step 2: Send stack command and propagate them to others
             # connected auxiliaires and check if something was received
             # if instance was created
