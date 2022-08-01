@@ -59,20 +59,30 @@ class TestCaseOverride(pykiso.BasicTest):
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
-        # send 20 requests over the connected channel and check if the
-        # command was successfully sent
-        for _ in range(20):
-            req = b"\x02\x04\x06"
-            logging.info(f"send request {req} over {com_aux.name}")
-            state = com_aux.send_message(req)
-            logging.info(f"request excecution state: {state}")
-            self.assertEqual(state, True)
+        # send 20 requests (with the context manager over the connected channel
+        #  and check if the command was successfully sent
+        with com_aux.collect_messages():
+            for _ in range(20):
+                req = b"\x02\x04\x06"
+                logging.info(f"send request {req} over {com_aux.name}")
+                state = com_aux.send_message(req)
+                logging.info(f"request excecution state: {state}")
+                self.assertEqual(state, True)
+                response = com_aux.receive_message()
+                logging.info(f"received data {response}")
+                self.assertEqual(response, b"\x02\x04\x06")
 
-        # get the 20 first received messages
-        for _ in range(20):
-            response = com_aux.receive_message()
-            logging.info(f"received data {response}")
-            self.assertEqual(response, b"\x02\x04\x06")
+        self.assertTrue(com_aux.queue_out.empty())
+
+        # sending one request just to make sure queue is not empty
+        with com_aux.collect_messages():
+            req = b"\x02\x04\x06"
+            com_aux.send_message(req)
+
+        # check queue clearing process
+        self.assertFalse(com_aux.queue_out.empty())
+        com_aux.clear_buffer()
+        self.assertTrue(com_aux.queue_out.empty())
 
     def tearDown(self):
         """If a fixture is not use just override it like below."""
