@@ -71,6 +71,7 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
 
         self.uds_config_enable = False
         self.uds_config = None
+        self.tp_waiting_time = 0.010
 
         super().__init__(is_proxy_capable=True, **kwargs)
 

@@ -139,7 +139,9 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :param response_data: the UDS response to send.
         """
         to_send = self.uds_config.tp.encode_isotp(
-            response_data, use_external_snd_rcv_functions=True
+            response_data,
+            use_external_snd_rcv_functions=True,
+            tpWaitTime=self.tp_waiting_time,
         )
         if to_send is not None:
             self.transmit(to_send)
