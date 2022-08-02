@@ -282,7 +282,7 @@ class CCRttSegger(connector.CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.1, size: Optional[int] = None
-    ) -> Dict[str, Union[Message, bytes, None]]:
+    ) -> Dict[str, Optional[bytes]]:
         """Read message from the corresponding RTT buffer.
 
         :param timeout: timeout applied on receive event
@@ -303,12 +303,6 @@ class CCRttSegger(connector.CChannel):
                 msg_received = self.jlink.rtt_read(self.rx_buffer_idx, size)
                 # if a message is received
                 if msg_received:
-                    if size == Message().header_size:
-                        # Read the payload and CRC
-                        msg_received += self.jlink.rtt_read(
-                            self.rx_buffer_idx,
-                            msg_received[-1] + Message().crc_byte_size,
-                        )
                     # Parse the bytes list into bytes string
                     msg_received = bytes(msg_received)
                     log.debug(
@@ -317,7 +311,6 @@ class CCRttSegger(connector.CChannel):
                         msg_received,
                         len(msg_received),
                     )
-
                     break
             except Exception:
                 log.exception(

@@ -323,10 +323,10 @@ def test_wait_and_get_report_queue_empty(aux_inst):
 
 def test__run_command(mocker, aux_inst):
     send_mock = mocker.patch.object(aux_inst.channel, "_cc_send")
+    message_send = message.Message()
+    aux_inst._run_command(cmd_message=message_send, cmd_data=None)
 
-    aux_inst._run_command(cmd_message="abcde", cmd_data=None)
-
-    send_mock.assert_called_with(msg="abcde")
+    send_mock.assert_called_with(msg=message_send.serialize())
 
 
 def test__run_command_exception(mocker, aux_inst, caplog):
@@ -340,12 +340,14 @@ def test__run_command_exception(mocker, aux_inst, caplog):
 
 
 def test__receive_message(mocker, aux_inst):
-    response = message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_SUITE_RUN)
+    response = message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_RUN)
     send_mock = mocker.patch.object(aux_inst.channel, "_cc_send")
     recv_mock = mocker.patch.object(
-        aux_inst.channel, "_cc_receive", return_value={"msg": response}
+        aux_inst.channel, "_cc_receive", return_value={"msg": response.serialize()}
     )
-
+    parse_mock = mocker.patch.object(
+        message.Message, "parse_packet", return_value=response
+    )
     aux_inst._receive_message(timeout_in_s=0)
 
     send_mock.assert_called_once()
@@ -368,14 +370,16 @@ def test__receive_message_no_response(mocker, aux_inst):
 
 
 def test__receive_message_failed_ack(mocker, aux_inst):
-    response = message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_SUITE_RUN)
+    response = message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_RUN)
     send_mock = mocker.patch.object(
         aux_inst.channel, "_cc_send", side_effect=AttributeError
     )
     recv_mock = mocker.patch.object(
-        aux_inst.channel, "_cc_receive", return_value={"msg": response}
+        aux_inst.channel, "_cc_receive", return_value={"msg": response.serialize()}
     )
-
+    parse_mock = mocker.patch.object(
+        message.Message, "parse_packet", return_value=response
+    )
     aux_inst._receive_message(timeout_in_s=0)
 
     recv_mock.assert_called_once()
@@ -386,9 +390,11 @@ def test__receive_message_response_is_ack(mocker, aux_inst):
     response = message.Message(MESSAGE_TYPE.ACK)
     send_mock = mocker.patch.object(aux_inst.channel, "_cc_send")
     recv_mock = mocker.patch.object(
-        aux_inst.channel, "_cc_receive", return_value={"msg": response}
+        aux_inst.channel, "_cc_receive", return_value={"msg": response.serialize()}
     )
-
+    parse_mock = mocker.patch.object(
+        message.Message, "parse_packet", return_value=response
+    )
     aux_inst._receive_message(timeout_in_s=0)
 
     send_mock.assert_not_called()

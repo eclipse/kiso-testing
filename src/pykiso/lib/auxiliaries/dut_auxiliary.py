@@ -352,7 +352,9 @@ class DUTAuxiliary(DTAuxiliaryInterface):
             return None
 
     def _run_command(
-        self, cmd_message: message.Message, cmd_data: bytes = None, raw: bool = False
+        self,
+        cmd_message: message.Message,
+        cmd_data: bytes = None,
     ) -> None:
         """Simply send the given command using the associated channel.
 
@@ -360,50 +362,40 @@ class DUTAuxiliary(DTAuxiliaryInterface):
         :param cmd_data: not use
         """
         try:
-            # We serialize the message if raw is false and we sent it
-            # The connector CCexample await a Message and not a Bytes so we do nothing
-            if isinstance(self.channel, CCExample):
-                pass
-            elif not raw and isinstance(cmd_message, Message):
-                cmd_message = cmd_message.serialize()
-
-            # So we send the Message or the bytes
+            cmd_message = cmd_message.serialize()
+            # We send the the bytes
             self.channel.cc_send(msg=cmd_message)
         except Exception:
             log.exception(
                 f"encountered error while sending message '{cmd_message}' to {self.channel}"
             )
 
-    def _receive_message(
-        self, timeout_in_s: float, raw: bool = False, size: Optional[int] = None
-    ) -> None:
+    def _receive_message(self, timeout_in_s: float, size: Optional[int] = None) -> None:
         """Get message from the device under test.
 
         :param timeout_in_s: Time in seconds to wait for an answer
         """
         # For the CCrttSegger we define the size of the message to receive
-        if isinstance(self.channel, (CCRttSegger)) and not raw:
-            size = Message().header_size
+        # if isinstance(self.channel, CCRttSegger):
+        #    size = Message.header_size
         # We get the message
-        recv_response = self.channel.cc_receive(timeout_in_s, size=size)
+        recv_response = self.channel.cc_receive(
+            timeout_in_s, size=Message.max_message_size
+        )
         response = recv_response.get("msg")
-        # Some channel does differently so we separate case
-        if not raw and isinstance(self.channel, CCTcpip):
-            response = response.decode().strip()
-        elif raw and isinstance(self.channel, VISAChannel):
-            response.encode()
-        elif not raw and response is not None and isinstance(response, bytes):
-            response = Message.parse_packet(response)
 
         if response is None:
             return
+        elif isinstance(response, str):
+            response = response.encode()
+        response = Message.parse_packet(response)
 
         # If a message was received just automatically acknowledge it
         # and populate the queue_out
         if response.msg_type != MESSAGE_TYPE.ACK:
             ack_cmd = response.generate_ack_message(message.MessageAckType.ACK)
             try:
-                self.channel.cc_send(msg=ack_cmd, raw=False)
+                self.channel.cc_send(msg=ack_cmd)
             except Exception:
                 log.exception(
                     f"encountered error while sending acknowledge message for {response}!"

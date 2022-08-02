@@ -86,26 +86,26 @@ class CCExample(connector.CChannel):
 
         :return: Message if successful, otherwise None
         """
-
+        received_message = None
         if self.last_received_message is not None:
             # Transform into ack
-            r_message = message.Message.parse_packet(self.last_received_message)
-            r_message.msg_type = message.MessageType.ACK
-            r_message.sub_type = message.MessageAckType.ACK
+            # r_message = message.Message.parse_packet(self.last_received_message)
+            # r_message.msg_type = message.MessageType.ACK
+            # r_message.sub_type = message.MessageAckType.ACK
             # Delete the stored raw message
+            received_message = self.last_received_message
             self.last_received_message = None
             # Return the ACK
-            log.debug("Receive: {}".format(r_message))
-            return {"msg": r_message}
+            log.debug("Receive: {}".format(received_message))
         elif self.report_requested_message is not None:
             # Transform message to ACK
-            r_message = message.Message.parse_packet(self.report_requested_message)
-            r_message.msg_type = message.MessageType.REPORT
-            r_message.sub_type = message.MessageReportType.TEST_PASS
+            # r_message = message.Message.parse_packet(self.report_requested_message)
+            # r_message.msg_type = message.MessageType.REPORT
+            # r_message.sub_type = message.MessageReportType.TEST_PASS
             # Delete the stored raw message
+            received_message = self.report_requested_message
             self.report_requested_message = None
             # Return REPORT
-            log.debug("Receive: {}".format(r_message))
-            return {"msg": r_message}
-        else:
-            return {"msg": None}
+            log.debug("Receive: {}".format(received_message))
+
+        return {"msg": received_message}

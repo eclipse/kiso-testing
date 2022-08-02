@@ -84,7 +84,7 @@ class VISAChannel(CChannel):
                 f"Request {request}:{request_data} failed! Timeout expired before operation completed."
             )
         except Exception as e:
-            log.exception(f"Request {request}:{request_data} failed!\n{e}")
+            log.exception(f"Request {request}: {request_data} failed!\n{e}")
         else:
             log.debug(f"Response received: {recv}")
         finally:
