@@ -245,8 +245,10 @@ def execute(
 
         exit_code = failure_and_error_handling(result)
     except TestCollectionError:
+        log.exception("Error occurred during test collections.")
         exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
     except AuxiliaryCreationError:
+        log.exception("Error occurred during auxiliary creation.")
         exit_code = ExitCode.AUXILIARY_CREATION_FAILED
     except KeyboardInterrupt:
         log.exception("Keyboard Interrupt detected")
