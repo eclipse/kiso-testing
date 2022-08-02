@@ -43,6 +43,19 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
     """Base Auxiliary class for handling UDS protocol."""
 
     POSITIVE_RESPONSE_OFFSET = 0x40
+    DEFAULT_UDS_CONFIG = {
+        "transport_protocol": "CAN",
+        "p2_can_client": 5,
+        "p2_can_server": 1,
+    }
+    DEFAULT_TP_CONFIG = {
+        "addressing_type": "NORMAL",
+        "n_sa": 0xFF,
+        "n_ta": 0xFF,
+        "n_ae": 0xFF,
+        "m_type": "DIAGNOSTICS",
+        "discard_neg_resp": False,
+    }
 
     def __init__(
         self,
@@ -62,17 +75,31 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
         :param request_id: optional CAN ID used for sending messages.
         :param response_id: optional CAN ID used for receiving messages.
         """
-        self.channel = com
-        self.odx_file_path = odx_file_path
-        self.req_id = tp_layer.get("req_id")
-        self.res_id = tp_layer.get("res_id")
-        self.uds_config_enable = False
-        self.uds_config = None
-        self.layer_config = (tp_layer, uds_layer)
 
         super().__init__(
             is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs
         )
+
+        self.channel = com
+        self.odx_file_path = odx_file_path
+        self.req_id = request_id
+        self.res_id = response_id
+        self.uds_config_enable = False
+        self.uds_config = None
+        self.tp_layer = None
+        self.uds_layer = None
+        self.init_com_layers(tp_layer, uds_layer)
+
+    def init_com_layers(
+        self, tp_layer: Optional[dict] = None, uds_layer: Optional[dict] = None
+    ) -> None:
+        tp_layer = tp_layer or UdsBaseAuxiliary.DEFAULT_TP_CONFIG
+        uds_layer = uds_layer or UdsBaseAuxiliary.DEFAULT_UDS_CONFIG
+        # add configured reauest id and response id to tp layer config
+        tp_layer["req_id"] = self.req_id
+        tp_layer["res_id"] = self.res_id
+        self.tp_layer = tp_layer
+        self.uds_layer = uds_layer
 
     @open_connector
     def _create_auxiliary_instance(self) -> bool:
@@ -82,16 +109,11 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
             otherwise false
         """
         try:
-            tp_conf, uds_conf = self.layer_config
-            Config.load_com_layer_config(tp_conf, uds_conf)
-
+            Config.load_com_layer_config(self.tp_layer, self.uds_layer)
             self.uds_config = Uds(
                 self.odx_file_path,
                 connector=self.channel,
-                reqId=self.req_id,
-                resId=self.res_id,
             )
-
             if hasattr(self, "transmit"):
                 self.uds_config.tp.overwrite_transmit_method(self.transmit)
             if hasattr(self, "receive"):
