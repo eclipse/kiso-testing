@@ -7,13 +7,13 @@ auxiliaries:
       # and instead of using send_uds_raw method use the send_uds_config
       # for a more human readable command
       odx_file_path: null
+      request_id : 0xAB
+      response_id : 0xAC
       uds_layer:
         transport_protocol: 'CAN'
         p2_can_client: 5
         p2_can_server: 1
       tp_layer:
-        req_id: 0xAB
-        res_id: 0xAC
         addressing_type: 'NORMAL'
         n_sa: 0xFF
         n_ta: 0xFF

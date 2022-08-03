@@ -23,6 +23,8 @@ uds_base_auxiliary
 """
 import configparser
 import logging
+import warnings
+
 from pathlib import Path
 from typing import Optional, Union
 
@@ -37,6 +39,7 @@ from pykiso.interfaces.dt_auxiliary import (
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
+
 
 
 class UdsBaseAuxiliary(DTAuxiliaryInterface):
@@ -60,6 +63,7 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
     def __init__(
         self,
         com: CChannel,
+        config_ini_path: Optional[Union[Path, str]] = None,
         odx_file_path: Optional[Union[Path, str]] = None,
         request_id: Optional[int] = None,
         response_id: Optional[int] = None,
@@ -75,11 +79,9 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
         :param request_id: optional CAN ID used for sending messages.
         :param response_id: optional CAN ID used for receiving messages.
         """
-
         super().__init__(
             is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs
         )
-
         self.channel = com
         self.odx_file_path = odx_file_path
         self.req_id = request_id
@@ -88,11 +90,24 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
         self.uds_config = None
         self.tp_layer = None
         self.uds_layer = None
-        self.init_com_layers(tp_layer, uds_layer)
+        self._init_com_layers(tp_layer, uds_layer)
 
-    def init_com_layers(
+        # remove it after a few releases just warn users
+        if config_ini_path is not None:
+            warnings.warn(
+                "The usage of ini file is deprecated, nothing will be read from it", category=FutureWarning
+            )
+            log.warning(f"apply following values for ISOTP layer configuration : {DEFAULT_TP_CONFIG}")
+            log.warning(f"apply following values for UDS layer configuration : {DEFAULT_UDS_CONFIG}")
+
+    def _init_com_layers(
         self, tp_layer: Optional[dict] = None, uds_layer: Optional[dict] = None
     ) -> None:
+        """Initialize isotp and uds layer attributes.
+
+        :param tp_layer: isotp configurration given at yaml level
+        :param uds_layer: uds configurration given at yaml level
+        """
         tp_layer = tp_layer or UdsBaseAuxiliary.DEFAULT_TP_CONFIG
         uds_layer = uds_layer or UdsBaseAuxiliary.DEFAULT_UDS_CONFIG
         # add configured reauest id and response id to tp layer config
@@ -109,6 +124,9 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
             otherwise false
         """
         try:
+            if self.odx_file_path is not None:
+                self.uds_config_enable = True
+
             Config.load_com_layer_config(self.tp_layer, self.uds_layer)
             self.uds_config = Uds(
                 self.odx_file_path,
