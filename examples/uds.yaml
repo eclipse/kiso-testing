@@ -9,10 +9,23 @@ auxiliaries:
       odx_file_path: null
       request_id : 0xAB
       response_id : 0xAC
+      # uds_layer parameter is not mandatory and by default the following
+      # values will be applied:
+      # transport_protocol -> CAN
+      # p2_can_client -> 5
+      # p2_can_server -> 1
       uds_layer:
         transport_protocol: 'CAN'
         p2_can_client: 5
         p2_can_server: 1
+      # tp_layer parameter is not mandatory and by default the following
+      # values will be applied:
+      # addressing_type -> NORMAL
+      # n_sa -> 0xFF
+      # n_ta -> 0xFF
+      # n_ae -> 0xFF
+      # m_type -> DIAGNOSTICS
+      # discard_neg_resp -> False
       tp_layer:
         addressing_type: 'NORMAL'
         n_sa: 0xFF

@@ -24,7 +24,6 @@ uds_base_auxiliary
 import configparser
 import logging
 import warnings
-
 from pathlib import Path
 from typing import Optional, Union
 
@@ -39,7 +38,6 @@ from pykiso.interfaces.dt_auxiliary import (
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
-
 
 
 class UdsBaseAuxiliary(DTAuxiliaryInterface):
@@ -95,10 +93,15 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
         # remove it after a few releases just warn users
         if config_ini_path is not None:
             warnings.warn(
-                "The usage of ini file is deprecated, nothing will be read from it", category=FutureWarning
+                "The usage of ini file is deprecated, nothing will be read from it",
+                category=FutureWarning,
             )
-            log.warning(f"apply following values for ISOTP layer configuration : {DEFAULT_TP_CONFIG}")
-            log.warning(f"apply following values for UDS layer configuration : {DEFAULT_UDS_CONFIG}")
+            log.warning(
+                f"apply following values for ISOTP layer configuration : {UdsBaseAuxiliary.DEFAULT_TP_CONFIG}"
+            )
+            log.warning(
+                f"apply following values for UDS layer configuration : {UdsBaseAuxiliary.DEFAULT_UDS_CONFIG}"
+            )
 
     def _init_com_layers(
         self, tp_layer: Optional[dict] = None, uds_layer: Optional[dict] = None
@@ -133,9 +136,9 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
                 connector=self.channel,
             )
             if hasattr(self, "transmit"):
-                self.uds_config.tp.overwrite_transmit_method(self.transmit)
+                self.uds_config.overwrite_transmit_method(self.transmit)
             if hasattr(self, "receive"):
-                self.uds_config.tp.overwrite_receive_method(self.receive)
+                self.uds_config.overwrite_receive_method(self.receive)
             return True
         except Exception:
             log.exception("An error occurred during kiso-python-uds initialization")
