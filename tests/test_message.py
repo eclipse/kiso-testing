@@ -25,13 +25,15 @@ from pykiso.message import (
 
 class MessageTest(unittest.TestCase):
     def test_message_creation(self):
-        message_for_test = Message(
+        msg = Message(
             msg_type=MessageType.COMMAND,
             sub_type=MessageCommandType.TEST_CASE_SETUP,
             test_suite=2,
             test_case=3,
         )
-        print(message_for_test)  # Not best unittest -> Used to compare with old code
+        assert msg.test_suite == 2
+        assert msg.test_case == 3
+        assert msg.msg_type == MessageType.COMMAND
 
     def test_message_consistency_with_tlv_dict(self):
         # Create the message
@@ -47,14 +49,14 @@ class MessageTest(unittest.TestCase):
             tlv_dict=tlv_dict_to_send,
         )
         # Check message content
-        self.assertEqual(MessageType.COMMAND, message_for_test.get_message_type())
-        self.assertEqual(
-            MessageCommandType.TEST_CASE_SETUP, message_for_test.get_message_sub_type()
+        assert MessageType.COMMAND == message_for_test.get_message_type()
+        assert (
+            MessageCommandType.TEST_CASE_SETUP
+            == message_for_test.get_message_sub_type()
         )
-        self.assertEqual(
-            next(message_mod.msg_cnt) - 1, message_for_test.get_message_token()
-        )
-        self.assertDictEqual(tlv_dict_to_send, message_for_test.get_message_tlv_dict())
+
+        assert next(message_mod.msg_cnt) - 1 == message_for_test.get_message_token()
+        assert tlv_dict_to_send == message_for_test.get_message_tlv_dict()
 
     def test_message_serialization_no_tlv(self):
         # Create the message
@@ -71,7 +73,7 @@ class MessageTest(unittest.TestCase):
 
         expected_output = "40{:02x}030000020300".format(next(message_mod.msg_cnt) - 1)
 
-        self.assertEqual(expected_output, output_result.hex())
+        assert expected_output == output_result.hex()
 
     def test_message_serialization_with_tlv(self):
         # Create the message
@@ -101,7 +103,7 @@ class MessageTest(unittest.TestCase):
         )
         # Remove the crc (not the purpose of this test)
         output_result = output_result[:-2]
-        self.assertEqual(expected_output, output_result.hex())
+        assert expected_output == output_result.hex()
 
     def test_parse_back_message_with_no_tlv(self):
         # Create raw message
@@ -109,12 +111,10 @@ class MessageTest(unittest.TestCase):
         # Parse message back
         message = Message.parse_packet(raw_message)
         # Check content
-        self.assertEqual(MessageType.COMMAND, message.get_message_type())
-        self.assertEqual(
-            MessageCommandType.TEST_CASE_SETUP, message.get_message_sub_type()
-        )
-        self.assertEqual(1, message.get_message_token())
-        self.assertEqual(None, message.get_message_tlv_dict())
+        assert MessageType.COMMAND == message.get_message_type()
+        assert MessageCommandType.TEST_CASE_SETUP == message.get_message_sub_type()
+        assert 1 == message.get_message_token()
+        assert None == message.get_message_tlv_dict()
 
     def test_parse_back_message_with_tlv(self):
         # Create raw message
@@ -122,18 +122,13 @@ class MessageTest(unittest.TestCase):
         # Parse message back
         message = Message.parse_packet(raw_message)
         # Check content
-        self.assertEqual(MessageType.COMMAND, message.get_message_type())
-        self.assertEqual(
-            MessageCommandType.TEST_CASE_SETUP, message.get_message_sub_type()
-        )
-        self.assertEqual(1, message.get_message_token())
-        self.assertDictEqual(
-            {
-                TlvKnownTags.TEST_REPORT: [79, 75],
-                TlvKnownTags.FAILURE_REASON: [18, 52, 86],
-            },
-            message.get_message_tlv_dict(),
-        )
+        assert MessageType.COMMAND == message.get_message_type()
+        assert MessageCommandType.TEST_CASE_SETUP == message.get_message_sub_type()
+        assert 1 == message.get_message_token()
+        assert {
+            TlvKnownTags.TEST_REPORT: [79, 75],
+            TlvKnownTags.FAILURE_REASON: [18, 52, 86],
+        } == message.get_message_tlv_dict()
 
     def test_ack_message_matching(self):
         # Create the messages
@@ -148,7 +143,24 @@ class MessageTest(unittest.TestCase):
         )
         # Parse and compare
         message_received = Message.parse_packet(raw_ack_message_received)
-        self.assertTrue(message_sent.check_if_ack_message_is_matching(message_received))
+        assert message_sent.check_if_ack_message_is_matching(message_received) is True
+
+    def test_ack_message_not_matching(self):
+        message_sent = Message(
+            msg_type=MessageType.COMMAND,
+            sub_type=MessageCommandType.TEST_CASE_SETUP,
+            test_suite=2,
+            test_case=3,
+        )
+
+        message_rcv = Message(
+            msg_type=MessageType.COMMAND,
+            sub_type=MessageCommandType.TEST_CASE_SETUP,
+            test_suite=2,
+            test_case=3,
+        )
+
+        assert message_sent.check_if_ack_message_is_matching(message_rcv) is False
 
     def test_ack_message_gen_and_match(self):
         # Create the messages
@@ -160,15 +172,20 @@ class MessageTest(unittest.TestCase):
         )
         ack_message_received = message_sent.generate_ack_message(MessageAckType.ACK)
         # Parse and compare
-        self.assertTrue(
-            message_sent.check_if_ack_message_is_matching(ack_message_received)
+        assert (
+            message_sent.check_if_ack_message_is_matching(ack_message_received) is True
         )
 
     def test_get_crc(self):
         crc = Message.get_crc(b"@\x01\x00\x00\x00UU\x00", 2)
-        self.assertEqual(b"\xc5\n", struct.pack("H", crc))
+        assert b"\xc5\n" == struct.pack("H", crc)
 
+    def test_generate_ack_message_wrong_type(self):
+        msg = Message(
+            msg_type=MessageType.COMMAND,
+            sub_type=MessageCommandType.TEST_CASE_SETUP,
+            test_suite=2,
+            test_case=3,
+        )
 
-if __name__ == "__main__":
-    # Start unittests
-    unittest.main()
+        assert msg.generate_ack_message(1) is None
