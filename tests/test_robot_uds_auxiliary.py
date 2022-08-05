@@ -72,7 +72,7 @@ def test_send_uds_raw_with_response(mocker, robot_uds_aux, uds_aux):
 
     response = robot_uds_aux.send_uds_raw(b"\x10\x01", "uds_aux", 6)
 
-    uds_raw_mock.assert_called_with(b"\x10\x01", 6)
+    uds_raw_mock.assert_called_with(b"\x10\x01", 6, True)
     assert isinstance(response, list)
     assert response.pop() == 0x03
     assert response.pop() == 0x50
@@ -83,7 +83,7 @@ def test_send_uds_raw_with_state(mocker, robot_uds_aux, uds_aux):
 
     response = robot_uds_aux.send_uds_raw(b"\x10\x01", "uds_aux", 6)
 
-    uds_raw_mock.assert_called_with(b"\x10\x01", 6)
+    uds_raw_mock.assert_called_with(b"\x10\x01", 6, True)
     assert isinstance(response, bool)
 
 
@@ -182,4 +182,6 @@ def test_tester_present_sender(mocker, robot_uds_aux, uds_aux):
     robot_uds_aux.start_tester_present_sender(1, "uds_aux")
     robot_uds_aux.stop_tester_present_sender()
 
-    send_mock.assert_called_with(UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE)
+    send_mock.assert_called_with(
+        UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE, response_required=False
+    )
