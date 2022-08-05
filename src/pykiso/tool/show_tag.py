@@ -285,6 +285,8 @@ def main(
     if output is None:
         return
 
+    output = Path(output)
+
     with open(output, "w", encoding="utf-8") as f:
         if ".json" in output.suffixes:
             json.dump(all_results, f, ensure_ascii=False, indent=2)

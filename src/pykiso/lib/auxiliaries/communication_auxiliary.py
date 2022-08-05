@@ -224,9 +224,9 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         """
         try:
             rcv_data = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
+            log.internal_debug(f"received message '{rcv_data}' from {self.channel}")
             msg = rcv_data.get("msg")
             if msg is not None and self.queueing_event.is_set():
-                log.internal_debug(f"received message '{rcv_data}' from {self.channel}")
                 self.queue_out.put(rcv_data)
         except Exception:
             log.exception(
