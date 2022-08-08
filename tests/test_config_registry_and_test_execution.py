@@ -7,15 +7,13 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import itertools
-import sys
+import logging
 from unittest import TestCase, TestResult
 
 import pytest
 
 import pykiso
 import pykiso.test_coordinator.test_execution
-from pykiso import cli
 from pykiso.config_parser import parse_config
 from pykiso.test_coordinator import test_execution
 from pykiso.test_setup.config_registry import ConfigRegistry
@@ -42,7 +40,9 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
     assert "->  Failed" not in output.err
 
 
-@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+@pytest.mark.parametrize(
+    "tmp_test", [("with_pattern_aux1", "_with_pattern_aux2", False)], indirect=True
+)
 def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
@@ -61,8 +61,12 @@ def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     assert "Ran 0 tests" in output.err
 
 
-@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
-def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mocker):
+@pytest.mark.parametrize(
+    "tmp_test",
+    [("collector_error_aux1", "collector_error_aux_2", False)],
+    indirect=True,
+)
+def test_config_registry_test_collection_error(tmp_test, capsys, mocker, caplog):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     by specifying a pattern
@@ -85,6 +89,58 @@ def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mock
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "Ran 0 tests" not in output.err
+
+
+@pytest.mark.parametrize(
+    "tmp_test",
+    [("collector_error_2_aux1", "collector_error_2_aux", False)],
+    indirect=True,
+)
+def test_config_registry_and_test_execution_collect_error(mocker, caplog, tmp_test):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    by specifying a pattern
+
+    Validation criteria:
+        -  run is executed with test collection error
+    """
+    mocker.patch(
+        "pykiso.test_coordinator.test_execution.collect_test_suites",
+        side_effect=pykiso.TestCollectionError("test"),
+    )
+
+    cfg = parse_config(tmp_test)
+
+    with caplog.at_level(logging.ERROR):
+        test_execution.execute(config=cfg)
+
+    assert "Error occurred during test collections." in caplog.text
+
+
+@pytest.mark.parametrize(
+    "tmp_test", [("creation_error_aux1", "creation_error_aux2", False)], indirect=True
+)
+def test_config_registry_and_test_execution_test_auxiliary_creation_error(
+    mocker, caplog, tmp_test
+):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    by specifying a pattern
+
+    Validation criteria:
+        -  run is executed with auxiliary creation error
+    """
+    mocker.patch(
+        "pykiso.test_coordinator.test_execution.collect_test_suites",
+        side_effect=pykiso.AuxiliaryCreationError("test"),
+    )
+
+    cfg = parse_config(tmp_test)
+
+    with caplog.at_level(logging.ERROR):
+        test_execution.execute(config=cfg)
+
+    assert "Error occurred during auxiliary creation." in caplog.text
 
 
 @pytest.mark.parametrize("tmp_test", [("text_aux1", "text_aux2", False)], indirect=True)
