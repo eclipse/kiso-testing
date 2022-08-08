@@ -85,11 +85,11 @@ The test suite definition is a list of key-value pairs.
 Each test suite consists of a `test_suite_id`, a `suite_dir` and a `test_filter_pattern`.
 
 For fast test development, the `test_filter_pattern` can be overwritten from the command line
-in order to e.g. execute a single test file inside the `suite_dir` using the CLI argument `PATTERN`:
+in order to e.g. execute a single test file inside the `suite_dir` using the CLI argument `-p` or `--pattern`:
 
 ..code:: bash
 
-    pykiso -c dummy.yaml test_suite_1.py
+    pykiso -c dummy.yaml -p test_suite_1.py
 
 
 Requirements specification

@@ -52,3 +52,23 @@ The collected messages by the Communication auxiliary can still be cleared with 
 :py:meth`~pykiso.lib.auxiliaries.communication_auxiliary.CommunicationAuxiliary.clear_buffer`
 
 See :ref:`communication_auxiliary`
+
+DUT Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^
+refactor/redesign of the device under test auxiliary to fit with the brand new double
+threaded auxiliary interface
+
+Record Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the record auxiliary to fit with the brand new double threaded auxiliary interface
+
+Acroname Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
+
+Agnostic tag call
+^^^^^^^^^^^^^^^^^
+Instead of having only the 2 tags "variant" and "branch_level" to select tests, users
+can now set any tagname.
+
+See: :ref:`define_test_information` for more details.
