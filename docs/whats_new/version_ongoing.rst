@@ -23,6 +23,8 @@ Currently adapted modules:
 - Record Auxiliary
 - Acroname Auxiliary
 - Instrument Auxiliary
+- UDS Auxiliary
+- UDS server Auxiliary
 
 There is not API changes, therefor, as user, your tests should not be affected.
 
@@ -53,3 +55,15 @@ The collected messages by the Communication auxiliary can still be cleared with 
 :py:meth`~pykiso.lib.auxiliaries.communication_auxiliary.CommunicationAuxiliary.clear_buffer`
 
 See :ref:`communication_auxiliary`
+
+Lightweight UDS auxliary configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The add of an .ini file to configured the UDS auxiliary and it variant (server)
+is no more mandatory, every parameter is now reachable in the .yaml file.
+
+See :ref:`examples/uds.yaml`
+
+In addition, if the tp_layer and uds_layer parameters are not given at yaml level
+a default configuration is applied.
+
+See :ref:`uds_auxiliary`
