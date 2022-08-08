@@ -13,8 +13,6 @@ Configuration
 To configure the UDS auxiliary 3 parameters are mandatory :
 
 - odx_file_path: path to the odx formatted ecu diagnostic definition file.
-- config_ini_path: path to the uds parameters ini file.
-- ecu_target: ecu on which uds communication is established.
 
 .. note:: More information about yaml test configuration creation are available under Test Integration Framework project documentation.
 
@@ -23,75 +21,52 @@ Find below a complete configuration example :
 .. code:: yaml
 
     auxiliaries:
-        uds_aux:
-            connectors:
-                com: can_channel
-            config:
-                odx_file_path: 'path/to/my/file.odx'
-                #For Vector Box, serial number and interface needs to be updated in config.ini file
-                #request and response id need to be configured in config.ini depending on the target
-                config_ini_path: 'examples/test_uds/config.ini'
-            type: pykiso.lib.auxiliaries.udsaux.uds_auxiliary:UdsAuxiliary
+      uds_aux:
+        connectors:
+            com: can_channel
+        config:
+          # you can sepcify your odx file by using odx_file_path parameter
+          # and instead of using send_uds_raw method use the send_uds_config
+          # for a more human readable command
+          odx_file_path: null
+          request_id : 0x123
+          response_id : 0x321
+          # uds_layer parameter is not mandatory and by default the following
+          # values will be applied:
+          # transport_protocol -> CAN
+          # p2_can_client -> 5
+          # p2_can_server -> 1
+          uds_layer:
+            transport_protocol: 'CAN'
+            p2_can_client: 5
+            p2_can_server: 1
+          # tp_layer parameter is not mandatory and by default the following
+          # values will be applied:
+          # addressing_type -> NORMAL
+          # n_sa -> 0xFF
+          # n_ta -> 0xFF
+          # n_ae -> 0xFF
+          # m_type -> DIAGNOSTICS
+          # discard_neg_resp -> False
+          tp_layer:
+            addressing_type: 'NORMAL'
+            n_sa: 0xFF
+            n_ta: 0xFF
+            n_ae: 0xFF
+            m_type: 'DIAGNOSTICS'
+            discard_neg_resp: False
+        type: pykiso.lib.auxiliaries.udsaux.uds_auxiliary:UdsAuxiliary
     connectors:
-        can_channel:
-            config:
-            interface : 'pcan'
-            channel: 'PCAN_USBBUS1'
-            state: 'ACTIVE'
-            type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
+      can_channel:
+        config:
+          interface : 'pcan'
+          channel: 'PCAN_USBBUS1'
+          state: 'ACTIVE'
+        type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
     test_suite_list:
-    -   suite_dir: test_uds
-        test_filter_pattern: 'test_uds.py'
-        test_suite_id: 1
-
-And for the config.ini file:
-
-.. code:: ini
-
-    [can]
-    interface=peak
-    canfd=True
-    baudrate=500000
-    data_baudrate=2000000
-    defaultReqId=0xAB
-    defaultResId=0xAC
-
-    [uds]
-    transportProtocol=CAN
-    P2_CAN_Client=5
-    P2_CAN_Server=1
-
-    [canTp]
-    reqId=0xAB
-    resId=0xAC
-    addressingType=NORMAL
-    N_SA=0xFF
-    N_TA=0xFF
-    N_AE=0xFF
-    Mtype=DIAGNOSTICS
-    discardNegResp=False
-
-    [virtual]
-    interfaceName=virtualInterface
-
-    [peak]
-    device=PCAN_USBBUS1
-    f_clock_mhz=80
-    nom_brp=2
-    nom_tseg1=63
-    nom_tseg2=16
-    nom_sjw=16
-    data_brp=4
-    data_tseg1=7
-    data_tseg2=2
-    data_sjw=2
-
-    [vector]
-    channel=1
-    appName=MyApp
-
-    [socketcan]
-    channel=can0
+    - suite_dir: test_uds
+      test_filter_pattern: 'test_raw_uds*.py'
+      test_suite_id: 1
 
 
 Send UDS Raw Request

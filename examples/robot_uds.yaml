@@ -4,6 +4,8 @@ auxiliaries:
         com: can_channel
     config:
       odx_file_path: null
+      request_id : 0x123
+      response_id : 0x321
       uds_layer:
         transport_protocol: 'CAN'
         p2_can_client: 5

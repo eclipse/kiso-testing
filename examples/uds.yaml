@@ -7,8 +7,8 @@ auxiliaries:
       # and instead of using send_uds_raw method use the send_uds_config
       # for a more human readable command
       odx_file_path: null
-      request_id : 0xAB
-      response_id : 0xAC
+      request_id : 0x123
+      response_id : 0x321
       # uds_layer parameter is not mandatory and by default the following
       # values will be applied:
       # transport_protocol -> CAN
