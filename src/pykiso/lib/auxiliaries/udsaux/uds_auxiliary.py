@@ -61,7 +61,9 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         """Send a UDS diagnostic request to the target ECU and check response.
 
         :param msg_to_send: can uds raw bytes to be sent
-        :param timeout_in_s: not used
+        :param timeout_in_s: not used, actual timeout in seconds for the response can be
+            configured with the P2_CAN_Client parameter in the config.ini file
+            (default value is 5s)
         :param response_required: Wait for a response if True
 
         :raise ResponseNotReceivedError: raised when no answer has been received
