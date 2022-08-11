@@ -89,21 +89,23 @@ class CCExample(connector.CChannel):
         received_message = None
         if self.last_received_message is not None:
             # Transform into ack
-            # r_message = message.Message.parse_packet(self.last_received_message)
-            # r_message.msg_type = message.MessageType.ACK
-            # r_message.sub_type = message.MessageAckType.ACK
+            received_message = message.Message.parse_packet(self.last_received_message)
+            received_message.msg_type = message.MessageType.ACK
+            received_message.sub_type = message.MessageAckType.ACK
             # Delete the stored raw message
-            received_message = self.last_received_message
+            received_message = received_message.serialize()
             self.last_received_message = None
             # Return the ACK
             log.debug("Receive: {}".format(received_message))
         elif self.report_requested_message is not None:
             # Transform message to ACK
-            # r_message = message.Message.parse_packet(self.report_requested_message)
-            # r_message.msg_type = message.MessageType.REPORT
-            # r_message.sub_type = message.MessageReportType.TEST_PASS
+            received_message = message.Message.parse_packet(
+                self.report_requested_message
+            )
+            received_message.msg_type = message.MessageType.REPORT
+            received_message.sub_type = message.MessageReportType.TEST_PASS
             # Delete the stored raw message
-            received_message = self.report_requested_message
+            received_message = received_message.serialize()
             self.report_requested_message = None
             # Return REPORT
             log.debug("Receive: {}".format(received_message))

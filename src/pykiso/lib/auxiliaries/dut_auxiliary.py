@@ -375,10 +375,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
 
         :param timeout_in_s: Time in seconds to wait for an answer
         """
-        # For the CCrttSegger we define the size of the message to receive
-        # if isinstance(self.channel, CCRttSegger):
-        #    size = Message.header_size
-        # We get the message
+
         recv_response = self.channel.cc_receive(
             timeout_in_s, size=Message.max_message_size
         )
