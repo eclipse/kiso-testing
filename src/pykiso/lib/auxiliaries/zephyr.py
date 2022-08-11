@@ -184,6 +184,7 @@ class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
         self.twister_path = twister_path
         self.test_directory = test_directory
         self.test_name = test_name
+        self.wait_for_start = wait_for_start
         self.twister = Twister(twister_path)
         super().__init__(**kwargs)
 
