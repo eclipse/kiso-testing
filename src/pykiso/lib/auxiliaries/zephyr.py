@@ -12,7 +12,7 @@ import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional
-from pykiso import AuxiliaryInterface
+from pykiso import SimpleAuxiliaryInterface
 from pykiso.types import MsgType
 
 log = logging.getLogger(__name__)
@@ -27,11 +27,9 @@ class TestResult(enum.IntEnum):
     ERROR = 3
 
 
-class ZyphyrException(Exception):
+class ZephyrError(Exception):
     """Exception for twister errors"""
-
-    def __init__(self, message) -> None:
-        super().__init__(message)
+    pass
 
 
 class Twister:
@@ -53,7 +51,7 @@ class Twister:
         :return: True if successful
         """
         if self.process is not None:
-            raise ZyphyrException("Twister test is already running")
+            raise ZephyrError("Twister test is already running")
 
         self.outdir = str(Path(test_directory).resolve() / "twister-out")
         logging.info(f"Using Twister output directory: {self.outdir}")
@@ -97,9 +95,10 @@ class Twister:
                 return None
             line = read.decode("utf-8").strip()
             # Twister outputs many lines without a real message, remove those
-            output = line.find("- OUTPUT:")
+            test_output_pattern = "- OUTPUT:"
+            output = line.find(test_output_pattern)
             if output != -1:
-                message = line[output + 9 :]
+                message = line[output + len(test_output_pattern) :]
                 if len(message) == 0 or message.isspace():
                     continue
             log.debug(f"Twister: {line}")
@@ -135,7 +134,7 @@ class Twister:
         :return: The result of the test, taken from the xunit output of twister
         """
         if self.process is None:
-            raise ZyphyrException("Twister was not started so can not wait.")
+            raise ZephyrError("Twister was not started so can not wait.")
 
         # Read the twister console for log output
         while True:
@@ -159,7 +158,7 @@ class Twister:
         return result
 
 
-class ZephyrTestAuxiliary(AuxiliaryInterface):
+class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
     """Auxiliary for Zephyr test interaction using the twister commandline tool
 
     The functionality includes test case execution and result collection.
@@ -198,9 +197,9 @@ class ZephyrTestAuxiliary(AuxiliaryInterface):
         test_directory = test_directory if test_directory is not None else self.test_directory
         test_name = test_name if test_name is not None else self.test_name
         if test_directory is None:
-            raise ZyphyrException("test_directory parameter is not set.")
+            raise ZephyrError("test_directory parameter is not set.")
         if test_name is None:
-            raise ZyphyrException("test_name parameter is not set.")
+            raise ZephyrError("test_name parameter is not set.")
         return self.twister.start_test(test_directory, test_name, self.wait_for_start)
 
     def wait_test(self) -> TestResult:
@@ -211,13 +210,3 @@ class ZephyrTestAuxiliary(AuxiliaryInterface):
 
     def _delete_auxiliary_instance(self) -> bool:
         return True
-
-    def _run_command(self, cmd_message: MsgType, cmd_data: bytes = None) -> MsgType:
-        # Must return a matching type
-        return "dummy"
-
-    def _abort_command(self) -> bool:
-        return True
-
-    def _receive_message(self, timeout_in_s: float):
-        return None
