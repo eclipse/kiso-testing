@@ -170,7 +170,6 @@ class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
         twister_path: str = "twister",
         test_directory: Optional[str] = None,
         test_name: Optional[str] = None,
-        wait_for_start: bool = True,
         **kwargs,
     ) -> None:
         """Initialize the auxiliary
@@ -184,9 +183,8 @@ class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
         self.twister_path = twister_path
         self.test_directory = test_directory
         self.test_name = test_name
-        self.wait_for_start = wait_for_start
         self.twister = Twister(twister_path)
-        super().__init__(auto_start=False, **kwargs)
+        super().__init__(**kwargs)
 
     def start_test(self, test_directory: Optional[str] = None, test_name: Optional[str] = None) -> None:
         """Start the Zephyr test
