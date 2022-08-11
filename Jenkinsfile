@@ -82,8 +82,10 @@ pipeline
                     west init .
                     west update
                     west zephyr-export
+                    export PATH=$PATH:/kiso-project/zephyr-project/zephyr/scripts/
                     cd ..
-                    pykiso -c examples/zephyr.yaml --log-level DEBUG || true
+                    poetry run pip3 install colorama ply pyelftools west
+                    poetry run pykiso -c examples/zephyr.yaml --log-level DEBUG
                 '''
             }
         }
