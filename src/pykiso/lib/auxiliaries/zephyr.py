@@ -170,6 +170,7 @@ class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
         twister_path: str = "twister",
         test_directory: Optional[str] = None,
         test_name: Optional[str] = None,
+        wait_for_start: bool = True,
         **kwargs,
     ) -> None:
         """Initialize the auxiliary
