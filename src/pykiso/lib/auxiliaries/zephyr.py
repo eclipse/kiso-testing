@@ -29,6 +29,7 @@ class TestResult(enum.IntEnum):
 
 class ZephyrError(Exception):
     """Exception for twister errors"""
+
     pass
 
 
@@ -188,13 +189,17 @@ class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
         self.twister = Twister(twister_path)
         super().__init__(**kwargs)
 
-    def start_test(self, test_directory: Optional[str] = None, test_name: Optional[str] = None) -> None:
+    def start_test(
+        self, test_directory: Optional[str] = None, test_name: Optional[str] = None
+    ) -> None:
         """Start the Zephyr test
 
         :param test_directory: The directory to search for the Zephyr test project. Defaults to the test_directory from YAML.
         :param testcase_name: The name of the Zephyr test. Defaults to the testcase_name from YAML.
         """
-        test_directory = test_directory if test_directory is not None else self.test_directory
+        test_directory = (
+            test_directory if test_directory is not None else self.test_directory
+        )
         test_name = test_name if test_name is not None else self.test_name
         if test_directory is None:
             raise ZephyrError("test_directory parameter is not set.")
