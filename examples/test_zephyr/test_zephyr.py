@@ -47,8 +47,8 @@ class MyTest1(pykiso.BasicTest):
         instead of calling test_run from RemoteTest class the following
         code is called.
 
-        
-        
+
+
         """
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
