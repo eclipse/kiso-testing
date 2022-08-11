@@ -47,20 +47,25 @@ class UdsAuxiliary(RobotAuxInterface):
 
     @keyword(name="Send uds raw")
     def send_uds_raw(
-        self, msg_to_send: bytes, aux_alias: str, timeout_in_s: float = 6
+        self,
+        msg_to_send: bytes,
+        aux_alias: str,
+        timeout_in_s: float = 6,
+        response_required: bool = True,
     ) -> Union[list, bool]:
         """Send a UDS diagnostic request to the target ECU.
 
         :param msg_to_send: can uds raw bytes to be sent
         :param aux_alias: auxiliary's alias
         :param timeout_in_s: maximum time used to wait for a response.
+        :param response_required: Wait for a response if True
 
         :return: the raw uds response's, or True if a response is
             not expected and the command is properly sent otherwise
             False
         """
         aux = self._get_aux(aux_alias)
-        msg = aux.send_uds_raw(msg_to_send, timeout_in_s)
+        msg = aux.send_uds_raw(msg_to_send, timeout_in_s, response_required)
         return list(msg) if not isinstance(msg, bool) else msg
 
     @keyword(name="Send uds config")
