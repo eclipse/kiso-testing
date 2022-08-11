@@ -184,7 +184,7 @@ an additional reference can be added into the test_run decorator:
 
 In order to run only a subset of tests, an additional reference can be added to the test_run decorator:
 
-- variant : optional test variants can be defined like:
+- tag : [optional] the variant can be defined like:
 
 .. code:: python
 
@@ -193,12 +193,27 @@ In order to run only a subset of tests, an additional reference can be added to 
 Both parameters (variant/branch_level), will play the role of filter to fine
 tune the test collection and at the end ensure the execution of very specific tests subset.
 
-.. note:: branch_level parameter is also part of the CLI and both (variant/branch_level)
-    accept multiple values.
+.. note:: cli tags must be given in pairs. If one key has multiple values seperate them with a comma
 
 .. code:: bash
 
-    pykiso -c configuration_file --variant var1 --variant var2 --branch-level daily --branch-level nightly
+    pykiso -c configuration_file --variant var1,var2 --branch-level daily,nightly
+
+.. table:: Exectuion table for test case tags and cli tag arguments
+   :widths: auto
+
+   =======================================================  ===============================  ========
+   test case tags                                           cli tags                         executed
+   =======================================================  ===============================  ========
+   "branch_level": ["daily","nightly"]                      branch_level nightly             🗸
+   "branch_level": ["daily","nightly"]                      branch_level nightly,daily       🗸
+   "branch_level": ["daily","nightly"]                      branch_level master              ✗
+   "branch_level": ["daily","nightly"],"variant":["var1"]   branch_level nightly             🗸
+   "branch_level": ["daily","nightly"],"variant":["var1"]   variant var1                     🗸
+   "branch_level": ["daily","nightly"],"variant":["var1"]   variant var2                     ✗
+   "branch_level": ["daily","nightly"],"variant":["var1"]   branch_level daily variant var1  ✗
+   =======================================================  ===============================  ========
+
 
 In order to utilise the SetUp/TearDown test-suite feature, users have to define a class inheriting from
 :py:class:`~pykiso.test_coordinator.test_suite.BasicTestSuiteSetup` or
