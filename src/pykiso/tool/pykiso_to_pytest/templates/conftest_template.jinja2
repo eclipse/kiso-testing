@@ -61,7 +61,6 @@ def proxy({% for key, _ in auxiliaries.items() %} {{key}} ,{% endfor %}):
     proxy_aux.start()
     proxy_aux.create_instance()
     yield {% for key, _ in auxiliaries.items() %} {{key}} ,{% endfor %} proxy_aux
-    if proxy_aux.is_alive():
-        proxy_aux.delete_instance()
-        proxy_aux.stop()
+    proxy_aux.delete_instance()
+    proxy_aux.stop()
 {% endif %}

@@ -9,10 +9,11 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version Unreleased (2022-08-11)
+## Version Unreleased (2022-08-12)
 
 #### New Features
 
+* Improve error reporting in test case execution ([#111](https://github.com/eclipse/kiso-testing/issues/111)) ([#91](https://github.com/eclipse/kiso-testing/issues/91))
 * Improve error reporting in test case execution ([#111](https://github.com/eclipse/kiso-testing/issues/111))
 * ComAux ability to handle reception buffer ([#86](https://github.com/eclipse/kiso-testing/issues/86))
 * Add a tester present sender to uds auxiliary ([#87](https://github.com/eclipse/kiso-testing/issues/87))
@@ -22,6 +23,8 @@ invoke changelog
 * add show tag script for test information analysis
 #### Fixes
 
+* update pykitest example
+* redefine jenkins resources & timeouts
 * skip suite tests when setup fails
 * virtual test fail
 * hanging ci and rework mp aux and proxy pytest
@@ -47,7 +50,7 @@ invoke changelog
 * increase coverage
 * add tests for show-tag
 
-Full set of changes: [`0.18.0...06bdbdf`](https://github.com/eclipse/kiso-testing/compare/0.18.0...06bdbdf)
+Full set of changes: [`0.18.0...afb79e5`](https://github.com/eclipse/kiso-testing/compare/0.18.0...afb79e5)
 
 ## Version 0.18.0 (2022-06-08)
 
