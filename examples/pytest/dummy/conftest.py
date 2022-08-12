@@ -16,15 +16,15 @@ import logging
 import pytest
 
 from pykiso.lib.auxiliaries.dut_auxiliary import DUTAuxiliary
-from pykiso.lib.auxiliaries.example_test_auxiliary import ExampleAuxiliary
 from pykiso.lib.connectors.cc_example import CCExample
+from pykiso.lib.connectors.cc_flasher_example import FlasherExample
 
 
 @pytest.fixture(scope="session")
 def aux1():
     try:
         com = CCExample(name="chan1")
-        aux1 = ExampleAuxiliary(
+        aux1 = DUTAuxiliary(
             com=com,
         )
         aux1.start()
@@ -40,10 +40,8 @@ def aux1():
 def aux2():
     try:
         com = CCExample(name="chan2")
-        flash = CCExample(name="chan3", configKey="config value")
-        aux2 = ExampleAuxiliary(
+        aux2 = DUTAuxiliary(
             com=com,
-            flash=flash,
         )
         aux2.start()
         aux2.create_instance()
@@ -58,8 +56,10 @@ def aux2():
 def aux3():
     try:
         com = CCExample(name="chan4")
+        flash = FlasherExample(name="chan3")
         aux3 = DUTAuxiliary(
             com=com,
+            flash=flash,
         )
         aux3.start()
         aux3.create_instance()
