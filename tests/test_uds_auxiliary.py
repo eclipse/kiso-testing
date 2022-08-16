@@ -117,6 +117,14 @@ class TestUdsAuxiliary:
 
         assert resp == [0x50, 0x03]
 
+    def test_send_uds_raw_no_response_required(self, mock_uds_config, uds_odx_aux_inst):
+        mock_uds_config.send.return_value = None
+        uds_odx_aux_inst.uds_config = mock_uds_config
+
+        resp = uds_odx_aux_inst.send_uds_raw([0x10, 0x03], response_required=False)
+
+        assert resp == True
+
     def test_send_uds_raw_resp_empty_list(self, mock_uds_config, uds_odx_aux_inst):
         mock_uds_config.send.return_value = []
         uds_odx_aux_inst.uds_config = mock_uds_config
@@ -327,5 +335,6 @@ class TestUdsAuxiliary:
             sleep(3)
 
         send_mock.assert_called_with(
-            UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE
+            UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE,
+            response_required=False,
         )
