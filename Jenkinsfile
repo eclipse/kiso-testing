@@ -12,8 +12,8 @@ pipeline
                 ttyEnabled true
                 resourceRequestCpu '2'
                 resourceLimitCpu '2'
-                resourceRequestMemory '8Gi'
-                resourceLimitMemory '8Gi'
+                resourceRequestMemory '2Gi'
+                resourceLimitMemory '4Gi'
             }
         }
     }
@@ -56,6 +56,10 @@ pipeline
         }
         stage('Run unittests')
         {
+            options
+            {
+                timeout(time: 10, unit: 'MINUTES')
+            }
             steps
             {
                 sh 'poetry run pytest --junitxml=reports/testReport.xml'

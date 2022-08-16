@@ -74,8 +74,8 @@ class IntegrationTestSuite(unittest.TestCase):
             result.failures[0][0].id(),
             "fake_suite_1.FakeTestCase-1-0.test_fake_2",
         )
-        self.assertEqual(len(result.skipped), 0)
-        self.assertEqual(result.testsRun, 3)
+        self.assertEqual(len(result.skipped), 1)
+        self.assertEqual(result.testsRun, 2)
 
 
 @pytest.mark.parametrize(

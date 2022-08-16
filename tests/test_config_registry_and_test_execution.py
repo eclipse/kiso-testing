@@ -7,15 +7,13 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import itertools
-import sys
+import logging
 from unittest import TestCase, TestResult
 
 import pytest
 
 import pykiso
 import pykiso.test_coordinator.test_execution
-from pykiso import cli
 from pykiso.config_parser import parse_config
 from pykiso.test_coordinator import test_execution
 from pykiso.test_setup.config_registry import ConfigRegistry
@@ -42,7 +40,9 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
     assert "->  Failed" not in output.err
 
 
-@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+@pytest.mark.parametrize(
+    "tmp_test", [("with_pattern_aux1", "_with_pattern_aux2", False)], indirect=True
+)
 def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
@@ -59,6 +59,56 @@ def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "Ran 0 tests" in output.err
+
+
+@pytest.mark.parametrize("tmp_test", [("aux_1", "aux_2", False)], indirect=True)
+def test_config_registry_and_test_execution_with_user_tags(tmp_test, mocker):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    with additional user tags.
+
+    Validation criteria:
+        -  apply_filter called once
+    """
+    apply_filter_mock = mocker.patch(
+        "pykiso.test_coordinator.test_execution.apply_tag_filter"
+    )
+    user_tags = {"variant": ["delta"]}
+    cfg = parse_config(tmp_test)
+    ConfigRegistry.register_aux_con(cfg)
+    exit_code = test_execution.execute(cfg, user_tags=user_tags)
+    ConfigRegistry.delete_aux_con()
+    apply_filter_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "tmp_test",
+    [("collector_error_aux1", "collector_error_aux_2", False)],
+    indirect=True,
+)
+def test_config_registry_test_collection_error(tmp_test, capsys, mocker, caplog):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    by specifying a pattern
+
+    Validation criteria:
+        -  run is executed without error
+    """
+    mocker.patch(
+        "pykiso.test_coordinator.test_suite.tc_sort_key", side_effect=Exception
+    )
+
+    cfg = parse_config(tmp_test)
+    ConfigRegistry.register_aux_con(cfg)
+
+    with pytest.raises(pykiso.TestCollectionError):
+        test_execution.collect_test_suites(cfg["test_suite_list"])
+
+    ConfigRegistry.delete_aux_con()
+
+    output = capsys.readouterr()
+    assert "FAIL" not in output.err
+    assert "Ran 0 tests" not in output.err
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -85,6 +135,58 @@ def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mock
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "Ran 0 tests" not in output.err
+
+
+@pytest.mark.parametrize(
+    "tmp_test",
+    [("collector_error_2_aux1", "collector_error_2_aux", False)],
+    indirect=True,
+)
+def test_config_registry_and_test_execution_collect_error(mocker, caplog, tmp_test):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    by specifying a pattern
+
+    Validation criteria:
+        -  run is executed with test collection error
+    """
+    mocker.patch(
+        "pykiso.test_coordinator.test_execution.collect_test_suites",
+        side_effect=pykiso.TestCollectionError("test"),
+    )
+
+    cfg = parse_config(tmp_test)
+
+    with caplog.at_level(logging.ERROR):
+        test_execution.execute(config=cfg)
+
+    assert "Error occurred during test collections." in caplog.text
+
+
+@pytest.mark.parametrize(
+    "tmp_test", [("creation_error_aux1", "creation_error_aux2", False)], indirect=True
+)
+def test_config_registry_and_test_execution_test_auxiliary_creation_error(
+    mocker, caplog, tmp_test
+):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    by specifying a pattern
+
+    Validation criteria:
+        -  run is executed with auxiliary creation error
+    """
+    mocker.patch(
+        "pykiso.test_coordinator.test_execution.collect_test_suites",
+        side_effect=pykiso.AuxiliaryCreationError("test"),
+    )
+
+    cfg = parse_config(tmp_test)
+
+    with caplog.at_level(logging.ERROR):
+        test_execution.execute(config=cfg)
+
+    assert "Error occurred during auxiliary creation." in caplog.text
 
 
 @pytest.mark.parametrize("tmp_test", [("text_aux1", "text_aux2", False)], indirect=True)
@@ -184,20 +286,20 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
 
 
 @pytest.mark.parametrize(
-    "m_tag ,tests_to_run, variants, branch_levels, expected_success",
+    "tc_tags ,cli_tags, is_test_running",
     [
-        (None, {}, (), (), True),
+        (None, {}, True),
         (
             {
                 "variant": [
                     "omicron",
                 ],
                 "branch_level": [],
-            },
-            {},
-            ("omicron",),
-            (),
-            True,
+            },  # tc_tags
+            {
+                "variant": "omicron",
+            },  # cli_tags
+            True,  # is_test_running
         ),
         (
             {
@@ -207,11 +309,11 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
                 "branch_level": [
                     "leaf",
                 ],
-            },
-            {},
-            ("omicron",),
-            ("leaf",),
-            True,
+            },  # tc_tags
+            {
+                "branch_level": "leaf",
+            },  # cli_tags
+            True,  # is_test_running
         ),
         (
             {
@@ -221,113 +323,109 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
                 "branch_level": [
                     "leaf",
                 ],
-            },
-            {},
-            (),
-            ("leaf",),
-            True,
+            },  # tc_tags
+            {
+                "branch_level": "bud",
+            },  # cli_tags
+            False,  # is_test_running
         ),
         (
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "leaf",
-                ],
-            },
-            {},
-            ("omicron",),
-            (),
-            True,
+                "k1": ["v1", "v3"],
+                "k2": ["v2", "v5", "v6"],
+            },  # tc_tags
+            {
+                "k1": "v1",
+                "k2": "v2",
+            },  # cli_tags
+            True,  # is_test_running
         ),
         (
             {
-                "variant": [],
-                "branch_level": [
-                    "leaf",
-                ],
-            },
-            {},
-            (),
-            ("leaf",),
-            True,
+                "k1": ["v1", "v7"],
+                "k2": ["v2", "v5", "v6"],
+            },  # tc_tags
+            {
+                "k1": "v1",
+                "k2": "v2",
+            },  # cli_tags
+            True,  # is_test_running
         ),
         (
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [],
-            },
-            {},
-            (),
-            ("leaf",),
-            False,
+                "k1": ["v1", "v7"],
+                "k2": ["v2", "v5", "v6"],
+            },  # tc_tags
+            {
+                "k1": "v1",
+                "k2": "v10",
+            },  # cli_tags
+            False,  # is_test_running
         ),
         (
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "leaf",
-                ],
-            },
-            {},
-            ("delta",),
-            ("feuille",),
-            False,
+                "k1": ["v1", "v3"],
+                "k2": ["v2", "v5", "v6"],
+            },  # tc_tags
+            {
+                "k1": "v1",
+            },  # cli_tags
+            True,  # is_test_running
         ),
         (
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "leaf",
-                ],
-            },
-            {},
-            (),
-            ("feuille",),
-            False,
+                "k1": ["v1", "v7"],
+                "k2": ["v2", "v5", "v6"],
+            },  # tc_tags
+            {
+                "k1": "v1",
+            },  # cli_tags
+            True,  # is_test_running
         ),
         (
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "leaf",
-                ],
-            },
-            {},
-            ("delta",),
-            (),
-            False,
+                "k1": ["v1", "v3"],
+                "k2": ["v2", "v5", "v6"],
+            },  # tc_tags
+            {"k1": ["v1", "v3"]},  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {
+                "k1": ["v1", "v3"],
+                "k2": ["v2", "v5", "v6"],
+            },  # tc_tags
+            {"k1": ["v1", "v3"], "k2": ["v2", "v5"]},  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {
+                "k1": ["v1", "v3"],
+            },  # tc_tags
+            {"k2": ["v2", "v5"]},  # cli_tags
+            False,  # is_test_running
         ),
     ],
 )
 def test_config_registry_and_test_execution_apply_variant_filter(
-    m_tag, tests_to_run, variants, branch_levels, expected_success, mocker
+    tc_tags, cli_tags, is_test_running, mocker
 ):
     mock_test_case = mocker.Mock()
     mock_test_case.setUp = None
     mock_test_case.tearDown = None
     mock_test_case.testMethodName = None
     mock_test_case.skipTest = lambda x: x  # return input
-    mock_test_case.tag = m_tag
+    mock_test_case.tag = tc_tags
     mock_test_case._testMethodName = "testMethodName"
     mock = mocker.patch(
         "pykiso.test_coordinator.test_execution.test_suite.flatten",
         return_value=[mock_test_case],
     )
 
-    test_execution.apply_variant_filter(tests_to_run, variants, branch_levels)
+    test_execution.apply_tag_filter({}, cli_tags)
 
     mock.assert_called_once()
-    if expected_success:
+    if is_test_running:
         assert mock_test_case.setUp is None
         assert mock_test_case.tearDown is None
         assert mock_test_case.testMethodName is None

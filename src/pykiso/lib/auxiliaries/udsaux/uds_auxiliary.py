@@ -56,11 +56,15 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         self,
         msg_to_send: Union[bytes, List[int], tuple],
         timeout_in_s: float = 6,
+        response_required: bool = True,
     ) -> Union[UdsResponse, bool]:
         """Send a UDS diagnostic request to the target ECU and check response.
 
         :param msg_to_send: can uds raw bytes to be sent
-        :param timeout_in_s: not used
+        :param timeout_in_s: not used, actual timeout in seconds for the response can be
+            configured with the P2_CAN_Client parameter in the config.ini file
+            (default value is 5s)
+        :param response_required: Wait for a response if True
 
         :raise ResponseNotReceivedError: raised when no answer has been received
         :raise Exception: raised when the raw message could not be send properly
@@ -73,13 +77,16 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             log.info(
                 f"UDS request to send '{['0x{:02X}'.format(i) for i in msg_to_send]}'"
             )
-            resp = self.uds_config.send(msg_to_send, tpWaitTime=self.tp_waiting_time)
+            resp = self.uds_config.send(msg_to_send, responseRequired=response_required, tpWaitTime=self.tp_waiting_time)
         except Exception:
             log.exception("Error while sending uds raw request")
             return False
 
         if resp is None:
-            raise self.errors.ResponseNotReceivedError(msg_to_send)
+            if not response_required:
+                return True
+            else:
+                raise self.errors.ResponseNotReceivedError(msg_to_send)
 
         resp_print = (
             f"UDS response received {['0x{:02X}'.format(i) for i in resp]}"
@@ -236,7 +243,10 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :param stop_event: event to set to stop the sending of tester present
         """
         while not stop_event.is_set():
-            self.send_uds_raw(UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE)
+            self.send_uds_raw(
+                UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE,
+                response_required=False,
+            )
             time.sleep(period)
 
     @contextmanager

@@ -99,7 +99,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-exclude_lines = ["pass", "def __repr__"]
+exclude_lines = ["pass", "def __repr__" ,"pragma: no cover","if TYPE_CHECKING:"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
