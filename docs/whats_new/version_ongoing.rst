@@ -72,3 +72,11 @@ Instead of having only the 2 tags "variant" and "branch_level" to select tests, 
 can now set any tagname.
 
 See: :ref:`define_test_information` for more details.
+
+Configurable waiting for send_uds_raw
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To avoid extra waiting time during long/heavy UDS data exchange(flashing) expose
+the parameter tpWaitTime from kiso-testing-python-uds for uds auxilary send_uds_raw
+method
+
+See :ref:`uds_auxiliary`
