@@ -290,10 +290,6 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             if arbitration_id == self.res_id:
                 self.uds_config.tp.callback_onReceive(can_msg)
 
-    def _abort_command(self) -> None:
-        """Not used."""
-        pass
-
     def _run_command(self, cmd_message, cmd_data=None) -> Union[dict, bytes, bool]:
         """Not used."""
         pass

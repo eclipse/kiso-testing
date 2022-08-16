@@ -45,7 +45,7 @@ robotframework = "3.2.2"
 unittest-xml-reporting = "*"
 click = "*"
 MarkupSafe = "~2.0"
-pykiso-python-uds = "^2.1.0"
+pykiso-python-uds = "^2.2.0"
 tabulate = "*"
 
 [tool.poetry.dev-dependencies]

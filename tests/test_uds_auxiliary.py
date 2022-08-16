@@ -31,10 +31,6 @@ class TestUdsAuxiliary:
     def uds_odx_aux_inst(self, mocker, ccpcan_inst, tmp_uds_config_ini):
 
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run",
-            return_value=None,
-        )
-        mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
@@ -55,10 +51,6 @@ class TestUdsAuxiliary:
     def uds_odx_aux_inst_v(self, mocker, ccvector_inst, tmp_uds_config_ini):
 
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run",
-            return_value=None,
-        )
-        mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
@@ -77,10 +69,6 @@ class TestUdsAuxiliary:
 
     @pytest.fixture(scope="function")
     def uds_raw_aux_inst(self, mocker, ccpcan_inst, tmp_uds_config_ini):
-        mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run",
-            return_value=None,
-        )
         mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
@@ -101,13 +89,11 @@ class TestUdsAuxiliary:
     def test_constructor_odx(self, uds_odx_aux_inst, tmp_uds_config_ini):
         assert uds_odx_aux_inst.is_proxy_capable
         assert str(uds_odx_aux_inst.odx_file_path) == "odx"
-        assert uds_odx_aux_inst.config_ini_path == tmp_uds_config_ini
         assert uds_odx_aux_inst.tp_waiting_time == 0.010
 
     def test_constructor_raw(self, uds_raw_aux_inst, tmp_uds_config_ini):
         assert uds_raw_aux_inst.is_proxy_capable
         assert uds_raw_aux_inst.odx_file_path is None
-        assert uds_raw_aux_inst.config_ini_path == tmp_uds_config_ini
         assert uds_raw_aux_inst.tp_waiting_time == 0.010
 
     def test_send_uds_raw(self, mock_uds_config, uds_odx_aux_inst):

@@ -22,6 +22,9 @@ Currently adapted modules:
 - DUT Auxiliary
 - Record Auxiliary
 - Acroname Auxiliary
+- Instrument Auxiliary
+- UDS Auxiliary
+- UDS server Auxiliary
 
 There is not API changes, therefor, as user, your tests should not be affected.
 
@@ -78,5 +81,17 @@ Configurable waiting for send_uds_raw
 To avoid extra waiting time during long/heavy UDS data exchange(flashing) expose
 the parameter tpWaitTime from kiso-testing-python-uds for uds auxilary send_uds_raw
 method
+
+See :ref:`uds_auxiliary`
+
+Lightweight UDS auxiliary configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The add of an .ini file to configured the UDS auxiliary and it variant (server)
+is no more mandatory, every parameter is now reachable in the .yaml file.
+
+See :ref:`examples/uds.yaml`
+
+In addition, if the tp_layer and uds_layer parameters are not given at yaml level
+a default configuration is applied.
 
 See :ref:`uds_auxiliary`
