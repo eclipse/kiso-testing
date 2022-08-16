@@ -77,7 +77,11 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             log.info(
                 f"UDS request to send '{['0x{:02X}'.format(i) for i in msg_to_send]}'"
             )
-            resp = self.uds_config.send(msg_to_send, responseRequired=response_required, tpWaitTime=self.tp_waiting_time)
+            resp = self.uds_config.send(
+                msg_to_send,
+                responseRequired=response_required,
+                tpWaitTime=self.tp_waiting_time,
+            )
         except Exception:
             log.exception("Error while sending uds raw request")
             return False

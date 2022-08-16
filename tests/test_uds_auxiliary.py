@@ -119,7 +119,9 @@ class TestUdsAuxiliary:
         resp = uds_odx_aux_inst.send_uds_raw([0x10, 0x03])
 
         mock_uds_config.send.assert_called_with(
-            [0x10, 0x03], tpWaitTime=uds_odx_aux_inst.tp_waiting_time
+            [0x10, 0x03],
+            responseRequired=True,
+            tpWaitTime=uds_odx_aux_inst.tp_waiting_time,
         )
         assert resp == [0x50, 0x03]
 
