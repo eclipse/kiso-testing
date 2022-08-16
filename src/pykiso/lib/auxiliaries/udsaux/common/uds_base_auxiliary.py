@@ -108,12 +108,12 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
     ) -> None:
         """Initialize isotp and uds layer attributes.
 
-        :param tp_layer: isotp configurration given at yaml level
-        :param uds_layer: uds configurration given at yaml level
+        :param tp_layer: isotp configuration given at yaml level
+        :param uds_layer: uds configuration given at yaml level
         """
         tp_layer = tp_layer or UdsBaseAuxiliary.DEFAULT_TP_CONFIG
         uds_layer = uds_layer or UdsBaseAuxiliary.DEFAULT_UDS_CONFIG
-        # add configured reauest id and response id to tp layer config
+        # add configured request id and response id to tp layer config
         tp_layer["req_id"] = self.req_id
         tp_layer["res_id"] = self.res_id
         self.tp_layer = tp_layer

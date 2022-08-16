@@ -25,7 +25,7 @@ Find below a complete configuration example :
         connectors:
             com: can_channel
         config:
-          # you can sepcify your odx file by using odx_file_path parameter
+          # you can specify your odx file by using odx_file_path parameter
           # and instead of using send_uds_raw method use the send_uds_config
           # for a more human readable command
           odx_file_path: null
