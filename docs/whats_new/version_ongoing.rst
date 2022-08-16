@@ -76,6 +76,14 @@ can now set any tagname.
 
 See: :ref:`define_test_information` for more details.
 
+Configurable waiting for send_uds_raw
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To avoid extra waiting time during long/heavy UDS data exchange(flashing) expose
+the parameter tpWaitTime from kiso-testing-python-uds for uds auxilary send_uds_raw
+method
+
+See :ref:`uds_auxiliary`
+
 Lightweight UDS auxiliary configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The add of an .ini file to configured the UDS auxiliary and it variant (server)

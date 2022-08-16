@@ -87,6 +87,7 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
         self.uds_config_enable = False
         self.uds_config = None
         self.tp_layer = None
+        self.tp_waiting_time = 0.010
         self.uds_layer = None
         self._init_com_layers(tp_layer, uds_layer)
 

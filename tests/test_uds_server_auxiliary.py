@@ -150,7 +150,9 @@ class TestUdsServerAuxiliary:
         uds_server_aux_inst.send_response(b"plop")
 
         uds_mock.tp.encode_isotp.assert_called_with(
-            b"plop", use_external_snd_rcv_functions=True
+            b"plop",
+            use_external_snd_rcv_functions=True,
+            tpWaitTime=uds_server_aux_inst.tp_waiting_time,
         )
         mock_transmit.assert_called_with("NOT NONE")
 
