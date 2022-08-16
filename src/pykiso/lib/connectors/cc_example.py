@@ -52,19 +52,16 @@ class CCExample(connector.CChannel):
     def _cc_send(self, msg: message.Message) -> None:
         """Sends the message on the channel.
 
-        :param msg: message to send, should be Message type like.
+        :param msg: message to send.
 
         """
 
         log.debug("Send: {}".format(msg))
         # Exit if ack sent
-        if isinstance(msg, message.Message):
-            if msg.get_message_type() == message.MessageType.ACK:
-                return
-        else:
-            msg = message.Message.parse_packet(msg)
+        msg = message.Message.parse_packet(msg)
+        if msg.get_message_type() == message.MessageType.ACK:
+            return
 
-        # Else save received message
         self.last_received_message = msg.serialize()
 
         # Check if it is a run test-case message and save it for the report
@@ -95,7 +92,6 @@ class CCExample(connector.CChannel):
             # Delete the stored raw message
             received_message = received_message.serialize()
             self.last_received_message = None
-            # Return the ACK
             log.debug("Receive: {}".format(received_message))
         elif self.report_requested_message is not None:
             # Transform message to ACK
@@ -107,7 +103,6 @@ class CCExample(connector.CChannel):
             # Delete the stored raw message
             received_message = received_message.serialize()
             self.report_requested_message = None
-            # Return REPORT
             log.debug("Receive: {}".format(received_message))
 
         return {"msg": received_message}
