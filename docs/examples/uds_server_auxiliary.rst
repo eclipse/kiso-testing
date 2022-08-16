@@ -1,7 +1,7 @@
 .. _uds_server_auxiliary:
 
 UDS protocol handling as a server
-================================
+=================================
 
 The :py:class:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary`
 implements the Unified Diagnostic Services protocol on server side and therefore acts
@@ -357,3 +357,11 @@ an overview of all previously described features:
 
             for callback in uds_aux.callbacks:
                 uds_aux.unregister_callback(callback)
+
+Modify the waiting time
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Sending a huge amount of bytes over UDS can take some time and to avoid extra
+waiting time, users can modify the waiting time between two isotp packets of 4096 bytes.
+
+It can be achieved using the public attribute from uds server auxiliary "tp_waiting_time".
