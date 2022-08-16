@@ -114,9 +114,10 @@ Once installed the application is bound to `pykiso`, it can be called with the f
 ```bash
 Usage: pykiso [OPTIONS] [PATTERN]
 
-  Embedded Integration Test Framework - CLI Entry Point.
+  TAG Filters: Just add pairs of arguments to the pykiso call. Multiple values
+  for a key must be seperate via a comma.
 
-  PATTERN: overwrite the test filter pattern from the YAML file (optional)
+  For example: pykiso -c your_config.yaml --branch dev,master --variant delta
 
 Options:
   -c, --test-configuration-file FILE
@@ -130,10 +131,6 @@ Options:
                                   set the verbosity of the logging
   --version                       Show the version and exit.
   -h, --help                          Show this message and exit.
-  --variant                       allow the user to execute a subset of tests
-                                  based on variants
-  --branch-level                  allow the user to execute a subset of tests
-                                  based on branch levels
   --junit                         enables the generation of a junit report
   --text                          default, test results are only displayed in
                                   the console

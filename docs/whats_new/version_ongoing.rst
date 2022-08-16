@@ -56,6 +56,26 @@ The collected messages by the Communication auxiliary can still be cleared with 
 
 See :ref:`communication_auxiliary`
 
+DUT Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^
+refactor/redesign of the device under test auxiliary to fit with the brand new double
+threaded auxiliary interface
+
+Record Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the record auxiliary to fit with the brand new double threaded auxiliary interface
+
+Acroname Auxiliary adaption
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
+
+Agnostic tag call
+^^^^^^^^^^^^^^^^^
+Instead of having only the 2 tags "variant" and "branch_level" to select tests, users
+can now set any tagname.
+
+See: :ref:`define_test_information` for more details.
+
 Lightweight UDS auxliary configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The add of an .ini file to configured the UDS auxiliary and it variant (server)

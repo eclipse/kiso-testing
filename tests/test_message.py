@@ -176,6 +176,20 @@ class MessageTest(unittest.TestCase):
             message_sent.check_if_ack_message_is_matching(ack_message_received) is True
         )
 
+    def test_ack_message_gen_and_match_wrong_type(self):
+        # Create the messages
+        message_sent = Message(
+            msg_type=MessageType.COMMAND,
+            sub_type=MessageCommandType.TEST_CASE_SETUP,
+            test_suite=2,
+            test_case=3,
+        )
+        ack_message_received = message_sent.generate_ack_message(
+            TlvKnownTags.TEST_REPORT
+        )
+        # Parse and compare
+        self.assertIsNone(ack_message_received)
+
     def test_get_crc(self):
         crc = Message.get_crc(b"@\x01\x00\x00\x00UU\x00", 2)
         assert b"\xc5\n" == struct.pack("H", crc)
