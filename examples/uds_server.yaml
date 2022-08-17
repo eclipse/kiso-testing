@@ -6,7 +6,6 @@ auxiliaries:
       odx_file_path: null
       request_id: 0x123
       response_id: 0x321
-      config_ini_path: ./examples/test_uds/config.ini
     type: pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary:UdsServerAuxiliary
 connectors:
   can_channel:

@@ -23,44 +23,19 @@ from pykiso.lib.robot_framework.uds_auxiliary import (
 from pykiso.test_setup.config_registry import ConfigRegistry
 
 
-def create_config():
-    cfg = """
-[can]
-interface=peak
-canfd=True
-baudrate=500000
-data_baudrate=2000000
-defaultReqId=0xAB
-defaultResId=0xAC
-    """
-    return cfg
-
-
 @pytest.fixture
-def tmp_config_ini(tmp_path):
-    uds_folder = tmp_path / "fake_robot_uds"
-    uds_folder.mkdir()
-    config_ini = uds_folder / "_config.ini"
-    config_ini.write_text(create_config())
-    import logging
-
-    logging.error(config_ini)
-    return config_ini
-
-
-@pytest.fixture(scope="function")
-def robot_uds_aux(mocker, tmp_config_ini):
+def robot_uds_aux(mocker):
     mocker.patch(
         "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run", return_value=None
     )
     mocker.patch(
         "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
-        return_value={"uds_aux": UdsAux("", tmp_config_ini)},
+        return_value={"uds_aux": UdsAux("", tp_layer={}, uds_layer={})},
     )
     return UdsAuxiliary()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def uds_aux(robot_uds_aux):
     return robot_uds_aux._get_aux("uds_aux")
 
