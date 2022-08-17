@@ -26,6 +26,7 @@ import queue
 import time
 from typing import Any
 
+from .logging import add_logging_level
 from .test_setup.config_registry import ConfigRegistry
 from .types import MsgType
 
@@ -46,6 +47,11 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         self.is_instance = False
         self.stop_event = None
         self._aux_copy = None
+        # add internal kiso log levels in case the auxiliary is used without pykiso cli
+        if not hasattr(logging, "KISO_WARNING"):
+            add_logging_level("KISO_WARNING", logging.WARNING + 1)
+            add_logging_level("KISO_INFO", logging.INFO + 1)
+            add_logging_level("KISO_DEBUG", logging.DEBUG + 1)
 
     def __repr__(self) -> str:
         name = self.name
