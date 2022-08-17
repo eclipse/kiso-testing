@@ -19,104 +19,20 @@ Integration Test Framework
 
 
 """
-import collections
-import itertools
 import logging
 import pprint
 import sys
-import time
-from pathlib import Path
-from typing import NamedTuple, Optional, Tuple
+from typing import Optional, Tuple
 
 import click
 
 from . import __version__
 from .config_parser import parse_config
 from .global_config import Grabber
+from .logging import initialize_logging
 from .test_coordinator import test_execution
 from .test_setup.config_registry import ConfigRegistry
 from .types import PathType
-
-LogOptions = collections.namedtuple("LogOptions", "log_path log_level report_type")
-
-# use to store the selected logging options
-log_options: Optional[NamedTuple] = None
-
-
-def initialize_logging(
-    log_path: PathType, log_level: str, report_type: str = None
-) -> logging.Logger:
-    """Initialize the logging.
-
-    Sets the general log level, output file or STDOUT and the
-    logging format.
-
-    :param log_path: path to the logfile
-    :param log_level: any of DEBUG, INFO, WARNING, ERROR
-    :param report_type: expected report type (junit, text,...)
-
-    :returns: configured Logger
-    """
-    root_logger = logging.getLogger()
-    log_format = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(module)s:%(lineno)d: %(message)s"
-    )
-    levels = {
-        "DEBUG": logging.DEBUG,
-        "INFO": logging.INFO,
-        "WARNING": logging.WARNING,
-        "ERROR": logging.ERROR,
-    }
-
-    # update logging options
-    global log_options
-    log_options = LogOptions(log_path, log_level, report_type)
-
-    # if log_path is given create use a logging file handler
-    if log_path is not None:
-        log_path = Path(log_path)
-        if log_path.is_dir():
-            fname = time.strftime("%Y-%m-%d_%H-%M-test.log")
-            log_path = log_path / fname
-        file_handler = logging.FileHandler(log_path, "a+")
-        file_handler.setFormatter(log_format)
-        file_handler.setLevel(levels[log_level])
-        root_logger.addHandler(file_handler)
-    # if log_path is not given and report type is not junit just
-    # instanciate a logging StreamHandler
-    if log_path is None and report_type != "junit":
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(log_format)
-        stream_handler.setLevel(levels[log_level])
-        root_logger.addHandler(stream_handler)
-    # if report_type is junit use sys.stdout as stream
-    if report_type == "junit":
-        # flush all StreamHandler
-        for handler in root_logger.handlers:
-            if isinstance(handler, logging.StreamHandler):
-                handler.flush()
-        # but keep FileHandler
-        root_logger.handlers = [
-            handler
-            for handler in root_logger.handlers
-            if isinstance(handler, logging.FileHandler)
-        ]
-        stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setFormatter(log_format)
-        stream_handler.setLevel(levels[log_level])
-        root_logger.addHandler(stream_handler)
-
-    root_logger.setLevel(levels[log_level])
-
-    return logging.getLogger(__name__)
-
-
-def get_logging_options() -> LogOptions:
-    """Simply return the previous logging options.
-
-    :return: logging options log path, log level and report type
-    """
-    return log_options
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
@@ -180,6 +96,12 @@ def get_logging_options() -> LogOptions:
     is_flag=True,
     help="stop the test run on the first error or failure",
 )
+@click.option(
+    "--verbose",
+    is_flag=True,
+    required=False,
+    help="activate logging for the whole framework",
+)
 @click.argument("pattern", required=False)
 @click.version_option(__version__)
 @Grabber.grab_cli_config
@@ -192,6 +114,7 @@ def main(
     branch_level: Optional[tuple] = None,
     pattern: Optional[str] = None,
     failfast: bool = False,
+    verbose: bool = False,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -206,11 +129,12 @@ def main(
     :param branch_level: allow the user to execute a subset of tests based on branch levels
     :param pattern: overwrite the pattern from the YAML file for easier test development
     :param failfast: stop the test run on the first error or failure
+    :param verbose: activate logging for the whole framework
     """
 
     for config_file in test_configuration_file:
         # Set the logging
-        logger = initialize_logging(log_path, log_level, report_type)
+        logger = initialize_logging(log_path, log_level, verbose, report_type)
         # Get YAML configuration
         cfg_dict = parse_config(config_file)
         # Run tests

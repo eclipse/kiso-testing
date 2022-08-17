@@ -164,7 +164,7 @@ class DTAuxiliaryInterface(abc.ABC):
 
         :raises AuxiliaryCreationError: if instance creation failed
         """
-        log.info(f"Creating instance of auxiliary {self.name}")
+        log.kiso_info(f"Creating instance of auxiliary {self.name}")
 
         with self.lock:
             # if the current aux is alive don't try to create it again
@@ -188,7 +188,7 @@ class DTAuxiliaryInterface(abc.ABC):
 
         :return: True if the auxiliary is deleted otherwise False
         """
-        log.info(f"Deleting instance of auxiliary {self.name}")
+        log.kiso_info(f"Deleting instance of auxiliary {self.name}")
 
         with self.lock:
 
@@ -386,7 +386,7 @@ def open_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.info("Open channel")
+        log.kiso_info("Open channel")
         try:
             self.channel.open()
             return func(self, *arg, **kwargs)
@@ -414,7 +414,7 @@ def close_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.info("Close channel")
+        log.kiso_info("Close channel")
         try:
             self.channel.close()
             return func(self, *arg, **kwargs)
@@ -448,7 +448,7 @@ def flash_target(func: Callable) -> Callable:
             return func(self, *arg, **kwargs)
 
         try:
-            log.info("Flash target")
+            log.kiso_info("Flash target")
             with self.flash as flasher:
                 flasher.flash()
             return func(self, *arg, **kwargs)

@@ -38,15 +38,15 @@ class FlasherExample(Flasher):
 
     def open(self) -> None:
         """Initialize the flasher."""
-        log.info("Initialize flasher")
-        log.info("Flasher ready!")
+        log.kiso_info("Initialize flasher")
+        log.kiso_info("Flasher ready!")
 
     def close(self) -> None:
         """Close flasher and free resources."""
-        log.info("Close flasher")
-        log.info("Free ressoucres!")
+        log.kiso_info("Close flasher")
+        log.kiso_info("Free ressoucres!")
 
     def flash(self) -> None:
         """Fake a firmware update."""
-        log.info("flashing device")
-        log.info("flashing device successful")
+        log.kiso_info("flashing device")
+        log.kiso_info("flashing device successful")

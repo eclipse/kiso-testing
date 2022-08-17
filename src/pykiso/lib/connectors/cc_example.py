@@ -45,11 +45,11 @@ class CCExample(connector.CChannel):
 
     def _cc_open(self) -> None:
         """Open the channel."""
-        log.info("open channel")
+        log.kiso_info("open channel")
 
     def _cc_close(self) -> None:
         """Close the channel."""
-        log.info("close channel")
+        log.kiso_info("close channel")
 
     def _cc_send(self, msg: message.Message, raw: bool = False) -> None:
         """Sends the message on the channel.
