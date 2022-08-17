@@ -113,7 +113,7 @@ def check_acknowledgement(func: Callable) -> Callable:
 
         # invalid token or received message not type of ACK
         if is_ack is False:
-            log.warning(f"Received {response} not matching {self.current_cmd}!")
+            log.kiso_warning(f"Received {response} not matching {self.current_cmd}!")
             return False
 
         log.kiso_info("Command was acknowledged by the DUT!")
@@ -300,10 +300,10 @@ class DUTAuxiliary(DTAuxiliaryInterface):
             return False
 
         if response.get_message_type() == MESSAGE_TYPE.ACK:
-            log.warning(f"ACK message received from {self.name}: {response}")
+            log.kiso_warning(f"ACK message received from {self.name}: {response}")
             return False
 
-        log.warning(f"Message type unknown received from {self.name}: {response}")
+        log.kiso_warning(f"Message type unknown received from {self.name}: {response}")
         return False
 
     def evaluate_report(self, report_msg: message.Message) -> None:
@@ -321,7 +321,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
             )
 
         elif report_msg.get_message_sub_type() == REPORT_TYPE.TEST_NOT_IMPLEMENTED:
-            log.warning(
+            log.kiso_warning(
                 f"Report with verdict NOT IMPLEMENTED from {self.name} : {report_msg}"
             )
         else:

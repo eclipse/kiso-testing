@@ -81,7 +81,7 @@ class NegativeResponseCode(IntEnum):
         :param value: missing NRC value.
         :return: a new NRC member UNKNOWN with the missing value.
         """
-        log.warning(f"Unknown NRC: {value}")
+        log.kiso_warning(f"Unknown NRC: {value}")
         new_member = int.__new__(cls, value)
         new_member._name_ = "UNKNOWN"
         new_member._value_ = value

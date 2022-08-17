@@ -101,7 +101,7 @@ class LauterbachFlasher(connector.Flasher):
         # load Trace32 remote api
         try:
             self.t32_api = ctypes.cdll.LoadLibrary(self.t32_api_path)
-            log.info("Trace32 remote API loaded")
+            log.kiso_info("Trace32 remote API loaded")
         except Exception as e:
             log.exception("Unable to open Trace32")
             raise e
@@ -109,14 +109,16 @@ class LauterbachFlasher(connector.Flasher):
         if self.t32_api.T32_Init() == 0:
             # Quit properly the previous T32 instance
             cmd_status = self.t32_api.T32_Cmd("QUIT".encode("latin-1"))
-            log.debug(f"Previous process Trace32 closed with exit code:{cmd_status}")
+            log.kiso_debug(
+                f"Previous process Trace32 closed with exit code:{cmd_status}"
+            )
             # Properly exit t32 api. Otherwise subsequential commands will fail
             self.t32_api.T32_Exit()
 
         # open a new Trace32 process
         try:
             self.t32_process = subprocess.Popen(self.t32_start_args)
-            log.debug(f"Trace32 process open with arguments {self.t32_start_args}")
+            log.kiso_debug(f"Trace32 process open with arguments {self.t32_start_args}")
         except Exception as e:
             log.exception("Unable to open Trace32")
             raise e
@@ -132,7 +134,7 @@ class LauterbachFlasher(connector.Flasher):
         # open UDP connection with Trace32
         if self.t32_api.T32_Init() == 0:
             self.t32_api.T32_Attach(self.device)
-            log.info(f"ITF connected on {self.node}:{self.port}")
+            log.kiso_info(f"ITF connected on {self.node}:{self.port}")
         else:
             log.fatal(f"Unable to connect on port : {self.port}")
             raise Exception(f"Unable to connect on port : {self.port}")
@@ -150,13 +152,13 @@ class LauterbachFlasher(connector.Flasher):
 
         # read actual flash script content for logging puprpose
         with open(file=self.t32_script_path, mode="r") as script:
-            log.debug(
+            log.kiso_debug(
                 f"flash using script at {self.t32_script_path}, with the following commands : {script.read()}"
             )
 
         # run flash script
         cmd = f"CD.DO {self.t32_script_path}"
-        log.info(f"Call T32_Cmd {cmd}")
+        log.kiso_info(f"Call T32_Cmd {cmd}")
         request_state = self.t32_api.T32_Cmd(cmd.encode("utf-8"))
 
         if request_state < 0:
@@ -171,7 +173,7 @@ class LauterbachFlasher(connector.Flasher):
                 request_state = self.t32_api.T32_GetPracticeState(
                     ctypes.byref(script_state)
                 )
-                log.debug(
+                log.kiso_debug(
                     f"Called T32_GetPracticeState. request_state: {request_state} "
                     f"script_state: {script_state.value} request error: {error_count}"
                 )
@@ -186,7 +188,7 @@ class LauterbachFlasher(connector.Flasher):
 
         # reset target
         cmd = "SYStem.RESet"
-        log.info(f"Call T32_Cmd {cmd}")
+        log.kiso_info(f"Call T32_Cmd {cmd}")
         request_state = self.t32_api.T32_Cmd(cmd.encode("utf-8"))
 
         # get script execution verdict
@@ -202,7 +204,7 @@ class LauterbachFlasher(connector.Flasher):
             and not script_state.value == MessageLineState.ERROR
             and not script_state.value == MessageLineState.ERROR_INFO
         ):
-            log.info("flash procedure successful")
+            log.kiso_info("flash procedure successful")
         else:
             log.fatal(
                 f"An error occurred during flash,state : {script_state.value} -> {msg}"
@@ -218,11 +220,11 @@ class LauterbachFlasher(connector.Flasher):
 
         # close communication with Trace32
         exit_state = self.t32_api.T32_Exit()
-        log.info(f"Disconnect from Trace32 with state {exit_state}")
+        log.kiso_info(f"Disconnect from Trace32 with state {exit_state}")
 
         # Process has to quit properly.
         # Otherwise lauterbach needs a power reset to rerun t32mppc.
         try:
             self.t32_process.wait(timeout=5)
         except Exception:
-            log.warning("Trace32 failed to exit properly")
+            log.kiso_warning("Trace32 failed to exit properly")

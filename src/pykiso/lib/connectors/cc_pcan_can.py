@@ -151,13 +151,13 @@ class CCPCanCan(CChannel):
         """
         if self.trace_path.is_file():
             self.trace_path = self.trace_path.parent
-            log.warning(
+            log.kiso_warning(
                 f"File names are not supported for trace file creation. Trace will be written to {self.trace_path}"
             )
 
         if not 0 < self.trace_size <= 100:
             self.trace_size = 10
-            log.warning(
+            log.kiso_warning(
                 f"Make sure trace size is between 1 and 100 Mb. Setting trace size to default value "
                 f"value : {self.trace_size}."
             )
@@ -166,7 +166,7 @@ class CCPCanCan(CChannel):
             logging.getLogger("can.pcan").addFilter(PcanFilter())
 
         if self.enable_brs and not self.is_fd:
-            log.warning(
+            log.kiso_warning(
                 "Bitrate switch will have no effect because option is_fd is set to false."
             )
 
@@ -206,7 +206,7 @@ class CCPCanCan(CChannel):
         """
         pcan_channel = getattr(PCANBasic, self.channel)
         if self.trace_path is None:
-            log.warning(
+            log.kiso_warning(
                 "No trace path specified, an existing trace will be overwritten."
             )
             pcan_path_argument = PCANBasic.TRACE_FILE_OVERWRITE
@@ -216,17 +216,17 @@ class CCPCanCan(CChannel):
             if self.trace_path is not None:
                 if not Path(self.trace_path).exists():
                     Path(self.trace_path).mkdir(parents=True, exist_ok=True)
-                    log.info(f"Path {self.trace_path} created")
+                    log.kiso_info(f"Path {self.trace_path} created")
                 self._pcan_set_value(
                     pcan_channel,
                     PCANBasic.PCAN_TRACE_LOCATION,
                     bytes(self.trace_path),
                 )
-                log.info(
+                log.kiso_info(
                     f"Tracefile path in PCAN device configured to {self.trace_path}"
                 )
 
-            log.info("Segmented option of trace file activated.")
+            log.kiso_info("Segmented option of trace file activated.")
             self._pcan_set_value(
                 pcan_channel,
                 PCANBasic.TRACE_FILE_SEGMENTED,
@@ -234,7 +234,7 @@ class CCPCanCan(CChannel):
             )
 
             if self.trace_size != 10:
-                log.info(f"Trace size set to {self.trace_size} MB.")
+                log.kiso_info(f"Trace size set to {self.trace_size} MB.")
                 self._pcan_set_value(
                     pcan_channel, PCANBasic.PCAN_TRACE_SIZE, self.trace_size
                 )
@@ -244,12 +244,12 @@ class CCPCanCan(CChannel):
                 PCANBasic.PCAN_TRACE_CONFIGURE,
                 pcan_path_argument,
             )
-            log.info("Tracefile configured")
+            log.kiso_info("Tracefile configured")
 
             self._pcan_set_value(
                 pcan_channel, PCANBasic.PCAN_TRACE_STATUS, PCANBasic.PCAN_PARAMETER_ON
             )
-            log.info("Trace activated")
+            log.kiso_info("Trace activated")
         except RuntimeError:
             log.error(f"Logging for {self.channel} not activated")
         except OSError as e:
@@ -329,7 +329,7 @@ class CCPCanCan(CChannel):
         )
         self.bus.send(can_msg)
 
-        log.debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
+        log.kiso_debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
 
     def _cc_receive(
         self, timeout: float = 0.0001, raw: bool = False
@@ -353,12 +353,14 @@ class CCPCanCan(CChannel):
                 timestamp = received_msg.timestamp
                 if not raw:
                     payload = Message.parse_packet(payload)
-                log.debug(f"received CAN Message: {frame_id}, {payload}, {timestamp}")
+                log.kiso_debug(
+                    f"received CAN Message: {frame_id}, {payload}, {timestamp}"
+                )
                 return {"msg": payload, "remote_id": frame_id}
             else:
                 return {"msg": None}
         except can.CanError as can_error:
-            log.debug(f"encountered can error: {can_error}")
+            log.kiso_debug(f"encountered can error: {can_error}")
             return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")

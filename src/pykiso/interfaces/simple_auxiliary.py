@@ -90,14 +90,14 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         if not self.is_instance:
             self.create_instance()
         else:
-            log.warning(f"Auxiliary '{self}' is already running")
+            log.kiso_warning(f"Auxiliary '{self}' is already running")
 
     def suspend(self) -> None:
         """Suspend current auxiliary's run."""
         if self.is_instance:
             self.delete_instance()
         else:
-            log.warning(f"Auxiliary '{self}' is already stopped")
+            log.kiso_warning(f"Auxiliary '{self}' is already stopped")
 
     def stop(self):
         """Stop the auxiliary"""

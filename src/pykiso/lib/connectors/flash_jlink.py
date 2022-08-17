@@ -84,7 +84,9 @@ class JLinkFlasher(Flasher):
             if lib.exists():
                 lib = pylink.Library(dllpath=lib)
             else:
-                log.warning(f"No library file found at {lib}, using system default")
+                log.kiso_warning(
+                    f"No library file found at {lib}, using system default"
+                )
                 lib = None
 
         # Define SEGGER J-Link interface
@@ -106,7 +108,7 @@ class JLinkFlasher(Flasher):
         self.jlink.halt()
         self.jlink.reset()
 
-        log.debug("JLink connected to device")
+        log.kiso_debug("JLink connected to device")
 
     def close(self) -> None:
         """Close flasher and free resources."""
@@ -118,9 +120,9 @@ class JLinkFlasher(Flasher):
         :raises pylink.JLinkException: if any hardware related error occurred
             during flashing.
         """
-        log.debug("flashing device")
+        log.kiso_debug("flashing device")
         self.jlink.flash_file(
             str(self.binary), addr=self.start_addr, power_on=self.power_on
         )
         self.jlink.reset()
-        log.debug("flashing device successful")
+        log.kiso_debug("flashing device successful")

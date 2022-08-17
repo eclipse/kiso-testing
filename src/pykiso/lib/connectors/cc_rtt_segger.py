@@ -180,41 +180,41 @@ class CCRttSegger(connector.CChannel):
         # connect to J-Link debugger
         if not self.jlink.opened():
             self.jlink.open(self.serial_number)
-            log.info(f"connection made with J-Link debugger {self.serial_number}")
+            log.kiso_info(f"connection made with J-Link debugger {self.serial_number}")
         else:
-            log.debug("connection to J-Link already started")
+            log.kiso_debug("connection to J-Link already started")
         # set target interface to SWD
         self.jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
         # connect debugger to  the specified target
         self.jlink.connect(
             chip_name=self.chip_name, speed=self.speed, verbose=self.verbose
         )
-        log.debug(
+        log.kiso_debug(
             f"connection to chip {self.chip_name} performed at speed {self.speed}Hz"
         )
         # reset debugger if halted
         if self.jlink.halted():
-            log.info(
+            log.kiso_info(
                 f"J-Link is halted, reset target and wait for {self.connection_timeout}s"
             )
             self.jlink.reset(halt=False)
             time.sleep(self.connection_timeout)
         # start rtt at the specified address
         self.jlink.rtt_start(self.block_address)
-        log.info(f"RTT communication started at address {self.block_address}")
+        log.kiso_info(f"RTT communication started at address {self.block_address}")
 
         t_start = time.perf_counter()
         while True:
             try:
                 num_up = self.jlink.rtt_get_num_up_buffers()
                 num_down = self.jlink.rtt_get_num_down_buffers()
-                log.debug(
+                log.kiso_debug(
                     f"RTT started. Found {num_up} up and {num_down} down channels."
                 )
                 # get rx buffer size
                 rx_buffer = self.jlink.rtt_get_buf_descriptor(self.rx_buffer_idx, True)
                 self.rx_buffer_size = rx_buffer.SizeOfBuffer
-                log.debug(
+                log.kiso_debug(
                     f"Maximum size for a received message set to {self.rx_buffer_size}"
                 )
                 self.rtt_configured = True
@@ -234,9 +234,11 @@ class CCRttSegger(connector.CChannel):
                 self.rtt_log_buffer_size = rtt_log_buffer.SizeOfBuffer
                 if self.rtt_log_buffer_size == 0:
                     raise ValueError
-                log.debug(f"RTT log buffer size is {self.rtt_log_buffer_size} bytes")
+                log.kiso_debug(
+                    f"RTT log buffer size is {self.rtt_log_buffer_size} bytes"
+                )
             except ValueError:
-                log.debug("Read RTT log buffer size is 0, defaulting to 1kB")
+                log.kiso_debug("Read RTT log buffer size is 0, defaulting to 1kB")
                 self.rtt_log_buffer_size = 1024
             except pylink.errors.JLinkRTTException as e:
                 log.error(f"Could not get RTT log buffer size: {e}")
@@ -247,7 +249,7 @@ class CCRttSegger(connector.CChannel):
             finally:
                 self._log_thread_running = True
                 self.rtt_log_thread.start()
-                log.info("RTT logging started")
+                log.kiso_info("RTT logging started")
 
     def _cc_close(self) -> None:
         """Close current RTT communication in use."""
@@ -258,7 +260,7 @@ class CCRttSegger(connector.CChannel):
                 self.rtt_log_thread.join()
             self.jlink.rtt_stop()
             self.jlink.close()
-            log.info("RTT communication closed")
+            log.kiso_info("RTT communication closed")
 
     def _cc_send(self, msg: Message or bytes, raw: bool = False) -> None:
         """Send message using the corresponding RTT buffer.
@@ -271,7 +273,7 @@ class CCRttSegger(connector.CChannel):
                 msg = msg.serialize()
             msg = list(msg)
             bytes_written = self.jlink.rtt_write(self.tx_buffer_idx, msg)
-            log.debug(
+            log.kiso_debug(
                 "===> message sent (RTT) on buffer %d: %s, number of bytes written: %d",
                 self.tx_buffer_idx,
                 msg,
@@ -313,7 +315,7 @@ class CCRttSegger(connector.CChannel):
                         )
                     # Parse the bytes list into bytes string
                     msg_received = bytes(msg_received)
-                    log.debug(
+                    log.kiso_debug(
                         "<=== message received (RTT) on buffer %d: %s, number of bytes read: %d",
                         self.rx_buffer_idx,
                         msg_received,
@@ -344,7 +346,7 @@ class CCRttSegger(connector.CChannel):
                 self.rtt_log_buffer_idx, self.rtt_log_buffer_size
             )
             if log_msg:
-                self.rtt_log.debug(bytes(log_msg).decode())
+                self.rtt_log.kiso_debug(bytes(log_msg).decode())
             time.sleep(self.rtt_log_refresh_time)  # reduce resource consumption
 
     @_need_connection

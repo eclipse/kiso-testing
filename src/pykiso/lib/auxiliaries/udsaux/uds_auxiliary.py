@@ -70,7 +70,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             False
         """
         try:
-            log.info(
+            log.kiso_info(
                 f"UDS request to send '{['0x{:02X}'.format(i) for i in msg_to_send]}'"
             )
             resp = self.uds_config.send(msg_to_send)
@@ -86,7 +86,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             if not isinstance(resp, bool)
             else resp
         )
-        log.info(resp_print)
+        log.kiso_info(resp_print)
         resp = UdsResponse(resp)
         return resp
 
@@ -100,7 +100,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :return: True if response is positive
         """
         if resp.is_negative:
-            log.info(f"Negative response with NRC: {resp.nrc.name}")
+            log.kiso_info(f"Negative response with NRC: {resp.nrc.name}")
             raise self.errors.UnexpectedResponseError(resp)
         return True
 
@@ -115,7 +115,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         """
         if not resp.is_negative:
             raise self.errors.UnexpectedResponseError(resp)
-        log.info(f"Negative response with :{resp.nrc.name}")
+        log.kiso_info(f"Negative response with :{resp.nrc.name}")
         return True
 
     def send_uds_config(
@@ -140,7 +140,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             req_resp_data = uds_service(**msg_to_send["data"])
             if req_resp_data is None:
                 req_resp_data = True
-            log.info(f"UDS response received {req_resp_data}")
+            log.kiso_info(f"UDS response received {req_resp_data}")
             return req_resp_data
         except AttributeError:
             # Service not found, raised by getattr()

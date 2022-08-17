@@ -53,12 +53,12 @@ class CCUdpServer(connector.CChannel):
 
     def _cc_open(self) -> None:
         """Bind UDP socket with configured port and IP address."""
-        log.info(f"UDP socket open at address: {self.address}")
+        log.kiso_info(f"UDP socket open at address: {self.address}")
         self.udp_socket.bind((self.dest_ip, self.dest_port))
 
     def _cc_close(self) -> None:
         """Close UDP socket."""
-        log.info(f"UDP socket closed at address: {self.address}")
+        log.kiso_info(f"UDP socket closed at address: {self.address}")
         self.udp_socket.close()
 
     def _cc_send(self, msg: bytes or Message, raw: bool = False) -> None:
@@ -69,7 +69,7 @@ class CCUdpServer(connector.CChannel):
         if not raw:
             msg = msg.serialize()
 
-        log.debug(f"UDP server send: {msg} at {self.address}")
+        log.kiso_debug(f"UDP server send: {msg} at {self.address}")
         self.udp_socket.sendto(msg, self.address)
 
     def _cc_receive(
@@ -92,13 +92,13 @@ class CCUdpServer(connector.CChannel):
             if not raw:
                 msg_received = Message.parse_packet(msg_received)
 
-            log.debug(f"UDP server receives: {msg_received} at {self.address}")
+            log.kiso_debug(f"UDP server receives: {msg_received} at {self.address}")
         # catch the errors linked to the socket timeout without blocking
         except BlockingIOError:
-            log.debug(f"encountered error while receiving message via {self}")
+            log.kiso_debug(f"encountered error while receiving message via {self}")
             return {"msg": None}
         except socket.timeout:
-            log.debug(f"encountered error while receiving message via {self}")
+            log.kiso_debug(f"encountered error while receiving message via {self}")
             return {"msg": None}
         except BaseException:
             log.exception(f"encountered error while receiving message via {self}")

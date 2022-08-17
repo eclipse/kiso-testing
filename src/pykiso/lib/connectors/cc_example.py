@@ -62,7 +62,7 @@ class CCExample(connector.CChannel):
         with self.lock:
             if raw:
                 raise NotImplementedError()
-            log.debug("Send: {}".format(msg))
+            log.kiso_debug("Send: {}".format(msg))
             # Exit if ack sent
             if msg.get_message_type() == message.MessageType.ACK:
                 return
@@ -102,7 +102,7 @@ class CCExample(connector.CChannel):
                 # Delete the stored raw message
                 self.last_received_message = None
                 # Return the ACK
-                log.debug("Receive: {}".format(r_message))
+                log.kiso_debug("Receive: {}".format(r_message))
                 return {"msg": r_message}
             elif self.report_requested_message is not None:
                 # Transform message to ACK
@@ -112,7 +112,7 @@ class CCExample(connector.CChannel):
                 # Delete the stored raw message
                 self.report_requested_message = None
                 # Return REPORT
-                log.debug("Receive: {}".format(r_message))
+                log.kiso_debug("Receive: {}".format(r_message))
                 return {"msg": r_message}
             else:
                 return {"msg": None}
