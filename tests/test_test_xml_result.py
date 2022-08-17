@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import unittest
 from collections import namedtuple
 
 from pykiso.test_coordinator import test_xml_result
@@ -66,6 +67,35 @@ def test_CustomXmlResult_constructor(mocker):
         properties="properties",
         infoclass="infoclass",
     )
+
+
+def test_CustomXmlResult_constructor_ErrorHolder(mocker):
+    mock_test_info = mocker.patch.object(
+        test_xml_result.xmlrunner.result._TestInfo, "__init__"
+    )
+    test_method = unittest.suite._ErrorHolder("description")
+    custom_xml = test_xml_result.TestInfo(
+        "test_result",
+        test_method,
+        "outcome",
+        "err",
+        "subTest",
+        "filename",
+        "lineno",
+        "doc",
+    )
+
+    mock_test_info.assert_called_once_with(
+        "test_result",
+        test_method,
+        "outcome",
+        "err",
+        "subTest",
+        "filename",
+        "lineno",
+        "doc",
+    )
+    assert custom_xml.test_ids == "{}"
 
 
 def test_report_testcase(mocker):
