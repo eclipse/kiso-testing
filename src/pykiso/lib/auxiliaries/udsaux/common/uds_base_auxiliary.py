@@ -81,8 +81,8 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
             otherwise false
         """
         try:
-            log.kiso_info("Create auxiliary instance")
-            log.kiso_info("Enable channel")
+            log.internal_info("Create auxiliary instance")
+            log.internal_info("Enable channel")
             self.channel.open()
 
             channel_name = self.channel.__class__.__name__.lower()
@@ -104,7 +104,7 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
                 interface = "peak"
 
             if self.odx_file_path:
-                log.kiso_info("Create Uds Config connection with ODX")
+                log.internal_info("Create Uds Config connection with ODX")
                 self.uds_config_enable = True
                 self.uds_config = createUdsConnection(
                     self.odx_file_path,
@@ -116,7 +116,7 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
                     resId=self.res_id,
                 )
             else:
-                log.kiso_info("Create Uds Config connection without ODX")
+                log.internal_info("Create Uds Config connection without ODX")
                 self.uds_config_enable = False
                 self.uds_config = Uds(
                     configPath=self.config_ini_path,
@@ -140,7 +140,7 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
 
         :return: always True
         """
-        log.kiso_info("Delete auxiliary instance")
+        log.internal_info("Delete auxiliary instance")
         self.uds_config.disconnect()
         self.channel.close()
         return True

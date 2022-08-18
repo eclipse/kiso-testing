@@ -49,7 +49,7 @@ class CCTcpip(CChannel):
 
     def _cc_open(self) -> None:
         """Connect to socket with configured port and IP address."""
-        log.kiso_info(
+        log.internal_info(
             f"Connection to socket at address {self.dest_ip} port {self.dest_port}"
         )
         self.socket.settimeout(3)
@@ -57,7 +57,7 @@ class CCTcpip(CChannel):
 
     def _cc_close(self) -> None:
         """Close UDP socket."""
-        log.kiso_info(
+        log.internal_info(
             f"Disconnect from socket at address {self.dest_ip}, port {self.dest_port}"
         )
         self.socket.close()
@@ -71,7 +71,7 @@ class CCTcpip(CChannel):
         if msg is not None and raw is False:
             msg = msg.encode()
 
-        log.kiso_debug(f"Sending {msg} via socket to {self.dest_ip}")
+        log.internal_debug(f"Sending {msg} via socket to {self.dest_ip}")
         self.socket.send(msg)
 
     def _cc_receive(
@@ -93,7 +93,7 @@ class CCTcpip(CChannel):
             if not raw:
                 msg_received = msg_received.decode().strip()
 
-            log.kiso_debug(f"Socket at {self.dest_ip} received: {msg_received}")
+            log.internal_debug(f"Socket at {self.dest_ip} received: {msg_received}")
         except socket.timeout:
             log.exception(
                 f"encountered timeout error while receiving message via {self}"

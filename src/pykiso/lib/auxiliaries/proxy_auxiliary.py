@@ -134,7 +134,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
 
         # configure the file handler and create the trace file
         log_format = logging.Formatter("%(asctime)s : %(message)s")
-        log.kiso_info(f"create proxy trace file at {log_path}")
+        log.internal_info(f"create proxy trace file at {log_path}")
         handler = logging.FileHandler(log_path, "w+")
         handler.setFormatter(log_format)
         # create logger and set the log level to DEBUG
@@ -173,7 +173,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # check if the given aux_name is in the available aux
             # alias list
             elif aux in ConfigRegistry.get_auxes_alias():
-                log.kiso_warning(
+                log.internal_warning(
                     f"Auxiliary : {aux} is not using import magic mechanism (pre-loaded)"
                 )
                 # load it using ConfigRegistry _aux_cache
@@ -234,7 +234,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             False
         """
         self._dispatch_tx_method_to_channels()
-        log.kiso_info("Auxiliary instance created")
+        log.internal_info("Auxiliary instance created")
         return True
 
     @close_connector
@@ -244,7 +244,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         :return: if channel deletion is successful return True otherwise
             False
         """
-        log.kiso_info("Auxiliary instance deleted")
+        log.internal_info("Auxiliary instance deleted")
         return True
 
     def run_command(self, conn: CChannel, *args: tuple, **kwargs: dict) -> None:

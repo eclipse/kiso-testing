@@ -192,7 +192,7 @@ class ModuleCache:
                 spec = importlib.util.spec_from_file_location(path_loc.stem, path_loc)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
-                log.kiso_debug(f"loading {_class} as {name} from {path_loc}")
+                log.internal_debug(f"loading {_class} as {name} from {path_loc}")
             else:
                 raise ImportError(
                     f"no python module found at '{path_loc}'",
@@ -201,23 +201,23 @@ class ModuleCache:
         else:
             module = importlib.import_module(location)
         cls = getattr(module, _class)
-        log.kiso_debug(f"loaded {_class} as {name} from {location}")
+        log.internal_debug(f"loaded {_class} as {name} from {location}")
         return cls
 
     def get_instance(self, name: str):
         """Get an instance of alias <name> (create and configure one of not existed)."""
         if name in self.instances:
-            log.kiso_debug(f"instance for {name} found ({self.instances[name]})")
+            log.internal_debug(f"instance for {name} found ({self.instances[name]})")
             return self.instances[name]
         if name not in self.modules:
-            log.kiso_debug(f"module for {name} not found, loading...")
+            log.internal_debug(f"module for {name} not found, loading...")
             self.modules[name] = self._import(name)
-        log.kiso_debug(
+        log.internal_debug(
             f"instantiating {name}: {self.modules[name]}({self.configs[name]})"
         )
         inst = self.modules[name](name=name, **self.configs[name])
         self.instances[name] = inst
-        log.kiso_debug(f"instantiated {name}")
+        log.internal_debug(f"instantiated {name}")
         return inst
 
 
@@ -266,7 +266,7 @@ class AuxiliaryCache(ModuleCache):
         is_dt = isinstance(inst, pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface)
         if not inst.is_instance and auto_start and is_dt:
             inst.create_instance()
-            log.kiso_debug(f"called create_instance on {name}")
+            log.internal_debug(f"called create_instance on {name}")
         #################################################################################
 
         elif not inst.is_instance and auto_start:
@@ -274,14 +274,14 @@ class AuxiliaryCache(ModuleCache):
             if start_method is not None:
                 inst.start()
             inst.create_instance()
-            log.kiso_debug(f"called create_instance on {name}")
+            log.internal_debug(f"called create_instance on {name}")
         self.instances[name] = inst
         return inst
 
     def _stop_auxiliaries(self):
         """Elegant workaround to shut down all the auxiliaries."""
         for aux in self.instances.values():
-            log.kiso_debug(f"issuing stop for auxiliary '{aux}'")
+            log.internal_debug(f"issuing stop for auxiliary '{aux}'")
             aux.stop()
 
 
@@ -300,7 +300,7 @@ class DynamicImportLinker:
 
     def install(self):
         """Install the import hooks with the system."""
-        log.kiso_debug(f"installed the {self.__class__.__name__}")
+        log.internal_debug(f"installed the {self.__class__.__name__}")
         sys.meta_path.insert(0, *self._finders)
 
     def provide_connector(self, name: str, module: str, **config_params):
@@ -310,7 +310,7 @@ class DynamicImportLinker:
         :param module: either 'python-file-path:Class' or 'module:Class' of the class we want
             to provide
         """
-        log.kiso_debug(f"provided connector {name} (at {module})")
+        log.internal_debug(f"provided connector {name} (at {module})")
         self._con_cache.provide(name, module, **config_params)
 
     def provide_auxiliary(self, name: str, module: str, aux_cons=None, **config_params):
@@ -321,13 +321,13 @@ class DynamicImportLinker:
             to provide
         :param aux_cons: list of connectors this auxiliary has
         """
-        log.kiso_debug(f"provided auxiliary {name} (at {module})")
+        log.internal_debug(f"provided auxiliary {name} (at {module})")
         self._aux_cache.provide(name, module, connectors=aux_cons, **config_params)
         self._aux_loader.provide(name)
 
     def uninstall(self):
         """Deregister the import hooks, close all running threads, delete all instances."""
-        log.kiso_debug("closing and uninstalling all dynamic modules and loaders")
+        log.internal_debug("closing and uninstalling all dynamic modules and loaders")
         self._stop_auxiliaries()
         del self._con_cache
         del self._aux_cache

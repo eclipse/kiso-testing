@@ -55,7 +55,7 @@ class CCProxy(CChannel):
     def detach_tx_callback(self) -> None:
         """Detach the current callback."""
         with self._lock:
-            log.kiso_warning("reset current attached transmit callback!")
+            log.internal_warning("reset current attached transmit callback!")
             self._tx_callback = None
 
     def attach_tx_callback(self, func: Callable) -> None:
@@ -64,21 +64,21 @@ class CCProxy(CChannel):
         :param func: function to call when _cc_send is called
         """
         with self._lock:
-            log.kiso_debug(f"attached function {func.__name__}")
+            log.internal_debug(f"attached function {func.__name__}")
             if self._tx_callback is not None:
-                log.kiso_warning(
+                log.internal_warning(
                     f"function {func.__name__} will replace current transmit callback {self._tx_callback.__name__}"
                 )
             self._tx_callback = func
 
     def _cc_open(self) -> None:
         """Open proxy channel."""
-        log.kiso_debug("Open proxy channel")
+        log.internal_debug("Open proxy channel")
         self.queue_out = queue.Queue()
 
     def _cc_close(self) -> None:
         """Close proxy channel."""
-        log.kiso_debug("Close proxy channel")
+        log.internal_debug("Close proxy channel")
         self.queue_out = queue.Queue()
 
     def _cc_send(self, *args: tuple, **kwargs: dict) -> None:
@@ -87,7 +87,7 @@ class CCProxy(CChannel):
         :param args: tuple containing positionnal arguments
         :param kwargs: dictionary containing named arguments
         """
-        log.kiso_debug(f"put at proxy level: {args} {kwargs}")
+        log.internal_debug(f"put at proxy level: {args} {kwargs}")
         if self._tx_callback is not None:
             self._tx_callback(self, *args, **kwargs)
 
@@ -102,7 +102,7 @@ class CCProxy(CChannel):
         """
         try:
             return_response = self.queue_out.get(True, self.timeout)
-            log.kiso_debug(f"received at proxy level : {return_response}")
+            log.internal_debug(f"received at proxy level : {return_response}")
             return return_response
         except queue.Empty:
             return {"msg": None}

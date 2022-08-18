@@ -393,7 +393,7 @@ def test_receive_log(
 
     mocker_sleep.assert_called_once_with(expected_sleep)
     if log_return:
-        mock_rtt_log.debug.assert_called_once_with("rtt_log")
+        mock_rtt_log.internal_debug.assert_called_once_with("rtt_log")
 
 
 def test_reset_jlink(mocker):

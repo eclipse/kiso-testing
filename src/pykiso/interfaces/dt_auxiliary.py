@@ -95,7 +95,7 @@ class DTAuxiliaryInterface(abc.ABC):
             loggers = list()
         # keyword 'all' should keep all loggers to the configured level
         if "all" in loggers:
-            log.kiso_warning(
+            log.internal_warning(
                 "All loggers are activated, this could lead to performance issues."
             )
             return
@@ -141,14 +141,14 @@ class DTAuxiliaryInterface(abc.ABC):
             False
         """
         with self.lock:
-            log.kiso_debug(
+            log.internal_debug(
                 f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
             )
             response_received = None
             self.queue_in.put((cmd_message, cmd_data))
             try:
                 response_received = self.queue_out.get(blocking, timeout_in_s)
-                log.kiso_debug(
+                log.internal_debug(
                     f"reply to command '{cmd_message}' received: '{response_received}' in {self.name}"
                 )
             except queue.Empty:
@@ -164,7 +164,7 @@ class DTAuxiliaryInterface(abc.ABC):
 
         :raises AuxiliaryCreationError: if instance creation failed
         """
-        log.kiso_info(f"Creating instance of auxiliary {self.name}")
+        log.internal_info(f"Creating instance of auxiliary {self.name}")
 
         with self.lock:
             # if the current aux is alive don't try to create it again
@@ -188,7 +188,7 @@ class DTAuxiliaryInterface(abc.ABC):
 
         :return: True if the auxiliary is deleted otherwise False
         """
-        log.kiso_info(f"Deleting instance of auxiliary {self.name}")
+        log.internal_info(f"Deleting instance of auxiliary {self.name}")
 
         with self.lock:
 
@@ -214,10 +214,10 @@ class DTAuxiliaryInterface(abc.ABC):
     def _start_tx_task(self) -> None:
         """Start transmission task."""
         if self.tx_task_on is False:
-            log.kiso_debug("transmit task is not needed, don't start it")
+            log.internal_debug("transmit task is not needed, don't start it")
             return
 
-        log.kiso_debug(f"start transmit task {self.name}_tx")
+        log.internal_debug(f"start transmit task {self.name}_tx")
         self.tx_thread = threading.Thread(
             name=f"{self.name}_tx", target=self._transmit_task
         )
@@ -226,10 +226,10 @@ class DTAuxiliaryInterface(abc.ABC):
     def _start_rx_task(self) -> None:
         """Start reception task."""
         if self.rx_task_on is False:
-            log.kiso_debug("reception task is not needed, don't start it")
+            log.internal_debug("reception task is not needed, don't start it")
             return
 
-        log.kiso_debug(f"start reception task {self.name}_tx")
+        log.internal_debug(f"start reception task {self.name}_tx")
         self.rx_thread = threading.Thread(
             name=f"{self.name}_rx", target=self._reception_task
         )
@@ -238,10 +238,10 @@ class DTAuxiliaryInterface(abc.ABC):
     def _stop_tx_task(self) -> None:
         """Stop transmission task."""
         if self.tx_task_on is False:
-            log.kiso_debug("transmit task was not started, so no need to stop it")
+            log.internal_debug("transmit task was not started, so no need to stop it")
             return
 
-        log.kiso_debug(f"stop transmit task {self.name}_tx")
+        log.internal_debug(f"stop transmit task {self.name}_tx")
         self.queue_in.put((AuxCommand.DELETE_AUXILIARY, None))
         self.stop_tx.set()
         self.tx_thread.join()
@@ -250,10 +250,10 @@ class DTAuxiliaryInterface(abc.ABC):
     def _stop_rx_task(self) -> None:
         """Stop reception task."""
         if self.rx_task_on is False:
-            log.kiso_debug("recpetion task was not started, so no need t stop it")
+            log.internal_debug("recpetion task was not started, so no need t stop it")
             return
 
-        log.kiso_debug(f"stop reception task {self.name}_rx")
+        log.internal_debug(f"stop reception task {self.name}_rx")
         self.stop_rx.set()
         self.rx_thread.join()
         self.stop_rx.clear()
@@ -386,7 +386,7 @@ def open_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.kiso_info("Open channel")
+        log.internal_info("Open channel")
         try:
             self.channel.open()
             return func(self, *arg, **kwargs)
@@ -414,7 +414,7 @@ def close_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.kiso_info("Close channel")
+        log.internal_info("Close channel")
         try:
             self.channel.close()
             return func(self, *arg, **kwargs)
@@ -444,11 +444,11 @@ def flash_target(func: Callable) -> Callable:
         :return: True if everything was successful otherwise False
         """
         if self.flash is None and not self.is_instance:
-            log.kiso_debug("No flasher configured!")
+            log.internal_debug("No flasher configured!")
             return func(self, *arg, **kwargs)
 
         try:
-            log.kiso_info("Flash target")
+            log.internal_info("Flash target")
             with self.flash as flasher:
                 flasher.flash()
             return func(self, *arg, **kwargs)

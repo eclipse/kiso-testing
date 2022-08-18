@@ -45,15 +45,15 @@ class SimulatedAuxiliary(AuxiliaryInterface):
         self.context = Simulation()
         self.playbook = None
         self.ts_tc = None
-        log.kiso_debug(f"com is {com}")
+        log.internal_debug(f"com is {com}")
 
     def _create_auxiliary_instance(self) -> bool:
         """Open current associated channel.
 
         :return: always True
         """
-        log.kiso_info("Create auxiliary instance")
-        log.kiso_info("Enable channel")
+        log.internal_info("Create auxiliary instance")
+        log.internal_info("Enable channel")
         self.channel.open()
         return True
 
@@ -62,7 +62,7 @@ class SimulatedAuxiliary(AuxiliaryInterface):
 
         :return: always True
         """
-        log.kiso_info("Delete auxiliary instance")
+        log.internal_info("Delete auxiliary instance")
         self.channel.close()
         return True
 

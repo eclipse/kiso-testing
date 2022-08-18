@@ -104,14 +104,14 @@ class AcronameAuxiliary(DTAuxiliaryInterface):
         :return: True if successful
         """
 
-        log.kiso_info("Create auxiliary instance")
+        log.internal_info("Create auxiliary instance")
 
         result = self.stem.discoverAndConnect(
             brainstem.link.Spec.USB, self.serial_number
         )
         if result == (Result.NO_ERROR):
             result = self.stem.system.getSerialNumber()
-            log.kiso_info(
+            log.internal_info(
                 "Connected to USBStem with serial number: 0x%08X" % result.value
             )
         else:
@@ -126,7 +126,7 @@ class AcronameAuxiliary(DTAuxiliaryInterface):
 
         :return: always True
         """
-        log.kiso_info("Delete auxiliary instance")
+        log.internal_info("Delete auxiliary instance")
         try:
             self.stem.disconnect()
         except Exception:

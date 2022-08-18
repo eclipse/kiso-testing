@@ -84,7 +84,7 @@ class JLinkFlasher(Flasher):
             if lib.exists():
                 lib = pylink.Library(dllpath=lib)
             else:
-                log.kiso_warning(
+                log.internal_warning(
                     f"No library file found at {lib}, using system default"
                 )
                 lib = None
@@ -108,7 +108,7 @@ class JLinkFlasher(Flasher):
         self.jlink.halt()
         self.jlink.reset()
 
-        log.kiso_debug("JLink connected to device")
+        log.internal_debug("JLink connected to device")
 
     def close(self) -> None:
         """Close flasher and free resources."""
@@ -120,9 +120,9 @@ class JLinkFlasher(Flasher):
         :raises pylink.JLinkException: if any hardware related error occurred
             during flashing.
         """
-        log.kiso_debug("flashing device")
+        log.internal_debug("flashing device")
         self.jlink.flash_file(
             str(self.binary), addr=self.start_addr, power_on=self.power_on
         )
         self.jlink.reset()
-        log.kiso_debug("flashing device successful")
+        log.internal_debug("flashing device successful")

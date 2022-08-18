@@ -165,7 +165,7 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
             # check if the given aux_name is in the available aux
             # alias list
             elif aux_name in ConfigRegistry.get_auxes_alias():
-                log.kiso_warning(
+                log.internal_warning(
                     f"Auxiliary : {aux_name} is not using import magic mechanism (pre-loaded)"
                 )
                 # load it using ConfigRegistry _aux_cache

@@ -48,10 +48,10 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         self.stop_event = None
         self._aux_copy = None
         # add internal kiso log levels in case the auxiliary is used without pykiso cli
-        if not hasattr(logging, "KISO_WARNING"):
-            add_logging_level("KISO_WARNING", logging.WARNING + 1)
-            add_logging_level("KISO_INFO", logging.INFO + 1)
-            add_logging_level("KISO_DEBUG", logging.DEBUG + 1)
+        if not hasattr(logging, "INTERNAL_WARNING"):
+            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
 
     def __repr__(self) -> str:
         name = self.name
@@ -94,7 +94,7 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
             raise Exception("Only use named parameters when invoking create_copy")
         # if a copy already exist return the actual one
         if self._aux_copy is not None:
-            log.kiso_warning(
+            log.internal_warning(
                 f"A copy of {self} already exists, destroy it before creating a new one"
             )
             return self._aux_copy
@@ -163,25 +163,25 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         """
         return_code = False
 
-        log.kiso_debug(f"sending command '{cmd_message}' in {self}")
+        log.internal_debug(f"sending command '{cmd_message}' in {self}")
         if cmd_data:
-            log.kiso_debug(f"command payload data: {repr(cmd_data)}")
+            log.internal_debug(f"command payload data: {repr(cmd_data)}")
 
         if self.lock.acquire():
             # Trigger the internal requests
             self.queue_in.put(("command", cmd_message, cmd_data))
-            log.kiso_debug(f"sent command '{cmd_message}' in {self}")
+            log.internal_debug(f"sent command '{cmd_message}' in {self}")
             # Wait until the test request was received
             try:
-                log.kiso_debug(
+                log.internal_debug(
                     f"waiting for reply to command '{cmd_message}' in {self}"
                 )
                 return_code = self.queue_out.get(blocking, timeout_in_s)
-                log.kiso_debug(
+                log.internal_debug(
                     f"reply to command '{cmd_message}' received: '{return_code}' in {self}"
                 )
             except queue.Empty:
-                log.kiso_debug("no reply received within time")
+                log.internal_debug("no reply received within time")
             # Release the above lock
             self.lock.release()
             # Return the ack_report if exists
@@ -205,7 +205,7 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
             try:
                 return_code = self.queue_out.get(blocking, timeout_in_s)
             except queue.Empty:
-                log.kiso_info("no reply received within time")
+                log.internal_info("no reply received within time")
             # Release the above lock
             self.lock.release()
             # Return the ack_report if exists
@@ -247,14 +247,14 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         if not self.stop_event.is_set() and not self.is_instance:
             self.create_instance()
         else:
-            log.kiso_warning(f"Auxiliary '{self}' is already running")
+            log.internal_warning(f"Auxiliary '{self}' is already running")
 
     def suspend(self) -> None:
         """Supend current auxiliary's run."""
         if self.is_instance:
             self.delete_instance()
         else:
-            log.kiso_warning(f"Auxiliary '{self}' is already stopped")
+            log.internal_warning(f"Auxiliary '{self}' is already stopped")
 
     @abc.abstractmethod
     def create_instance(self) -> bool:

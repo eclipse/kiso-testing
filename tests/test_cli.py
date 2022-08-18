@@ -46,9 +46,9 @@ def test_initialize_logging(mocker, path, level, expected_level, report_type):
         flush_mock.assert_called()
     assert isinstance(logger, logging.Logger)
     assert logger.isEnabledFor(expected_level)
-    assert cli.log_options.log_path == path
-    assert cli.log_options.log_level == level
-    assert cli.log_options.report_type == report_type
+    assert logging.log_options.log_path == path
+    assert logging.log_options.log_level == level
+    assert logging.log_options.report_type == report_type
 
 
 def test_get_logging_options():

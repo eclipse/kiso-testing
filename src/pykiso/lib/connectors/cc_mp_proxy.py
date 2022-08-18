@@ -59,7 +59,7 @@ class CCMpProxy(CChannel):
         doesn't have to change in order to ensure that ProxyAuxiliary
         works even if suspend or resume is called.
         """
-        log.kiso_debug("Open proxy channel")
+        log.internal_debug("Open proxy channel")
 
     def _cc_close(self) -> None:
         """Close proxy channel.
@@ -68,7 +68,7 @@ class CCMpProxy(CChannel):
         doesn't have to change in order to ensure that ProxyAuxiliary
         works even if suspend or resume is called.
         """
-        log.kiso_debug("Close proxy channel")
+        log.internal_debug("Close proxy channel")
 
     def _cc_send(self, *args: tuple, **kwargs: dict) -> None:
         """Populate the queue in of the proxy connector.
@@ -76,7 +76,7 @@ class CCMpProxy(CChannel):
         :param args: tuple containing positionnal arguments
         :param kwargs: dictionary containing named arguments
         """
-        log.kiso_debug(f"put at proxy level: {args} {kwargs}")
+        log.internal_debug(f"put at proxy level: {args} {kwargs}")
         self.queue_in.put((args, kwargs))
 
     def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
@@ -90,7 +90,7 @@ class CCMpProxy(CChannel):
         """
         try:
             return_response = self.queue_out.get(True, self.timeout)
-            log.kiso_debug(f"received at proxy level : {return_response}")
+            log.internal_debug(f"received at proxy level : {return_response}")
             return return_response
         except queue.Empty:
             return {"msg": None}

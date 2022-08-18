@@ -190,7 +190,7 @@ class SocketCan2Trc(can.Listener):
         :param can_frame: can frame to log
         """
         if can_frame.is_error_frame:
-            log.kiso_warning("is errorframe")
+            log.internal_warning("is errorframe")
         txt = "{num:7d} {time_msec:13.3f} {type:<6} {can_id:04x} RX {len:<2d}"
         print(
             txt.format(

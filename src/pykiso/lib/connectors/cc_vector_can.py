@@ -95,13 +95,13 @@ class CCVectorCan(CChannel):
         self.timeout = 1e-6
 
         if self.enable_brs and not self.fd:
-            log.kiso_warning(
+            log.internal_warning(
                 "Bitrate switch will have no effect because option is_fd is set to false."
             )
 
     def _cc_open(self) -> None:
         """Open a can bus channel and set filters for reception."""
-        log.kiso_info(f"CAN bus channel open: {self.channel}")
+        log.internal_info(f"CAN bus channel open: {self.channel}")
         self.bus = can.interface.Bus(
             bustype=self.bustype,
             poll_interval=self.poll_interval,
@@ -118,7 +118,7 @@ class CCVectorCan(CChannel):
 
     def _cc_close(self) -> None:
         """Close the current can bus channel."""
-        log.kiso_info(f"CAN bus channel closed: {self.channel}")
+        log.internal_info(f"CAN bus channel closed: {self.channel}")
         self.bus.shutdown()
         self.bus = None
 
@@ -152,7 +152,7 @@ class CCVectorCan(CChannel):
         )
         self.bus.send(can_msg)
 
-        log.kiso_debug(f"sent CAN Message: {can_msg}")
+        log.internal_debug(f"sent CAN Message: {can_msg}")
 
     def _cc_receive(
         self, timeout=0.0001, raw: bool = False
@@ -177,7 +177,7 @@ class CCVectorCan(CChannel):
                 if not raw:
                     payload = Message.parse_packet(payload)
 
-                log.kiso_debug(f"received CAN Message: {frame_id}, {payload}")
+                log.internal_debug(f"received CAN Message: {frame_id}, {payload}")
 
                 return {"msg": payload, "remote_id": frame_id}
             else:
@@ -207,7 +207,7 @@ def detect_serial_number() -> int:
     if serial_numbers:
         # if several devices are discovered, the first Vector Box is chosen
         serial_number = min(serial_numbers)
-        log.kiso_info(f"Using Vector Box with serial number {serial_number}")
+        log.internal_info(f"Using Vector Box with serial number {serial_number}")
         return serial_number
     else:
         raise ConnectionRefusedError("No Vector box is currently available")

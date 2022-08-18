@@ -101,7 +101,7 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
             loggers = list()
         # keyword 'all' should keep all loggers to the configured level
         if "all" in loggers:
-            log.kiso_warning(
+            log.internal_warning(
                 "All loggers are activated, this could lead to performance issues."
             )
             return
@@ -198,8 +198,10 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
                 self.queue_out.put(self._abort_command())
             elif request != "":
                 # A request was received but could not be processed
-                log.kiso_warning(f"Unknown request '{request}', will not be processed!")
-                log.kiso_warning(f"Aux status: {self.__dict__}")
+                log.internal_warning(
+                    f"Unknown request '{request}', will not be processed!"
+                )
+                log.internal_warning(f"Aux status: {self.__dict__}")
 
             # Step 2: Check if something was received from the aux instance if instance was created
             if self.is_instance:
@@ -213,7 +215,7 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
                 time.sleep(0.050)
 
         # Thread stop command was set
-        log.kiso_info("{} was stopped".format(self))
+        log.internal_info("{} was stopped".format(self))
         # Delete auxiliary external instance if not done
         if self.is_instance:
             self._delete_auxiliary_instance()
