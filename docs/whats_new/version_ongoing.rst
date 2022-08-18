@@ -52,3 +52,10 @@ The collected messages by the Communication auxiliary can still be cleared with 
 :py:meth`~pykiso.lib.auxiliaries.communication_auxiliary.CommunicationAuxiliary.clear_buffer`
 
 See :ref:`communication_auxiliary`
+
+Kiso log levels
+^^^^^^^^^^^^^^^
+To let users decide the level of information they want to see in their logs, new log levels
+have been defined. When launch normally only the logs in the tests and the errors will be
+active.
+The flag --verbose should be used to display the internal logs of the framework.

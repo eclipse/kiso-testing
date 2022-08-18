@@ -511,3 +511,7 @@ Run the tests
 ~~~~~~~~~~~~~
 
 ``pykiso -c <config_file>``
+
+to run with internal logs:
+
+``pykiso -c <config_file>`` --verbose
