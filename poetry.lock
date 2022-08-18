@@ -508,7 +508,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "pykiso-python-uds"
-version = "2.2.0"
+version = "3.0.0"
 description = "Please use python-uds instead, this is a refactored version with breaking changes, only for pykiso"
 category = "main"
 optional = false
@@ -1048,7 +1048,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "e0cf72178d7b0e2141abc16c45bc84652edb7bda88e21783abde40102d442d91"
+content-hash = "40abfd61c56c4cfb11667e82802b6ffb101c331d16baf6ed5e276967911c4fcf"
 
 [metadata.files]
 alabaster = []
