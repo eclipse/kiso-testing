@@ -19,11 +19,10 @@ from pykiso import (
     AuxiliaryInterface,
     MpAuxiliaryInterface,
     SimpleAuxiliaryInterface,
-    cli,
+    logging_initializer,
 )
 from pykiso.auxiliary import AuxiliaryCommon
 from pykiso.exceptions import AuxiliaryCreationError
-from pykiso.logging import LogOptions, log_options
 from pykiso.test_setup.config_registry import ConfigRegistry
 
 
@@ -73,7 +72,9 @@ def mock_thread_aux(mocker):
 def mock_mp_aux(mocker):
     class MockMpAux(MpAuxiliaryInterface):
         def __init__(self, param_1=None, param_2=None, **kwargs):
-            log_options = LogOptions(None, "ERROR", None)
+            logging_initializer.log_options = logging_initializer.LogOptions(
+                None, "ERROR", None
+            )
             self.param_1 = param_1
             self.param_2 = param_2
             super().__init__(name="mp_aux", **kwargs)

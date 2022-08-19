@@ -28,7 +28,7 @@ from typing import Dict, List, Optional, Union
 
 from .. import message
 from ..interfaces.thread_auxiliary import AuxiliaryInterface
-from ..logging import get_logging_options, initialize_logging
+from ..logging_initializer import get_logging_options, initialize_logging
 from .test_message_handler import test_app_interaction
 
 log = logging.getLogger(__name__)

@@ -26,7 +26,7 @@ import queue
 import time
 from typing import Any
 
-from .logging import add_logging_level
+from .logging_initializer import add_logging_level
 from .test_setup.config_registry import ConfigRegistry
 from .types import MsgType
 

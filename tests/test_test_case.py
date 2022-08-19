@@ -14,7 +14,7 @@ from functools import partial
 import pytest
 
 from pykiso import cli, retry_test_case
-from pykiso.logging import LogOptions
+from pykiso.logging_initializer import LogOptions
 from pykiso.test_coordinator import test_case
 
 

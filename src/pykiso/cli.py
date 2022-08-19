@@ -29,7 +29,7 @@ import click
 from . import __version__
 from .config_parser import parse_config
 from .global_config import Grabber
-from .logging import initialize_logging
+from .logging_initializer import initialize_logging
 from .test_coordinator import test_execution
 from .test_setup.config_registry import ConfigRegistry
 from .types import PathType
