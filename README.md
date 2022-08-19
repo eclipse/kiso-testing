@@ -139,6 +139,7 @@ Options:
                                   the console
   --failfast                      stop the test run on the first error or
                                   failure
+  --verbose                       enables the internal logs of the framework
 ```
 
 Suitable config files are available in the `examples` folder.

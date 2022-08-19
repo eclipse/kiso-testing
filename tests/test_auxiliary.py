@@ -7,11 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import queue
-import threading
 import time
-import unittest
-from threading import Thread
 
 import pytest
 
