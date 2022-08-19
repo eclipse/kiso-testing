@@ -25,7 +25,7 @@ def aux_mock(mocker):
         send_response = mocker.stub(name="send_response")
         send_flow_control = mocker.stub(name="send_flow_control")
         format_data = mocker.stub(name="format_data")
-        stop_event = MagicMock(name="stop_event")
+        stop_rx = MagicMock(name="stop_rx")
         receive = MagicMock(name="receive")
 
     return MockAux()
@@ -149,7 +149,7 @@ class TestUdsDownloadCallback:
         mock_get_first_frame_data_length = mocker.patch.object(
             callback_inst, "get_first_frame_data_length", side_effect=[(3, 6), (3, 6)]
         )
-        aux_mock.stop_event.is_set.return_value = False
+        aux_mock.stop_rx.is_set.return_value = False
         initial_transfer_data = [0x00] * 6 + [0x36, 0x01, 0x02]
         aux_mock.receive.side_effect = (
             None,  # no initial transfer_data

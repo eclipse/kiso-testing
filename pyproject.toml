@@ -35,18 +35,18 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-PyYAML = "*"
-pylink-square = "^0.12.0"
-pyserial = "*"
-python-can = {extras = ["pcan"], version = "^4.0.0"}
-PyVISA = "*"
-PyVISA-py = "*"
+PyYAML = "^6.0"
+pylink-square = "~0.12.0"
+pyserial = "^3.0"
+python-can = {version = "^4.0.0", extras = ["pcan"]}
+PyVISA = "^1.12.0"
+PyVISA-py = "~0.5.3"
 robotframework = "3.2.2"
-unittest-xml-reporting = "*"
-click = "*"
+unittest-xml-reporting = "^3.2.0"
+click = "^7.1.2"
 MarkupSafe = "~2.0"
-pykiso-python-uds = "^2.1.0"
-tabulate = "*"
+pykiso-python-uds = "^3.0.0"
+tabulate = "~0.8.9"
 
 [tool.poetry.dev-dependencies]
 auto-changelog = "0.5.3"
@@ -99,7 +99,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-exclude_lines = ["pass", "def __repr__"]
+exclude_lines = ["pass", "def __repr__" ,"pragma: no cover","if TYPE_CHECKING:"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

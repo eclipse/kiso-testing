@@ -7,9 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-
-import os
-
+import click
 import pytest
 from click.testing import CliRunner
 
@@ -31,4 +29,61 @@ def test_main(runner):
             "-c",
             "examples/acroname.yaml",
         ],
+    )
+
+
+@pytest.mark.parametrize(
+    "user_tags,expected_results",
+    [
+        (["--branch-level", "dev"], {"branch-level": ["dev"]}),
+        (["--branch-level", "dev,master"], {"branch-level": ["dev", "master"]}),
+        (
+            ["--branch-level", "dev", "--variant", "delta"],
+            {"branch-level": ["dev"], "variant": ["delta"]},
+        ),
+    ],
+)
+def test_eval_user_tags(user_tags, expected_results, mocker):
+    click_context_mock = mocker.MagicMock()
+    click_context_mock.args = user_tags
+    user_tags = cli.eval_user_tags(click_context_mock)
+    assert user_tags == expected_results
+
+
+def test_eval_user_tags_empty(mocker):
+    click_context_mock = mocker.MagicMock()
+    click_context_mock.args = []
+    user_tags = cli.eval_user_tags(click_context_mock)
+    assert user_tags == {}
+
+
+@pytest.mark.parametrize(
+    "user_tags,expected_message",
+    [
+        (
+            ["branch-level", "dev"],
+            "no such option: branch-level  Did you mean --branch-level",
+        ),
+        (
+            ["--forbidden_underscore", "dev"],
+            "no such option: --forbidden_underscore  Did you mean --forbidden-underscore",
+        ),
+    ],
+)
+def test_eval_user_tags_exception_no_such_option(user_tags, expected_message, mocker):
+    # user_tags = ["branch-level", "dev"]
+    click_context_mock = mocker.MagicMock()
+    click_context_mock.args = user_tags
+    with pytest.raises(click.NoSuchOption) as exec_info:
+        eval_user_tags = cli.eval_user_tags(click_context_mock)
+    assert expected_message in exec_info.value.format_message()
+
+
+def test_eval_user_tags_exception_bad_option_usage(mocker):
+    click_context_mock = mocker.MagicMock()
+    click_context_mock.args = ["--branch-level"]
+    with pytest.raises(click.BadOptionUsage) as exec_info:
+        eval_user_tags = cli.eval_user_tags(click_context_mock)
+    assert (
+        "No value specified for tag --branch-level" in exec_info.value.format_message()
     )

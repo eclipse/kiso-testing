@@ -43,6 +43,11 @@ class SuiteSetup(pykiso.RemoteTestSuiteSetup):
     yaml configuration file)
     """
 
+    def test_suite_setUp(self):
+        module = importlib.import_module("pykiso.auxiliaries")
+        attribute = dir(module)
+        logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
+
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
 class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):

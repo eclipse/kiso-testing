@@ -239,7 +239,7 @@ class UdsDownloadCallback(UdsCallback):
 
         # handle data transfer
         while (
-            not aux.stop_event.is_set()
+            not aux.stop_rx.is_set()
             and transfer_size < expected_transfer_size
             and time.perf_counter() - transfer_start_time < self.TRANSFER_TIMEOUT
         ):
@@ -274,7 +274,7 @@ class UdsDownloadCallback(UdsCallback):
 
             # receive block data
             while (
-                not aux.stop_event.is_set()
+                not aux.stop_rx.is_set()
                 and block_data_len < (expected_data_len - 1)
                 and elapsed_time < self.TRANSFER_TIMEOUT
             ):

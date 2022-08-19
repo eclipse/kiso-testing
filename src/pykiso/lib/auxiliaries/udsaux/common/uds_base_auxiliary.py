@@ -23,29 +23,50 @@ uds_base_auxiliary
 """
 import configparser
 import logging
+import warnings
 from pathlib import Path
 from typing import Optional, Union
 
-from uds import Uds, createUdsConnection
+from uds import Config, Uds
 
 from pykiso.connector import CChannel
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+    open_connector,
+)
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
 
 
-class UdsBaseAuxiliary(AuxiliaryInterface):
+class UdsBaseAuxiliary(DTAuxiliaryInterface):
     """Base Auxiliary class for handling UDS protocol."""
 
     POSITIVE_RESPONSE_OFFSET = 0x40
+    DEFAULT_UDS_CONFIG = {
+        "transport_protocol": "CAN",
+        "p2_can_client": 5,
+        "p2_can_server": 1,
+    }
+    DEFAULT_TP_CONFIG = {
+        "addressing_type": "NORMAL",
+        "n_sa": 0xFF,
+        "n_ta": 0xFF,
+        "n_ae": 0xFF,
+        "m_type": "DIAGNOSTICS",
+        "discard_neg_resp": False,
+    }
 
     def __init__(
         self,
         com: CChannel,
-        config_ini_path: Union[Path, str],
+        config_ini_path: Optional[Union[Path, str]] = None,
         odx_file_path: Optional[Union[Path, str]] = None,
         request_id: Optional[int] = None,
         response_id: Optional[int] = None,
+        tp_layer: dict = None,
+        uds_layer: dict = None,
         **kwargs,
     ):
         """Initialize attributes.
@@ -56,24 +77,50 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
         :param request_id: optional CAN ID used for sending messages.
         :param response_id: optional CAN ID used for receiving messages.
         """
+        super().__init__(
+            is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs
+        )
         self.channel = com
         self.odx_file_path = odx_file_path
-        if odx_file_path:
-            self.odx_file_path = Path(odx_file_path)
-
-        self.config_ini_path = Path(config_ini_path)
-
-        config = configparser.ConfigParser()
-        config.read(self.config_ini_path)
-
-        self.req_id = request_id or int(config.get("can", "defaultReqId"), 16)
-        self.res_id = response_id or int(config.get("can", "defaultResId"), 16)
-
+        self.req_id = request_id
+        self.res_id = response_id
         self.uds_config_enable = False
         self.uds_config = None
+        self.tp_layer = None
+        self.tp_waiting_time = 0.010
+        self.uds_layer = None
+        self._init_com_layers(tp_layer, uds_layer)
 
-        super().__init__(is_proxy_capable=True, **kwargs)
+        # remove it after a few releases just warn users
+        if config_ini_path is not None:
+            warnings.warn(
+                "The usage of ini file is deprecated, nothing will be read from it",
+                category=FutureWarning,
+            )
+            log.warning(
+                f"apply following values for ISOTP layer configuration : {UdsBaseAuxiliary.DEFAULT_TP_CONFIG}"
+            )
+            log.warning(
+                f"apply following values for UDS layer configuration : {UdsBaseAuxiliary.DEFAULT_UDS_CONFIG}"
+            )
 
+    def _init_com_layers(
+        self, tp_layer: Optional[dict] = None, uds_layer: Optional[dict] = None
+    ) -> None:
+        """Initialize isotp and uds layer attributes.
+
+        :param tp_layer: isotp configuration given at yaml level
+        :param uds_layer: uds configuration given at yaml level
+        """
+        tp_layer = tp_layer or UdsBaseAuxiliary.DEFAULT_TP_CONFIG
+        uds_layer = uds_layer or UdsBaseAuxiliary.DEFAULT_UDS_CONFIG
+        # add configured request id and response id to tp layer config
+        tp_layer["req_id"] = self.req_id
+        tp_layer["res_id"] = self.res_id
+        self.tp_layer = tp_layer
+        self.uds_layer = uds_layer
+
+    @open_connector
     def _create_auxiliary_instance(self) -> bool:
         """Open current associated channel.
 
@@ -81,66 +128,28 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
             otherwise false
         """
         try:
-            log.internal_info("Create auxiliary instance")
-            log.internal_info("Enable channel")
-            self.channel.open()
-
-            channel_name = self.channel.__class__.__name__.lower()
-
-            if "vectorcan" in channel_name:
-                interface = "vector"
-                bus = self.channel.bus
-            elif "pcan" in channel_name:
-                interface = "peak"
-                bus = self.channel.bus
-            elif "socketcan" in channel_name:
-                interface = "socketcan"
-                bus = self.channel.bus
-            elif "ccproxy" in channel_name:
-                # Just fake python-uds (when proxy auxiliary is used),
-                # by setting bus to True no channel creation is
-                # performed
-                bus = True
-                interface = "peak"
-
-            if self.odx_file_path:
-                log.internal_info("Create Uds Config connection with ODX")
+            if self.odx_file_path is not None:
                 self.uds_config_enable = True
-                self.uds_config = createUdsConnection(
-                    self.odx_file_path,
-                    "",
-                    configPath=self.config_ini_path,
-                    bus=bus,
-                    interface=interface,
-                    reqId=self.req_id,
-                    resId=self.res_id,
-                )
-            else:
-                log.internal_info("Create Uds Config connection without ODX")
-                self.uds_config_enable = False
-                self.uds_config = Uds(
-                    configPath=self.config_ini_path,
-                    bus=bus,
-                    interface=interface,
-                    reqId=self.req_id,
-                    resId=self.res_id,
-                )
+
+            Config.load_com_layer_config(self.tp_layer, self.uds_layer)
+            self.uds_config = Uds(
+                self.odx_file_path,
+                connector=self.channel,
+            )
             if hasattr(self, "transmit"):
-                self.uds_config.tp.overwrite_transmit_method(self.transmit)
+                self.uds_config.overwrite_transmit_method(self.transmit)
             if hasattr(self, "receive"):
-                self.uds_config.tp.overwrite_receive_method(self.receive)
+                self.uds_config.overwrite_receive_method(self.receive)
             return True
         except Exception:
-            log.exception("Error during channel creation")
-            self.stop()
+            log.exception("An error occurred during kiso-python-uds initialization")
             return False
 
+    @close_connector
     def _delete_auxiliary_instance(self) -> bool:
         """Close current associated channel.
 
         :return: always True
         """
-        log.internal_info("Delete auxiliary instance")
-        self.uds_config.disconnect()
-        self.channel.close()
+        log.internal_info("Auxiliary instance deleted")
         return True

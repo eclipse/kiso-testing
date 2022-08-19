@@ -81,10 +81,12 @@ class BannerTestResult(TextTestResult):
         :return: the wrapped docstring
         """
         doc = ""
-        if test._testMethodDoc:
+        if getattr(test, "_testMethodDoc", None) is not None:
             doc = "\n"
             for line in test._testMethodDoc.splitlines():
                 doc += "\n" + textwrap.fill(line.strip(), width=100)
+        else:
+            doc = ""
         return doc
 
     def startTest(self, test: TestCase) -> None:

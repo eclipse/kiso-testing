@@ -31,10 +31,6 @@ class TestUdsAuxiliary:
     def uds_odx_aux_inst(self, mocker, ccpcan_inst, tmp_uds_config_ini):
 
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run",
-            return_value=None,
-        )
-        mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
@@ -55,10 +51,6 @@ class TestUdsAuxiliary:
     def uds_odx_aux_inst_v(self, mocker, ccvector_inst, tmp_uds_config_ini):
 
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run",
-            return_value=None,
-        )
-        mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
@@ -77,10 +69,6 @@ class TestUdsAuxiliary:
 
     @pytest.fixture(scope="function")
     def uds_raw_aux_inst(self, mocker, ccpcan_inst, tmp_uds_config_ini):
-        mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run",
-            return_value=None,
-        )
         mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
@@ -101,21 +89,35 @@ class TestUdsAuxiliary:
     def test_constructor_odx(self, uds_odx_aux_inst, tmp_uds_config_ini):
         assert uds_odx_aux_inst.is_proxy_capable
         assert str(uds_odx_aux_inst.odx_file_path) == "odx"
-        assert uds_odx_aux_inst.config_ini_path == tmp_uds_config_ini
+        assert uds_odx_aux_inst.tp_waiting_time == 0.010
 
     def test_constructor_raw(self, uds_raw_aux_inst, tmp_uds_config_ini):
         assert uds_raw_aux_inst.is_proxy_capable
         assert uds_raw_aux_inst.odx_file_path is None
-        assert uds_raw_aux_inst.config_ini_path == tmp_uds_config_ini
+        assert uds_raw_aux_inst.tp_waiting_time == 0.010
 
     def test_send_uds_raw(self, mock_uds_config, uds_odx_aux_inst):
         mock_uds_config.send.return_value = [0x50, 0x03]
         uds_odx_aux_inst.uds_config = mock_uds_config
         uds_odx_aux_inst.POSITIVE_RESPONSE_OFFSET = 0x40
+        uds_odx_aux_inst.tp_waiting_time = 0.020
 
         resp = uds_odx_aux_inst.send_uds_raw([0x10, 0x03])
 
+        mock_uds_config.send.assert_called_with(
+            [0x10, 0x03],
+            responseRequired=True,
+            tpWaitTime=uds_odx_aux_inst.tp_waiting_time,
+        )
         assert resp == [0x50, 0x03]
+
+    def test_send_uds_raw_no_response_required(self, mock_uds_config, uds_odx_aux_inst):
+        mock_uds_config.send.return_value = None
+        uds_odx_aux_inst.uds_config = mock_uds_config
+
+        resp = uds_odx_aux_inst.send_uds_raw([0x10, 0x03], response_required=False)
+
+        assert resp == True
 
     def test_send_uds_raw_resp_empty_list(self, mock_uds_config, uds_odx_aux_inst):
         mock_uds_config.send.return_value = []
@@ -327,5 +329,6 @@ class TestUdsAuxiliary:
             sleep(3)
 
         send_mock.assert_called_with(
-            UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE
+            UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE,
+            response_required=False,
         )

@@ -9,10 +9,51 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version 0.18.0 (2022-06-07)
+## Version Unreleased (2022-08-11)
 
 #### New Features
 
+* Improve error reporting in test case execution ([#111](https://github.com/eclipse/kiso-testing/issues/111))
+* ComAux ability to handle reception buffer ([#86](https://github.com/eclipse/kiso-testing/issues/86))
+* Add a tester present sender to uds auxiliary ([#87](https://github.com/eclipse/kiso-testing/issues/87))
+* make DuT DT-aux capable ([#77](https://github.com/eclipse/kiso-testing/issues/77))
+* Implement double threaded auxiliary interface ([#74](https://github.com/eclipse/kiso-testing/issues/74))
+* detect test collection errors and abort execution
+* add show tag script for test information analysis
+#### Fixes
+
+* skip suite tests when setup fails
+* virtual test fail
+* hanging ci and rework mp aux and proxy pytest
+* multiple yaml logging
+#### Refactorings
+
+* adapt instrument aux to dt interface ([#85](https://github.com/eclipse/kiso-testing/issues/85))
+* adapt acroname aux to dt interface ([#84](https://github.com/eclipse/kiso-testing/issues/84))
+* migrate recorder to DT-aux interface ([#80](https://github.com/eclipse/kiso-testing/issues/80))
+#### Docs
+
+* Extend contribution parts with DoD hints ([#94](https://github.com/eclipse/kiso-testing/issues/94))
+* fix dead links and rework formatting ([#105](https://github.com/eclipse/kiso-testing/issues/105))
+* align dependencies in NOTICE.md ([#90](https://github.com/eclipse/kiso-testing/issues/90))
+* add tools section and remove tools from coverage
+#### Others
+
+* (deps): bump lxml from 4.9.0 to 4.9.1 ([#88](https://github.com/eclipse/kiso-testing/issues/88))
+* rename show-tag CLI to pykiso-tags
+* fix docstring
+* fix issues induced by tmp_path fixture
+* try to fix get_yaml_files test
+* increase coverage
+* add tests for show-tag
+
+Full set of changes: [`0.18.0...06bdbdf`](https://github.com/eclipse/kiso-testing/compare/0.18.0...06bdbdf)
+
+## Version 0.18.0 (2022-06-08)
+
+#### New Features
+
+* make release 0.18.0 ([#72](https://github.com/eclipse/kiso-testing/issues/72))
 * create base class for test ([#61](https://github.com/eclipse/kiso-testing/issues/61))
 * make the proxy agnostic of transitioning messages
 * add pykiso to pytest tool ([#62](https://github.com/eclipse/kiso-testing/issues/62))

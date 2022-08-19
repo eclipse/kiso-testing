@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 from uds import IsoServices
 
@@ -141,7 +141,9 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :param response_data: the UDS response to send.
         """
         to_send = self.uds_config.tp.encode_isotp(
-            response_data, use_external_snd_rcv_functions=True
+            response_data,
+            use_external_snd_rcv_functions=True,
+            tpWaitTime=self.tp_waiting_time,
         )
         if to_send is not None:
             self.transmit(to_send)
@@ -194,6 +196,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         response: Optional[Union[int, List[int]]] = None,
         response_data: Optional[Union[int, bytes]] = None,
         data_length: Optional[int] = None,
+        callback: Optional[Callable] = None,
     ) -> None:
         """Register an automatic response to send if the specified request is received
         from the client.
@@ -209,6 +212,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             positive response containing no data.
         :param data_length: optional length of the data to send if it is supposed
             to have a fixed length (zero-padded).
+        :param callback: custom callback to register
         """
         callback = (
             request
@@ -218,6 +222,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 response=response,
                 response_data=response_data,
                 data_length=data_length,
+                callback=callback,
             )
         )
         self.callbacks[self.format_data(callback.request)] = callback
