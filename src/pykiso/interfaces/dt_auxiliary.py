@@ -28,7 +28,7 @@ from enum import Enum, unique
 from typing import Any, Callable, List, Optional
 
 from ..exceptions import AuxiliaryCreationError
-from ..test_setup.dynamic_loader import PACKAGE
+from ..logging_initializer import initialize_loggers
 
 log = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class DTAuxiliaryInterface(abc.ABC):
         self.name = name
         self.is_proxy_capable = is_proxy_capable
         self.auto_start = auto_start
-        self.initialize_loggers(activate_log)
+        initialize_loggers(activate_log)
         self.lock = threading.RLock()
         self.stop_tx = threading.Event()
         self.stop_rx = threading.Event()
@@ -84,40 +84,6 @@ class DTAuxiliaryInterface(abc.ABC):
         self.rx_thread = None
         self.recv_timeout = 1
         self.is_instance = False
-
-    @staticmethod
-    def initialize_loggers(loggers: Optional[List[str]]) -> None:
-        """Deactivate all external loggers except the specified ones.
-
-        :param loggers: list of logger names to keep activated
-        """
-        if loggers is None:
-            loggers = list()
-        # keyword 'all' should keep all loggers to the configured level
-        if "all" in loggers:
-            log.internal_warning(
-                "All loggers are activated, this could lead to performance issues."
-            )
-            return
-        # keep package and auxiliary loggers
-        relevant_loggers = {
-            name: logger
-            for name, logger in logging.root.manager.loggerDict.items()
-            if not (name.startswith(PACKAGE) or name.endswith("auxiliary"))
-            and not isinstance(logger, logging.PlaceHolder)
-        }
-        # keep child loggers
-        childs = [
-            logger
-            for logger in relevant_loggers.keys()
-            for parent in loggers
-            if (logger.startswith(parent) or parent.startswith(logger))
-        ]
-        loggers += childs
-        # keep original level for specified loggers
-        loggers_to_deactivate = set(relevant_loggers) - set(loggers)
-        for logger_name in loggers_to_deactivate:
-            logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     def run_command(
         self,

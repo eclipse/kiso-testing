@@ -43,14 +43,6 @@ def test_constructor(aux_instance):
     assert not aux_instance.is_instance
 
 
-def test_initialize_loggers(mocker):
-    mock_log = mocker.patch.object(AuxiliaryInterface, "initialize_loggers")
-
-    logger = [logging.getLogger(__name__)]
-    SimpleAuxiliaryInterface.initialize_loggers(logger)
-    mock_log.assert_called_with(logger)
-
-
 def test_create_instance(mocker, aux_instance):
     mock_create = mocker.patch.object(
         ConcreteSimpleAux, "_create_auxiliary_instance", return_value=True

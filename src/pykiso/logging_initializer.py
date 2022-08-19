@@ -23,8 +23,9 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import NamedTuple, Optional
+from typing import List, NamedTuple, Optional
 
+from .test_setup.dynamic_loader import PACKAGE
 from .types import PathType
 
 LogOptions = collections.namedtuple("LogOptions", "log_path log_level report_type")
@@ -160,3 +161,37 @@ def add_logging_level(level_name: str, level_num: int):
         setattr(logging, level_name, level_num)
         setattr(logging.getLoggerClass(), method_name, log_for_level)
         setattr(logging, method_name, log_to_root)
+
+
+def initialize_loggers(loggers: Optional[List[str]]) -> None:
+    """Deactivate all external loggers except the specified ones.
+
+    :param loggers: list of logger names to keep activated
+    """
+    if loggers is None:
+        loggers = list()
+    # keyword 'all' should keep all loggers to the configured level
+    if "all" in loggers:
+        logging.internal_warning(
+            "All loggers are activated, this could lead to performance issues."
+        )
+        return
+    # keep package and auxiliary loggers
+    relevant_loggers = {
+        name: logger
+        for name, logger in logging.root.manager.loggerDict.items()
+        if not (name.startswith(PACKAGE) or name.endswith("auxiliary"))
+        and not isinstance(logger, logging.PlaceHolder)
+    }
+    # keep child loggers
+    childs = [
+        logger
+        for logger in relevant_loggers.keys()
+        for parent in loggers
+        if (logger.startswith(parent) or parent.startswith(logger))
+    ]
+    loggers += childs
+    # keep original level for specified loggers
+    loggers_to_deactivate = set(relevant_loggers) - set(loggers)
+    for logger_name in loggers_to_deactivate:
+        logging.getLogger(logger_name).setLevel(logging.WARNING)

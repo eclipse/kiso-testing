@@ -24,6 +24,7 @@ import logging
 from typing import List, Optional
 
 from ..exceptions import AuxiliaryCreationError
+from ..logging_initializer import initialize_loggers
 from .thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         """
         self.name = name
         self.is_instance = False
-        self.initialize_loggers(activate_log)
+        initialize_loggers(activate_log)
 
     def __repr__(self) -> str:
         name = self.name if self.name is not None else ""
@@ -50,14 +51,6 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         if name:
             repr_ = repr_[:1] + f"{name} is " + repr_[1:]
         return repr_
-
-    @staticmethod
-    def initialize_loggers(loggers: Optional[List[str]]) -> None:
-        """Deactivate all external loggers except the specified ones.
-
-        :param loggers: list of logger names to keep activated
-        """
-        AuxiliaryInterface.initialize_loggers(loggers)
 
     def create_instance(self) -> bool:
         """Create an auxiliary instance and ensure the communication to it.

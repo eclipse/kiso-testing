@@ -59,3 +59,11 @@ def test_get_logging_options():
     assert options is not None
     assert options.log_level == "ERROR"
     assert options.report_type is None
+
+
+def test_deactivate_all_loggers(caplog):
+
+    with caplog.at_level(logging.WARNING):
+        logging_initializer.initialize_loggers(["all"])
+
+    assert "All loggers are activated" in caplog.text

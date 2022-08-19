@@ -261,11 +261,3 @@ def test_wait_for_queue_out_empty(aux_inst):
     value = aux_inst.wait_for_queue_out(blocking=False, timeout_in_s=0)
 
     assert value is None
-
-
-def test_deactivate_all_loggers(caplog):
-
-    with caplog.at_level(logging.WARNING):
-        DTAuxiliaryInterface.initialize_loggers(["all"])
-
-    assert "All loggers are activated" in caplog.text
