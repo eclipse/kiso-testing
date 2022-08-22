@@ -17,12 +17,7 @@ Integration Test Framework
 
 .. currentmodule:: cli
 
-
 """
-import logging
-import pprint
-import sys
-from typing import Optional, Tuple
 import collections
 import logging
 import pprint
