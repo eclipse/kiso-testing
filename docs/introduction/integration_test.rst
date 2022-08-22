@@ -528,11 +528,20 @@ Example:
     :language: yaml
     :linenos:
 
+.. _run_the_tests:
+
 Run the tests
 ~~~~~~~~~~~~~
 
 ``pykiso -c <config_file>``
 
-to run with internal log messages::
+To let user decide the level of information they want to see in their logs, new log levels
+have been defined. When launch normally only the logs in the tests and the errors will be
+active.
+The flag --verbose should be used to display the internal logs of the framework:
 
-``pykiso -c <config_file>`` --verbose
+``pykiso -c <config_file> --verbose``
+
+There is three internal log levels: INTERNAL_INFO, INTERNAL_DEBUG, INTERNAL_WARNING.
+They will be filtered as the basic ones with the use of --log-level. Errors log
+level will allways be logged, internal or not. 

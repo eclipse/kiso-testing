@@ -101,3 +101,5 @@ To let users decide the level of information they want to see in their logs, new
 have been defined. When launch normally only the logs in the tests and the errors will be
 active.
 The flag --verbose should be used to display the internal logs of the framework.
+
+See :ref:`run_the_tests`
