@@ -202,8 +202,7 @@ def execute(
     config: Dict[str, Any],
     report_type: str = "text",
     user_tags: Optional[Dict[str, List[str]]] = None,
-    step_report: bool = False,
-    step_report_output: str = "step_report.html",
+    step_report: Optional[Path] = None,
     pattern_inject: Optional[str] = None,
     failfast: bool = False,
 ) -> int:
@@ -213,8 +212,7 @@ def execute(
     :param report_type: str to set the type of report wanted, i.e. test
         or junit
     :param user_tags: test case tags to execute
-    :param step_report: generate the step report
-    :param step_report_output: file path for the output step report
+    :param step_report: file path for the step report or None
     :param pattern_inject: optional pattern that will override
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
@@ -231,7 +229,7 @@ def execute(
         if user_tags:
             apply_tag_filter(all_tests_to_run, user_tags)
         # Enable step report
-        if step_report:
+        if step_report is not None:
             enable_step_report(all_tests_to_run)
 
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
@@ -255,8 +253,8 @@ def execute(
             result = test_runner.run(all_tests_to_run)
 
         # Generate the html step report
-        if step_report:
-            generate_step_report(result, step_report_output)
+        if step_report is not None:
+            generate_step_report(result, step_report)
 
         exit_code = failure_and_error_handling(result)
     except TestCollectionError:

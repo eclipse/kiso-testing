@@ -143,7 +143,11 @@ class BannerTestResult(TextTestResult):
         TestResult.addFailure(self, test, err)
         self._error_occurred = True
 
-    def addSuccess(self, test: TestCase):
+    def addSuccess(self, test: TestCase) -> None:
+        """Add a testcase to the list of succeeded test cases.
+
+        :param test: running testcase
+        """
         self.successes.append(test)
 
     def addError(self, test: TestCase, err: tuple) -> None:
