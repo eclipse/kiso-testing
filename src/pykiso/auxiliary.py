@@ -38,6 +38,16 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
     multiprocessing and thread auxiliary interface.
     """
 
+    def __new__(cls: AuxiliaryCommon, *args, **kwargs) -> AuxiliaryCommon:
+        """Create instance and add internal kiso log levels in
+        case the auxiliary is used without pykiso cli
+        """
+        if not hasattr(logging, "INTERNAL_WARNING"):
+            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
+        return super(AuxiliaryCommon, cls).__new__(cls)
+
     def __init__(self) -> None:
         """Auxiliary common attributes initialization."""
         self.name = None
@@ -47,11 +57,6 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         self.is_instance = False
         self.stop_event = None
         self._aux_copy = None
-        # add internal kiso log levels in case the auxiliary is used without pykiso cli
-        if not hasattr(logging, "INTERNAL_WARNING"):
-            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
-            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
-            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
 
     def __repr__(self) -> str:
         name = self.name

@@ -24,7 +24,7 @@ import logging
 from typing import List, Optional
 
 from ..exceptions import AuxiliaryCreationError
-from ..logging_initializer import initialize_loggers
+from ..logging_initializer import initialize_loggers, add_logging_level
 from .thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
@@ -34,6 +34,16 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
     """Define the interface for all simple auxiliary where usage of
     thread or mulitprocessing is not necessary.
     """
+
+    def __new__(cls, *args, **kwargs):
+        """Create instance and add internal kiso log levels in
+        case the auxiliary is used without pykiso cli
+        """
+        if not hasattr(logging, "INTERNAL_WARNING"):
+            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
+        return super(SimpleAuxiliaryInterface, cls).__new__(cls)
 
     def __init__(self, name: str = None, activate_log: List[str] = None) -> None:
         """Auxiliary initialization.

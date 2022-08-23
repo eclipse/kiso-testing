@@ -28,7 +28,7 @@ from enum import Enum, unique
 from typing import Any, Callable, List, Optional
 
 from ..exceptions import AuxiliaryCreationError
-from ..logging_initializer import initialize_loggers
+from ..logging_initializer import initialize_loggers, add_logging_level
 
 log = logging.getLogger(__name__)
 
@@ -48,6 +48,16 @@ class DTAuxiliaryInterface(abc.ABC):
     << double threaded >> auxiliary, simply encapsulate two threads one
     for the reception and one for the transmmission.
     """
+
+    def __new__(cls, *args, **kwargs):
+        """Create instance and add internal kiso log levels in
+        case the auxiliary is used without pykiso cli
+        """
+        if not hasattr(logging, "INTERNAL_WARNING"):
+            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
+        return super(DTAuxiliaryInterface, cls).__new__(cls)
 
     def __init__(
         self,
