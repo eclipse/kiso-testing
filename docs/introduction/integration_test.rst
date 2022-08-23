@@ -538,7 +538,11 @@ Run the tests
 To let user decide the level of information they want to see in their logs, new log levels
 have been defined. When launch normally only the logs in the tests and the errors will be
 active.
-The flag --verbose should be used to display the internal logs of the framework:
+The option -v (--verbose) should be used to display the internal logs of the framework:
+
+``pykiso -c <config_file> -v``
+
+or
 
 ``pykiso -c <config_file> --verbose``
 

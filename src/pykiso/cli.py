@@ -127,6 +127,7 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     help="stop the test run on the first error or failure",
 )
 @click.option(
+    "-v",
     "--verbose",
     is_flag=True,
     required=False,
