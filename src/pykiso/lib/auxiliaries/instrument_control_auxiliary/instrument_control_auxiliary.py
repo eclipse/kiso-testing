@@ -76,7 +76,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
         :param validation: contain validation criteria apply on the
             response
         """
-        log.debug(f"Sending a write request in {self} for {write_command}")
+        log.internal_debug(f"Sending a write request in {self} for {write_command}")
         return self.handle_write(write_command, validation)
 
     def handle_write(
@@ -94,7 +94,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
         :return: status message depending on the command validation:
             SUCCESS, FAILURE or NO_VALIDATION
         """
-        log.debug(f"Sending a write request in {self} for {write_command}")
+        log.internal_debug(f"Sending a write request in {self} for {write_command}")
         # Send the message with the termination character
         self.channel.cc_send(msg=write_command + self.write_termination, raw=False)
 
@@ -132,22 +132,24 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
                     else:
                         write_success = False
                 if write_success is True:
-                    log.debug(
+                    log.internal_debug(
                         f"Write request {write_command} successful after verification"
                     )
                     return "SUCCESS"
                 else:
-                    log.warning(
+                    log.internal_warning(
                         f"Write request {write_command} failed! Validation query response was different than expected."
                     )
                     return "FAILURE"
             else:
-                log.warning(
+                log.internal_warning(
                     f"Write request {write_command} failed! No response received for the validation query."
                 )
                 return "FAILURE"
         else:
-            log.debug(f"Write request {write_command} processed without validation")
+            log.internal_debug(
+                f"Write request {write_command} processed without validation"
+            )
             return "NO_VALIDATION"
 
     def read(self) -> Union[str, bool]:
@@ -156,7 +158,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
         :return: received response from instrument otherwise empty
             string
         """
-        log.debug(f"Sending a read request in {self}")
+        log.internal_debug(f"Sending a read request in {self}")
         return self.handle_read()
 
     def handle_read(self) -> str:
@@ -178,7 +180,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
         :return: Response message, None if the request expired with a
             timeout.
         """
-        log.debug(f"Sending a query request in {self}) for {query_command}")
+        log.internal_debug(f"Sending a query request in {self}) for {query_command}")
         return self.handle_query(query_command)
 
     def handle_query(self, query_command: str) -> str:
@@ -204,15 +206,15 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
 
         :return: always True
         """
-        log.info("Create auxiliary instance")
+        log.internal_info("Create auxiliary instance")
 
         try:
             # Open instrument
-            log.info("Open instrument")
+            log.internal_info("Open instrument")
             self.channel.open()
 
             # Enable remote control
-            log.info("Enable remote control")
+            log.internal_info("Enable remote control")
             command, validation = self.helpers.get_command(
                 cmd_tag="REMOTE_CONTROL",
                 cmd_type="write",
@@ -222,7 +224,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
 
             # Select channel if needed
             if self.output_channel is not None:
-                log.info(f"Select channel {self.output_channel}")
+                log.internal_info(f"Select channel {self.output_channel}")
                 command, validation = self.helpers.get_command(
                     cmd_tag="OUTPUT_CHANNEL",
                     cmd_type="write",
@@ -232,7 +234,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
                     f"{command} {self.output_channel}".strip(), validation
                 )
             else:
-                log.info("Using default output channel.")
+                log.internal_info("Using default output channel.")
         except Exception:
             log.exception("Unable to safely open the instrument.")
             return False
@@ -244,7 +246,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
 
         :return: True if the connectors is closed otherwise False
         """
-        log.info("Auxiliary instance deleted")
+        log.internal_info("Auxiliary instance deleted")
         return True
 
     def _run_command(self, cmd_message: Any, cmd_data: Optional[bytes]) -> None:

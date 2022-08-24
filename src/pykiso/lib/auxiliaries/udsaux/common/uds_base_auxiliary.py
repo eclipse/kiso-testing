@@ -151,5 +151,5 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
 
         :return: always True
         """
-        log.info("Auxiliary instance deleted")
+        log.internal_info("Auxiliary instance deleted")
         return True

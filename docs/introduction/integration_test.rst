@@ -528,7 +528,45 @@ Example:
     :language: yaml
     :linenos:
 
+.. _run_the_tests:
+
 Run the tests
 ~~~~~~~~~~~~~
 
 ``pykiso -c <config_file>``
+
+To let the user decide which information they want to see in their logs, new log levels
+have been defined. When launched normally, only the logs from the tests and the framework 
+errors will be active.
+The option -v (--verbose) should be used to display the internal logs of the framework:
+
+``pykiso -c <config_file> -v``
+
+or
+
+``pykiso -c <config_file> --verbose``
+
+Three internal log levels are available: INTERNAL_INFO, INTERNAL_DEBUG, INTERNAL_WARNING.
+They will then be activated depending on the value of the--log-level option. Error logs
+level will always be logged, internal or not. 
+
+The summary of the activated logs depending of the value of the --log-level and
+--verbose options can be found in the following table:
+
++------------------------+-----------------------------+--------------------+
+|                        | verbose == True             | verbose == False   |
+|                        |                             |                    |
++========================+=============================+====================+
+| log-level == DEBUG     |DEBUG, INTERNAL_DEBUG,       |DEBUG, INFO,        |
+|                        |INFO, INTERNAL_INFO, WARNING,|WARNING, ERROR      |
+|                        |INTERNAL_WARNING, ERROR      |                    |
++------------------------+-----------------------------+--------------------+
+| log-level == INFO      |INFO, INTERNAL_INFO,         |INFO, WARNING,      |
+|                        |WARNING, INTERNAL_WARNING,   |ERROR               |
+|                        |ERROR                        |                    |
++------------------------+-----------------------------+--------------------+
+| log-level == WARNING   |WARNING, INTERNAL_WARNING,   |WARNING, ERROR      |
+|                        |ERROR                        |                    |
++------------------------+-----------------------------+--------------------+
+| log-level == ERROR     |ERROR                        |ERROR               |          
++------------------------+-----------------------------+--------------------+

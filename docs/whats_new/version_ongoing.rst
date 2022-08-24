@@ -5,7 +5,6 @@ WARNING
 ^^^^^^^
 pykiso_to_pytest will generate none working contest.py until ticket `fix pykiso to pytest <https://github.com/eclipse/kiso-testing/issues/76>`__  is merged and finished.
 
-
 Tool for test suites tags analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 See :ref:`show_tag`
@@ -95,3 +94,12 @@ In addition, if the tp_layer and uds_layer parameters are not given at yaml leve
 a default configuration is applied.
 
 See :ref:`uds_auxiliary`
+
+Kiso log levels
+^^^^^^^^^^^^^^^
+To let users decide the level of information they want to see in their logs, new log levels
+have been defined. When launched normally only the logs in the tests and the errors will be
+active.
+The option -v (--verbose) should be used to display the internal logs of the framework.
+
+See :ref:`run_the_tests`

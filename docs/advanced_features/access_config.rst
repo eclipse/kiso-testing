@@ -21,7 +21,7 @@ And we passed the following arguments at the command line interface:
 
 .. code:: bash
 
-   pykiso -c examples/conf_access.yaml --variant variant1 --variant daily --log-level INFO
+   pykiso -c examples/conf_access.yaml --variant variant1 --variant daily --log-level INFO --verbose
 
 To access all those parameters contain in both sources (cli and yaml) :
 

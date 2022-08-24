@@ -73,7 +73,7 @@ def retry_command(tries: int) -> Callable:
                 False
             """
             for idx in range(tries):
-                log.info(f"command try n: {idx}")
+                log.internal_info(f"command try n: {idx}")
                 if func(*arg, **kwargs):
                     return True
             return False
@@ -113,10 +113,12 @@ def check_acknowledgement(func: Callable) -> Callable:
 
         # invalid token or received message not type of ACK
         if is_ack is False:
-            log.warning(f"Received {response} not matching {self.current_cmd}!")
+            log.internal_warning(
+                f"Received {response} not matching {self.current_cmd}!"
+            )
             return False
 
-        log.info("Command was acknowledged by the DUT!")
+        log.internal_info("Command was acknowledged by the DUT!")
         return True
 
     return inner_check
@@ -193,7 +195,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
             self.queue_out.get_nowait()
 
         self.current_cmd = message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.PING)
-        log.info(f"send ping request: {self.current_cmd}")
+        log.internal_info(f"send ping request: {self.current_cmd}")
         return self.run_command(
             cmd_message=self.current_cmd,
             cmd_data=None,
@@ -214,7 +216,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
         :return: True if the command is acknowledged otherwise False
         """
         self.current_cmd = command
-        log.info(f"send request: {self.current_cmd}")
+        log.internal_info(f"send request: {self.current_cmd}")
         return self.run_command(
             cmd_message=self.current_cmd,
             cmd_data=None,
@@ -238,7 +240,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
         :return: True if the command is acknowledged otherwise False
         """
         self.current_cmd = message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.ABORT)
-        log.info(f"send abort request: {self.current_cmd}")
+        log.internal_info(f"send abort request: {self.current_cmd}")
         return self.run_command(
             cmd_message=self.current_cmd,
             cmd_data=None,
@@ -269,7 +271,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
 
         :return: True if everything was successful otherwise False
         """
-        log.info("Auxiliary instance created")
+        log.internal_info("Auxiliary instance created")
         return True
 
     @close_connector
@@ -278,7 +280,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
 
         :return: always True
         """
-        log.info("Auxiliary instance deleted")
+        log.internal_info("Auxiliary instance deleted")
         return True
 
     def evaluate_response(self, response: message.Message) -> bool:
@@ -296,14 +298,16 @@ class DUTAuxiliary(DTAuxiliaryInterface):
             return True
 
         if response.get_message_type() == MESSAGE_TYPE.LOG:
-            log.info(f"Logging message received from {self.name}: {response}")
+            log.internal_info(f"Logging message received from {self.name}: {response}")
             return False
 
         if response.get_message_type() == MESSAGE_TYPE.ACK:
-            log.warning(f"ACK message received from {self.name}: {response}")
+            log.internal_warning(f"ACK message received from {self.name}: {response}")
             return False
 
-        log.warning(f"Message type unknown received from {self.name}: {response}")
+        log.internal_warning(
+            f"Message type unknown received from {self.name}: {response}"
+        )
         return False
 
     def evaluate_report(self, report_msg: message.Message) -> None:
@@ -316,12 +320,12 @@ class DUTAuxiliary(DTAuxiliaryInterface):
                 f"Report with verdict FAILED received from {self.name} : {report_msg}"
             )
         elif report_msg.get_message_sub_type() == REPORT_TYPE.TEST_PASS:
-            log.info(
+            log.internal_info(
                 f"Report with verdict PASS received from {self.name} : {report_msg}"
             )
 
         elif report_msg.get_message_sub_type() == REPORT_TYPE.TEST_NOT_IMPLEMENTED:
-            log.warning(
+            log.internal_warning(
                 f"Report with verdict NOT IMPLEMENTED from {self.name} : {report_msg}"
             )
         else:
