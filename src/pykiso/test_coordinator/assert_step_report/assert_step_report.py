@@ -30,13 +30,15 @@ import logging
 import re
 import types
 import typing
-from dataclasses import dataclass, field
+import unittest
 from collections import OrderedDict, namedtuple
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 from typing import Union
 
 import jinja2
+
 from pykiso.test_coordinator.test_result import BannerTestResult, TestCase
 from pykiso.test_coordinator.test_xml_result import TestInfo, XmlTestResult
 
@@ -56,6 +58,7 @@ SCRIPT_PATH = str(Path(__file__).resolve().parent)
 
 REPORT_TEMPLATE = "report_template.html.j2"
 
+
 @dataclass
 class StepReportData:
     # Store additional data fetched during test for
@@ -69,9 +72,10 @@ class StepReportData:
     # Error message on step fail
     last_error_message: str = ""
     # Flag used for stopping interruptions on first fail for reporting
-    continue_on_error: bool = False # or use the failfast value?
+    continue_on_error: bool = False  # or use the failfast value?
     # Current report table
     current_table: typing.Optional[str] = None
+
 
 def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
     """Get the input parameter name to the assert method.
@@ -155,7 +159,7 @@ def _get_expected(func_name: str, arguments: dict) -> str:
     return expected
 
 
-def _prepare_report(test_class, test_name: str) -> None:
+def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
     """Make ALL_STEP_REPORT variable ready for update
 
     Create the tree if required, otherwise, does nothing
@@ -167,12 +171,12 @@ def _prepare_report(test_class, test_name: str) -> None:
         - test_list: store the steps result
             - test_name: list of steps
 
-    :param test_class: class being tested
+    :param test: test to be reported
     :param test_name: name of the function being tested
     """
     global ALL_STEP_REPORT
 
-    test_class_name = type(test_class).__name__
+    test_class_name = type(test).__name__
 
     # Create the testClass
     if not ALL_STEP_REPORT.get(test_class_name):
@@ -180,14 +184,14 @@ def _prepare_report(test_class, test_name: str) -> None:
         # Add test succeed flag
         ALL_STEP_REPORT[test_class_name]["succeed"] = True
         # Add header (mutable object -> dictionary fed during test)
-        ALL_STEP_REPORT[test_class_name]["header"] = test_class.step_report.header
+        ALL_STEP_REPORT[test_class_name]["header"] = test.step_report.header
         # Add description of the test -> Always test_run
         ALL_STEP_REPORT[test_class_name]["description"] = (
-            test_class._testMethodDoc or "Not provided"
+            test._testMethodDoc or "Not provided"
         )
         # Add test file path
         ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(
-            type(test_class)
+            type(test)
         )
         # Store the result (start, stop, elapsed time)
         ALL_STEP_REPORT[test_class_name]["time_result"] = OrderedDict()
