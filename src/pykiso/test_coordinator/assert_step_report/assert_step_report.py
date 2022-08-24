@@ -339,13 +339,12 @@ def _parse_timestamp(timestamp: float) -> str:
 
 def generate_step_report(
     test_result: Union[BannerTestResult, XmlTestResult],
-    output_file: str = "step_report.html",
+    output_file: str,
 ) -> None:
     """Generate the HTML step report based on Jinja2 template
 
-    Args:
-        test_result ([type]): [description]
-        output_file (str, optional): [description]. Defaults to "step_report.html".
+    :param test_result: Result of tests to generate the report from
+    :param output_file: Report output file path
     """
     global ALL_STEP_REPORT, SCRIPT_PATH, REPORT_TEMPLATE
 
