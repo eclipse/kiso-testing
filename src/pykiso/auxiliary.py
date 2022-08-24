@@ -40,7 +40,7 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
 
     def __new__(cls: AuxiliaryCommon, *args, **kwargs) -> AuxiliaryCommon:
         """Create instance and add internal kiso log levels in
-        case the auxiliary is used without pykiso cli
+        case the auxiliary is used outside the pykiso context
         """
         if not hasattr(logging, "INTERNAL_WARNING"):
             add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)

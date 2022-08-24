@@ -131,7 +131,7 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     "--verbose",
     is_flag=True,
     required=False,
-    help="activate the framwork logs",
+    help="activate the internal framework logs",
 )
 @click.option(
     "-p",
