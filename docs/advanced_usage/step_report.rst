@@ -1,5 +1,5 @@
-Step report
-===========
+System-test (step) report
+=========================
 
 The step report aims to provide a more comprehensive test-report (adapted for system testers) by tracking each assertion that contains a message.
 It follows the following structure:
