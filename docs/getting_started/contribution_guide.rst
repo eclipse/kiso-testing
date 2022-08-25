@@ -59,11 +59,14 @@ Kiso-testing and make sure that you understand your rights and obligations.
 Any contributions to Kiso-testing project code base needs to be licensed under
 EPL v2.0.
 
+.. include:: getting_started_dev.rst
+
 What should I do before committing ?
 ------------------------------------
 
 PEP8-Compliancy
 ---------------
+
 In order to maintain clear and user-friendly project, make sure that your
 changes respect PEP8 standards. PEP8 is a guide that provides Python coding
 conventions (naming, indentation,...).
@@ -71,6 +74,7 @@ Official document : https://peps.python.org/pep-0008/
 
 To make sure your changes are PEP8 Compliant, different tools exist to help you
 here:
+
     - linter (applicable on IDE) :
         show some warning directly on IDE.
     - pre-commit hook :
@@ -80,6 +84,7 @@ here:
 
 Typography
 ----------
+
 Most of the comments made during PR-Reviewing are about typography/misspelling
 mistakes. An easy way to avoid these is by running
 `codespell <https://pypi.org/project/codespell/>`_ on your written code.
@@ -87,6 +92,7 @@ mistakes. An easy way to avoid these is by running
 
 Function type hinting
 ---------------------
+
 In kiso-testing, every implemented function must have annotations for its
 parameters and return types (type hints). This results in increased readability and
 therefore in easier comprehension of the code for any reader.
@@ -111,6 +117,7 @@ therefore in easier comprehension of the code for any reader.
 
 Unit Testing
 ------------
+
 To ensure the correct behaviour of your code, add unit tests for every function
 you implemented.A convenient and pythonic way to do this is this is
 given by `pytest <https://docs.pytest.org/en/stable/>`_
@@ -119,14 +126,17 @@ simply checks if the code coverage is not going lower than it was before changes
 
 Examples Adaptation
 -------------------
+
 To ensure proper integration of your changes into the existing features,
 and demonstrate their usages, adapt the examples of modified module, and run
 it locally.
 
 Update Documentation
 --------------------
+
 Regarding documentation there are four main purposes that have to be fulfilled
 before committing :
+
     - Documentation regarding the changes :
         Make sure that the documentation allow easy understanding of the new
         feature(s).This step mainly concern docstring (module, class, and function)
@@ -183,5 +193,3 @@ before committing :
         Further information on the naming can be found on: https://www.conventionalcommits.org/en/v1.0.0/)
 
     - Documentation has to build properly.
-
-.. include:: getting_started_dev.rst
