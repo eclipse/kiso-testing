@@ -190,9 +190,7 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
             test._testMethodDoc or "Not provided"
         )
         # Add test file path
-        ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(
-            type(test)
-        )
+        ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(type(test))
         # Store the result (start, stop, elapsed time)
         ALL_STEP_REPORT[test_class_name]["time_result"] = OrderedDict()
         ALL_STEP_REPORT[test_class_name]["time_result"][

@@ -195,12 +195,7 @@ def main(
         user_tags = eval_user_tags(click_context)
 
         exit_code = test_execution.execute(
-            cfg_dict,
-            report_type,
-            user_tags,
-            step_report,
-            pattern,
-            failfast
+            cfg_dict, report_type, user_tags, step_report, pattern, failfast
         )
         ConfigRegistry.delete_aux_con()
         for handler in logging.getLogger().handlers:
