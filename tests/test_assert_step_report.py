@@ -84,7 +84,7 @@ def test_assert_step_report_multi_input(mocker, test_case):
         "TestCase",
         "test_assert_step_report_multi_input",
         "Test the step report",
-        "",
+        "data_to_test",
         "Almost Equal to 4.5; with delta=1",
         4.5,
     )

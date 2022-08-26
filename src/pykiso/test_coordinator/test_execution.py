@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
 import enum
 import logging
+import sys
 import time
 import unittest
 from collections import OrderedDict
@@ -44,7 +45,7 @@ import pykiso
 
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from . import test_suite
-from .assert_step_report import assert_decorator, generate_step_report, StepReportData
+from .assert_step_report import StepReportData, assert_decorator, generate_step_report
 from .test_result import BannerTestResult
 from .test_xml_result import XmlTestResult
 
@@ -154,6 +155,11 @@ def enable_step_report(all_tests_to_run: unittest.suite.TestSuite) -> None:
 
     :param all_tests_to_run: a dict containing all testsuites and testcases
     """
+    if sys.version_info.minor >= 8:
+        log.warning(
+            "Variable names may be missing in the step report when using multiline assert statements on Python >=3.8"
+        )
+
     # Step report header fed during test
     base_suite = test_suite.flatten(all_tests_to_run)
     for tc in base_suite:
