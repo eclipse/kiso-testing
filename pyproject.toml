@@ -11,6 +11,10 @@ documentation = "https://kiso-testing.readthedocs.io/en/latest/"
 packages = [
     { include = "pykiso", from = "src" }
 ]
+include = [
+    "src/pykiso/test_coordinator/assert_step_report/report_template.html.j2",
+    "src/pykiso/test_coordinator/assert_step_report/report_template.css",
+]
 keywords = [
     "testing",
     "integration testing",
