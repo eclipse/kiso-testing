@@ -50,6 +50,4 @@ How to generate
 
 .. code:: bash
 
-  pykiso -c my_config.yaml --junit --step-report
-
-"--junit" is required in order to get more information during test
+  pykiso -c my_config.yaml --step-report my_report.html
