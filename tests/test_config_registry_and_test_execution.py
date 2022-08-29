@@ -8,6 +8,7 @@
 ##########################################################################
 
 import logging
+import pathlib
 from unittest import TestCase, TestResult
 
 import pytest
@@ -436,3 +437,23 @@ def test_config_registry_and_test_execution_apply_variant_filter(
             == "skipped due to non-matching variant value"
         )
         assert mock_test_case.tearDown() == "tearDown_skipped"
+
+
+@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+def test_config_registry_and_test_execution_with_step_report(tmp_test, capsys):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+
+    Validation criteria:
+        -  creates step report file
+    """
+    cfg = parse_config(tmp_test)
+    ConfigRegistry.register_aux_con(cfg)
+    exit_code = test_execution.execute(cfg, step_report="step_report.html")
+    ConfigRegistry.delete_aux_con()
+
+    output = capsys.readouterr()
+    assert "RUNNING TEST: " in output.err
+    assert "END OF TEST: " in output.err
+    assert "->  Passed" in output.err
+    assert pathlib.Path("step_report.html").is_file()
