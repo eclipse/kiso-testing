@@ -11,7 +11,6 @@ Welcome to pykiso's documentation!
     getting_started/index
     whats_new/index
     api
-    step_report
     examples/index
     advanced_features/index
     remote_test/remote_test

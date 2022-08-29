@@ -122,13 +122,6 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     help="default, test results are only displayed in the console",
 )
 @click.option(
-    "--step-report",
-    required=False,
-    default=None,
-    type=click.Path(writable=True),
-    help="generate the step report at the specified path",
-)
-@click.option(
     "--failfast",
     is_flag=True,
     help="stop the test run on the first error or failure",
@@ -156,7 +149,6 @@ def main(
     log_path: PathType = None,
     log_level: str = "INFO",
     report_type: str = "text",
-    step_report: Optional[PathType] = None,
     pattern: Optional[str] = None,
     failfast: bool = False,
     verbose: bool = False,
@@ -176,7 +168,6 @@ def main(
     :param report_type: if "test", the standard report, if "junit", a junit report is generated
     :param variant: allow the user to execute a subset of tests based on variants
     :param branch_level: allow the user to execute a subset of tests based on branch levels
-    :param step_report: file path for the step report or None
     :param pattern: overwrite the pattern from the YAML file for easier test development
     :param failfast: stop the test run on the first error or failure
     :param verbose: activate logging for the whole framework
@@ -195,7 +186,7 @@ def main(
         user_tags = eval_user_tags(click_context)
 
         exit_code = test_execution.execute(
-            cfg_dict, report_type, user_tags, step_report, pattern, failfast
+            cfg_dict, report_type, user_tags, pattern, failfast
         )
         ConfigRegistry.delete_aux_con()
         for handler in logging.getLogger().handlers:
