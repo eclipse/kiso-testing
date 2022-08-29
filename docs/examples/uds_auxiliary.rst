@@ -271,6 +271,8 @@ UDS read & write data
 |Parameter is a string that contain the name of the data that is to be read. API must return dictionary with either
 |data associated to the read parameter, or NRC.
 
+.. _start_stop_tester_present_sender:
+
 UDS tester present sender
 -------------------------
 
@@ -284,7 +286,6 @@ UDS tester present sender
     with uds_aux.tester_present_sender(period=3):
         # Perform uds commands here
 
-.._start_stop_tester_present_sender:
 |It is also possible to start and stop the tester present sender manually with the methods
 |start_tester_present_sender and stop_tester_present_sender.
 |Warning: if start_tester_present_sender is called but not stop_tester_present_sender the
