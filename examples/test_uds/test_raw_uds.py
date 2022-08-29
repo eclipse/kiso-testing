@@ -67,6 +67,12 @@ class ExampleUdsTest(pykiso.BasicTest):
             # Go into safety system session
             uds_aux.send_uds_raw([0x10, 0x04])
 
+        # It is also possible to do it with start and stop methods
+        uds_aux.start_tester_present_sender(5)
+        time.sleep(6)
+        uds_aux.send_uds_raw([0x10, 0x04])
+        uds_aux.stop_tester_present_sender()
+
     def tearDown(self):
         """Hook method from unittest in order to execute code after test case run."""
         pass

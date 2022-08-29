@@ -283,3 +283,16 @@ UDS tester present sender
     # start sending tester present messages every 3 seconds until the context manager is exited
     with uds_aux.tester_present_sender(period=3):
         # Perform uds commands here
+
+.._start_stop_tester_present_sender:
+|It is also possible to start and stop the tester present sender manually with the methods
+|start_tester_present_sender and stop_tester_present_sender.
+|Warning: if start_tester_present_sender is called but not stop_tester_present_sender the
+|tester present sender thread will still be running
+
+.. code:: python
+
+    # start sending tester present messages every 3 seconds until the context manager is exited
+    uds_aux.start_tester_present_sender(1)
+    # Perform uds commands here
+    uds_aux.stop_tester_present_sender()

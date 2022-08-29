@@ -103,3 +103,10 @@ active.
 The option -v (--verbose) should be used to display the internal logs of the framework.
 
 See :ref:`run_the_tests`
+
+Enhance uds-aux with a start and stop tester present
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Allows to start and stop the tester present sender manually with the methods
+start_tester_present_sender and stop_tester_present_sender.
+
+See :ref:`start_stop_tester_present_sender`
