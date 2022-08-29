@@ -20,7 +20,6 @@ UDS Auxiliary plugin
 
 """
 
-import threading
 from typing import List, Optional, Union
 
 from robot.api import logger
@@ -42,8 +41,6 @@ class UdsAuxiliary(RobotAuxInterface):
     def __init__(self):
         """Initialize attributes."""
         super().__init__(aux_type=UdsAux)
-        self.sender_stop_event = threading.Event()
-        self.sender = None
 
     @keyword(name="Send uds raw")
     def send_uds_raw(
@@ -178,19 +175,13 @@ class UdsAuxiliary(RobotAuxInterface):
         :param aux_alias: auxiliary's alias
         """
         aux = self._get_aux(aux_alias)
-        self.sender = threading.Thread(
-            name="TesterPresentSender",
-            target=aux._sender_run,
-            args=(period, self.sender_stop_event),
-        )
-        self.sender.start()
+        aux.start_tester_present_sender(period)
 
     @keyword(name="Stop tester present")
-    def stop_tester_present_sender(self) -> None:
+    def stop_tester_present_sender(self, aux_alias) -> None:
         """Stop to continuously sends tester present messages via UDS"""
-        self.sender_stop_event.set()
-        self.sender.join()
-        self.sender_stop_event.clear()
+        aux = self._get_aux(aux_alias)
+        aux.stop_tester_present_sender()
 
     @staticmethod
     def get_service_id(service_name: str) -> int:
