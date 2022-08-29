@@ -29,10 +29,10 @@ jobs:
       - name: Prerequisite installation
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.7'
 
       - name: Install poetry
-        run: pip3.8 install poetry
+        run: pip3.7 install poetry
 
       # Runs the preparation
       - name: Prepare working environement
