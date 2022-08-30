@@ -1,0 +1,20 @@
+
+name: Changelog Updater
+
+on:
+  push:
+    paths:
+      - 'pyproject.toml' # When somebody update the toml file
+
+jobs:
+  build:
+    name: Update changelog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Changelog
+        uses: scottbrenner/generate-changelog-action@master
+        id: Changelog
