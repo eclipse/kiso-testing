@@ -9,10 +9,15 @@ This Changelog can be updated by calling:
 invoke changelog
 ```
 
-## Version Unreleased (2022-08-12)
+## Version Unreleased (2022-08-26)
 
 #### New Features
 
+* make release 0.19.0
+* Step report ([#101](https://github.com/eclipse/kiso-testing/issues/101))
+* add new logging strategy ([#122](https://github.com/eclipse/kiso-testing/issues/122))
+* add dependabot to manage our fixed dependencies ([#121](https://github.com/eclipse/kiso-testing/issues/121))
+* adapt UDS auxiliary and server to the dt auxiliary interface ([#114](https://github.com/eclipse/kiso-testing/issues/114))
 * Improve error reporting in test case execution ([#111](https://github.com/eclipse/kiso-testing/issues/111)) ([#91](https://github.com/eclipse/kiso-testing/issues/91))
 * Improve error reporting in test case execution ([#111](https://github.com/eclipse/kiso-testing/issues/111))
 * ComAux ability to handle reception buffer ([#86](https://github.com/eclipse/kiso-testing/issues/86))
@@ -24,6 +29,8 @@ invoke changelog
 #### Fixes
 
 * update pykitest example
+* MarkupSafe
+* correct AttributeError when setUpClass failed for junit report generation ([#120](https://github.com/eclipse/kiso-testing/issues/120))
 * redefine jenkins resources & timeouts
 * skip suite tests when setup fails
 * virtual test fail
@@ -50,7 +57,7 @@ invoke changelog
 * increase coverage
 * add tests for show-tag
 
-Full set of changes: [`0.18.0...afb79e5`](https://github.com/eclipse/kiso-testing/compare/0.18.0...afb79e5)
+Full set of changes: [`0.18.0...2a31aab`](https://github.com/eclipse/kiso-testing/compare/0.18.0...2a31aab)
 
 ## Version 0.18.0 (2022-06-08)
 
