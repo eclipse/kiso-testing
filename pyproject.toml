@@ -56,7 +56,7 @@ tabulate = "~0.8.9"
 auto-changelog = "0.5.3"
 black = { version = "^21.12b0", allow-prereleases = true }
 bump2version = "*"
-coverage = { version = "^5.0", extras = ["toml"] }
+coverage = { version = "^6.4", extras = ["toml"] }
 invoke = "*"
 pdbpp = "*"
 pre-commit = "*"
