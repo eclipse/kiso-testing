@@ -1,5 +1,5 @@
 # Get latest debian (>=10)
-FROM debian:10
+FROM debian:11
 
 # Set the working directory to /app
 WORKDIR /kiso-project
