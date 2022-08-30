@@ -1,0 +1,28 @@
+
+name: Changelog Updater
+
+on:
+  push:
+    paths:
+      - 'pyproject.toml' # When somebody update the toml file
+
+jobs:
+  build:
+    name: Update changelog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Generate changelog
+        uses: orhun/git-cliff-action@v1
+        with:
+          config: .github/workflows/cliff.toml
+        env:
+          OUTPUT: CHANGELOG.md
+      - name: Commit changelog
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore(changelog): update changelog to newest version"
+          file_pattern: CHANGELOG.md

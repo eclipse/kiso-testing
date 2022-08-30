@@ -53,7 +53,6 @@ pykiso-python-uds = "^3.0.0"
 tabulate = "~0.8.9"
 
 [tool.poetry.dev-dependencies]
-auto-changelog = "0.5.3"
 black = { version = "^21.12b0", allow-prereleases = true }
 bump2version = "*"
 coverage = { version = "^6.4", extras = ["toml"] }
