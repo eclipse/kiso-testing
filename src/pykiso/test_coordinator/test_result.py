@@ -20,6 +20,7 @@ wrapped in banners.
 """
 
 import textwrap
+import time
 from shutil import get_terminal_size
 from typing import List, Optional, TextIO, Union
 from unittest import TestCase, TestResult, TextTestResult
@@ -49,6 +50,7 @@ class BannerTestResult(TextTestResult):
         size = get_terminal_size(fallback=(150, 24))
         # avoid border effects due to newlines
         self.width = size.columns - 1
+        self.successes: List[TestCase] = []
 
     def _banner(
         self, text: Union[List, str], width: Optional[int] = None, sym: str = "#"
@@ -110,12 +112,15 @@ class BannerTestResult(TextTestResult):
         top_banner = self._banner(top_str)
         self.stream.write(top_banner)
         self.stream.flush()
+        test.start_time = time.time()
 
     def stopTest(self, test: TestCase) -> None:
         """Print a banner containing the test information and its result.
 
         :param test: running testcase
         """
+        test.stop_time = time.time()
+        test.elapsed_time = test.stop_time - test.start_time
         result = "Failed" if self._error_occurred else "Passed"
         bot_str = f"END OF TEST: {test}"
         result_str = f"  ->  {result}"
@@ -137,6 +142,13 @@ class BannerTestResult(TextTestResult):
         """
         TestResult.addFailure(self, test, err)
         self._error_occurred = True
+
+    def addSuccess(self, test: TestCase) -> None:
+        """Add a testcase to the list of succeeded test cases.
+
+        :param test: running testcase
+        """
+        self.successes.append(test)
 
     def addError(self, test: TestCase, err: tuple) -> None:
         """Set the error flag when an error occurs in order to get the
