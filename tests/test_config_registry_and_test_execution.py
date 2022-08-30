@@ -439,7 +439,7 @@ def test_config_registry_and_test_execution_apply_variant_filter(
         assert mock_test_case.tearDown() == "tearDown_skipped"
 
 
-@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+@pytest.mark.parametrize("tmp_test", [("step_aux1", "step_aux2", False)], indirect=True)
 def test_config_registry_and_test_execution_with_step_report(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
