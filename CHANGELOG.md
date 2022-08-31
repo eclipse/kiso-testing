@@ -6,11 +6,20 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### Bug Fixes
+
+- Readthedocs requirements
+
 ### Miscellaneous Tasks
 
 - Bump pre-commit from 2.19.0 to 2.20.0
 - Bump coverage from 5.5 to 6.4.4
 - Bump pytest-mock from 3.7.0 to 3.8.2
+- Update changelog to newest version
+
+### Refactorings
+
+- Restructure the documentation
 
 ### Ci
 
