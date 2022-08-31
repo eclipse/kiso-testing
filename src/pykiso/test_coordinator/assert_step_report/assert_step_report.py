@@ -109,7 +109,7 @@ def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
     line = line.replace(" ", "")
 
     # remove current assert function name
-    line = re.split(fr".*{assert_name}\(", line)[1]
+    line = re.split(rf".*{assert_name}\(", line)[1]
 
     # Check the variable start names
     if re.findall(r"^[a-zA-Z]", line):
