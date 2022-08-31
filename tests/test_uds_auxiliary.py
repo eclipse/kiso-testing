@@ -362,8 +362,8 @@ class TestUdsAuxiliary:
         mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
         mocker.patch("time.sleep", return_value=None)
 
-        assert uds_raw_aux_inst.sender_context is None
+        assert uds_raw_aux_inst.is_tester_present is None
         uds_raw_aux_inst.start_tester_present_sender(0.5)
-        assert uds_raw_aux_inst.sender_context is not None
+        assert uds_raw_aux_inst.is_tester_present is not None
         assert uds_raw_aux_inst._delete_auxiliary_instance() is True
-        assert uds_raw_aux_inst.sender_context is None
+        assert uds_raw_aux_inst.is_tester_present is None
