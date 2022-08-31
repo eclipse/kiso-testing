@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.18.0"
+version = "0.19.0"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -10,6 +10,10 @@ repository = "https://github.com/eclipse/kiso-testing"
 documentation = "https://kiso-testing.readthedocs.io/en/latest/"
 packages = [
     { include = "pykiso", from = "src" }
+]
+include = [
+    "src/pykiso/test_coordinator/assert_step_report/report_template.html.j2",
+    "src/pykiso/test_coordinator/assert_step_report/report_template.css",
 ]
 keywords = [
     "testing",
@@ -49,10 +53,9 @@ pykiso-python-uds = "^3.0.0"
 tabulate = "~0.8.9"
 
 [tool.poetry.dev-dependencies]
-auto-changelog = "0.5.3"
 black = { version = "^21.12b0", allow-prereleases = true }
 bump2version = "*"
-coverage = { version = "^5.0", extras = ["toml"] }
+coverage = { version = "^6.4", extras = ["toml"] }
 invoke = "*"
 pdbpp = "*"
 pre-commit = "*"

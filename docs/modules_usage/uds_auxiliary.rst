@@ -8,7 +8,7 @@ in uds_auxiliary.py is the main interface between user and all the behind implem
 This class defines usable keywords(methods) for scripters in order to send uds requests to the device under test (raw or configurable)...
 
 Configuration
-=============
+-------------
 
 To configure the UDS auxiliary 3 parameters are mandatory :
 
