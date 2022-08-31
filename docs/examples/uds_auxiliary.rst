@@ -288,8 +288,6 @@ UDS tester present sender
 
 |It is also possible to start and stop the tester present sender manually with the methods
 |start_tester_present_sender and stop_tester_present_sender.
-|Warning: if start_tester_present_sender is called but not stop_tester_present_sender the
-|tester present sender thread will still be running
 
 .. code:: python
 

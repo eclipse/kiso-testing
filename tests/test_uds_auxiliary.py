@@ -357,3 +357,12 @@ class TestUdsAuxiliary:
                 "Tester present sender should be started before it can be stopped"
                 in caplog.text
             )
+
+    def test_delete_aux_instance(self, mocker, uds_raw_aux_inst):
+        mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
+        mocker.patch("time.sleep", return_value=None)
+
+        uds_raw_aux_inst.start_tester_present_sender(0.5)
+        assert uds_raw_aux_inst.sender.is_alive() is True
+        assert uds_raw_aux_inst._delete_auxiliary_instance() is True
+        assert uds_raw_aux_inst.sender.is_alive() is False
