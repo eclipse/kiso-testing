@@ -29,6 +29,7 @@ import can
 from uds import IsoServices
 
 from pykiso.connector import CChannel
+from pykiso.interfaces.dt_auxiliary import close_connector
 
 from .common import uds_exceptions
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
@@ -296,36 +297,29 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
         :param period: period in seconds to use for the cyclic sending of tester present
         """
-        stop_event = threading.Event()
-        sender = threading.Thread(
-            name="TesterPresentSender",
-            target=self._sender_run,
-            args=(period, stop_event),
-        )
+        self._enter_tester_present_sender(period=period)
         try:
-            yield sender.start()
+            yield self.sender.start()
         finally:
-            stop_event.set()
-            sender.join()
+            self.stop_tester_present_sender()
 
-    def start_tester_present_sender(self, period: int = 4) -> None:
-        """Start to continuously sends tester present messages via UDS
+    def start_tester_present_sender(self, period: int = 4):
+        self._enter_tester_present_sender(period)
+        self.sender.start()
 
-        :param period: period in seconds to use for the cyclic sending of tester present
-        """
+    def _enter_tester_present_sender(self, period: int = 4):
+        self.stop_event = threading.Event()
         self.sender = threading.Thread(
             name="TesterPresentSender",
             target=self._sender_run,
-            args=(period, self.sender_stop_event),
+            args=(period, self.stop_event),
         )
-        self.sender.start()
 
     def stop_tester_present_sender(self) -> None:
         """Stop to continuously sends tester present messages via UDS"""
         try:
-            self.sender_stop_event.set()
+            self.stop_event.set()
             self.sender.join()
-            self.sender_stop_event.clear()
         except AttributeError:
             log.error(
                 "Tester present sender should be started before it can be stopped"
@@ -353,3 +347,15 @@ class UdsAuxiliary(UdsBaseAuxiliary):
     def _run_command(self, cmd_message, cmd_data=None) -> Union[dict, bytes, bool]:
         """Not used."""
         pass
+
+    def _delete_auxiliary_instance(self) -> bool:
+        """Close current associated channel.
+
+        :return: always True
+        """
+        try:
+            self.stop_event.set()
+            self.sender.join()
+        except Exception:
+            pass
+        return super()._delete_auxiliary_instance()
