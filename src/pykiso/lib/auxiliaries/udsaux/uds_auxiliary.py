@@ -45,40 +45,6 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
     errors = uds_exceptions
 
-    def __init__(
-        self,
-        com: CChannel,
-        config_ini_path: Optional[Union[Path, str]] = None,
-        odx_file_path: Optional[Union[Path, str]] = None,
-        request_id: Optional[int] = None,
-        response_id: Optional[int] = None,
-        tp_layer: dict = None,
-        uds_layer: dict = None,
-        **kwargs,
-    ):
-        """Initialize attributes.
-
-        :param com: communication channel connector.
-        :param config_ini_path: UDS parameter file.
-        :param odx_file_path: ecu diagnostic definition file.
-        :param request_id: optional CAN ID used for sending messages.
-        :param response_id: optional CAN ID used for receiving messages.
-        :param tp_layer: isotp configuration given at yaml level
-        :param uds_layer: uds configuration given at yaml level
-        """
-        self.sender_stop_event = threading.Event()
-        self.sender = None
-        super().__init__(
-            com,
-            config_ini_path,
-            odx_file_path,
-            request_id,
-            response_id,
-            tp_layer,
-            uds_layer,
-            **kwargs,
-        )
-
     def transmit(self, data: bytes, req_id: int, extended: bool = False) -> None:
         """Transmit a message through ITF connector. This method is a
         substitute to transmit method present in python-uds package.
