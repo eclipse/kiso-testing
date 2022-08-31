@@ -295,3 +295,10 @@ UDS tester present sender
     uds_aux.start_tester_present_sender(period=1)
     # Perform uds commands here
     uds_aux.stop_tester_present_sender()
+
+|It is then possible to check if the tester present is active with the attribute is_tester_present
+
+.. code:: python
+
+    if uds_aux.is_tester_present:
+        # Perform commands here

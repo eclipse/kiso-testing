@@ -64,7 +64,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :param tp_layer: isotp configuration given at yaml level
         :param uds_layer: uds configuration given at yaml level
         """
-        self.sender_context = None
+        self.is_tester_present = None
         super().__init__(
             com,
             config_ini_path,
@@ -308,17 +308,17 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
     def start_tester_present_sender(self, period: int = 4):
         """Start to continuously send tester present messages via UDS"""
-        if not self.sender_context:
-            self.sender_context = self.tester_present_sender(period=period)
-            return self.sender_context.__enter__()
+        if not self.is_tester_present:
+            self.is_tester_present = self.tester_present_sender(period=period)
+            return self.is_tester_present.__enter__()
 
     def stop_tester_present_sender(self):
         """Stop to continuously send tester present messages via UDS"""
-        if self.sender_context:
-            self.sender_context.__exit__(None, None, None)
-            self.sender_context = None
+        if self.is_tester_present:
+            self.is_tester_present.__exit__(None, None, None)
+            self.is_tester_present = None
         else:
-            log.error(
+            log.internal_warning(
                 "Tester present sender should be started before it can be stopped"
             )
 
@@ -350,7 +350,6 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
         :return: always True
         """
-        if self.sender_context:
-            self.sender_context.__exit__(None, None, None)
-            self.sender_context = None
+        if self.is_tester_present:
+            self.stop_tester_present_sender()
         return super()._delete_auxiliary_instance()
