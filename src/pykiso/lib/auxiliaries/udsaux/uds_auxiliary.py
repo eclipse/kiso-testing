@@ -29,7 +29,6 @@ import can
 from uds import IsoServices
 
 from pykiso.connector import CChannel
-from pykiso.interfaces.dt_auxiliary import close_connector
 
 from .common import uds_exceptions
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
@@ -44,6 +43,38 @@ class UdsAuxiliary(UdsBaseAuxiliary):
     """Auxiliary used to handle the UDS protocol on client (tester) side."""
 
     errors = uds_exceptions
+
+    def __init__(
+        self,
+        com: CChannel,
+        config_ini_path: Optional[Union[Path, str]] = None,
+        odx_file_path: Optional[Union[Path, str]] = None,
+        request_id: Optional[int] = None,
+        response_id: Optional[int] = None,
+        tp_layer: dict = None,
+        uds_layer: dict = None,
+        **kwargs,
+    ):
+        """Initialize attributes.
+        :param com: communication channel connector.
+        :param config_ini_path: UDS parameter file.
+        :param odx_file_path: ecu diagnostic definition file.
+        :param request_id: optional CAN ID used for sending messages.
+        :param response_id: optional CAN ID used for receiving messages.
+        :param tp_layer: isotp configuration given at yaml level
+        :param uds_layer: uds configuration given at yaml level
+        """
+        self.sender_context = None
+        super().__init__(
+            com,
+            config_ini_path,
+            odx_file_path,
+            request_id,
+            response_id,
+            tp_layer,
+            uds_layer,
+            **kwargs,
+        )
 
     def transmit(self, data: bytes, req_id: int, extended: bool = False) -> None:
         """Transmit a message through ITF connector. This method is a
@@ -263,30 +294,30 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
         :param period: period in seconds to use for the cyclic sending of tester present
         """
-        self._enter_tester_present_sender(period=period)
-        try:
-            yield self.sender.start()
-        finally:
-            self.stop_tester_present_sender()
-
-    def start_tester_present_sender(self, period: int = 4):
-        self._enter_tester_present_sender(period)
-        self.sender.start()
-
-    def _enter_tester_present_sender(self, period: int = 4):
-        self.stop_event = threading.Event()
-        self.sender = threading.Thread(
+        stop_event = threading.Event()
+        sender = threading.Thread(
             name="TesterPresentSender",
             target=self._sender_run,
-            args=(period, self.stop_event),
+            args=(period, stop_event),
         )
-
-    def stop_tester_present_sender(self) -> None:
-        """Stop to continuously sends tester present messages via UDS"""
         try:
-            self.stop_event.set()
-            self.sender.join()
-        except AttributeError:
+            yield sender.start()
+        finally:
+            stop_event.set()
+            sender.join()
+
+    def start_tester_present_sender(self, period: int = 4):
+        """Start to continuously send tester present messages via UDS"""
+        if not self.sender_context:
+            self.sender_context = self.tester_present_sender(period=period)
+            return self.sender_context.__enter__()
+
+    def stop_tester_present_sender(self):
+        """Stop to continuously send tester present messages via UDS"""
+        if self.sender_context:
+            self.sender_context.__exit__(None, None, None)
+            self.sender_context = None
+        else:
             log.error(
                 "Tester present sender should be started before it can be stopped"
             )
@@ -319,9 +350,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
         :return: always True
         """
-        try:
-            self.stop_event.set()
-            self.sender.join()
-        except Exception:
-            pass
+        if self.sender_context:
+            self.sender_context.__exit__(None, None, None)
+            self.sender_context = None
         return super()._delete_auxiliary_instance()
