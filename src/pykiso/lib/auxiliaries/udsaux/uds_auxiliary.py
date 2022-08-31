@@ -62,6 +62,8 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :param odx_file_path: ecu diagnostic definition file.
         :param request_id: optional CAN ID used for sending messages.
         :param response_id: optional CAN ID used for receiving messages.
+        :param tp_layer: isotp configuration given at yaml level
+        :param uds_layer: uds configuration given at yaml level
         """
         self.sender_stop_event = threading.Event()
         self.sender = None
@@ -306,13 +308,11 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             stop_event.set()
             sender.join()
 
-    def start_tester_present_sender(self, period: int) -> None:
+    def start_tester_present_sender(self, period: int = 4) -> None:
         """Start to continuously sends tester present messages via UDS
 
         :param period: period in seconds to use for the cyclic sending of tester present
-        :param aux_alias: auxiliary's alias
         """
-
         self.sender = threading.Thread(
             name="TesterPresentSender",
             target=self._sender_run,

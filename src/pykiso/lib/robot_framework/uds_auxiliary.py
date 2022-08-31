@@ -168,7 +168,7 @@ class UdsAuxiliary(RobotAuxInterface):
         return aux.write_data(parameter, value)
 
     @keyword(name="Start tester present with ${period} seconds ${aux_alias} ")
-    def start_tester_present_sender(self, period: int, aux_alias) -> None:
+    def start_tester_present_sender(self, aux_alias, period: int = 4) -> None:
         """Start to continuously sends tester present messages via UDS
 
         :param period: period in seconds to use for the cyclic sending of tester present
