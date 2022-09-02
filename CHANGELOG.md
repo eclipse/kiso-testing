@@ -20,7 +20,8 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Bump pylink-square from 0.12.0 to 0.14.2 ([#137](https://github.com/orhun/git-cliff/issues/137))
 - Update changelog to newest version
 - Update click ([#143](https://github.com/orhun/git-cliff/issues/143))
-- Release 0.19.1
+- Update changelog to newest version
+- Release 0.19.1 ([#144](https://github.com/orhun/git-cliff/issues/144))
 
 ### New Features
 
