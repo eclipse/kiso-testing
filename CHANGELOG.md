@@ -24,6 +24,7 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### New Features
 
 - Add start and stop uds tester present sender ([#131](https://github.com/orhun/git-cliff/issues/131))
+- Add cc_serial connector
 
 ### Refactorings
 
