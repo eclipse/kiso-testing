@@ -22,10 +22,13 @@ import logging
 import threading
 import time
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Iterator, List, Optional, Union
 
 import can
 from uds import IsoServices
+
+from pykiso.connector import CChannel
 
 from .common import uds_exceptions
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
@@ -40,6 +43,38 @@ class UdsAuxiliary(UdsBaseAuxiliary):
     """Auxiliary used to handle the UDS protocol on client (tester) side."""
 
     errors = uds_exceptions
+
+    def __init__(
+        self,
+        com: CChannel,
+        config_ini_path: Optional[Union[Path, str]] = None,
+        odx_file_path: Optional[Union[Path, str]] = None,
+        request_id: Optional[int] = None,
+        response_id: Optional[int] = None,
+        tp_layer: dict = None,
+        uds_layer: dict = None,
+        **kwargs,
+    ):
+        """Initialize attributes.
+        :param com: communication channel connector.
+        :param config_ini_path: UDS parameter file.
+        :param odx_file_path: ecu diagnostic definition file.
+        :param request_id: optional CAN ID used for sending messages.
+        :param response_id: optional CAN ID used for receiving messages.
+        :param tp_layer: isotp configuration given at yaml level
+        :param uds_layer: uds configuration given at yaml level
+        """
+        self.is_tester_present = None
+        super().__init__(
+            com,
+            config_ini_path,
+            odx_file_path,
+            request_id,
+            response_id,
+            tp_layer,
+            uds_layer,
+            **kwargs,
+        )
 
     def transmit(self, data: bytes, req_id: int, extended: bool = False) -> None:
         """Transmit a message through ITF connector. This method is a
@@ -271,6 +306,22 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             stop_event.set()
             sender.join()
 
+    def start_tester_present_sender(self, period: int = 4):
+        """Start to continuously send tester present messages via UDS"""
+        if not self.is_tester_present:
+            self.is_tester_present = self.tester_present_sender(period=period)
+            return self.is_tester_present.__enter__()
+
+    def stop_tester_present_sender(self):
+        """Stop to continuously send tester present messages via UDS"""
+        if self.is_tester_present:
+            self.is_tester_present.__exit__(None, None, None)
+            self.is_tester_present = None
+        else:
+            log.internal_warning(
+                "Tester present sender should be started before it can be stopped"
+            )
+
     def _receive_message(self, timeout_in_s: float) -> None:
         """This method is only used to populate the python-uds reception
         buffer. When a message is received, invoke python-uds configured
@@ -293,3 +344,12 @@ class UdsAuxiliary(UdsBaseAuxiliary):
     def _run_command(self, cmd_message, cmd_data=None) -> Union[dict, bytes, bool]:
         """Not used."""
         pass
+
+    def _delete_auxiliary_instance(self) -> bool:
+        """Close current associated channel.
+
+        :return: always True
+        """
+        if self.is_tester_present:
+            self.stop_tester_present_sender()
+        return super()._delete_auxiliary_instance()

@@ -154,8 +154,8 @@ def test_tester_present_sender(mocker, robot_uds_aux, uds_aux):
     send_mock = mocker.patch.object(uds_aux, "send_uds_raw")
     mocker.patch("time.sleep", return_value=None)
 
-    robot_uds_aux.start_tester_present_sender(1, "uds_aux")
-    robot_uds_aux.stop_tester_present_sender()
+    robot_uds_aux.start_tester_present_sender("uds_aux", period=1)
+    robot_uds_aux.stop_tester_present_sender("uds_aux")
 
     send_mock.assert_called_with(
         UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE, response_required=False
