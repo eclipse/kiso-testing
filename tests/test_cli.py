@@ -62,11 +62,11 @@ def test_eval_user_tags_empty(mocker):
     [
         (
             ["branch-level", "dev"],
-            "no such option: branch-level  Did you mean --branch-level",
+            "No such option: branch-level Did you mean --branch-level",
         ),
         (
             ["--forbidden_underscore", "dev"],
-            "no such option: --forbidden_underscore  Did you mean --forbidden-underscore",
+            "No such option: --forbidden_underscore Did you mean --forbidden-underscore",
         ),
     ],
 )

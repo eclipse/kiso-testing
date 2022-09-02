@@ -47,13 +47,12 @@ PyVISA = "^1.12.0"
 PyVISA-py = "~0.5.3"
 robotframework = "3.2.2"
 unittest-xml-reporting = "^3.2.0"
-click = "^7.1.2"
-MarkupSafe = "~2.0"
+click = ">=7.0.0,<9.0.0"
 pykiso-python-uds = "^3.0.0"
 tabulate = "~0.8.9"
 
 [tool.poetry.dev-dependencies]
-black = { version = "^21.12b0", allow-prereleases = true }
+black = "22.3.0"
 bump2version = "*"
 coverage = { version = "^6.4", extras = ["toml"] }
 invoke = "*"
@@ -67,6 +66,7 @@ Sphinx = "*"
 sphinx-rtd-theme = "*"
 sphinxcontrib-programoutput = "*"
 sphinx-autodoc-typehints = "*"
+MarkupSafe = "~2.0.1"
 
 [tool.poetry.scripts]
 pykiso = 'pykiso.cli:main'
