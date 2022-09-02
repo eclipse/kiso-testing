@@ -40,7 +40,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7"
 PyYAML = "^6.0"
-pylink-square = "~0.12.0"
+pylink-square = ">=0.12,<0.15"
 pyserial = "^3.0"
 python-can = {version = "^4.0.0", extras = ["pcan"]}
 PyVISA = "^1.12.0"
