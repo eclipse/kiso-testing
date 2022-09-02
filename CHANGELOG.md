@@ -19,12 +19,12 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Update changelog to newest version
 - Bump pylink-square from 0.12.0 to 0.14.2 ([#137](https://github.com/orhun/git-cliff/issues/137))
 - Update changelog to newest version
-- Update click
+- Update click ([#143](https://github.com/orhun/git-cliff/issues/143))
 
 ### New Features
 
 - Add start and stop uds tester present sender ([#131](https://github.com/orhun/git-cliff/issues/131))
-- Add cc_serial connector
+- Add cc_serial connector ([#124](https://github.com/orhun/git-cliff/issues/124))
 
 ### Refactorings
 
