@@ -16,6 +16,12 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Bump coverage from 5.5 to 6.4.4
 - Bump pytest-mock from 3.7.0 to 3.8.2
 - Update changelog to newest version
+- Update changelog to newest version
+- Bump pylink-square from 0.12.0 to 0.14.2 ([#137](https://github.com/orhun/git-cliff/issues/137))
+
+### New Features
+
+- Add start and stop uds tester present sender ([#131](https://github.com/orhun/git-cliff/issues/131))
 
 ### Refactorings
 
