@@ -329,3 +329,42 @@ The summary of the activated logs depending of the value of the --log-level and
 +------------------------+-----------------------------+--------------------+
 | log-level == ERROR     |ERROR                        |ERROR               |
 +------------------------+-----------------------------+--------------------+
+
+
+.. _test_case_patterns:
+
+Run single tests
+~~~~~~~~~~~~~~~~
+
+Test case can be selected with the -p or --pattern flag.
+Here is an example to just override the test file:
+
+.. code:: bash
+
+    pykiso -c dummy.yaml -p test_suite_1.py
+
+
+
+It is also possible to select single or multiple test cases by extending the pattern.
+Test classes and single test methods can be selected.
+The pattern can consist 3 elements separated by a "::".
+Each element is a unix file name pattern.
+
+The elements are file_name::test_class_name::test_method_name
+
+Here some examples:
+
+.. code:: bash
+
+
+    #select a single test
+    pykiso -c dummy.yaml -p test_suite_1.py::TestClass::test_run1
+
+    #select all test methods which begins with test_
+    pykiso -c dummy.yaml -p test_suite_1.py::TestClass::test_*
+
+    #select all test classes which starts with Test and run method test_run1
+    pykiso -c dummy.yaml -p test_suite_1.py::Test*::test_run1
+
+    #use file pattern from yaml file and select all test classes and run method test_run1
+    pykiso -c dummy.yaml -p ::*::test_run1

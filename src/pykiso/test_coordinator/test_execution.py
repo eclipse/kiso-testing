@@ -32,10 +32,12 @@ if TYPE_CHECKING:
 
 import enum
 import logging
+import re
 import sys
 import time
 import unittest
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
+from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -45,11 +47,17 @@ import pykiso
 
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from . import test_suite
-from .assert_step_report import StepReportData, assert_decorator, generate_step_report
+from .assert_step_report import (
+    StepReportData,
+    assert_decorator,
+    generate_step_report,
+)
 from .test_result import BannerTestResult
 from .test_xml_result import XmlTestResult
 
 log = logging.getLogger(__name__)
+
+TestFilterPattern = namedtuple("TestFilterPattern", "test_file, test_class, test_case")
 
 
 @enum.unique
@@ -85,7 +93,6 @@ def apply_tag_filter(
     all_tests_to_run: unittest.TestSuite, usr_tags: Dict[str, List[str]]
 ) -> None:
     """Filter the test cases based on user tags.
-
     :param all_tests_to_run: a dict containing all testsuites and testcases
     :param usr_tags: encapsulate user's variant choices
     """
@@ -93,7 +100,6 @@ def apply_tag_filter(
     def is_skip_test(test_case: BasicTest) -> bool:
         """Check if test shall be skipped by evaluating the test case tag
         attribute
-
         :param test_case: test_case to check
         :return: True if test shall be skipped else False
         """
@@ -111,7 +117,6 @@ def apply_tag_filter(
 
     def set_skipped(test_case: BasicTest) -> None:
         """Set testcase to skipped
-
         :param test_case: testcase to be skipped
         """
         test_case.setUp = lambda: "setup_skipped"
@@ -126,6 +131,42 @@ def apply_tag_filter(
     base_suite: List[BasicTest] = test_suite.flatten(all_tests_to_run)
 
     list(map(set_skipped, filter(is_skip_test, base_suite)))
+
+
+def apply_test_case_filter(
+    all_tests_to_run: unittest.TestSuite,
+    test_class_pattern: str,
+    test_case_pattern: str,
+) -> unittest.TestSuite:
+    """Apply a filter to run only test cases which matches given expression
+
+    :param all_tests_to_run: a dict containing all testsuites and testcases
+    :param test_class_pattern: pattern to select test class as unix filename pattern
+    :param test_case_pattern: pattern to select test case as unix filename pattern
+    :return: new test suite with filtered test cases
+    """
+
+    base_suite = test_suite.flatten(all_tests_to_run)
+
+    def is_active_test(test_case: BasicTest) -> bool:
+        """Check if testcase shall be active by given selection patterns
+
+        :param test_case: unittest test
+        :return: True if test matches patterns else False
+        """
+        test_class_name = re.sub(r"-\d+-\d+", "", test_case.__class__.__name__)
+        is_classname_match = bool(fnmatch(test_class_name, test_class_pattern))
+
+        if is_classname_match and test_case_pattern is None:
+            return is_classname_match
+
+        elif is_classname_match and test_case_pattern:
+            return bool(fnmatch(test_case._testMethodName, test_case_pattern))
+        else:
+            return False
+
+    filtered_suite = filter(is_active_test, base_suite)
+    return unittest.TestSuite(filtered_suite)
 
 
 def failure_and_error_handling(result: unittest.TestResult) -> int:
@@ -177,6 +218,28 @@ def enable_step_report(all_tests_to_run: unittest.suite.TestSuite) -> None:
             method = getattr(tc, method_name)
             # Add decorator to the existing method
             setattr(tc, method_name, assert_decorator(method))
+
+
+def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
+    """Parse test selection pattern from cli.
+    For example: test_file.py::test_class::test_case
+
+    :param pattern: test selection pattern
+    :return: pattern for file, class name and test case name
+    """
+    if not pattern:
+        return TestFilterPattern(None, None, None)
+    parsed_patterns = []
+    patterns = pattern.split("::")
+    for pattern in patterns:
+        if pattern == "":
+            parsed_patterns.append(None)
+        else:
+            parsed_patterns.append(pattern)
+    for _ in range(3 - (len(parsed_patterns))):
+        parsed_patterns.append(None)
+
+    return TestFilterPattern(*parsed_patterns)
 
 
 def collect_test_suites(
@@ -231,7 +294,12 @@ def execute(
         (tests failed, unexpected exception, ...)
     """
     try:
-        test_suites = collect_test_suites(config["test_suite_list"], pattern_inject)
+
+        test_file_pattern = parse_test_selection_pattern(pattern_inject)
+
+        test_suites = collect_test_suites(
+            config["test_suite_list"], test_file_pattern.test_file
+        )
         # Group all the collected test suites in one global test suite
         all_tests_to_run = unittest.TestSuite(test_suites)
         # filter test cases based on variant and branch-level options
@@ -240,6 +308,13 @@ def execute(
         # Enable step report
         if step_report is not None:
             enable_step_report(all_tests_to_run)
+
+        if test_file_pattern.test_class:
+            all_tests_to_run = apply_test_case_filter(
+                all_tests_to_run,
+                test_file_pattern.test_class,
+                test_file_pattern.test_case,
+            )
 
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
         if report_type == "junit":

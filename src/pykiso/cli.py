@@ -145,7 +145,7 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     "--pattern",
     type=click.STRING,
     required=False,
-    help="test filter pattern, e.g. 'test_suite_1.py' or 'test_*.py'. It will be applied to all defined test suites.",
+    help="test filter pattern, e.g. 'test_suite_1.py' or 'test_*.py'. Or even more granularly 'test_suite_1.py::TestClass::test_name'",
 )
 @click.version_option(__version__)
 @Grabber.grab_cli_config

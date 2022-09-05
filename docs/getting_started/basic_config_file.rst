@@ -89,6 +89,6 @@ in order to e.g. execute a single test file inside the `suite_dir` using the CLI
 
 .. code:: bash
 
-    pykiso -c dummy.yaml -p test_suite_1.py
+    pykiso -c dummy.yaml
 
 To learn more, please take a look at :ref:`config_file`.

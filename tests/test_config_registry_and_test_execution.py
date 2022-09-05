@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import copy
 import logging
 import pathlib
 from unittest import TestCase, TestResult
@@ -30,7 +31,7 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
     """
     cfg = parse_config(tmp_test)
     ConfigRegistry.register_aux_con(cfg)
-    exit_code = test_execution.execute(cfg)
+    exit_code = test_execution.execute(cfg, pattern_inject="*.py::MyTest*")
     ConfigRegistry.delete_aux_con()
 
     output = capsys.readouterr()
@@ -71,15 +72,11 @@ def test_config_registry_and_test_execution_with_user_tags(tmp_test, mocker):
     Validation criteria:
         -  apply_filter called once
     """
-    apply_filter_mock = mocker.patch(
-        "pykiso.test_coordinator.test_execution.apply_tag_filter"
-    )
     user_tags = {"variant": ["delta"]}
     cfg = parse_config(tmp_test)
     ConfigRegistry.register_aux_con(cfg)
     exit_code = test_execution.execute(cfg, user_tags=user_tags)
     ConfigRegistry.delete_aux_con()
-    apply_filter_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -110,6 +107,31 @@ def test_config_registry_test_collection_error(tmp_test, capsys, mocker, caplog)
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "Ran 0 tests" not in output.err
+
+
+def test_parse_test_selection_pattern():
+    test_file_pattern = ()
+    test_file_pattern = test_execution.parse_test_selection_pattern("first::")
+    assert test_file_pattern.test_file == "first"
+    assert test_file_pattern.test_class == None
+    assert test_file_pattern.test_case == None
+
+    test_file_pattern = test_execution.parse_test_selection_pattern(
+        "first::second::third"
+    )
+    assert test_file_pattern.test_file == "first"
+    assert test_file_pattern.test_class == "second"
+    assert test_file_pattern.test_case == "third"
+
+    test_file_pattern = test_execution.parse_test_selection_pattern("first::::third")
+    assert test_file_pattern.test_file == "first"
+    assert test_file_pattern.test_class == None
+    assert test_file_pattern.test_case == "third"
+
+    test_file_pattern = test_execution.parse_test_selection_pattern("::second::third")
+    assert test_file_pattern.test_file == None
+    assert test_file_pattern.test_class == "second"
+    assert test_file_pattern.test_case == "third"
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -437,6 +459,44 @@ def test_config_registry_and_test_execution_apply_variant_filter(
             == "skipped due to non-matching variant value"
         )
         assert mock_test_case.tearDown() == "tearDown_skipped"
+
+
+def test_test_execution_apply_tc_name_filter(mocker):
+    mock_test_case = mocker.Mock()
+    mock_test_case.setUp = None
+    mock_test_case.tearDown = None
+    mock_test_case.testMethodName = None
+    mock_test_case.skipTest = lambda x: x  # return input
+    mock_test_case.tag = None
+    mock_test_case._testMethodName = "testMethodName"
+    mock_test_case.__class__.__name__ = "testClass1"
+
+    test_cases = []
+    for id in range(10):
+        mock_test_case._testMethodName = f"test_run_{id}"
+        test_cases.append(copy.deepcopy(mock_test_case))
+
+    mock = mocker.patch(
+        "pykiso.test_coordinator.test_execution.test_suite.flatten",
+        return_value=test_cases,
+    )
+
+    new_testsuite = test_execution.apply_test_case_filter(
+        {}, "testClass1", "test_run_[2-5]"
+    )
+    assert len(new_testsuite._tests) == 4
+    assert new_testsuite._tests[0]._testMethodName == "test_run_2"
+    assert new_testsuite._tests[1]._testMethodName == "test_run_3"
+    assert new_testsuite._tests[2]._testMethodName == "test_run_4"
+    assert new_testsuite._tests[3]._testMethodName == "test_run_5"
+
+    new_testsuite = test_execution.apply_test_case_filter({}, "testClass1", None)
+    assert len(new_testsuite._tests) == 10
+
+    new_testsuite = test_execution.apply_test_case_filter(
+        {}, "NotExistingTestClass", None
+    )
+    assert len(new_testsuite._tests) == 0
 
 
 @pytest.mark.parametrize("tmp_test", [("step_aux1", "step_aux2", False)], indirect=True)
