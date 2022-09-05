@@ -318,7 +318,9 @@ def test_pcan_configure_trace(
         with mock.patch.object(can_inst, "_pcan_set_value", side_effect=side_effects):
             can_inst._pcan_configure_trace()
             info_logs = [
-                record for record in caplog.records if record.levelname == "INFO"
+                record
+                for record in caplog.records
+                if record.levelname == "INTERNAL_INFO"
             ]
             error_logs = [
                 record for record in caplog.records if record.levelname == "ERROR"

@@ -332,3 +332,38 @@ class TestUdsAuxiliary:
             UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE,
             response_required=False,
         )
+
+    def test_tester_present_sender_start_stop(self, mocker, uds_raw_aux_inst):
+        send_mock = mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
+        mocker.patch("time.sleep", return_value=None)
+
+        uds_raw_aux_inst.start_tester_present_sender(1)
+        uds_raw_aux_inst.stop_tester_present_sender()
+
+        send_mock.assert_called_with(
+            UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE,
+            response_required=False,
+        )
+
+    def test_tester_present_sender_stop_before_start(
+        self, mocker, uds_raw_aux_inst, caplog
+    ):
+        send_mock = mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
+        mocker.patch("time.sleep", return_value=None)
+
+        uds_raw_aux_inst.stop_tester_present_sender()
+        with caplog.at_level(logging.ERROR):
+            assert (
+                "Tester present sender should be started before it can be stopped"
+                in caplog.text
+            )
+
+    def test_delete_aux_instance(self, mocker, uds_raw_aux_inst):
+        mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
+        mocker.patch("time.sleep", return_value=None)
+
+        assert uds_raw_aux_inst.is_tester_present is None
+        uds_raw_aux_inst.start_tester_present_sender(0.5)
+        assert uds_raw_aux_inst.is_tester_present is not None
+        assert uds_raw_aux_inst._delete_auxiliary_instance() is True
+        assert uds_raw_aux_inst.is_tester_present is None

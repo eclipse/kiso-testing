@@ -45,11 +45,11 @@ class CCExample(connector.CChannel):
 
     def _cc_open(self) -> None:
         """Open the channel."""
-        log.info("open channel")
+        log.internal_info("open channel")
 
     def _cc_close(self) -> None:
         """Close the channel."""
-        log.info("close channel")
+        log.internal_info("close channel")
 
     def _cc_send(self, msg: message.Message, raw: bool = False) -> None:
         """Sends the message on the channel.
@@ -62,7 +62,7 @@ class CCExample(connector.CChannel):
         with self.lock:
             if raw:
                 raise NotImplementedError()
-            log.debug("Send: {}".format(msg))
+            log.internal_debug("Send: {}".format(msg))
             # Exit if ack sent
             if msg.get_message_type() == message.MessageType.ACK:
                 return
@@ -102,7 +102,7 @@ class CCExample(connector.CChannel):
                 # Delete the stored raw message
                 self.last_received_message = None
                 # Return the ACK
-                log.debug("Receive: {}".format(r_message))
+                log.internal_debug("Receive: {}".format(r_message))
                 return {"msg": r_message}
             elif self.report_requested_message is not None:
                 # Transform message to ACK
@@ -112,7 +112,7 @@ class CCExample(connector.CChannel):
                 # Delete the stored raw message
                 self.report_requested_message = None
                 # Return REPORT
-                log.debug("Receive: {}".format(r_message))
+                log.internal_debug("Receive: {}".format(r_message))
                 return {"msg": r_message}
             else:
                 return {"msg": None}

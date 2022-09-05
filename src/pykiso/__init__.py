@@ -24,7 +24,15 @@ import pkg_resources
 __version__ = pkg_resources.get_distribution(__package__).version
 
 
-from . import auxiliary, cli, config_parser, connector, message, types
+from . import (
+    auxiliary,
+    cli,
+    config_parser,
+    connector,
+    logging_initializer,
+    message,
+    types,
+)
 from .auxiliary import AuxiliaryCommon
 from .connector import CChannel, Flasher
 from .exceptions import (

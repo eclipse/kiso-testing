@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.18.0"
+version = "0.19.1"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -10,6 +10,10 @@ repository = "https://github.com/eclipse/kiso-testing"
 documentation = "https://kiso-testing.readthedocs.io/en/latest/"
 packages = [
     { include = "pykiso", from = "src" }
+]
+include = [
+    "src/pykiso/test_coordinator/assert_step_report/report_template.html.j2",
+    "src/pykiso/test_coordinator/assert_step_report/report_template.css",
 ]
 keywords = [
     "testing",
@@ -35,24 +39,22 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-PyYAML = "*"
-pylink-square = "^0.12.0"
-pyserial = "*"
-python-can = {extras = ["pcan"], version = "^4.0.0"}
-PyVISA = "*"
-PyVISA-py = "*"
+PyYAML = "^6.0"
+pylink-square = ">=0.12,<0.15"
+pyserial = "^3.0"
+python-can = {version = "^4.0.0", extras = ["pcan"]}
+PyVISA = "^1.12.0"
+PyVISA-py = "~0.5.3"
 robotframework = "3.2.2"
-unittest-xml-reporting = "*"
-click = "*"
-MarkupSafe = "~2.0"
-pykiso-python-uds = "^2.2.0"
-tabulate = "*"
+unittest-xml-reporting = "^3.2.0"
+click = ">=7.0.0,<9.0.0"
+pykiso-python-uds = "^3.0.0"
+tabulate = "~0.8.9"
 
 [tool.poetry.dev-dependencies]
-auto-changelog = "0.5.3"
-black = { version = "^21.12b0", allow-prereleases = true }
+black = "22.3.0"
 bump2version = "*"
-coverage = { version = "^5.0", extras = ["toml"] }
+coverage = { version = "^6.4", extras = ["toml"] }
 invoke = "*"
 pdbpp = "*"
 pre-commit = "*"
@@ -64,6 +66,7 @@ Sphinx = "*"
 sphinx-rtd-theme = "*"
 sphinxcontrib-programoutput = "*"
 sphinx-autodoc-typehints = "*"
+MarkupSafe = "~2.0.1"
 
 [tool.poetry.scripts]
 pykiso = 'pykiso.cli:main'

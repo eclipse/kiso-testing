@@ -28,7 +28,7 @@ from enum import Enum, unique
 from typing import Any, Callable, List, Optional
 
 from ..exceptions import AuxiliaryCreationError
-from ..test_setup.dynamic_loader import PACKAGE
+from ..logging_initializer import initialize_loggers, add_logging_level
 
 log = logging.getLogger(__name__)
 
@@ -48,6 +48,16 @@ class DTAuxiliaryInterface(abc.ABC):
     << double threaded >> auxiliary, simply encapsulate two threads one
     for the reception and one for the transmmission.
     """
+
+    def __new__(cls, *args, **kwargs):
+        """Create instance and add internal kiso log levels in
+        case the auxiliary is used outside the pykiso context
+        """
+        if not hasattr(logging, "INTERNAL_WARNING"):
+            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
+        return super(DTAuxiliaryInterface, cls).__new__(cls)
 
     def __init__(
         self,
@@ -72,7 +82,7 @@ class DTAuxiliaryInterface(abc.ABC):
         self.name = name
         self.is_proxy_capable = is_proxy_capable
         self.auto_start = auto_start
-        self.initialize_loggers(activate_log)
+        initialize_loggers(activate_log)
         self.lock = threading.RLock()
         self.stop_tx = threading.Event()
         self.stop_rx = threading.Event()
@@ -84,40 +94,6 @@ class DTAuxiliaryInterface(abc.ABC):
         self.rx_thread = None
         self.recv_timeout = 1
         self.is_instance = False
-
-    @staticmethod
-    def initialize_loggers(loggers: Optional[List[str]]) -> None:
-        """Deactivate all external loggers except the specified ones.
-
-        :param loggers: list of logger names to keep activated
-        """
-        if loggers is None:
-            loggers = list()
-        # keyword 'all' should keep all loggers to the configured level
-        if "all" in loggers:
-            log.warning(
-                "All loggers are activated, this could lead to performance issues."
-            )
-            return
-        # keep package and auxiliary loggers
-        relevant_loggers = {
-            name: logger
-            for name, logger in logging.root.manager.loggerDict.items()
-            if not (name.startswith(PACKAGE) or name.endswith("auxiliary"))
-            and not isinstance(logger, logging.PlaceHolder)
-        }
-        # keep child loggers
-        childs = [
-            logger
-            for logger in relevant_loggers.keys()
-            for parent in loggers
-            if (logger.startswith(parent) or parent.startswith(logger))
-        ]
-        loggers += childs
-        # keep original level for specified loggers
-        loggers_to_deactivate = set(relevant_loggers) - set(loggers)
-        for logger_name in loggers_to_deactivate:
-            logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     def run_command(
         self,
@@ -141,14 +117,14 @@ class DTAuxiliaryInterface(abc.ABC):
             False
         """
         with self.lock:
-            log.debug(
+            log.internal_debug(
                 f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
             )
             response_received = None
             self.queue_in.put((cmd_message, cmd_data))
             try:
                 response_received = self.queue_out.get(blocking, timeout_in_s)
-                log.debug(
+                log.internal_debug(
                     f"reply to command '{cmd_message}' received: '{response_received}' in {self.name}"
                 )
             except queue.Empty:
@@ -164,7 +140,7 @@ class DTAuxiliaryInterface(abc.ABC):
 
         :raises AuxiliaryCreationError: if instance creation failed
         """
-        log.info(f"Creating instance of auxiliary {self.name}")
+        log.internal_info(f"Creating instance of auxiliary {self.name}")
 
         with self.lock:
             # if the current aux is alive don't try to create it again
@@ -188,7 +164,7 @@ class DTAuxiliaryInterface(abc.ABC):
 
         :return: True if the auxiliary is deleted otherwise False
         """
-        log.info(f"Deleting instance of auxiliary {self.name}")
+        log.internal_info(f"Deleting instance of auxiliary {self.name}")
 
         with self.lock:
 
@@ -214,10 +190,10 @@ class DTAuxiliaryInterface(abc.ABC):
     def _start_tx_task(self) -> None:
         """Start transmission task."""
         if self.tx_task_on is False:
-            log.debug("transmit task is not needed, don't start it")
+            log.internal_debug("transmit task is not needed, don't start it")
             return
 
-        log.debug(f"start transmit task {self.name}_tx")
+        log.internal_debug(f"start transmit task {self.name}_tx")
         self.tx_thread = threading.Thread(
             name=f"{self.name}_tx", target=self._transmit_task
         )
@@ -226,10 +202,10 @@ class DTAuxiliaryInterface(abc.ABC):
     def _start_rx_task(self) -> None:
         """Start reception task."""
         if self.rx_task_on is False:
-            log.debug("reception task is not needed, don't start it")
+            log.internal_debug("reception task is not needed, don't start it")
             return
 
-        log.debug(f"start reception task {self.name}_tx")
+        log.internal_debug(f"start reception task {self.name}_tx")
         self.rx_thread = threading.Thread(
             name=f"{self.name}_rx", target=self._reception_task
         )
@@ -238,10 +214,10 @@ class DTAuxiliaryInterface(abc.ABC):
     def _stop_tx_task(self) -> None:
         """Stop transmission task."""
         if self.tx_task_on is False:
-            log.debug("transmit task was not started, so no need to stop it")
+            log.internal_debug("transmit task was not started, so no need to stop it")
             return
 
-        log.debug(f"stop transmit task {self.name}_tx")
+        log.internal_debug(f"stop transmit task {self.name}_tx")
         self.queue_in.put((AuxCommand.DELETE_AUXILIARY, None))
         self.stop_tx.set()
         self.tx_thread.join()
@@ -250,10 +226,10 @@ class DTAuxiliaryInterface(abc.ABC):
     def _stop_rx_task(self) -> None:
         """Stop reception task."""
         if self.rx_task_on is False:
-            log.debug("recpetion task was not started, so no need t stop it")
+            log.internal_debug("recpetion task was not started, so no need t stop it")
             return
 
-        log.debug(f"stop reception task {self.name}_rx")
+        log.internal_debug(f"stop reception task {self.name}_rx")
         self.stop_rx.set()
         self.rx_thread.join()
         self.stop_rx.clear()
@@ -386,7 +362,7 @@ def open_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.info("Open channel")
+        log.internal_info("Open channel")
         try:
             self.channel.open()
             return func(self, *arg, **kwargs)
@@ -414,7 +390,7 @@ def close_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.info("Close channel")
+        log.internal_info("Close channel")
         try:
             self.channel.close()
             return func(self, *arg, **kwargs)
@@ -444,11 +420,11 @@ def flash_target(func: Callable) -> Callable:
         :return: True if everything was successful otherwise False
         """
         if self.flash is None and not self.is_instance:
-            log.debug("No flasher configured!")
+            log.internal_debug("No flasher configured!")
             return func(self, *arg, **kwargs)
 
         try:
-            log.info("Flash target")
+            log.internal_info("Flash target")
             with self.flash as flasher:
                 flasher.flash()
             return func(self, *arg, **kwargs)

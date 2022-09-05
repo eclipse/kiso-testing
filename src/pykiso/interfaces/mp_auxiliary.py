@@ -65,7 +65,7 @@ class MpAuxiliaryInterface(multiprocessing.Process, AuxiliaryCommon):
         self.is_instance = False
         # store the logging information
         self._activate_log = activate_log
-        self._log_level = pykiso.cli.get_logging_options().log_level
+        self._log_level = pykiso.logging_initializer.get_logging_options().log_level
         self._aux_copy = None
         super().__init__()
 

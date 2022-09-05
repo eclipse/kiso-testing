@@ -7,10 +7,6 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import logging
-import os
-from pathlib import Path
-
 import click
 import pytest
 from click.testing import CliRunner
@@ -21,45 +17,6 @@ from pykiso import cli
 @pytest.fixture()
 def runner():
     return CliRunner()
-
-
-@pytest.mark.parametrize(
-    "path, level, expected_level, report_type",
-    [
-        (None, "INFO", logging.INFO, "junit"),
-        (os.getcwd(), "WARNING", logging.WARNING, "text"),
-        (None, "ERROR", logging.ERROR, None),
-    ],
-)
-def test_initialize_logging(mocker, path, level, expected_level, report_type):
-
-    mocker.patch("logging.Logger.addHandler")
-    mocker.patch("logging.FileHandler.__init__", return_value=None)
-    flush_mock = mocker.patch("logging.StreamHandler.flush", return_value=None)
-
-    if path:
-        path = Path(path)
-
-    logger = cli.initialize_logging(path, level, report_type)
-
-    if report_type == "junit":
-        flush_mock.assert_called()
-    assert isinstance(logger, logging.Logger)
-    assert logger.isEnabledFor(expected_level)
-    assert cli.log_options.log_path == path
-    assert cli.log_options.log_level == level
-    assert cli.log_options.report_type == report_type
-
-
-def test_get_logging_options():
-
-    cli.log_options = cli.LogOptions(None, "ERROR", None)
-
-    options = cli.get_logging_options()
-
-    assert options is not None
-    assert options.log_level == "ERROR"
-    assert options.report_type is None
 
 
 def test_main(runner):
@@ -105,11 +62,11 @@ def test_eval_user_tags_empty(mocker):
     [
         (
             ["branch-level", "dev"],
-            "no such option: branch-level  Did you mean --branch-level",
+            "No such option: branch-level Did you mean --branch-level",
         ),
         (
             ["--forbidden_underscore", "dev"],
-            "no such option: --forbidden_underscore  Did you mean --forbidden-underscore",
+            "No such option: --forbidden_underscore Did you mean --forbidden-underscore",
         ),
     ],
 )

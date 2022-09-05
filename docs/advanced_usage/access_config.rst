@@ -14,18 +14,18 @@ Each parameter stored in GlobalConfig's yaml and CLI attributes is read-only.
 
 Let's admit we have the following yaml configuration file:
 
-.. literalinclude:: ../examples/conf_access.yaml
+.. literalinclude:: ../../examples/conf_access.yaml
     :language: yaml
 
 And we passed the following arguments at the command line interface:
 
 .. code:: bash
 
-   pykiso -c examples/conf_access.yaml --variant variant1 --variant daily --log-level INFO
+   pykiso -c examples/conf_access.yaml --variant variant1 --variant daily --log-level INFO --verbose
 
 To access all those parameters contain in both sources (cli and yaml) :
 
-.. literalinclude:: ../examples/conf_access/test_access.py
+.. literalinclude:: ../../examples/conf_access/test_access.py
     :language: python
 
 .. note:: the GlobalConfig class is a singleton, so one and only one instance

@@ -52,12 +52,12 @@ class _collect_messages(ContextDecorator):
 
     def __enter__(self):
         """Set the queue event to allow messages collection."""
-        log.debug("Start queueing received messages.")
+        log.internal_debug("Start queueing received messages.")
         self.com_aux.queueing_event.set()
 
     def __exit__(self, *exc):
         """Clear queue event to stop messages collection."""
-        log.debug("Stop queueing received messages.")
+        log.internal_debug("Stop queueing received messages.")
         self.com_aux.queueing_event.clear()
 
 
@@ -83,7 +83,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
 
         :return: True if the channel is correctly opened otherwise False
         """
-        log.info("Auxiliary instance created")
+        log.internal_info("Auxiliary instance created")
         return True
 
     @close_connector
@@ -92,7 +92,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
 
         :return: always True
         """
-        log.info("Auxiliary instance deleted")
+        log.internal_info("Auxiliary instance deleted")
         return True
 
     def send_message(self, raw_msg: bytes) -> bool:
@@ -126,14 +126,14 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
             False
         """
         with self.lock:
-            log.debug(
+            log.internal_debug(
                 f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
             )
             state = None
             self.queue_in.put((cmd_message, cmd_data))
             try:
                 state = self.queue_tx.get(blocking, timeout_in_s)
-                log.debug(
+                log.internal_debug(
                     f"command '{cmd_message}' successfully sent for {self.name} aux"
                 )
             except queue.Empty:
@@ -160,7 +160,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         if self.queueing_event.is_set():
             in_ctx_manager = True
 
-        log.debug(
+        log.internal_debug(
             f"retrieving message in {self} (blocking={blocking}, timeout={timeout_in_s})"
         )
         # In case we are not in the context manager, we have a enable the receiver thread (and afterwards disable it)
@@ -170,7 +170,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         if not in_ctx_manager:
             self.queueing_event.clear()
 
-        log.debug(f"retrieved message '{response}' in {self}")
+        log.internal_debug(f"retrieved message '{response}' in {self}")
 
         # if queue.Empty exception is raised None is returned so just
         # directly return it
@@ -187,7 +187,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
 
     def clear_buffer(self) -> None:
         """Clear buffer from old stacked objects"""
-        log.info("Clearing buffer. Previous responses will be deleted.")
+        log.internal_info("Clearing buffer. Previous responses will be deleted.")
         with self.queue_out.mutex:
             self.queue_out.queue.clear()
 
@@ -209,9 +209,9 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
                     f"encountered error while sending message '{cmd_data}' to {self.channel}"
                 )
         elif isinstance(cmd_message, Message):
-            log.debug(f"ignored command '{cmd_message} in {self}'")
+            log.internal_debug(f"ignored command '{cmd_message} in {self}'")
         else:
-            log.warning(f"received unknown command '{cmd_message} in {self}'")
+            log.internal_warning(f"received unknown command '{cmd_message} in {self}'")
 
         self.queue_tx.put(state)
 
@@ -224,9 +224,9 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         """
         try:
             rcv_data = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
+            log.internal_debug(f"received message '{rcv_data}' from {self.channel}")
             msg = rcv_data.get("msg")
             if msg is not None and self.queueing_event.is_set():
-                log.debug(f"received message '{rcv_data}' from {self.channel}")
                 self.queue_out.put(rcv_data)
         except Exception:
             log.exception(

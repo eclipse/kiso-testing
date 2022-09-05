@@ -55,7 +55,9 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         self._ecu_config = None
         if self.odx_file_path is not None:
-            log.warning("Callback configuration through ODX files is not supported yet")
+            log.internal_warning(
+                "Callback configuration through ODX files is not supported yet"
+            )
 
         self._callbacks: Dict[str, UdsCallback] = {}
         self._callback_lock = threading.Lock()
@@ -260,7 +262,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 uds_data = self.uds_config.tp.decode_isotp(
                     received_data=msg, use_external_snd_rcv_functions=True
                 )
-                log.debug(
+                log.internal_debug(
                     "Received ISO TP data: %s || UDS data: %s",
                     f"0x{msg.hex()}",
                     self.format_data(uds_data),
@@ -284,7 +286,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 callback_to_execute = callback
                 break
         else:
-            log.warning(
+            log.internal_warning(
                 f"Unregistered request received: {self.format_data(received_uds_data)}"
             )
             return

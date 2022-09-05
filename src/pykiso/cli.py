@@ -17,7 +17,6 @@ Integration Test Framework
 
 .. currentmodule:: cli
 
-
 """
 import collections
 import logging
@@ -34,92 +33,10 @@ from pykiso.test_coordinator.test_execution import ExitCode
 from . import __version__
 from .config_parser import parse_config
 from .global_config import Grabber
+from .logging_initializer import initialize_logging
 from .test_coordinator import test_execution
 from .test_setup.config_registry import ConfigRegistry
 from .types import PathType
-
-LogOptions = collections.namedtuple("LogOptions", "log_path log_level report_type")
-
-click.UsageError.exit_code = ExitCode.BAD_CLI_USAGE
-
-# use to store the selected logging options
-log_options: Optional[NamedTuple] = None
-
-
-def initialize_logging(
-    log_path: PathType, log_level: str, report_type: str = None
-) -> logging.Logger:
-    """Initialize the logging.
-
-    Sets the general log level, output file or STDOUT and the
-    logging format.
-
-    :param log_path: path to the logfile
-    :param log_level: any of DEBUG, INFO, WARNING, ERROR
-    :param report_type: expected report type (junit, text,...)
-
-    :returns: configured Logger
-    """
-    root_logger = logging.getLogger()
-    log_format = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(module)s:%(lineno)d: %(message)s"
-    )
-    levels = {
-        "DEBUG": logging.DEBUG,
-        "INFO": logging.INFO,
-        "WARNING": logging.WARNING,
-        "ERROR": logging.ERROR,
-    }
-
-    # update logging options
-    global log_options
-    log_options = LogOptions(log_path, log_level, report_type)
-
-    # if log_path is given create use a logging file handler
-    if log_path is not None:
-        log_path = Path(log_path)
-        if log_path.is_dir():
-            fname = time.strftime("%Y-%m-%d_%H-%M-test.log")
-            log_path = log_path / fname
-        file_handler = logging.FileHandler(log_path, "a+")
-        file_handler.setFormatter(log_format)
-        file_handler.setLevel(levels[log_level])
-        root_logger.addHandler(file_handler)
-    # if log_path is not given and report type is not junit just
-    # instanciate a logging StreamHandler
-    if log_path is None and report_type != "junit":
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(log_format)
-        stream_handler.setLevel(levels[log_level])
-        root_logger.addHandler(stream_handler)
-    # if report_type is junit use sys.stdout as stream
-    if report_type == "junit":
-        # flush all StreamHandler
-        for handler in root_logger.handlers:
-            if isinstance(handler, logging.StreamHandler):
-                handler.flush()
-        # but keep FileHandler
-        root_logger.handlers = [
-            handler
-            for handler in root_logger.handlers
-            if isinstance(handler, logging.FileHandler)
-        ]
-        stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setFormatter(log_format)
-        stream_handler.setLevel(levels[log_level])
-        root_logger.addHandler(stream_handler)
-
-    root_logger.setLevel(levels[log_level])
-
-    return logging.getLogger(__name__)
-
-
-def get_logging_options() -> LogOptions:
-    """Simply return the previous logging options.
-
-    :return: logging options log path, log level and report type
-    """
-    return log_options
 
 
 def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
@@ -205,9 +122,23 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     help="default, test results are only displayed in the console",
 )
 @click.option(
+    "--step-report",
+    required=False,
+    default=None,
+    type=click.Path(writable=True),
+    help="generate the step report at the specified path",
+)
+@click.option(
     "--failfast",
     is_flag=True,
     help="stop the test run on the first error or failure",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    required=False,
+    help="activate the internal framework logs",
 )
 @click.option(
     "-p",
@@ -225,8 +156,10 @@ def main(
     log_path: PathType = None,
     log_level: str = "INFO",
     report_type: str = "text",
+    step_report: Optional[PathType] = None,
     pattern: Optional[str] = None,
     failfast: bool = False,
+    verbose: bool = False,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -243,13 +176,15 @@ def main(
     :param report_type: if "test", the standard report, if "junit", a junit report is generated
     :param variant: allow the user to execute a subset of tests based on variants
     :param branch_level: allow the user to execute a subset of tests based on branch levels
+    :param step_report: file path for the step report or None
     :param pattern: overwrite the pattern from the YAML file for easier test development
     :param failfast: stop the test run on the first error or failure
+    :param verbose: activate logging for the whole framework
     """
 
     for config_file in test_configuration_file:
         # Set the logging
-        logger = initialize_logging(log_path, log_level, report_type)
+        logger = initialize_logging(log_path, log_level, verbose, report_type)
         # Get YAML configuration
         cfg_dict = parse_config(config_file)
         # Run tests
@@ -260,7 +195,7 @@ def main(
         user_tags = eval_user_tags(click_context)
 
         exit_code = test_execution.execute(
-            cfg_dict, report_type, user_tags, pattern, failfast
+            cfg_dict, report_type, user_tags, step_report, pattern, failfast
         )
         ConfigRegistry.delete_aux_con()
         for handler in logging.getLogger().handlers:

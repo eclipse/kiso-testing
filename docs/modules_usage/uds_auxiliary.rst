@@ -8,7 +8,7 @@ in uds_auxiliary.py is the main interface between user and all the behind implem
 This class defines usable keywords(methods) for scripters in order to send uds requests to the device under test (raw or configurable)...
 
 Configuration
-=============
+-------------
 
 To configure the UDS auxiliary 3 parameters are mandatory :
 
@@ -271,6 +271,8 @@ UDS read & write data
 |Parameter is a string that contain the name of the data that is to be read. API must return dictionary with either
 |data associated to the read parameter, or NRC.
 
+.. _start_stop_tester_present_sender:
+
 UDS tester present sender
 -------------------------
 
@@ -283,3 +285,20 @@ UDS tester present sender
     # start sending tester present messages every 3 seconds until the context manager is exited
     with uds_aux.tester_present_sender(period=3):
         # Perform uds commands here
+
+|It is also possible to start and stop the tester present sender manually with the methods
+|start_tester_present_sender and stop_tester_present_sender.
+
+.. code:: python
+
+    # start sending tester present messages every 1 seconds until the context manager is exited
+    uds_aux.start_tester_present_sender(period=1)
+    # Perform uds commands here
+    uds_aux.stop_tester_present_sender()
+
+|It is then possible to check if the tester present is active with the attribute is_tester_present
+
+.. code:: python
+
+    if uds_aux.is_tester_present:
+        # Perform commands here

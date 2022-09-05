@@ -1,0 +1,16 @@
+auxiliaries:
+  com_aux:
+    connectors:
+        com: serial
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+connectors:
+  serial:
+    config:
+      port : 'COM5' # Device name (e.g. "COM1" for Windows or "/dev/ttyACM0" for Linux)
+      baudrate: 9600
+    type: pykiso.lib.connectors.cc_serial:CCSerial
+
+test_suite_list:
+- suite_dir: test_serial
+  test_filter_pattern: 'test_serial.py'
+  test_suite_id: 1

@@ -8,6 +8,7 @@
 ##########################################################################
 
 import itertools
+import logging
 import shutil
 import subprocess
 import time
@@ -21,10 +22,15 @@ from pykiso.lib.auxiliaries import dut_auxiliary
 from pykiso.lib.connectors import cc_example
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
+from pykiso.logging_initializer import LogOptions, add_logging_level
 from pykiso.test_coordinator import test_case
 from pykiso.test_coordinator.test_case import define_test_parameters
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
+# add the internal log levels to avoid errors during unit tests execution
+add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
 
 ## skip slow test by default
 def pytest_addoption(parser):
@@ -318,7 +324,7 @@ def tmp_test(request, tmp_path):
     # use a common tmp_path for all test modules
     tmp_base = tmp_path.parent / "tests"
 
-    cli.log_options = cli.LogOptions(None, "ERROR", None)
+    log_options = LogOptions(None, "ERROR", None)
 
     aux1, aux2, should_fail = request.param
     ts_folder = tmp_base / f"test_suite_{aux1}_{aux2}"

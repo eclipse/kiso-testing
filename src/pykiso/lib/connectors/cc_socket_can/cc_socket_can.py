@@ -118,7 +118,7 @@ class CCSocketCan(CChannel):
             )
 
         if self.enable_brs and not self.is_fd:
-            log.warning(
+            log.internal_warning(
                 "Bitrate switch will have no effect because option is_fd is set to false."
             )
 
@@ -137,7 +137,7 @@ class CCSocketCan(CChannel):
         )
 
         if self.logging_activated:
-            log.info(f"Logging path for socketCAN set to {self.log_path} ")
+            log.internal_info(f"Logging path for socketCAN set to {self.log_path} ")
             self.logger = SocketCan2Trc(self.channel, str(self.log_path))
             self.logger.start()
 
@@ -180,7 +180,7 @@ class CCSocketCan(CChannel):
         )
         self.bus.send(can_msg)
 
-        log.debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
+        log.internal_debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
 
     def _cc_receive(
         self, timeout: float = 0.0001, raw: bool = False
@@ -203,7 +203,7 @@ class CCSocketCan(CChannel):
                 timestamp = received_msg.timestamp
                 if not raw:
                     payload = Message.parse_packet(payload)
-                log.debug(
+                log.internal_debug(
                     "received CAN Message: {}, {}, {}".format(
                         frame_id, payload, timestamp
                     )
@@ -212,7 +212,7 @@ class CCSocketCan(CChannel):
             else:
                 return {"msg": None}
         except can.CanError as can_error:
-            log.debug(f"encountered can error: {can_error}")
+            log.internal_debug(f"encountered can error: {can_error}")
             return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")

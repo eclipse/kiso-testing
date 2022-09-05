@@ -104,14 +104,16 @@ class AcronameAuxiliary(DTAuxiliaryInterface):
         :return: True if successful
         """
 
-        log.info("Create auxiliary instance")
+        log.internal_info("Create auxiliary instance")
 
         result = self.stem.discoverAndConnect(
             brainstem.link.Spec.USB, self.serial_number
         )
         if result == (Result.NO_ERROR):
             result = self.stem.system.getSerialNumber()
-            log.info("Connected to USBStem with serial number: 0x%08X" % result.value)
+            log.internal_info(
+                "Connected to USBStem with serial number: 0x%08X" % result.value
+            )
         else:
             log.error("Could not connect to usb hub acroname")
             self.eval_result(result)
@@ -124,7 +126,7 @@ class AcronameAuxiliary(DTAuxiliaryInterface):
 
         :return: always True
         """
-        log.info("Delete auxiliary instance")
+        log.internal_info("Delete auxiliary instance")
         try:
             self.stem.disconnect()
         except Exception:

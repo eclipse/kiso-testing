@@ -18,10 +18,10 @@ test_xml_result
 .. currentmodule:: test_xml_result
 
 """
-
 import copy
 import json
 import sys
+import unittest
 from io import TextIOWrapper
 from xml.dom.minidom import Document, Element
 
@@ -60,7 +60,8 @@ class TestInfo(xmlrunner.result._TestInfo):
         super().__init__(
             test_result, test_method, outcome, err, subTest, filename, lineno, doc
         )
-
+        if isinstance(test_method, unittest.suite._ErrorHolder):
+            test_method.test_ids = {}
         # store extra tag
         self.test_ids = json.dumps(test_method.test_ids)
 
