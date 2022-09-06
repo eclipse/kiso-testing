@@ -28,7 +28,7 @@ from enum import Enum, unique
 from typing import Any, Callable, List, Optional
 
 from ..exceptions import AuxiliaryCreationError
-from ..logging_initializer import initialize_loggers, add_logging_level
+from ..logging_initializer import add_logging_level, initialize_loggers
 
 log = logging.getLogger(__name__)
 

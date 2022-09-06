@@ -7,18 +7,19 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-from multiprocessing.connection import deliver_challenge
-import time
 import logging
+import time
+from multiprocessing.connection import deliver_challenge
+
 import pytest
 
+import pykiso
 from pykiso import (
     AuxiliaryInterface,
     MpAuxiliaryInterface,
     SimpleAuxiliaryInterface,
     logging_initializer,
 )
-import pykiso
 from pykiso.auxiliary import AuxiliaryCommon
 from pykiso.exceptions import AuxiliaryCreationError
 from pykiso.test_setup.config_registry import ConfigRegistry
