@@ -288,7 +288,8 @@ class AuxiliaryCache(ModuleCache):
 
         # remove the common prefix "pykiso.auxiliaries" to enforce the
         # path finder -> loader -> module
-        sys.modules.pop(AuxLinkLoader._COMMON_PREFIX)
+        if AuxLinkLoader._COMMON_PREFIX in sys.modules:
+            sys.modules.pop(AuxLinkLoader._COMMON_PREFIX)
 
 
 class DynamicImportLinker:

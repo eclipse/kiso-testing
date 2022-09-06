@@ -41,9 +41,7 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
     assert "->  Failed" not in output.err
 
 
-@pytest.mark.parametrize(
-    "tmp_test", [("with_pattern_aux1", "_with_pattern_aux2", False)], indirect=True
-)
+@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
 def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
