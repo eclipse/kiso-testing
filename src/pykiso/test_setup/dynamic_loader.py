@@ -284,7 +284,7 @@ class AuxiliaryCache(ModuleCache):
             log.internal_debug(f"issuing stop for auxiliary '{aux}'")
             aux.stop()
             # remove all modules create by our custom loader
-            sys.modules.pop(f"{PACKAGE}.auxiliaries.{alias}")
+            sys.modules.pop(f"{AuxLinkLoader._COMMON_PREFIX}.{alias}")
 
         # remove the common prefix "pykiso.auxiliaries" to enforce the
         # path finder -> loader -> module
