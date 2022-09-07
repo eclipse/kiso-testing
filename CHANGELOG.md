@@ -8,6 +8,16 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Changelog only triggered on master
+
+### Miscellaneous Tasks
+
+- Add jinja2 for step reporter dependency
+
+## Version 0.19.1 (2022-09-02)
+
+### Bug Fixes
+
 - Readthedocs requirements
 
 ### Miscellaneous Tasks
@@ -15,12 +25,8 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Bump pre-commit from 2.19.0 to 2.20.0
 - Bump coverage from 5.5 to 6.4.4
 - Bump pytest-mock from 3.7.0 to 3.8.2
-- Update changelog to newest version
-- Update changelog to newest version
 - Bump pylink-square from 0.12.0 to 0.14.2 ([#137](https://github.com/orhun/git-cliff/issues/137))
-- Update changelog to newest version
 - Update click ([#143](https://github.com/orhun/git-cliff/issues/143))
-- Update changelog to newest version
 - Release 0.19.1 ([#144](https://github.com/orhun/git-cliff/issues/144))
 
 ### New Features
