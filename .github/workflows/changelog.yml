@@ -3,6 +3,8 @@ name: Changelog Updater
 
 on:
   push:
+    branches:
+      - master
     paths:
       - 'pyproject.toml' # When somebody update the toml file
 
