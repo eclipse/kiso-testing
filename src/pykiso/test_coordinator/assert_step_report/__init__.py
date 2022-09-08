@@ -7,4 +7,8 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-from .assert_step_report import assert_decorator, generate_step_report, StepReportData
+from .assert_step_report import (
+    StepReportData,
+    assert_decorator,
+    generate_step_report,
+)

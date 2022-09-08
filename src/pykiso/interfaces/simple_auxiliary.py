@@ -24,7 +24,7 @@ import logging
 from typing import List, Optional
 
 from ..exceptions import AuxiliaryCreationError
-from ..logging_initializer import initialize_loggers, add_logging_level
+from ..logging_initializer import add_logging_level, initialize_loggers
 from .thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)

@@ -45,7 +45,11 @@ import pykiso
 
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from . import test_suite
-from .assert_step_report import StepReportData, assert_decorator, generate_step_report
+from .assert_step_report import (
+    StepReportData,
+    assert_decorator,
+    generate_step_report,
+)
 from .test_result import BannerTestResult
 from .test_xml_result import XmlTestResult
 

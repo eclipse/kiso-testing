@@ -25,7 +25,9 @@ from .dynamic_loader import DynamicImportLinker
 
 
 class ConfigRegistry:
-    """Register auxiliaries with connectors to provide systemwide import statements."""
+    """Register auxiliaries with connectors to provide systemwide import
+    statements.
+    """
 
     _linker = None
 
@@ -53,7 +55,9 @@ class ConfigRegistry:
 
     @classmethod
     def delete_aux_con(cls) -> None:
-        """deregister the import hooks, close all running threads, delete all instances."""
+        """Deregister the import hooks, close all running threads,
+        delete all instances.
+        """
         ConfigRegistry._linker.uninstall()
 
     @classmethod
