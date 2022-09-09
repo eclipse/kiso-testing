@@ -187,9 +187,8 @@ before committing :
         Add your changes into the what's new section, so user can stay updated of the
         brand new features.
 
-    - Changelog:
-        Changelog is updated automatically with commit name. However commit names have
-        to respect specific norms. (Your changes concern a bug fix, commit name must be : "fix: commit name")
-        Further information on the naming can be found on: https://www.conventionalcommits.org/en/v1.0.0/)
+    - Changelog: (automatically updated)
+        Your commit needs to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) pattern.
+        Changelog is updated automatically with the commit message.
 
     - Documentation has to build properly.
