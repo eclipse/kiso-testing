@@ -324,7 +324,7 @@ def tmp_test(request, tmp_path):
     # use a common tmp_path for all test modules
     tmp_base = tmp_path.parent / "tests"
 
-    log_options = LogOptions(None, "ERROR", None)
+    log_options = LogOptions(None, "ERROR", None, False)
 
     aux1, aux2, should_fail = request.param
     ts_folder = tmp_base / f"test_suite_{aux1}_{aux2}"

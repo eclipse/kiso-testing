@@ -28,7 +28,10 @@ from typing import List, NamedTuple, Optional
 from .test_setup.dynamic_loader import PACKAGE
 from .types import PathType
 
-LogOptions = collections.namedtuple("LogOptions", "log_path log_level report_type")
+LogOptions = collections.namedtuple(
+    "LogOptions",
+    "log_path log_level report_type verbose",
+)
 # use to store the selected logging options
 log_options: Optional[NamedTuple] = None
 
@@ -82,7 +85,7 @@ def initialize_logging(
 
     # update logging options
     global log_options
-    log_options = LogOptions(log_path, log_level, report_type)
+    log_options = LogOptions(log_path, log_level, report_type, verbose)
 
     # if log_path is given create use a logging file handler
     if log_path is not None:

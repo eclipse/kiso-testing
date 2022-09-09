@@ -41,6 +41,7 @@ def test_initialize_logging(mocker, path, level, expected_level, verbose, report
         assert hasattr(logging, "INTERNAL_INFO")
         assert hasattr(logging, "INTERNAL_WARNING")
         assert hasattr(logging, "INTERNAL_DEBUG")
+        assert logging_initializer.log_options.verbose == True
     assert isinstance(logger, logging.Logger)
     assert logger.isEnabledFor(expected_level)
     assert logging_initializer.log_options.log_path == path
@@ -51,7 +52,7 @@ def test_initialize_logging(mocker, path, level, expected_level, verbose, report
 def test_get_logging_options():
 
     logging_initializer.log_options = logging_initializer.LogOptions(
-        None, "ERROR", None
+        None, "ERROR", None, False
     )
 
     options = logging_initializer.get_logging_options()

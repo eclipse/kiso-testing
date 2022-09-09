@@ -72,7 +72,7 @@ def mock_mp_aux(mocker):
     class MockMpAux(MpAuxiliaryInterface):
         def __init__(self, param_1=None, param_2=None, **kwargs):
             logging_initializer.log_options = logging_initializer.LogOptions(
-                None, "ERROR", None
+                None, "ERROR", None, False
             )
             self.param_1 = param_1
             self.param_2 = param_2

@@ -62,11 +62,11 @@ def test_eval_user_tags_empty(mocker):
     [
         (
             ["branch-level", "dev"],
-            "No such option: branch-level Did you mean --branch-level",
+            " branch-level",
         ),
         (
             ["--forbidden_underscore", "dev"],
-            "No such option: --forbidden_underscore Did you mean --forbidden-underscore",
+            "--forbidden_underscore",
         ),
     ],
 )
@@ -84,6 +84,4 @@ def test_eval_user_tags_exception_bad_option_usage(mocker):
     click_context_mock.args = ["--branch-level"]
     with pytest.raises(click.BadOptionUsage) as exec_info:
         eval_user_tags = cli.eval_user_tags(click_context_mock)
-    assert (
-        "No value specified for tag --branch-level" in exec_info.value.format_message()
-    )
+    assert "tag --branch-level" in exec_info.value.format_message()
