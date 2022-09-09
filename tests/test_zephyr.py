@@ -31,7 +31,7 @@ import xml.etree.ElementTree as ET
         ("twister2", None, "b", "testname1", None, False),
         (None, None, "b", "testname1", None, False),
         ("twister2", "b", None, None, None, False),
-        ("twister2", None, None,  "testname1", "testname2", False),
+        ("twister2", None, None, "testname1", "testname2", False),
     ],
 )
 def test_zephyr_aux(
@@ -44,7 +44,7 @@ def test_zephyr_aux(
     wait,
 ):
     global mock_readline_counter
-    mock_readline_counter=0
+    mock_readline_counter = 0
 
     twister_instance = mock.MagicMock(Twister)
     twister_mock = mocker.patch(
@@ -78,17 +78,22 @@ def test_zephyr_aux_misc(mocker):
     zephyr_aux._create_auxiliary_instance()
     zephyr_aux._delete_auxiliary_instance()
 
-mock_readline_counter=0
+
+mock_readline_counter = 0
+
+
 def mock_readline():
     global mock_readline_counter
     if mock_readline_counter > 2:
         return ""
-    ret = [b"2022-07-15 08:26:34,750 [DEBUG] zephyr:105: Twister: DEBUG   - OUTPUT:",
+    ret = [
+        b"2022-07-15 08:26:34,750 [DEBUG] zephyr:105: Twister: DEBUG   - OUTPUT:",
         b"2022-07-15 08:26:34,750 [DEBUG] zephyr:105: Twister: DEBUG   - OUTPUT: START - test_assert",
         b"2022-07-15 08:26:34,750 [DEBUG] zephyr:105: Twister: DEBUG   - OUTPUT:  PASS - test_assert in 0.0 seconds",
     ][mock_readline_counter]
     mock_readline_counter = mock_readline_counter + 1
     return ret
+
 
 @pytest.mark.parametrize(
     "twister_path, test_directory, testname, wait",
@@ -105,7 +110,7 @@ def test_twister(
     wait,
 ):
     global mock_readline_counter
-    mock_readline_counter=0
+    mock_readline_counter = 0
     mock_path = mock.MagicMock()
     mocker.patch.object(pathlib.Path, "resolve", return_value=mock_path)
 
@@ -120,12 +125,12 @@ def test_twister(
     mock_process.stderr.readline = mock_readline
     twister.start_test(test_directory, testname, wait)
 
-
     result = twister.wait_test()
+
 
 def test_twister_aux_wait_exception(mocker):
     global mock_readline_counter
-    mock_readline_counter=0
+    mock_readline_counter = 0
     twister = Twister()
     with pytest.raises(ZephyrError) as e:
         twister.wait_test()
@@ -133,7 +138,7 @@ def test_twister_aux_wait_exception(mocker):
 
 def test_twister_start_exception(mocker):
     global mock_readline_counter
-    mock_readline_counter=0
+    mock_readline_counter = 0
     twister = Twister()
     twister.process = 1
     with pytest.raises(ZephyrError) as e:
