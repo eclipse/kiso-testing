@@ -289,8 +289,8 @@ Implementation of Advanced Tests - Repeat testCases
 
 .. _run_the_tests:
 
-Run the tests
-~~~~~~~~~~~~~
+Test verbosity
+~~~~~~~~~~~~~~
 
 ``pykiso -c <config_file>``
 
