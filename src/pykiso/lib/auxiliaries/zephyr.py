@@ -205,7 +205,7 @@ class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
             raise ZephyrError("test_directory parameter is not set.")
         if test_name is None:
             raise ZephyrError("test_name parameter is not set.")
-        return self.twister.start_test(test_directory, test_name, self.wait_for_start)
+        self.twister.start_test(test_directory, test_name, self.wait_for_start)
 
     def wait_test(self) -> TestResult:
         return self.twister.wait_test()
