@@ -183,7 +183,9 @@ class BasicTest(unittest.TestCase):
         """
         options = get_logging_options()
         if options.report_type == "junit":
-            initialize_logging(None, options.log_level, options.report_type)
+            initialize_logging(
+                None, options.log_level, options.verbose, options.report_type
+            )
 
     def setUp(self) -> None:
         """Startup hook method to execute code before each test method."""

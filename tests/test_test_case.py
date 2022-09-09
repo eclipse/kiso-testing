@@ -213,14 +213,14 @@ def test_setUpClass(mocker):
     mocker.patch.object(
         test_case,
         "get_logging_options",
-        return_value=LogOptions(None, "ERROR", "junit"),
+        return_value=LogOptions(None, "ERROR", "junit", False),
     )
     mock_init_log = mocker.patch.object(test_case, "initialize_logging")
     test_case.BasicTest.setUpClass()
-    mock_init_log.assert_called_with(None, "ERROR", "junit")
+    mock_init_log.assert_called_with(None, "ERROR", False, "junit")
 
     test_case.RemoteTest.setUpClass()
-    mock_init_log.assert_called_with(None, "ERROR", "junit")
+    mock_init_log.assert_called_with(None, "ERROR", False, "junit")
 
 
 @pytest.mark.parametrize(
