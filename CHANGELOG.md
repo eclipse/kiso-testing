@@ -9,10 +9,17 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Bug Fixes
 
 - Changelog only triggered on master
+- Cleanup auxiliary properly by removing them from sys.modules ([#147](https://github.com/orhun/git-cliff/issues/147))
+- Fix double Logging with --junit option
+- Update logging initializer so that internal logs are always logged in file
 
 ### Miscellaneous Tasks
 
 - Add jinja2 for step reporter dependency
+
+### Refactorings
+
+- Small fixes
 
 ## Version 0.19.1 (2022-09-02)
 
