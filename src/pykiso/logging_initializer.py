@@ -73,19 +73,27 @@ def initialize_logging(
         "ERROR": logging.ERROR,
     }
     # add internal kiso log levels
-    if verbose:
-        add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
-        add_logging_level("INTERNAL_INFO", logging.INFO + 1)
-        add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
-    else:
-        # As level value is < than DEBUG value (10), internal kiso logs will be ignored
-        add_logging_level("INTERNAL_WARNING", 1)
-        add_logging_level("INTERNAL_INFO", 1)
-        add_logging_level("INTERNAL_DEBUG", 1)
+    add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+    add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+    add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
 
     # update logging options
     global log_options
     log_options = LogOptions(log_path, log_level, report_type, verbose)
+
+    class InternalLogsFilter(logging.Filter):
+        def filter(self, record):
+            """Filters internal log levels
+
+            :param record: event being logged
+
+            :return: False if internal logging, True otherwise
+            """
+            return record.levelno not in (
+                logging.INTERNAL_WARNING,
+                logging.INTERNAL_INFO,
+                logging.INTERNAL_DEBUG,
+            )
 
     # if log_path is given create use a logging file handler
     if log_path is not None:
@@ -103,6 +111,9 @@ def initialize_logging(
         stream_handler = logging.StreamHandler()
         stream_handler.setFormatter(log_format)
         stream_handler.setLevel(levels[log_level])
+        if not verbose:
+            # filter internal log levels
+            stream_handler.addFilter(InternalLogsFilter())
         root_logger.addHandler(stream_handler)
     # if report_type is junit use sys.stdout as stream
     if report_type == "junit":
