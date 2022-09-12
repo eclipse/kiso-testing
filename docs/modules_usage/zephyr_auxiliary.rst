@@ -7,7 +7,7 @@ The Zephyr auxiliary uses the Twister tool(https://docs.zephyrproject.org/latest
 A common use case is a pykiso test that interacts with a test on an embedded device via a communication interface.
 
 Prerequisites
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 To use the Zephyr auxiliary, you need a working Zephyr environment where you can use the Twister tool to execute your testcases.
 Refer to the Zephyr documentation for details: https://docs.zephyrproject.org/latest/develop/test/index.html
 

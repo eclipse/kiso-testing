@@ -1,5 +1,5 @@
 Zephyr Test Auxiliary
-=============
+=====================
 
 Example can be found here :ref:`zephyr_aux`.
 
