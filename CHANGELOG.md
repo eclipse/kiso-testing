@@ -16,6 +16,11 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Miscellaneous Tasks
 
 - Add jinja2 for step reporter dependency
+- [**breaking**] Release 0.19.2
+
+### New Features
+
+- Select test case with regex ([#146](https://github.com/orhun/git-cliff/issues/146))
 
 ### Refactorings
 
