@@ -63,7 +63,10 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Update click ([#143](https://github.com/orhun/git-cliff/issues/143))
 - Release 0.19.1 ([#144](https://github.com/orhun/git-cliff/issues/144))
 - Add jinja2 for step reporter dependency
+<<<<<<< HEAD
 - [**breaking**] Release 0.19.2
+=======
+>>>>>>> 25ab223 (chore(changelog): update changelog to newest version)
 
 ### New Features
 
@@ -98,7 +101,10 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Make release 0.19.0 ([#130](https://github.com/orhun/git-cliff/issues/130))
 - Add start and stop uds tester present sender ([#131](https://github.com/orhun/git-cliff/issues/131))
 - Add cc_serial connector ([#124](https://github.com/orhun/git-cliff/issues/124))
+<<<<<<< HEAD
 - Select test case with regex ([#146](https://github.com/orhun/git-cliff/issues/146))
+=======
+>>>>>>> 25ab223 (chore(changelog): update changelog to newest version)
 
 ### Refactorings
 
