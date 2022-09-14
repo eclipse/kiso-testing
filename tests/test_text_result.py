@@ -37,18 +37,32 @@ class TestResultStream:
         return ResultStream(DUMMY_FILE)
 
     @pytest.mark.parametrize(
-        "provided_file, expected_type, expected_type_ctx",
+        "provided_file, expected_type, expected_type_ctx, close_calls",
         [
-            (None, nullcontext, type(sys.stderr)),
-            ("my_file", ResultStream, ResultStream),
+            (None, nullcontext, type(sys.stderr), 0),
+            ("my_file", ResultStream, ResultStream, 1),
         ],
     )
-    def test_open(self, mock_open, provided_file, expected_type, expected_type_ctx):
+    def test_open(
+        self,
+        mocker,
+        mock_open,
+        provided_file,
+        expected_type,
+        expected_type_ctx,
+        close_calls,
+    ):
+        mock_close = mocker.patch.object(ResultStream, "close", return_value=None)
+
         stream = ResultStream(provided_file)
         assert type(stream) == expected_type
 
+        del stream
+
         with ResultStream(provided_file) as stream:
             assert type(stream) == expected_type_ctx
+
+        assert mock_close.call_count == close_calls
 
     def test_constructor(self, mock_open):
         stream = ResultStream(DUMMY_FILE)

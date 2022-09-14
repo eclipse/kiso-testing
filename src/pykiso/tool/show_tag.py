@@ -32,6 +32,7 @@ import click
 from tabulate import tabulate
 
 from pykiso.config_parser import parse_config
+from pykiso.exceptions import TestCollectionError
 from pykiso.test_coordinator import test_execution
 from pykiso.test_coordinator.test_case import BasicTest
 from pykiso.types import PathType
@@ -266,6 +267,11 @@ def main(
             except ValueError as e:
                 click.echo(
                     f"Failed to load test cases from config file {config_file.name}: {e.args[0]}"
+                )
+                continue
+            except TestCollectionError as e:
+                click.echo(
+                    f"Failed to load test cases from config file {config_file.name}: {e}"
                 )
                 continue
 
