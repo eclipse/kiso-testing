@@ -58,7 +58,7 @@ class TestUdsBaseAuxiliary:
         verdict = aux_inst._create_auxiliary_instance()
 
         aux_inst.channel._cc_open.assert_called_once()
-        # mock_init.assert_called_once()
+        mock_init.assert_called_once()
         mock_config.assert_called_once()
         mock_transmit.assert_called_with(aux_inst.transmit)
         mock_receive.assert_called_with(aux_inst.receive)
