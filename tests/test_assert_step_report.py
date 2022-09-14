@@ -6,9 +6,9 @@ from unittest import TestCase, mock
 import jinja2
 import pytest
 
-import pykiso.test_coordinator.assert_step_report as assert_step_report
-from pykiso.test_coordinator.test_result import BannerTestResult, TestCase
-from pykiso.test_coordinator.test_xml_result import TestInfo, XmlTestResult
+import pykiso.test_result.assert_step_report as assert_step_report
+from pykiso.test_result.text_result import BannerTestResult, TestCase
+from pykiso.test_result.xml_result import TestInfo, XmlTestResult
 
 
 @pytest.fixture

@@ -10,7 +10,7 @@
 import unittest
 from collections import namedtuple
 
-from pykiso.test_coordinator import test_xml_result
+from pykiso.test_coordinator.test_result import test_xml_result
 
 MockTestResult = namedtuple("TestMethod", "test_ids")
 

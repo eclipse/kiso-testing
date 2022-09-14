@@ -19,6 +19,7 @@ Virtual Communication Channel for tests
 
 import logging
 import threading
+import time
 from typing import Dict, Optional
 
 from pykiso import connector, message
@@ -94,6 +95,8 @@ class CCExample(connector.CChannel):
         with self.lock:
             if raw:
                 raise NotImplementedError()
+            # Simulate a real wait for message
+            time.sleep(1e-3)
             if self.last_received_message is not None:
                 # Transform into ack
                 r_message = message.Message.parse_packet(self.last_received_message)

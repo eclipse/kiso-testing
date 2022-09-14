@@ -11,23 +11,92 @@
 Text Test Result with banners
 *****************************
 
-:module: test_result
+:module: text_result
 
-:synopsis: implement BannerTestResult to show detailed test execution
-wrapped in banners.
+:synopsis: implements a test result that displays the test execution
+    wrapped in banners.
 
-.. currentmodule:: test_result
+.. currentmodule:: text_result
 """
 
+import logging
+import os
+import sys
 import textwrap
 import time
+from contextlib import nullcontext
 from shutil import get_terminal_size
 from typing import List, Optional, TextIO, Union
 from unittest import TestCase, TestResult, TextTestResult
 
+from pykiso.types import PathType
+
+log = logging.getLogger(__name__)
+
+
+class ResultStream:
+    """Class that duplicates sys.stderr to a log file if a file path is provided.
+
+    When passed to a TestRunner or a TestResult, this allows to display the
+    information from the test run in the log file.
+    """
+
+    def __new__(cls, file: Optional[PathType]):
+        """Customize class creation to return an instance of this class
+        if a file path is provided, or simply ``sys.stderr`` if no file
+        path is provided.
+
+        :param file: the file to write stderr to.
+        :return: an instance of this class or ``sys.stderr``.
+        """
+        # don't bother instanciating and simply return stderr as context manager
+        if file is None:
+            return nullcontext(sys.stderr)
+        # otherwise return a real instance
+        return super().__new__(cls)
+
+    def __init__(self, file: Optional[PathType]):
+        """Initialize the streams.
+
+        :param file: file where stderr should be written.
+        """
+        self.stderr = sys.stderr
+        self.file = open(file, mode="a")
+        sys.stderr = self
+
+    def __del__(self):
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    def write(self, message: str):
+        self.stderr.write(message)
+        self.file.write(message)
+
+    def flush(self):
+        self.stderr.flush()
+        self.file.flush()
+        os.fsync(self.file.fileno())
+
+    def close(self):
+        """Close or restore each stream."""
+        if self.stderr is not None:
+            sys.stderr = self.stderr
+            self.stderr = None
+
+        if self.file is not None:
+            self.file.close()
+            self.file = None
+
 
 class BannerTestResult(TextTestResult):
     """TextTestResult subclass showing results wrapped in banners."""
+
+    BANNER_CHAR_WIDTH = 4
 
     def __init__(self, stream: TextIO, descriptions: bool, verbosity: int):
         """Constructor. Initialize TextTestResult and the banner's width.
@@ -86,9 +155,9 @@ class BannerTestResult(TextTestResult):
         if getattr(test, "_testMethodDoc", None) is not None:
             doc = "\n"
             for line in test._testMethodDoc.splitlines():
-                doc += "\n" + textwrap.fill(line.strip(), width=100)
-        else:
-            doc = ""
+                doc += "\n" + textwrap.fill(
+                    line.strip(), width=self.width - self.BANNER_CHAR_WIDTH
+                )
         return doc
 
     def startTest(self, test: TestCase) -> None:

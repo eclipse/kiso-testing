@@ -8,22 +8,31 @@
 ##########################################################################
 
 """
-test_xml_result
-***************
+XML test result for JUnit support
+*********************************
 
-:module: test_xml_result
+:module: xml_result
 
-:synopsis: overwrite xmlrunner.result to be able to add additional data into the xml report.
+:synopsis: overwrite xmlrunner.result to add the test IDs
+    into the xml report.
 
-.. currentmodule:: test_xml_result
+.. currentmodule:: xml_result
 
 """
+from __future__ import annotations
+
 import copy
 import json
 import sys
 import unittest
 from io import TextIOWrapper
-from xml.dom.minidom import Document, Element
+from types import TracebackType
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Type
+
+if TYPE_CHECKING:
+    from unittest.case import TestCase
+    from xml.dom.minidom import Document, Element
+    from ..test_coordinator.test_case import BasicTest
 
 import xmlrunner.result
 import xmlrunner.runner
@@ -37,13 +46,13 @@ class TestInfo(xmlrunner.result._TestInfo):
     def __init__(
         self,
         test_result: xmlrunner.runner._XMLTestResult,
-        test_method,
+        test_method: BasicTest,
         outcome: int = 0,
-        err=None,
-        subTest=None,
-        filename: str = None,
-        lineno: bool = None,
-        doc: str = None,
+        err: Optional[Tuple[Type[BaseException], BaseException, TracebackType]] = None,
+        subTest: TestCase = None,
+        filename: Optional[str] = None,
+        lineno: Optional[bool] = None,
+        doc: Optional[str] = None,
     ):
         """Initialize the TestInfo class and append additional tag
            that have to be stored for each test
@@ -51,8 +60,8 @@ class TestInfo(xmlrunner.result._TestInfo):
         :param test_result: test result class
         :param test_method: test method (dynamically created eg: test_case.MyTest2-1-2)
         :param outcome: result of the test (SUCCESS, FAILURE, ERROR, SKIP)
-        :param err: error cached during test
-        :param subTest: optional, refer the test id and the test description
+        :param err: exception information of an error that was raised during the test
+        :param subTest: optional subTest that was run
         :param filename: name of the file
         :param lineno: store the test line number
         :param doc: additional documentation to store
@@ -75,9 +84,9 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         self,
         stream: TextIOWrapper = sys.stderr,
         descriptions: bool = True,
-        verbosity: int = 1,
+        verbosity: int = 0,
         elapsed_times: bool = True,
-        properties=None,
+        properties: Optional[Dict[str, Any]] = None,
         infoclass: xmlrunner.result._TestInfo = TestInfo,
     ):
         """Initialize the _XMLTestResult class.

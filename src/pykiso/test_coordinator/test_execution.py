@@ -46,14 +46,15 @@ import xmlrunner
 import pykiso
 
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
-from . import test_suite
-from .assert_step_report import (
+from ..logging_initializer import get_logging_options
+from ..test_result.assert_step_report import (
     StepReportData,
     assert_decorator,
     generate_step_report,
 )
-from .test_result import BannerTestResult
-from .test_xml_result import XmlTestResult
+from ..test_result.text_result import BannerTestResult, ResultStream
+from ..test_result.xml_result import XmlTestResult
+from . import test_suite
 
 log = logging.getLogger(__name__)
 
@@ -316,6 +317,7 @@ def execute(
                 test_file_pattern.test_case,
             )
 
+        log_file_path = get_logging_options().log_path
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
         if report_type == "junit":
             junit_report_name = time.strftime("TEST-pykiso-%Y-%m-%d_%H-%M-%S.xml")
@@ -323,18 +325,23 @@ def execute(
             reports_path = project_folder / "reports"
             junit_report_path = reports_path / junit_report_name
             reports_path.mkdir(exist_ok=True)
-            with open(junit_report_path, "wb") as junit_output:
+            with open(junit_report_path, "wb") as junit_output, ResultStream(
+                log_file_path
+            ) as stream:
                 test_runner = xmlrunner.XMLTestRunner(
                     output=junit_output,
                     resultclass=XmlTestResult,
                     failfast=failfast,
+                    verbosity=0,
+                    stream=stream,
                 )
                 result = test_runner.run(all_tests_to_run)
         else:
-            test_runner = unittest.TextTestRunner(
-                resultclass=BannerTestResult, failfast=failfast
-            )
-            result = test_runner.run(all_tests_to_run)
+            with ResultStream(log_file_path) as stream:
+                test_runner = unittest.TextTestRunner(
+                    stream=stream, resultclass=BannerTestResult, failfast=failfast
+                )
+                result = test_runner.run(all_tests_to_run)
 
         # Generate the html step report
         if step_report is not None:
