@@ -127,9 +127,15 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
         :return: if channel creation is successful return True
             otherwise false
         """
+
         try:
-            if self.odx_file_path is not None:
+            is_not_none = self.odx_file_path is not None
+            is_not_bool = not isinstance(self.odx_file_path, bool)
+
+            if is_not_none and is_not_bool and Path(self.odx_file_path).exists():
                 self.uds_config_enable = True
+            else:
+                self.odx_file_path = None
 
             Config.load_com_layer_config(self.tp_layer, self.uds_layer)
             self.uds_config = Uds(
