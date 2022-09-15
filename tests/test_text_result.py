@@ -76,6 +76,16 @@ class TestResultStream:
         test_result_instance.stderr.write.assert_called_once_with(to_write)
         test_result_instance.file.write.assert_called_once_with(to_write)
 
+    def test_flush(self, mocker, test_result_instance):
+        mock_fsync = mocker.patch("os.fsync")
+
+        test_result_instance.flush()
+
+        test_result_instance.stderr.flush.assert_called_once()
+        test_result_instance.file.flush.assert_called_once()
+        test_result_instance.file.fileno.assert_called_once()
+        mock_fsync.assert_called_once()
+
     def test_close(self, test_result_instance):
         assert test_result_instance.stderr is not None
         assert test_result_instance.file is not None
