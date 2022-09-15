@@ -56,8 +56,7 @@ _FUNCTION_TO_APPLY = r"|".join(["test", "run", "setup", "teardown"])
 
 # Jinja template location
 SCRIPT_PATH = str(Path(__file__).resolve().parent)
-
-REPORT_TEMPLATE = "report_template.html.j2"
+REPORT_TEMPLATE = "templates/report_template.html.j2"
 
 
 @dataclass
