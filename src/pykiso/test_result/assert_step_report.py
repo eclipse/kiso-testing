@@ -39,6 +39,7 @@ from typing import Union
 from unittest.case import TestCase
 
 import jinja2
+import sys
 
 from .text_result import BannerTestResult
 from .xml_result import TestInfo, XmlTestResult
@@ -96,13 +97,30 @@ def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
     # Get current line number
     line_no = f_back.f_lineno
 
-    # Get line content, if statement not
-    # complete, read from bottom to up
+    # The inspect module returns the first line in python >=3.8 and the last line in python 3.7
+    first_line = sys.version_info.major > 3 or sys.version_info.minor >= 8
+
+    # Get line content
     line = ""
-    while assert_name not in line:
-        # line_no start from 1 but list from 0
+    if first_line:
+        # Read top down in python >=3.8, count parantheses to find last line of assert statement
         line_no -= 1
-        line = lines[line_no] + line
+        parantheses = 0
+        while True:
+            next = lines[line_no]
+            open = len(list(filter(lambda x: x=="(", next)))
+            close = len(list(filter(lambda x: x==")", next)))
+            parantheses += open - close
+            line = line + next
+            line_no += 1
+            if parantheses == 0:
+                break
+    else:
+        # Read bottom up in python 3.7
+        while assert_name not in line:
+            # line_no start from 1 but list from 0
+            line_no -= 1
+            line = lines[line_no] + line
 
     # remove line break and spaces
     line = line.replace("\n", "")
