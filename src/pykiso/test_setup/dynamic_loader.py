@@ -283,8 +283,11 @@ class AuxiliaryCache(ModuleCache):
         for alias, aux in self.instances.items():
             log.internal_debug(f"issuing stop for auxiliary '{aux}'")
             aux.stop()
-            # remove all modules create by our custom loader
-            sys.modules.pop(f"{AuxLinkLoader._COMMON_PREFIX}.{alias}")
+            aux_mod = f"{AuxLinkLoader._COMMON_PREFIX}.{alias}"
+            # ensure that the module was created
+            if sys.modules.get(aux_mod) is not None:
+                # remove all modules create by our custom loader
+                sys.modules.pop(aux_mod)
 
         # remove the common prefix "pykiso.auxiliaries" to enforce the
         # path finder -> loader -> module

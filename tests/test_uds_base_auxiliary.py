@@ -46,6 +46,10 @@ class TestUdsBaseAuxiliary:
         assert aux_inst.tp_layer == expected_tp
 
     def test_create_auxiliary_instance_without_odx(self, mocker, aux_inst):
+        mocker.patch(
+            "pathlib.Path.exists",
+            return_value=False,
+        )
         mock_init = mocker.patch.object(Uds, "__init__", return_value=None)
         mock_transmit = mocker.patch.object(Uds, "overwrite_transmit_method")
         mock_receive = mocker.patch.object(Uds, "overwrite_receive_method")
@@ -62,6 +66,10 @@ class TestUdsBaseAuxiliary:
         assert verdict is True
 
     def test_create_auxiliary_instance_with_odx(self, mocker, aux_inst):
+        mocker.patch(
+            "pathlib.Path.exists",
+            return_value=True,
+        )
         mock_init = mocker.patch.object(Uds, "__init__", return_value=None)
         mock_transmit = mocker.patch.object(Uds, "overwrite_transmit_method")
         mock_receive = mocker.patch.object(Uds, "overwrite_receive_method")

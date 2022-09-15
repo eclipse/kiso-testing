@@ -42,6 +42,10 @@ class TestUdsAuxiliary:
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
+        mocker.patch(
+            "pathlib.Path.exists",
+            return_value=True,
+        )
         TestUdsAuxiliary.uds_aux_instance_odx = UdsAuxiliary(
             ccpcan_inst, tmp_uds_config_ini, "odx"
         )
