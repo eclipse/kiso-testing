@@ -102,7 +102,7 @@ def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
 
     # Get line content
     line = ""
-    if first_line:
+    if first_line: # pragma: no cover
         # Read top down in python >=3.8, count parantheses to find last line of assert statement
         line_no -= 1
         parantheses = 0
