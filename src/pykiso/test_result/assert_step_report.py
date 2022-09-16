@@ -28,6 +28,7 @@ import functools
 import inspect
 import logging
 import re
+import sys
 import types
 import typing
 import unittest
@@ -39,7 +40,6 @@ from typing import Union
 from unittest.case import TestCase
 
 import jinja2
-import sys
 
 from .text_result import BannerTestResult
 from .xml_result import TestInfo, XmlTestResult
@@ -102,14 +102,14 @@ def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
 
     # Get line content
     line = ""
-    if first_line: # pragma: no cover
+    if first_line:  # pragma: no cover
         # Read top down in python >=3.8, count parantheses to find last line of assert statement
         line_no -= 1
         parantheses = 0
         while True:
             next = lines[line_no]
-            open = len(list(filter(lambda x: x=="(", next)))
-            close = len(list(filter(lambda x: x==")", next)))
+            open = len(list(filter(lambda x: x == "(", next)))
+            close = len(list(filter(lambda x: x == ")", next)))
             parantheses += open - close
             line = line + next
             line_no += 1
