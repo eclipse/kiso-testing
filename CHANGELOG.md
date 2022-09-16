@@ -8,13 +8,56 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
-- Wait for logger thread to quit gracefully before closing segger channel ([#28](https://github.com/orhun/git-cliff/issues/28))
-- Qsize() not available for macos x
-- Pytest config and flake8 excludes
-- Remove --dev option (default for poetry)
-- Restrict markupsafe versions and cleanup docs
-- Use coverage coonfig from pyproject.toml
-- Point to pykiso-python-uds-alpha for PYPI
+- Changelog only triggered on master
+- Cleanup auxiliary properly by removing them from sys.modules ([#147](https://github.com/orhun/git-cliff/issues/147))
+- Fix double Logging with --junit option
+- Update logging initializer so that internal logs are always logged in file
+
+### Miscellaneous Tasks
+
+- Add jinja2 for step reporter dependency
+- [**breaking**] Release 0.19.2
+
+### New Features
+
+- Select test case with regex ([#146](https://github.com/orhun/git-cliff/issues/146))
+
+### Refactorings
+
+- Small fixes
+
+## Version 0.19.1 (2022-09-02)
+
+### Bug Fixes
+
+- Readthedocs requirements
+
+### Miscellaneous Tasks
+
+- Bump pre-commit from 2.19.0 to 2.20.0
+- Bump coverage from 5.5 to 6.4.4
+- Bump pytest-mock from 3.7.0 to 3.8.2
+- Bump pylink-square from 0.12.0 to 0.14.2 ([#137](https://github.com/orhun/git-cliff/issues/137))
+- Update click ([#143](https://github.com/orhun/git-cliff/issues/143))
+- Release 0.19.1 ([#144](https://github.com/orhun/git-cliff/issues/144))
+
+### New Features
+
+- Add start and stop uds tester present sender ([#131](https://github.com/orhun/git-cliff/issues/131))
+- Add cc_serial connector ([#124](https://github.com/orhun/git-cliff/issues/124))
+
+### Refactorings
+
+- Restructure the documentation
+
+### Ci
+
+- Replace auto-changelog
+
+## Version 0.19.0 (2022-08-30)
+
+### Bug Fixes
+
 - Multiple yaml logging
 - Hanging ci and rework mp aux and proxy pytest
 - Virtual test fail
@@ -25,26 +68,9 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Update pykitest example
 - Step report ci issues([#134](https://github.com/orhun/git-cliff/issues/134))
 - Replace dependabot to .github ([#133](https://github.com/orhun/git-cliff/issues/133))
-- Readthedocs requirements
-- Changelog only triggered on master
-- Cleanup auxiliary properly by removing them from sys.modules ([#147](https://github.com/orhun/git-cliff/issues/147))
-- Fix double Logging with --junit option
-- Update logging initializer so that internal logs are always logged in file
-- Handle case odx_file_path parameter is type of bool ([#158](https://github.com/orhun/git-cliff/issues/158))
 
 ### Documentation
 
-- Restructure docs ([#14](https://github.com/orhun/git-cliff/issues/14))
-- Autogen changelog ([#15](https://github.com/orhun/git-cliff/issues/15))
-- Add links for how to create an auxiliary and connector ([#17](https://github.com/orhun/git-cliff/issues/17))
-- Change auto changelog tool ([#30](https://github.com/orhun/git-cliff/issues/30))
-- Remove not maintained 'list of limitations' section
-- Add section whats new ([#38](https://github.com/orhun/git-cliff/issues/38))
-- Replace all occurences of pipenv with poetry
-- Rework getting_started
-- Add whats new for 0.17.0
-- Make usage of TestSuite elements more visible
-- Add quality goals
 - Add tools section and remove tools from coverage
 - Align dependencies in NOTICE.md ([#90](https://github.com/orhun/git-cliff/issues/90))
 - Fix dead links and rework formatting ([#105](https://github.com/orhun/git-cliff/issues/105))
@@ -56,36 +82,9 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Fix docstring
 - Rename show-tag CLI to pykiso-tags
 - Bump lxml from 4.9.0 to 4.9.1 ([#88](https://github.com/orhun/git-cliff/issues/88))
-- Bump pre-commit from 2.19.0 to 2.20.0
-- Bump coverage from 5.5 to 6.4.4
-- Bump pytest-mock from 3.7.0 to 3.8.2
-- Bump pylink-square from 0.12.0 to 0.14.2 ([#137](https://github.com/orhun/git-cliff/issues/137))
-- Update click ([#143](https://github.com/orhun/git-cliff/issues/143))
-- Release 0.19.1 ([#144](https://github.com/orhun/git-cliff/issues/144))
-- Add jinja2 for step reporter dependency
-<<<<<<< HEAD
-- [**breaking**] Release 0.19.2
-=======
->>>>>>> 25ab223 (chore(changelog): update changelog to newest version)
 
 ### New Features
 
-- Update to new release 0.15 ([#13](https://github.com/orhun/git-cliff/issues/13))
-- Add uptime for pcan inside python-can
-- Expose yaml and cli configuration to user test cases/suites
-- Add uptime for pcan inside python-can
-- [**breaking**] Restore yaml loader in config parser ([#31](https://github.com/orhun/git-cliff/issues/31))
-- Raise an exception when auxiliary failed at instance creation ([#33](https://github.com/orhun/git-cliff/issues/33))
-- Update to new release 0.16.0 ([#34](https://github.com/orhun/git-cliff/issues/34))
-- Update to new release 0.17.0
-- Make bus error warnings switchable for pcan
-- Set up badges
-- Multiple yaml in CLI
-- Rework pcan trace configuration in connector
-- Add pykiso to pytest tool ([#62](https://github.com/orhun/git-cliff/issues/62))
-- Make the proxy agnostic of transitioning messages
-- Create base class for test ([#61](https://github.com/orhun/git-cliff/issues/61))
-- Make release 0.18.0 ([#72](https://github.com/orhun/git-cliff/issues/72))
 - Add show tag script for test information analysis
 - Detect test collection errors and abort execution
 - Implement double threaded auxiliary interface ([#74](https://github.com/orhun/git-cliff/issues/74))
@@ -99,36 +98,21 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Add new logging strategy ([#122](https://github.com/orhun/git-cliff/issues/122))
 - Step report ([#101](https://github.com/orhun/git-cliff/issues/101))
 - Make release 0.19.0 ([#130](https://github.com/orhun/git-cliff/issues/130))
-- Add start and stop uds tester present sender ([#131](https://github.com/orhun/git-cliff/issues/131))
-- Add cc_serial connector ([#124](https://github.com/orhun/git-cliff/issues/124))
-<<<<<<< HEAD
-- Select test case with regex ([#146](https://github.com/orhun/git-cliff/issues/146))
-=======
->>>>>>> 25ab223 (chore(changelog): update changelog to newest version)
 
 ### Refactorings
 
-- [**breaking**] Change variant decorator
-- [**breaking**] Change variant decorator
-- Replace all setuptools-based files with poetry
 - Migrate recorder to DT-aux interface ([#80](https://github.com/orhun/git-cliff/issues/80))
 - Adapt acroname aux to dt interface ([#84](https://github.com/orhun/git-cliff/issues/84))
 - Adapt instrument aux to dt interface ([#85](https://github.com/orhun/git-cliff/issues/85))
-- Restructure the documentation
-- Small fixes
 
 ### Testing
 
-- Make test reliable ([#18](https://github.com/orhun/git-cliff/issues/18))
-- Add missing unittests
 - Add tests for show-tag
 - Increase coverage
 - Try to fix get_yaml_files test
 
 ### Bugfix
 
-- Remove warning in unittests
-- Remove warning in unittests
 - Fix/adapt socketcan connectors to be agnostic ([#89](https://github.com/orhun/git-cliff/issues/89))
 - Adapt rtt connector to create log folder if does not exist ([#92](https://github.com/orhun/git-cliff/issues/92))
 - Do not wait for an UDS response in tester present sender ([#113](https://github.com/orhun/git-cliff/issues/113))
@@ -137,15 +121,113 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 - Pykiso python uds 3 0 0 ([#119](https://github.com/orhun/git-cliff/issues/119))
 
+## Version 0.18.0 (2022-06-08)
+
+### Documentation
+
+- Add whats new for 0.17.0
+- Make usage of TestSuite elements more visible
+- Add quality goals
+
+### New Features
+
+- Make bus error warnings switchable for pcan
+- Set up badges
+- Multiple yaml in CLI
+- Rework pcan trace configuration in connector
+- Add pykiso to pytest tool ([#62](https://github.com/orhun/git-cliff/issues/62))
+- Make the proxy agnostic of transitioning messages
+- Create base class for test ([#61](https://github.com/orhun/git-cliff/issues/61))
+- Make release 0.18.0 ([#72](https://github.com/orhun/git-cliff/issues/72))
+
+## Version 0.17.0 (2022-05-04)
+
+### Bug Fixes
+
+- Qsize() not available for macos x
+- Pytest config and flake8 excludes
+- Remove --dev option (default for poetry)
+- Restrict markupsafe versions and cleanup docs
+- Use coverage coonfig from pyproject.toml
+- Point to pykiso-python-uds-alpha for PYPI
+
+### Documentation
+
+- Remove not maintained 'list of limitations' section
+- Add section whats new ([#38](https://github.com/orhun/git-cliff/issues/38))
+- Replace all occurences of pipenv with poetry
+- Rework getting_started
+
+### New Features
+
+- Update to new release 0.17.0
+
+### Refactorings
+
+- [**breaking**] Change variant decorator
+- [**breaking**] Change variant decorator
+- Replace all setuptools-based files with poetry
+
+### Testing
+
+- Add missing unittests
+
+### Bugfix
+
+- Remove warning in unittests
+- Remove warning in unittests
+
+### Ci
+
+- Update pipeline with poetry
+- Skip poetry install
+- Add poetry installation
+
+## Version 0.16.0 (2022-03-22)
+
+### Bug Fixes
+
+- Wait for logger thread to quit gracefully before closing segger channel ([#28](https://github.com/orhun/git-cliff/issues/28))
+
+### Documentation
+
+- Change auto changelog tool ([#30](https://github.com/orhun/git-cliff/issues/30))
+
+### New Features
+
+- Add uptime for pcan inside python-can
+- Expose yaml and cli configuration to user test cases/suites
+- Add uptime for pcan inside python-can
+- [**breaking**] Restore yaml loader in config parser ([#31](https://github.com/orhun/git-cliff/issues/31))
+- Raise an exception when auxiliary failed at instance creation ([#33](https://github.com/orhun/git-cliff/issues/33))
+- Update to new release 0.16.0 ([#34](https://github.com/orhun/git-cliff/issues/34))
+
 ### Ci
 
 - Github-action for codecov ([#27](https://github.com/orhun/git-cliff/issues/27))
 - Add skip lock for pipenv to prevent hangup
 - Add skip lock for pipenv to prevent hangup
-- Update pipeline with poetry
-- Skip poetry install
-- Add poetry installation
-- Replace auto-changelog
+
+## Version 0.15.1 (2022-02-17)
+
+### Documentation
+
+- Add links for how to create an auxiliary and connector ([#17](https://github.com/orhun/git-cliff/issues/17))
+
+### Testing
+
+- Make test reliable ([#18](https://github.com/orhun/git-cliff/issues/18))
+
+## Version 0.15.0 (2022-02-11)
+
+### Documentation
+
+- Restructure docs ([#14](https://github.com/orhun/git-cliff/issues/14))
+- Autogen changelog ([#15](https://github.com/orhun/git-cliff/issues/15))
+
+### New Features
+
+- Update to new release 0.15 ([#13](https://github.com/orhun/git-cliff/issues/13))
 
 ## Version 0.15.0 (in addition)
 
