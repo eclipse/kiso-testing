@@ -197,10 +197,6 @@ def enable_step_report(all_tests_to_run: unittest.suite.TestSuite) -> None:
 
     :param all_tests_to_run: a dict containing all testsuites and testcases
     """
-    if sys.version_info.minor >= 8:
-        log.warning(
-            "Variable names may be missing in the step report when using multiline assert statements on Python >=3.8"
-        )
 
     # Step report header fed during test
     base_suite = test_suite.flatten(all_tests_to_run)
