@@ -10,13 +10,18 @@
 import unittest
 from collections import namedtuple
 
+import pykiso
 from pykiso.test_result import xml_result
 
-MockTestResult = namedtuple("TestMethod", "test_ids")
+
+class MockTestResult:
+    def __init__(self, ids, doc) -> None:
+        self.test_ids = ids
+        self._testMethodDoc = doc
 
 
 def test_TestInfo_custom_constructor(mocker):
-    test_method = MockTestResult(test_ids={"Component1": ["Req"]})
+    test_method = MockTestResult(ids={"Component1": ["Req"]}, doc="DOCS")
     mock_test_info = mocker.patch.object(
         xml_result.xmlrunner.result._TestInfo, "__init__"
     )
@@ -43,11 +48,15 @@ def test_TestInfo_custom_constructor(mocker):
         "doc",
     )
     assert custom_xml.test_ids == '{"Component1": ["Req"]}'
+    assert custom_xml._testMethodDoc == "DOCS"
 
 
 def test_CustomXmlResult_constructor(mocker):
-    mock_test_result = mocker.patch.object(
+    mock_xml_test_result = mocker.patch.object(
         xml_result.xmlrunner.runner._XMLTestResult, "__init__"
+    )
+    mock_banner_test_result = mocker.patch.object(
+        pykiso.test_result.text_result.BannerTestResult, "__init__"
     )
 
     xml_result.XmlTestResult(
@@ -59,13 +68,18 @@ def test_CustomXmlResult_constructor(mocker):
         "infoclass",
     )
 
-    mock_test_result.assert_called_once_with(
+    mock_xml_test_result.assert_called_once_with(
         stream="stream",
         descriptions="descriptions",
         verbosity="verbosity",
         elapsed_times="elapsed_times",
         properties="properties",
         infoclass="infoclass",
+    )
+    mock_banner_test_result.assert_called_once_with(
+        stream="stream",
+        descriptions="descriptions",
+        verbosity="verbosity",
     )
 
 

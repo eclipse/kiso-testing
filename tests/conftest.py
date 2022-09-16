@@ -22,7 +22,11 @@ from pykiso.lib.auxiliaries import dut_auxiliary
 from pykiso.lib.connectors import cc_example
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
-from pykiso.logging_initializer import LogOptions, add_logging_level
+from pykiso.logging_initializer import (
+    LogOptions,
+    add_logging_level,
+    get_logging_options,
+)
 from pykiso.test_coordinator import test_case
 from pykiso.test_coordinator.test_case import define_test_parameters
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
@@ -320,11 +324,19 @@ TestResult.__test__ = False
 
 
 @pytest.fixture(scope="function")
-def tmp_test(request, tmp_path):
+def tmp_test(request, tmp_path, mocker):
     # use a common tmp_path for all test modules
     tmp_base = tmp_path.parent / "tests"
 
     log_options = LogOptions(None, "ERROR", None, False)
+    mocker.patch(
+        "pykiso.test_coordinator.test_case.get_logging_options",
+        return_value=log_options,
+    )
+    mocker.patch(
+        "pykiso.test_coordinator.test_execution.get_logging_options",
+        return_value=log_options,
+    )
 
     aux1, aux2, should_fail = request.param
     ts_folder = tmp_base / f"test_suite_{aux1}_{aux2}"

@@ -71,11 +71,12 @@ class TestInfo(xmlrunner.result._TestInfo):
         super().__init__(
             test_result, test_case, outcome, err, subTest, filename, lineno, doc
         )
-        # add attribute that will be used to format the errors
-        self._testMethodDoc = test_case._testMethodDoc
         # handle class setup error
         if isinstance(test_case, unittest.suite._ErrorHolder):
+            test_case._testMethodDoc = ""
             test_case.test_ids = {}
+        # add attribute that will be used to format the errors
+        self._testMethodDoc = test_case._testMethodDoc
         # store extra tag
         self.test_ids = json.dumps(test_case.test_ids)
 
@@ -136,9 +137,6 @@ class XmlTestResult(BannerTestResult, xmlrunner.runner._XMLTestResult):
         :param test: current succeeded TestCase.
         """
         return xmlrunner.runner._XMLTestResult.addSuccess(self, test)
-
-    def printErrorList(self, flavour, errors):
-        return super().printErrorList(flavour, errors)
 
     # save the original staticmethod that will be overwritten
     report_testcase = copy.deepcopy(xmlrunner.runner._XMLTestResult._report_testcase)

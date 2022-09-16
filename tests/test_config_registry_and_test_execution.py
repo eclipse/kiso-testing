@@ -38,8 +38,8 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
     assert "FAIL" not in output.err
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
-    assert "->  Passed" in output.err
-    assert "->  Failed" not in output.err
+    assert "->  PASSED" in output.err
+    assert "->  FAILED" not in output.err
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -229,8 +229,8 @@ def test_config_registry_and_test_execution_with_text_reporting(tmp_test, capsys
     assert "FAIL" not in output.err
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
-    assert "->  Passed" in output.err
-    assert "->  Failed" not in output.err
+    assert "->  PASSED" in output.err
+    assert "->  FAILED" not in output.err
 
 
 @pytest.mark.parametrize("tmp_test", [("fail_aux1", "fail_aux2", True)], indirect=True)
@@ -252,7 +252,7 @@ def test_config_registry_and_test_execution_fail(tmp_test, capsys):
     assert "FAIL" in output.err
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
-    assert "->  Failed" in output.err
+    assert "->  FAILED" in output.err
 
 
 @pytest.mark.parametrize(
@@ -275,9 +275,9 @@ def test_config_registry_and_test_execution_with_junit_reporting(tmp_test, capsy
 
     output = capsys.readouterr()
     assert "FAIL" not in output.err
-    assert "RUNNING TEST: " not in output.err
-    assert "END OF TEST: " not in output.err
-    assert "Passed" not in output.err
+    assert "RUNNING TEST: " in output.err
+    assert "END OF TEST: " in output.err
+    assert "PASSED" in output.err
 
 
 def test_config_registry_and_test_execution_failure_and_error_handling():
@@ -513,5 +513,5 @@ def test_config_registry_and_test_execution_with_step_report(tmp_test, capsys):
     output = capsys.readouterr()
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
-    assert "->  Passed" in output.err
+    assert "->  PASSED" in output.err
     assert pathlib.Path("step_report.html").is_file()
