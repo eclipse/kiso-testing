@@ -26,6 +26,7 @@ Create a Step report
 """
 import functools
 import inspect
+import linecache
 import logging
 import re
 import sys
@@ -92,7 +93,7 @@ def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
     expected_varname = ""
     # Get source code lines
     file = inspect.getsourcefile(f_back)
-    lines = inspect.linecache.getlines(file)
+    lines = linecache.getlines(file)
 
     # Get current line number
     line_no = f_back.f_lineno
