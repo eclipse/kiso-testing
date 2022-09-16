@@ -1,3 +1,5 @@
+.. _step_test:
+
 System-test (step) report
 =========================
 

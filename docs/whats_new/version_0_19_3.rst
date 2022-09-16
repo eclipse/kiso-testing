@@ -1,16 +1,13 @@
-Version 0.19.0
+Version 0.19.3
 --------------
 
-Tool for test suites tags analysis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-See :ref:`show_tag`
 
 Double Threaded Auxiliary Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Implement a brand new interface using two threads, one for the transmission
 and one for the reception.
 
-Currently adapted modules:
+Adapted modules for this release:
 - Proxy Auxiliary
 - CCProxy channel
 - Communication Auxiliary
@@ -23,21 +20,63 @@ Currently adapted modules:
 
 There is not API changes, therefor, as user, your tests should not be affected.
 
+
+Kiso log levels
+^^^^^^^^^^^^^^^
+To let users decide the level of information they want to see in their logs, new log levels
+have been defined. When launched normally only the logs in the tests and the errors will be
+active.
+The option -v (--verbose) should be used to display the internal logs of the framework.
+
+See :ref:`run_the_tests`
+
+
+Filter for Test cases
+^^^^^^^^^^^^^^^^^^^^^
+It is now possible to select test classes or even test cases with a unix filename
+pattern.
+This pattern can be passed with the -p flag or inside the yaml file.
+
+For more info see
+:ref:`test_case_patterns`
+
+
+Agnostic tag call
+^^^^^^^^^^^^^^^^^
+Instead of having only the 2 tags "variant" and "branch_level" to select tests, users
+can now set any tagname.
+
+See: :ref:`define_test_information` for more details.
+
+
+Step report (better reports for system-tester)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+It tracks each assertion containing a message to create a comprehensive test-report.
+
+See: :ref:`step_test` for more details.
+
+
 Agnostic CCSocketCan
 ^^^^^^^^^^^^^^^^^^^^
 Incompatibilities with the agnostic proxy are now resolved. You should be able to use it again.
+
 
 Tester Present Sender
 ^^^^^^^^^^^^^^^^^^^^^
 Add a context manager, tester present sender, that send cyclic tester present
 frames to keep UDS session alive more than 5 seconds
 
+It can also be started and stopped by using the following methods:
+ `start_tester_present_sender()` and `stop_tester_present_sender()`.
+
+See :ref:`start_stop_tester_present_sender`
 See :ref:`uds_auxiliary`
+
 
 RTT connector log folder creation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 RTT connector now creates a log folder if it does not exist instead of throwing an error.
+
 
 Communication Auxiliary
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -51,25 +90,6 @@ The collected messages by the Communication auxiliary can still be cleared with 
 
 See :ref:`communication_auxiliary`
 
-DUT Auxiliary adaption
-^^^^^^^^^^^^^^^^^^^^^^
-refactor/redesign of the device under test auxiliary to fit with the brand new double
-threaded auxiliary interface
-
-Record Auxiliary adaption
-^^^^^^^^^^^^^^^^^^^^^^^^^
-adapt the record auxiliary to fit with the brand new double threaded auxiliary interface
-
-Acroname Auxiliary adaption
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-adapt the acroname auxiliary to fit with the brand new double threaded auxiliary interface
-
-Agnostic tag call
-^^^^^^^^^^^^^^^^^
-Instead of having only the 2 tags "variant" and "branch_level" to select tests, users
-can now set any tagname.
-
-See: :ref:`define_test_information` for more details.
 
 Configurable waiting for send_uds_raw
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,6 +98,7 @@ the parameter tpWaitTime from kiso-testing-python-uds for uds auxilary send_uds_
 method
 
 See :ref:`uds_auxiliary`
+
 
 Lightweight UDS auxiliary configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -91,11 +112,12 @@ a default configuration is applied.
 
 See :ref:`uds_auxiliary`
 
-Kiso log levels
-^^^^^^^^^^^^^^^
-To let users decide the level of information they want to see in their logs, new log levels
-have been defined. When launched normally only the logs in the tests and the errors will be
-active.
-The option -v (--verbose) should be used to display the internal logs of the framework.
 
-See :ref:`run_the_tests`
+New serial connector
+^^^^^^^^^^^^^^^^^^^^
+Added cc_serial for serial communication.
+
+
+Tool for test suites tags analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+See :ref:`show_tag`
