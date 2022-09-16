@@ -93,47 +93,45 @@ def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
     expected_varname = ""
     # Get source code lines
     file = inspect.getsourcefile(f_back)
-    lines = linecache.getlines(file)
 
     # Get current line number
     line_no = f_back.f_lineno
 
-    # The inspect module returns the first line in python >=3.8 and the last line in python 3.7
+    # For multiline statements, the current frame points to the last line in python < 3.8
+    # and to the first line in python >= 3.8
     first_line = sys.version_info >= (3, 8)
 
     # Get line content
-    line = ""
-    if first_line:  # pragma: no cover
-        # Read top down in python >=3.8, count parantheses to find last line of assert statement
-        line_no -= 1
-        parentheses = 0
-        while True:
-            next = lines[line_no]
-            open = len(list(filter(lambda x: x == "(", next)))
-            close = len(list(filter(lambda x: x == ")", next)))
-            parentheses += open - close
-            line = line + next
-            line_no += 1
-            if parentheses == 0:
-                break
-    else:
-        # Read bottom up in python 3.7
-        while assert_name not in line:
-            # line_no start from 1 but list from 0
-            line_no -= 1
-            line = lines[line_no] + line
+    line = linecache.getline(file, line_no)
+    lines = line
 
-    # remove line break and spaces
-    line = line.replace("\n", "")
-    line = line.replace(" ", "")
+    if first_line:  # pragma: no cover
+        # Read top down, count parentheses to find last line of assert statement
+        open_parentheses, closed_parentheses = line.count("("), line.count(")")
+        while open_parentheses != closed_parentheses:
+            line_no += 1
+            line = linecache.getline(file, line_no)
+            lines += line
+            open_parentheses += line.count("(")
+            closed_parentheses += line.count(")")
+    else:
+        # Read bottom up until the assert method is reached
+        while assert_name not in line:
+            line_no -= 1
+            previous_line = linecache.getline(file, line_no)
+            lines = previous_line + line
+            line = previous_line
+
+    # remove line breaks and spaces
+    lines = lines.replace("\n", "").replace(" ", "")
 
     # remove current assert function name
-    line = re.split(rf".*{assert_name}\(", line)[1]
+    lines = re.split(rf".*{assert_name}\(", lines)[1]
 
     # Check the variable start names
-    if re.findall(r"^[a-zA-Z]", line):
+    if re.findall(r"^[a-zA-Z]", lines):
         # Get variable name
-        expected_varname = re.findall(r"[a-zA-Z0-9_]+", line)[0]
+        expected_varname = re.findall(r"[a-zA-Z0-9_]+", lines)[0]
 
     return expected_varname
 
