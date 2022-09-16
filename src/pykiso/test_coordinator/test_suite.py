@@ -33,8 +33,7 @@ from ..interfaces.thread_auxiliary import AuxiliaryInterface
 from .test_message_handler import test_app_interaction
 
 if TYPE_CHECKING:
-    from unittest.result import TestResult
-
+    from ..test_result.text_result import BannerTestResult
     from .test_case import BasicTest
 
 __all__ = [
@@ -90,6 +89,7 @@ class BaseTestSuite(unittest.TestCase):
         self.test_case_id = test_case_id
         self.test_ids = test_ids
         self.tag = tag
+        self.start_time = self.stop_time = self.elapsed_time = 0
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str):
         """Cleanup auxiliary and log reasons.
@@ -373,7 +373,9 @@ class BasicTestSuite(unittest.TestSuite):
 
         self.failed_suite_setups = set()
 
-    def check_suite_setup_failed(self, test: BasicTest, result: TestResult) -> None:
+    def check_suite_setup_failed(
+        self, test: BasicTest, result: BannerTestResult
+    ) -> None:
         """Check if the suite setup has failed and store failed suite id.
         Search in the global unittest result object, which save all the results
         of the tests performed up to that point, for a BasicTestSuiteSetup tests
@@ -387,7 +389,7 @@ class BasicTestSuite(unittest.TestSuite):
                 if isinstance(suite_type, BasicTestSuiteSetup):
                     self.failed_suite_setups.add(test.test_suite_id)
 
-    def run(self, result: TestResult, debug: bool = False) -> TestResult:
+    def run(self, result: BannerTestResult, debug: bool = False) -> BannerTestResult:
         """Override run method from unittest.suite.TestSuite.
         Added functionality:
         Skip suite tests if the parent test suite setup has failed.

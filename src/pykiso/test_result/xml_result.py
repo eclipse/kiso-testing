@@ -17,8 +17,8 @@ XML test result for JUnit support
     into the xml report.
 
 .. currentmodule:: xml_result
-
 """
+
 from __future__ import annotations
 
 import copy
@@ -37,6 +37,8 @@ if TYPE_CHECKING:
 import xmlrunner.result
 import xmlrunner.runner
 
+from .text_result import BannerTestResult
+
 
 class TestInfo(xmlrunner.result._TestInfo):
     """This class keeps useful information about the execution of a test method.
@@ -46,7 +48,7 @@ class TestInfo(xmlrunner.result._TestInfo):
     def __init__(
         self,
         test_result: xmlrunner.runner._XMLTestResult,
-        test_method: BasicTest,
+        test_case: BasicTest,
         outcome: int = 0,
         err: Optional[Tuple[Type[BaseException], BaseException, TracebackType]] = None,
         subTest: TestCase = None,
@@ -67,17 +69,29 @@ class TestInfo(xmlrunner.result._TestInfo):
         :param doc: additional documentation to store
         """
         super().__init__(
-            test_result, test_method, outcome, err, subTest, filename, lineno, doc
+            test_result, test_case, outcome, err, subTest, filename, lineno, doc
         )
-        if isinstance(test_method, unittest.suite._ErrorHolder):
-            test_method.test_ids = {}
+        # add attribute that will be used to format the errors
+        self._testMethodDoc = test_case._testMethodDoc
+        # handle class setup error
+        if isinstance(test_case, unittest.suite._ErrorHolder):
+            test_case.test_ids = {}
         # store extra tag
-        self.test_ids = json.dumps(test_method.test_ids)
+        self.test_ids = json.dumps(test_case.test_ids)
+
+    def __repr__(self) -> str:
+        """Return the same representation as the one of unittest.TestCase.
+
+        :return: the wrapped test case's representation.
+        """
+        module, test_case, test_method = self.test_id.split(".")
+        return f"{test_method} ({module}.{test_case})"
 
 
-class XmlTestResult(xmlrunner.runner._XMLTestResult):
-    """Test result class that can express test results in a XML report.
-    Used by XMLTestRunner
+class XmlTestResult(BannerTestResult, xmlrunner.runner._XMLTestResult):
+    """
+    Test result class that can express test results in a XML report.
+    Used by XMLTestRunner.
     """
 
     def __init__(
@@ -89,7 +103,7 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         properties: Optional[Dict[str, Any]] = None,
         infoclass: xmlrunner.result._TestInfo = TestInfo,
     ):
-        """Initialize the _XMLTestResult class.
+        """Initialize both base classes with the appropriate parameters.
 
         :param stream: buffered text interface to a buffered raw stream
         :param descriptions: include description of the test
@@ -98,7 +112,14 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         :param properties: junit testsuite properties
         :param infoclass: class containing the test information
         """
-        super().__init__(
+        BannerTestResult.__init__(
+            self,
+            stream=stream,
+            descriptions=descriptions,
+            verbosity=verbosity,
+        )
+        xmlrunner.runner._XMLTestResult.__init__(
+            self,
             stream=stream,
             descriptions=descriptions,
             verbosity=verbosity,
@@ -107,7 +128,19 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
             infoclass=infoclass,
         )
 
-    # save the original method that will be overwritten
+    def addSuccess(self, test: TestCase) -> None:
+        """Calls only _XMLTestResult's addSuccess as BannerTestResult's
+        appends TestCase instances to the successes list, but _XMLTestResult
+        wraps them in TestInfo instances with additional attributes.
+
+        :param test: current succeeded TestCase.
+        """
+        return xmlrunner.runner._XMLTestResult.addSuccess(self, test)
+
+    def printErrorList(self, flavour, errors):
+        return super().printErrorList(flavour, errors)
+
+    # save the original staticmethod that will be overwritten
     report_testcase = copy.deepcopy(xmlrunner.runner._XMLTestResult._report_testcase)
 
     @staticmethod
@@ -126,5 +159,5 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         # here can be added additional tags that have to be stored into the xml test report
         xml_testsuite.setAttribute("test_ids", str(test_result.test_ids))
 
-    # Catch and redefine xmlrunner.runner._XMLTestResult._report_testcase
+    # Overwrite the original staticmethod xmlrunner.runner._XMLTestResult._report_testcase with ours
     xmlrunner.runner._XMLTestResult._report_testcase = _report_testcase

@@ -335,7 +335,10 @@ def execute(
         else:
             with ResultStream(log_file_path) as stream:
                 test_runner = unittest.TextTestRunner(
-                    stream=stream, resultclass=BannerTestResult, failfast=failfast
+                    stream=stream,
+                    resultclass=BannerTestResult,
+                    failfast=failfast,
+                    verbosity=0,
                 )
                 result = test_runner.run(all_tests_to_run)
 
