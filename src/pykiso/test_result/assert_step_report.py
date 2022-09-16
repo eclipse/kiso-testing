@@ -31,16 +31,17 @@ import re
 import types
 import typing
 import unittest
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Union
+from unittest.case import TestCase
 
 import jinja2
 
-from pykiso.test_coordinator.test_result import BannerTestResult, TestCase
-from pykiso.test_coordinator.test_xml_result import TestInfo, XmlTestResult
+from .text_result import BannerTestResult
+from .xml_result import TestInfo, XmlTestResult
 
 log = logging.getLogger(__name__)
 
@@ -55,8 +56,7 @@ _FUNCTION_TO_APPLY = r"|".join(["test", "run", "setup", "teardown"])
 
 # Jinja template location
 SCRIPT_PATH = str(Path(__file__).resolve().parent)
-
-REPORT_TEMPLATE = "report_template.html.j2"
+REPORT_TEMPLATE = "templates/report_template.html.j2"
 
 
 @dataclass

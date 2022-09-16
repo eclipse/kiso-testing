@@ -10,7 +10,7 @@
 import unittest
 from collections import namedtuple
 
-from pykiso.test_coordinator import test_xml_result
+from pykiso.test_result import xml_result
 
 MockTestResult = namedtuple("TestMethod", "test_ids")
 
@@ -18,10 +18,10 @@ MockTestResult = namedtuple("TestMethod", "test_ids")
 def test_TestInfo_custom_constructor(mocker):
     test_method = MockTestResult(test_ids={"Component1": ["Req"]})
     mock_test_info = mocker.patch.object(
-        test_xml_result.xmlrunner.result._TestInfo, "__init__"
+        xml_result.xmlrunner.result._TestInfo, "__init__"
     )
 
-    custom_xml = test_xml_result.TestInfo(
+    custom_xml = xml_result.TestInfo(
         "test_result",
         test_method,
         "outcome",
@@ -47,10 +47,10 @@ def test_TestInfo_custom_constructor(mocker):
 
 def test_CustomXmlResult_constructor(mocker):
     mock_test_result = mocker.patch.object(
-        test_xml_result.xmlrunner.runner._XMLTestResult, "__init__"
+        xml_result.xmlrunner.runner._XMLTestResult, "__init__"
     )
 
-    test_xml_result.XmlTestResult(
+    xml_result.XmlTestResult(
         "stream",
         "descriptions",
         "verbosity",
@@ -71,10 +71,10 @@ def test_CustomXmlResult_constructor(mocker):
 
 def test_CustomXmlResult_constructor_ErrorHolder(mocker):
     mock_test_info = mocker.patch.object(
-        test_xml_result.xmlrunner.result._TestInfo, "__init__"
+        xml_result.xmlrunner.result._TestInfo, "__init__"
     )
     test_method = unittest.suite._ErrorHolder("description")
-    custom_xml = test_xml_result.TestInfo(
+    custom_xml = xml_result.TestInfo(
         "test_result",
         test_method,
         "outcome",
@@ -99,10 +99,10 @@ def test_CustomXmlResult_constructor_ErrorHolder(mocker):
 
 
 def test_report_testcase(mocker):
-    mocker.patch.object(test_xml_result.xmlrunner.runner._XMLTestResult, "__init__")
-    mocker.patch.object(test_xml_result.XmlTestResult, "report_testcase")
+    mocker.patch.object(xml_result.xmlrunner.runner._XMLTestResult, "__init__")
+    mocker.patch.object(xml_result.XmlTestResult, "report_testcase")
 
-    custom_xml_result = test_xml_result.XmlTestResult(
+    custom_xml_result = xml_result.XmlTestResult(
         "stream",
         "descriptions",
         "verbosity",

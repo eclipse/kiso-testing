@@ -6,9 +6,9 @@ from unittest import TestCase, mock
 import jinja2
 import pytest
 
-import pykiso.test_coordinator.assert_step_report as assert_step_report
-from pykiso.test_coordinator.test_result import BannerTestResult, TestCase
-from pykiso.test_coordinator.test_xml_result import TestInfo, XmlTestResult
+import pykiso.test_result.assert_step_report as assert_step_report
+from pykiso.test_result.text_result import BannerTestResult, TestCase
+from pykiso.test_result.xml_result import TestInfo, XmlTestResult
 
 
 @pytest.fixture
@@ -54,9 +54,7 @@ def test_result():
 
 
 def test_assert_step_report_single_input(mocker, test_case):
-    step_result = mocker.patch(
-        "pykiso.test_coordinator.assert_step_report.assert_step_report._add_step"
-    )
+    step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
     data_to_test = True
     test_case.assertTrue(data_to_test)
@@ -72,9 +70,7 @@ def test_assert_step_report_single_input(mocker, test_case):
 
 
 def test_assert_step_report_no_var_name_test(mocker, test_case):
-    step_result = mocker.patch(
-        "pykiso.test_coordinator.assert_step_report.assert_step_report._add_step"
-    )
+    step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
     test_case.assertTrue(True)
 
@@ -84,9 +80,7 @@ def test_assert_step_report_no_var_name_test(mocker, test_case):
 
 
 def test_assert_step_report_message(mocker, test_case):
-    step_result = mocker.patch(
-        "pykiso.test_coordinator.assert_step_report.assert_step_report._add_step"
-    )
+    step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
     data_to_test = True
     test_case.assertTrue(data_to_test, "message")
@@ -102,9 +96,7 @@ def test_assert_step_report_message(mocker, test_case):
 
 
 def test_assert_step_report_multi_input(mocker, test_case):
-    step_result = mocker.patch(
-        "pykiso.test_coordinator.assert_step_report.assert_step_report._add_step"
-    )
+    step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
     data_to_test = 4.5
     data_expected = 4.5
@@ -123,22 +115,14 @@ def test_assert_step_report_multi_input(mocker, test_case):
 
 
 def test_assert_step_report_generate(mocker, test_result):
-    assert_step_report.assert_step_report.ALL_STEP_REPORT = OrderedDict()
-    assert_step_report.assert_step_report.ALL_STEP_REPORT[
-        "TestClassName"
-    ] = OrderedDict()
-    assert_step_report.assert_step_report.ALL_STEP_REPORT["TestClassName"][
-        "time_result"
-    ] = OrderedDict()
-    assert_step_report.assert_step_report.ALL_STEP_REPORT["TestClassName"][
-        "time_result"
-    ]["Start Time"] = 1
-    assert_step_report.assert_step_report.ALL_STEP_REPORT["TestClassName"][
-        "time_result"
-    ]["End Time"] = 2
-    assert_step_report.assert_step_report.ALL_STEP_REPORT["TestClassName"][
-        "time_result"
-    ]["Elapsed Time"] = 1
+    assert_step_report.ALL_STEP_REPORT = OrderedDict()
+    assert_step_report.ALL_STEP_REPORT["TestClassName"] = OrderedDict()
+    assert_step_report.ALL_STEP_REPORT["TestClassName"]["time_result"] = OrderedDict()
+    assert_step_report.ALL_STEP_REPORT["TestClassName"]["time_result"]["Start Time"] = 1
+    assert_step_report.ALL_STEP_REPORT["TestClassName"]["time_result"]["End Time"] = 2
+    assert_step_report.ALL_STEP_REPORT["TestClassName"]["time_result"][
+        "Elapsed Time"
+    ] = 1
 
     jinja2.FileSystemLoader = mock_loader = mock.MagicMock()
     jinja2.Environment = mock_environment = mock.MagicMock()
@@ -153,15 +137,13 @@ def test_assert_step_report_generate(mocker, test_result):
 
 def test_assert_step_report_add_step(mocker):
 
-    assert_step_report.assert_step_report.ALL_STEP_REPORT["TestCase"] = OrderedDict()
-    assert_step_report.assert_step_report.ALL_STEP_REPORT["TestCase"][
-        "test_list"
-    ] = OrderedDict()
-    steplist = assert_step_report.assert_step_report.ALL_STEP_REPORT["TestCase"][
-        "test_list"
-    ]["test_assert_step_report_multi_input"] = []
+    assert_step_report.ALL_STEP_REPORT["TestCase"] = OrderedDict()
+    assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"] = OrderedDict()
+    steplist = assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
+        "test_assert_step_report_multi_input"
+    ] = []
 
-    assert_step_report.assert_step_report._add_step(
+    assert_step_report._add_step(
         "TestCase",
         "test_assert_step_report_multi_input",
         "Test the step report",

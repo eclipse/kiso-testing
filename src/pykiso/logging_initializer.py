@@ -33,7 +33,7 @@ LogOptions = collections.namedtuple(
     "log_path log_level report_type verbose",
 )
 # use to store the selected logging options
-log_options: Optional[NamedTuple] = None
+log_options: Optional[LogOptions] = None
 
 
 def get_logging_options() -> LogOptions:
@@ -95,7 +95,7 @@ def initialize_logging(
                 logging.INTERNAL_DEBUG,
             )
 
-    # if log_path is given create use a logging file handler
+    # if log_path is given create a file handler
     if log_path is not None:
         log_path = Path(log_path)
         if log_path.is_dir():
@@ -105,32 +105,32 @@ def initialize_logging(
         file_handler.setFormatter(log_format)
         file_handler.setLevel(levels[log_level])
         root_logger.addHandler(file_handler)
-    # if log_path is not given and report type is not junit just
-    # instanciate a logging StreamHandler
-    if log_path is None and report_type != "junit":
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(log_format)
-        stream_handler.setLevel(levels[log_level])
-        if not verbose:
-            # filter internal log levels
-            stream_handler.addFilter(InternalLogsFilter())
-        root_logger.addHandler(stream_handler)
+
     # if report_type is junit use sys.stdout as stream
     if report_type == "junit":
-        # flush all StreamHandler
+        stream = sys.stdout
+        # flush all StreamHandlers
         for handler in root_logger.handlers:
             if isinstance(handler, logging.StreamHandler):
                 handler.flush()
-        # but keep FileHandler
+        # and remove them from the handlers (keep FileHandlers only)
         root_logger.handlers = [
             handler
             for handler in root_logger.handlers
             if isinstance(handler, logging.FileHandler)
         ]
-        stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setFormatter(log_format)
-        stream_handler.setLevel(levels[log_level])
-        root_logger.addHandler(stream_handler)
+    # report type is not junit just instanciate a StreamHandler that prints to stderr
+    else:
+        stream = sys.stderr
+
+    # for all report types add a StreamHandler
+    stream_handler = logging.StreamHandler(stream)
+    stream_handler.setFormatter(log_format)
+    stream_handler.setLevel(levels[log_level])
+    if not verbose:
+        # filter internal log levels
+        stream_handler.addFilter(InternalLogsFilter())
+    root_logger.addHandler(stream_handler)
 
     root_logger.setLevel(levels[log_level])
 
