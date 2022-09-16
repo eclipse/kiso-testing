@@ -98,22 +98,22 @@ def _get_variable_name(f_back: types.FrameType, assert_name: str) -> str:
     line_no = f_back.f_lineno
 
     # The inspect module returns the first line in python >=3.8 and the last line in python 3.7
-    first_line = sys.version_info.major > 3 or sys.version_info.minor >= 8
+    first_line = sys.version_info >= (3, 8)
 
     # Get line content
     line = ""
     if first_line:  # pragma: no cover
         # Read top down in python >=3.8, count parantheses to find last line of assert statement
         line_no -= 1
-        parantheses = 0
+        parentheses = 0
         while True:
             next = lines[line_no]
             open = len(list(filter(lambda x: x == "(", next)))
             close = len(list(filter(lambda x: x == ")", next)))
-            parantheses += open - close
+            parentheses += open - close
             line = line + next
             line_no += 1
-            if parantheses == 0:
+            if parentheses == 0:
                 break
     else:
         # Read bottom up in python 3.7
