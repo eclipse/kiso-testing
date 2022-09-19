@@ -77,36 +77,6 @@ def test_config_registry_and_test_execution_with_user_tags(tmp_test, mocker):
     ConfigRegistry.delete_aux_con()
 
 
-@pytest.mark.parametrize(
-    "tmp_test",
-    [("collector_error_aux1", "collector_error_aux_2", False)],
-    indirect=True,
-)
-def test_config_registry_test_collection_error(tmp_test, capsys, mocker, caplog):
-    """Call execute function from test_execution using
-    configuration data coming from parse_config method
-    by specifying a pattern
-
-    Validation criteria:
-        -  run is executed without error
-    """
-    mocker.patch(
-        "pykiso.test_coordinator.test_suite.tc_sort_key", side_effect=Exception
-    )
-
-    cfg = parse_config(tmp_test)
-    ConfigRegistry.register_aux_con(cfg)
-
-    with pytest.raises(pykiso.TestCollectionError):
-        test_execution.collect_test_suites(cfg["test_suite_list"])
-
-    ConfigRegistry.delete_aux_con()
-
-    output = capsys.readouterr()
-    assert "FAIL" not in output.err
-    assert "Ran 0 tests" not in output.err
-
-
 def test_parse_test_selection_pattern():
     test_file_pattern = ()
     test_file_pattern = test_execution.parse_test_selection_pattern("first::")
@@ -163,7 +133,7 @@ def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mock
     [("collector_error_2_aux1", "collector_error_2_aux", False)],
     indirect=True,
 )
-def test_config_registry_and_test_execution_collect_error(mocker, caplog, tmp_test):
+def test_config_registry_and_test_execution_collect_error_log(mocker, caplog, tmp_test):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     by specifying a pattern
@@ -233,7 +203,12 @@ def test_config_registry_and_test_execution_with_text_reporting(tmp_test, capsys
     assert "->  FAILED" not in output.err
 
 
-@pytest.mark.parametrize("tmp_test", [("fail_aux1", "fail_aux2", True)], indirect=True)
+@pytest.mark.parametrize(
+    "tmp_test",
+    [("fail_aux1", "fail_aux2", True), ("err_aux1", "err_aux2", None)],
+    ids=["test failed", "error occurred"],
+    indirect=True,
+)
 def test_config_registry_and_test_execution_fail(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and

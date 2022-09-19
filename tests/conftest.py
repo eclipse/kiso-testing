@@ -393,7 +393,13 @@ test_suite_list:
 
 
 def create_test_case(aux1, aux2, should_fail):
-    error = "assert False" if should_fail else "pass"
+    if should_fail is True:
+        error = "assert False"
+    elif should_fail is False:
+        error = "pass"
+    elif should_fail is None:
+        error = "raise Exception"
+
     tc = (
         """
 import pykiso
