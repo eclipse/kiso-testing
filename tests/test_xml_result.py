@@ -8,20 +8,19 @@
 ##########################################################################
 
 import unittest
-from collections import namedtuple
 
 import pykiso
 from pykiso.test_result import xml_result
 
 
 class MockTestResult:
-    def __init__(self, ids, doc) -> None:
-        self.test_ids = ids
+    def __init__(self, test_ids, doc="") -> None:
+        self.test_ids = test_ids
         self._testMethodDoc = doc
 
 
 def test_TestInfo_custom_constructor(mocker):
-    test_method = MockTestResult(ids={"Component1": ["Req"]}, doc="DOCS")
+    test_method = MockTestResult(test_ids={"Component1": ["Req"]}, doc="DOCS")
     mock_test_info = mocker.patch.object(
         xml_result.xmlrunner.result._TestInfo, "__init__"
     )
@@ -68,7 +67,10 @@ def test_CustomXmlResult_constructor(mocker):
         "infoclass",
     )
 
-    mock_xml_test_result.assert_called_once_with(
+    mock_xml_test_result.assert_called_once()
+    # verify passed kwargs in the first and only call
+    # assert_called_once_with doesn't fit here as it expects self as first argument
+    assert mock_xml_test_result.call_args_list[0][1] == dict(
         stream="stream",
         descriptions="descriptions",
         verbosity="verbosity",
@@ -76,7 +78,9 @@ def test_CustomXmlResult_constructor(mocker):
         properties="properties",
         infoclass="infoclass",
     )
-    mock_banner_test_result.assert_called_once_with(
+
+    mock_banner_test_result.assert_called_once()
+    assert mock_banner_test_result.call_args_list[0][1] == dict(
         stream="stream",
         descriptions="descriptions",
         verbosity="verbosity",
