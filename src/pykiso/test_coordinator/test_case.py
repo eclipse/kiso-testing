@@ -51,8 +51,8 @@ class BasicTest(unittest.TestCase):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: Any,
-        kwargs: Any,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize generic test-case.
 
@@ -67,7 +67,8 @@ class BasicTest(unittest.TestCase):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
-        :param tag: dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
+        :param tag: dictionary allowing users to filter the tests based
+            on the keys and their value.
         """
         # Initialize base class
         super().__init__(*args, **kwargs)
@@ -140,8 +141,8 @@ class RemoteTest(BasicTest):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: Any,
-        kwargs: Any,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize TestApp test-case.
 
