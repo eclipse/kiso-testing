@@ -62,9 +62,9 @@ class IntegrationTestSuite(unittest.TestCase):
         -  no test case are skipped
         -  number of test run equal to 4
         """
-        parameters = (IntegrationTestSuite.test_suite_directory, "*.py", 1, [], {})
-
-        self.init.prepare_default_test_suites(parameters)
+        self.init.prepare_default_test_suites(
+            IntegrationTestSuite.test_suite_directory, "*.py", 1
+        )
         result = unittest.TextTestRunner().run(self.init.custom_test_suite)
 
         self.assertEqual(result.wasSuccessful(), False)

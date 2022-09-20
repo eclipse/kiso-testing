@@ -203,13 +203,21 @@ def CustomTestCaseAndSuite(request):
 
             self.suite.addTest(MyTestCase("test_run"))
 
-        def prepare_default_test_suites(self, test_suite_params):
+        def prepare_default_test_suites(
+            self, modules_to_add_dir, test_filter_pattern, test_suite_id
+        ):
             class MyTestSuite(test_suite.BasicTestSuite):
-                def __init__(self, params):
-                    super(MyTestSuite, self).__init__(*params)
+                def __init__(
+                    self, modules_to_add_dir, test_filter_pattern, test_suite_id
+                ):
+                    super(MyTestSuite, self).__init__(
+                        modules_to_add_dir, test_filter_pattern, test_suite_id
+                    )
 
             # Start integration test
-            self.custom_test_suite = MyTestSuite(test_suite_params)
+            self.custom_test_suite = MyTestSuite(
+                modules_to_add_dir, test_filter_pattern, test_suite_id
+            )
 
         def stop(self):
             for aux in self.auxiliaries:

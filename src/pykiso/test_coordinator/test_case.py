@@ -169,8 +169,8 @@ class RemoteTest(BasicTest):
             teardown_timeout,
             test_ids,
             tag,
-            args,
-            kwargs,
+            *args,
+            **kwargs,
         )
         self.setup_timeout = setup_timeout or RemoteTest.response_timeout
         self.run_timeout = run_timeout or RemoteTest.response_timeout
@@ -241,8 +241,8 @@ def define_test_parameters(
                     teardown_timeout,
                     test_ids,
                     tag,
-                    args,
-                    kwargs,
+                    *args,
+                    **kwargs,
                 )
 
         NewClass.__doc__ = NewClass.__doc__.format(

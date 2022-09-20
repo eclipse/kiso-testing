@@ -82,11 +82,9 @@ def create_test_suite(
         'test_filter_pattern', 'test_suite_id'
     """
     return test_suite.BasicTestSuite(
-        modules_to_add_dir=test_suite_dict["suite_dir"],
-        test_filter_pattern=test_suite_dict["test_filter_pattern"],
-        test_suite_id=test_suite_dict["test_suite_id"],
-        args=[],
-        kwargs={},
+        test_suite_dict["suite_dir"],
+        test_suite_dict["test_filter_pattern"],
+        test_suite_dict["test_suite_id"],
     )
 
 

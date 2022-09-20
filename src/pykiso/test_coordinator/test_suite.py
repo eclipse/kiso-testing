@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 import unittest
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 from unittest.suite import _isnotsuite
 
 from .. import message
@@ -62,8 +62,8 @@ class BaseTestSuite(unittest.TestCase):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: tuple,
-        kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize generic test-case.
 
@@ -120,8 +120,8 @@ class BasicTestSuiteSetup(BaseTestSuite):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: tuple,
-        kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize Message Protocol / TestApp test-case.
 
@@ -148,8 +148,8 @@ class BasicTestSuiteSetup(BaseTestSuite):
             teardown_timeout,
             test_ids,
             tag,
-            args,
-            kwargs,
+            *args,
+            **kwargs,
         )
         if any([setup_timeout, run_timeout, teardown_timeout]):
             log.warning(
@@ -174,8 +174,8 @@ class BasicTestSuiteTeardown(BaseTestSuite):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: tuple,
-        kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize Message Protocol / TestApp test-case.
 
@@ -202,8 +202,8 @@ class BasicTestSuiteTeardown(BaseTestSuite):
             teardown_timeout,
             test_ids,
             tag,
-            args,
-            kwargs,
+            *args,
+            **kwargs,
         )
         if any([setup_timeout, run_timeout, teardown_timeout]):
             log.warning(
@@ -232,8 +232,8 @@ class RemoteTestSuiteSetup(BasicTestSuiteSetup):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: tuple,
-        kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize Message Protocol / TestApp test-case.
 
@@ -260,8 +260,8 @@ class RemoteTestSuiteSetup(BasicTestSuiteSetup):
             teardown_timeout,
             test_ids,
             tag,
-            args,
-            kwargs,
+            *args,
+            **kwargs,
         )
         self.setup_timeout = setup_timeout or RemoteTestSuiteSetup.response_timeout
         self.run_timeout = run_timeout or RemoteTestSuiteSetup.response_timeout
@@ -294,8 +294,8 @@ class RemoteTestSuiteTeardown(BasicTestSuiteTeardown):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: tuple,
-        kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize Message Protocol / TestApp test-case.
 
@@ -322,8 +322,8 @@ class RemoteTestSuiteTeardown(BasicTestSuiteTeardown):
             teardown_timeout,
             test_ids,
             tag,
-            args,
-            kwargs,
+            *args,
+            **kwargs,
         )
         self.setup_timeout = setup_timeout or RemoteTestSuiteTeardown.response_timeout
         self.run_timeout = run_timeout or RemoteTestSuiteTeardown.response_timeout
@@ -347,8 +347,8 @@ class BasicTestSuite(unittest.TestSuite):
         modules_to_add_dir: str,
         test_filter_pattern: str,
         test_suite_id: int,
-        args: tuple,
-        kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize our custom unittest-test-suite.
 

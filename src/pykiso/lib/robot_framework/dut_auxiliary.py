@@ -109,8 +109,6 @@ class DUTAuxiliary(RobotAuxInterface):
             teardown_timeout=None,
             test_ids=None,
             tag=None,
-            args=(),
-            kwargs={},
         )
 
         fixture_func = getattr(test_instance, fixture_alias)
