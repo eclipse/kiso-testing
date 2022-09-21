@@ -22,7 +22,11 @@ from pykiso.lib.auxiliaries import dut_auxiliary
 from pykiso.lib.connectors import cc_example
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
-from pykiso.logging_initializer import LogOptions, add_logging_level
+from pykiso.logging_initializer import (
+    LogOptions,
+    add_logging_level,
+    get_logging_options,
+)
 from pykiso.test_coordinator import test_case
 from pykiso.test_coordinator.test_case import define_test_parameters
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
@@ -199,13 +203,21 @@ def CustomTestCaseAndSuite(request):
 
             self.suite.addTest(MyTestCase("test_run"))
 
-        def prepare_default_test_suites(self, test_suite_params):
+        def prepare_default_test_suites(
+            self, modules_to_add_dir, test_filter_pattern, test_suite_id
+        ):
             class MyTestSuite(test_suite.BasicTestSuite):
-                def __init__(self, params):
-                    super(MyTestSuite, self).__init__(*params)
+                def __init__(
+                    self, modules_to_add_dir, test_filter_pattern, test_suite_id
+                ):
+                    super(MyTestSuite, self).__init__(
+                        modules_to_add_dir, test_filter_pattern, test_suite_id
+                    )
 
             # Start integration test
-            self.custom_test_suite = MyTestSuite(test_suite_params)
+            self.custom_test_suite = MyTestSuite(
+                modules_to_add_dir, test_filter_pattern, test_suite_id
+            )
 
         def stop(self):
             for aux in self.auxiliaries:
@@ -320,11 +332,19 @@ TestResult.__test__ = False
 
 
 @pytest.fixture(scope="function")
-def tmp_test(request, tmp_path):
+def tmp_test(request, tmp_path, mocker):
     # use a common tmp_path for all test modules
     tmp_base = tmp_path.parent / "tests"
 
     log_options = LogOptions(None, "ERROR", None, False)
+    mocker.patch(
+        "pykiso.test_coordinator.test_case.get_logging_options",
+        return_value=log_options,
+    )
+    mocker.patch(
+        "pykiso.test_coordinator.test_execution.get_logging_options",
+        return_value=log_options,
+    )
 
     aux1, aux2, should_fail = request.param
     ts_folder = tmp_base / f"test_suite_{aux1}_{aux2}"
@@ -381,7 +401,13 @@ test_suite_list:
 
 
 def create_test_case(aux1, aux2, should_fail):
-    error = "assert False" if should_fail else "pass"
+    if should_fail is True:
+        error = "assert False"
+    elif should_fail is False:
+        error = "pass"
+    elif should_fail is None:
+        error = "raise Exception"
+
     tc = (
         """
 import pykiso

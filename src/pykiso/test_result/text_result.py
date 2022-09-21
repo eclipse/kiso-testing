@@ -19,17 +19,25 @@ Text Test Result with banners
 .. currentmodule:: text_result
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import sys
 import textwrap
 import time
+import typing
 from contextlib import nullcontext
 from shutil import get_terminal_size
-from typing import List, Optional, TextIO, Union
-from unittest import TestCase, TestResult, TextTestResult
+from types import TracebackType
+from typing import List, Optional, TextIO, Tuple, Type, Union
+from unittest import TextTestResult
 
-from pykiso.types import PathType
+from ..test_coordinator.test_case import BasicTest
+from ..test_coordinator.test_suite import BaseTestSuite
+
+if typing.TYPE_CHECKING:
+    from ..types import PathType
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +69,7 @@ class ResultStream:
         :param file: file where stderr should be written.
         """
         self.stderr = sys.stderr
-        self.file = open(file, mode="a")
+        self.file: TextIO = open(file, mode="a")
         sys.stderr = self
 
     def __del__(self):
@@ -111,15 +119,13 @@ class BannerTestResult(TextTestResult):
         :param verbosity: unused (required for TextTestResult)
         """
         super().__init__(stream, descriptions, verbosity)
-        # disable TextTestResult printing
-        self.dots = False
-        self.verbosity = False
+        # to determine whether the test succeeded or failed
         self._error_occurred = False
         # fallback is the default width in Jenkins
         size = get_terminal_size(fallback=(150, 24))
         # avoid border effects due to newlines
         self.width = size.columns - 1
-        self.successes: List[TestCase] = []
+        self.successes: List[Union[BasicTest, BaseTestSuite]] = []
 
     def _banner(
         self, text: Union[List, str], width: Optional[int] = None, sym: str = "#"
@@ -140,11 +146,13 @@ class BannerTestResult(TextTestResult):
         if isinstance(text, str):
             text = text.split("\n")
         if isinstance(text, list):
-            text = "\n".join(f"{sym} {line: <{width-4}} {sym}" for line in text)
+            text = "\n".join(
+                f"{sym} {line: <{width-self.BANNER_CHAR_WIDTH}} {sym}" for line in text
+            )
         banner = f"{bar}\n{text}\n{bar}\n"
         return banner
 
-    def getDescription(self, test: TestCase) -> str:
+    def getDescription(self, test: Union[BasicTest, BaseTestSuite]) -> str:
         """Return the entire test method docstring.
 
         :param test: running testcase
@@ -153,20 +161,19 @@ class BannerTestResult(TextTestResult):
         """
         doc = ""
         if getattr(test, "_testMethodDoc", None) is not None:
-            doc = "\n"
             for line in test._testMethodDoc.splitlines():
                 doc += "\n" + textwrap.fill(
                     line.strip(), width=self.width - self.BANNER_CHAR_WIDTH
                 )
         return doc
 
-    def startTest(self, test: TestCase) -> None:
+    def startTest(self, test: Union[BasicTest, BaseTestSuite]) -> None:
         """Print a banner containing the test information and the test
         method docstring when starting a test case.
 
         :param test: running testcase
         """
-        TestResult.startTest(self, test)
+        super().startTest(test)
         self._error_occurred = False
         top_str = "RUNNING TEST: "
         module_name = test.__module__
@@ -183,55 +190,65 @@ class BannerTestResult(TextTestResult):
         self.stream.flush()
         test.start_time = time.time()
 
-    def stopTest(self, test: TestCase) -> None:
+    def stopTest(self, test: Union[BasicTest, BaseTestSuite]) -> None:
         """Print a banner containing the test information and its result.
 
         :param test: running testcase
         """
         test.stop_time = time.time()
         test.elapsed_time = test.stop_time - test.start_time
-        result = "Failed" if self._error_occurred else "Passed"
+        result = "FAILED" if self._error_occurred else "PASSED"
         bot_str = f"END OF TEST: {test}"
-        result_str = f"  ->  {result}"
-        if len(bot_str + result_str) < self.width:
+        result_str = f"  ->  {result} in {test.elapsed_time:.3f}s"
+        if len(bot_str + result_str) < self.width - self.BANNER_CHAR_WIDTH:
             bot_str += result_str
         else:
             bot_str += "\n" + result_str
         bot_banner = self._banner(bot_str) + "\n"
         self.stream.write(bot_banner)
         self.stream.flush()
-        TestResult.stopTest(self, test)
+        super().stopTest(test)
 
-    def addFailure(self, test: TestCase, err: tuple) -> None:
+    def addFailure(
+        self,
+        test: Union[BasicTest, BaseTestSuite],
+        err: Tuple[Type[BaseException], BaseException, TracebackType],
+    ) -> None:
         """Set the error flag when a failure occurs in order to get the
         individual test case result.
 
         :param test: running testcase
         :param err: tuple returned by sys.exc_info
         """
-        TestResult.addFailure(self, test, err)
+        super().addFailure(test, err)
         self._error_occurred = True
 
-    def addSuccess(self, test: TestCase) -> None:
+    def addSuccess(self, test: Union[BasicTest, BaseTestSuite]) -> None:
         """Add a testcase to the list of succeeded test cases.
 
         :param test: running testcase
         """
-        self.successes.append(test)
+        if isinstance(test, (BasicTest, BaseTestSuite)):
+            self.successes.append(test)
 
-    def addError(self, test: TestCase, err: tuple) -> None:
+    def addError(
+        self,
+        test: Union[BasicTest, BaseTestSuite],
+        err: Tuple[Type[BaseException], BaseException, TracebackType],
+    ) -> None:
         """Set the error flag when an error occurs in order to get the
         individual test case result.
 
         :param test: running testcase
         :param err: tuple returned by sys.exc_info
         """
-        TestResult.addError(self, test, err)
+        super().addError(test, err)
         self._error_occurred = True
 
     def printErrorList(self, flavour: str, errors: List[tuple]):
-        """Print all errors at the end of the whole tests execution
-        Overwrite the unit-test function
+        """Print all errors at the end of the whole tests execution.
+
+        Overwrites the unit-test method to have a nicer output.
 
         :param flavour: failure reason
         :param errors: list of failed tests with their error message

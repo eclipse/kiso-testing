@@ -38,8 +38,8 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
     assert "FAIL" not in output.err
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
-    assert "->  Passed" in output.err
-    assert "->  Failed" not in output.err
+    assert "->  PASSED" in output.err
+    assert "->  FAILED" not in output.err
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -75,36 +75,6 @@ def test_config_registry_and_test_execution_with_user_tags(tmp_test, mocker):
     ConfigRegistry.register_aux_con(cfg)
     exit_code = test_execution.execute(cfg, user_tags=user_tags)
     ConfigRegistry.delete_aux_con()
-
-
-@pytest.mark.parametrize(
-    "tmp_test",
-    [("collector_error_aux1", "collector_error_aux_2", False)],
-    indirect=True,
-)
-def test_config_registry_test_collection_error(tmp_test, capsys, mocker, caplog):
-    """Call execute function from test_execution using
-    configuration data coming from parse_config method
-    by specifying a pattern
-
-    Validation criteria:
-        -  run is executed without error
-    """
-    mocker.patch(
-        "pykiso.test_coordinator.test_suite.tc_sort_key", side_effect=Exception
-    )
-
-    cfg = parse_config(tmp_test)
-    ConfigRegistry.register_aux_con(cfg)
-
-    with pytest.raises(pykiso.TestCollectionError):
-        test_execution.collect_test_suites(cfg["test_suite_list"])
-
-    ConfigRegistry.delete_aux_con()
-
-    output = capsys.readouterr()
-    assert "FAIL" not in output.err
-    assert "Ran 0 tests" not in output.err
 
 
 def test_parse_test_selection_pattern():
@@ -163,7 +133,7 @@ def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mock
     [("collector_error_2_aux1", "collector_error_2_aux", False)],
     indirect=True,
 )
-def test_config_registry_and_test_execution_collect_error(mocker, caplog, tmp_test):
+def test_config_registry_and_test_execution_collect_error_log(mocker, caplog, tmp_test):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     by specifying a pattern
@@ -229,11 +199,16 @@ def test_config_registry_and_test_execution_with_text_reporting(tmp_test, capsys
     assert "FAIL" not in output.err
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
-    assert "->  Passed" in output.err
-    assert "->  Failed" not in output.err
+    assert "->  PASSED" in output.err
+    assert "->  FAILED" not in output.err
 
 
-@pytest.mark.parametrize("tmp_test", [("fail_aux1", "fail_aux2", True)], indirect=True)
+@pytest.mark.parametrize(
+    "tmp_test",
+    [("fail_aux1", "fail_aux2", True), ("err_aux1", "err_aux2", None)],
+    ids=["test failed", "error occurred"],
+    indirect=True,
+)
 def test_config_registry_and_test_execution_fail(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
@@ -252,7 +227,7 @@ def test_config_registry_and_test_execution_fail(tmp_test, capsys):
     assert "FAIL" in output.err
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
-    assert "->  Failed" in output.err
+    assert "->  FAILED" in output.err
 
 
 @pytest.mark.parametrize(
@@ -275,9 +250,9 @@ def test_config_registry_and_test_execution_with_junit_reporting(tmp_test, capsy
 
     output = capsys.readouterr()
     assert "FAIL" not in output.err
-    assert "RUNNING TEST: " not in output.err
-    assert "END OF TEST: " not in output.err
-    assert "Passed" not in output.err
+    assert "RUNNING TEST: " in output.err
+    assert "END OF TEST: " in output.err
+    assert "PASSED" in output.err
 
 
 def test_config_registry_and_test_execution_failure_and_error_handling():
@@ -513,5 +488,5 @@ def test_config_registry_and_test_execution_with_step_report(tmp_test, capsys):
     output = capsys.readouterr()
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
-    assert "->  Passed" in output.err
+    assert "->  PASSED" in output.err
     assert pathlib.Path("step_report.html").is_file()

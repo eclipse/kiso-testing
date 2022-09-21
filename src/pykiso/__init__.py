@@ -19,10 +19,13 @@ pykiso - extensible framework for (embedded) integration testing.
 
 """
 
-import pkg_resources
+try:
+    from importlib import metadata
+except ImportError:  # for Python<3.8
+    import importlib_metadata as metadata
 
-__version__ = pkg_resources.get_distribution(__package__).version
-
+# get version from package metadata to automatically set the version dunder
+__version__ = metadata.version(__name__)
 
 from . import (
     auxiliary,
