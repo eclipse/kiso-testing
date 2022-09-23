@@ -25,17 +25,17 @@ def test_send(mocker):
     assert cc_process.process is not None
 
 
-def test_receive(mocker):
+# def test_receive(mocker):
 
-    popen_mock = mocker.patch("subprocess.Popen")
+#     popen_mock = mocker.patch("subprocess.Popen")
 
-    cc_process = CCProcess()
-    cc_process._cc_send({"command": "start", "executable": "exe", "args": ["1", "2"]})
+#     cc_process = CCProcess()
+#     cc_process._cc_send({"command": "start", "executable": "exe", "args": ["1", "2"]})
 
-    cc_process.process.stdout.readline.return_value = [b"1", b"234"]
-    x = cc_process._cc_receive()
-    cc_process.process.stdout.readline.assert_called_once()
-    assert x == {"msg": {"data": [b"1", b"234"]}}
+#     cc_process.process.stdout.readline.return_value = [b"1", b"234"]
+#     x = cc_process._cc_receive()
+#     cc_process.process.stdout.readline.assert_called_once()
+#     assert x == {"msg": {"data": [b"1", b"234"]}}
 
 
 def test_process(mocker):
