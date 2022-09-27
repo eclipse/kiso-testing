@@ -396,7 +396,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
         if response.msg_type != MESSAGE_TYPE.ACK:
             ack_cmd = response.generate_ack_message(message.MessageAckType.ACK)
             try:
-                self.channel.cc_send(msg=ack_cmd)
+                self.channel.cc_send(msg=ack_cmd.serialize())
             except Exception:
                 log.exception(
                     f"encountered error while sending acknowledge message for {response}!"

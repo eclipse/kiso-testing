@@ -123,9 +123,7 @@ class CCSerial(connector.CChannel):
         """Close serial port"""
         self.serial.close()
 
-    def _cc_send(
-        self, msg: ByteString, raw: bool = True, timeout: float = None
-    ) -> None:
+    def _cc_send(self, msg: ByteString, timeout: float = None) -> None:
         """Sends data to the serial port
 
         :param msg: data to send
@@ -141,7 +139,9 @@ class CCSerial(connector.CChannel):
 
         self.serial.write(msg)
 
-    def _cc_receive(self, timeout=0.00001, raw: bool = True) -> Dict[str, bytes]:
+    def _cc_receive(
+        self, timeout=0.00001, size: Optional[int] = None
+    ) -> Dict[str, bytes]:
         """Read bytes from the serial port.
         Try to read one byte in blocking mode. After blocking read check
         remaining bytes and read them without a blocking call.
@@ -151,8 +151,6 @@ class CCSerial(connector.CChannel):
         :raises NotImplementedError: if raw is to True
         :return: received bytes
         """
-        if not raw:
-            raise NotImplementedError()
 
         self.serial.timeout = timeout
 

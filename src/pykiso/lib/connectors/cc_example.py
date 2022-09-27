@@ -59,6 +59,11 @@ class CCExample(connector.CChannel):
 
         """
         with self.lock:
+            log.internal_debug("Send: {}".format(msg))
+            # Exit if ack sent
+            msg = message.Message.parse_packet(msg)
+            if msg.get_message_type() == message.MessageType.ACK:
+                return
 
             # Else save received message
             self.last_received_message = msg.serialize()
