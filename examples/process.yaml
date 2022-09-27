@@ -13,6 +13,7 @@ connectors:
       shell: False
       pipe_stderr: True
       pipe_stdout: True
+      pipe_stdin: True
       text: True
     type: pykiso.lib.connectors.cc_process:CCProcess
 

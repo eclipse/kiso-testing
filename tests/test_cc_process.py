@@ -44,24 +44,27 @@ def test_process(mocker):
         shell=False,
         pipe_stderr=True,
         pipe_stdout=True,
+        pipe_stdin=True,
         executable=executable,
         args=[
             "-c",
-            'import sys;import time;print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");sys.stdout.flush();time.sleep(1);print("pykiso")',
+            'import sys;import time;print(sys.stdin.readline());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");print("pykiso")',
         ],
     )
     cc_process.start()
-    cc_process.cc_send(
+    """cc_process.cc_send(
         {
             "command": "start",
             "executable": executable,
             "args": [
                 "-c",
-                'import sys;import time;print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");sys.stdout.flush();time.sleep(1);print("pykiso")',
+                'import sys;import time;print(sys.stdin.readline());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");print("pykiso")',
             ],
         }
-    )
+    )"""
+    cc_process._cc_send("hi\r\n")
     # cc_process.start()
+    assert cc_process._cc_receive(3) == "hi"
     assert cc_process.cc_receive(3) == {"msg": {"stderr": "error\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "hello\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "pykiso\n"}}

@@ -43,6 +43,7 @@ class CCProcess(CChannel):
         shell: bool = False,
         pipe_stderr: bool = False,
         pipe_stdout: bool = True,
+        pipe_stdin: bool = False,
         text: bool = True,
         cwd: Optional[str] = None,
         env: Optional[str] = None,
@@ -55,6 +56,7 @@ class CCProcess(CChannel):
         self.shell = shell
         self.pipe_stderr = pipe_stderr
         self.pipe_stdout = pipe_stdout
+        self.pipe_stdin = pipe_stdin
         self.encoding = encoding
         self.executable = executable
         self.args = args
@@ -85,6 +87,7 @@ class CCProcess(CChannel):
             + (args if args is not None else self.args),
             stderr=subprocess.PIPE if self.pipe_stderr else None,
             stdout=subprocess.PIPE if self.pipe_stdout else None,
+            stdin=subprocess.PIPE if self.pipe_stdin else None,
             shell=self.shell,
             text=self.text,
             encoding=self.encoding,
@@ -110,6 +113,7 @@ class CCProcess(CChannel):
                 line = stream.readline()
                 if len(line) == 0:
                     break
+                print(f"{name}: {line}")
                 self.queue_in.put((name, line))
         finally:
             with self.lock:
@@ -123,13 +127,17 @@ class CCProcess(CChannel):
         self._cleanup()
 
     def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
-        print(msg)
+        print(f"_cc_send: {msg}")
 
         if isinstance(msg, dict) and "command" in msg:
             if msg["command"] == "start":
                 self.start(msg["executable"], msg["args"])
-        else:
+        elif self.pipe_stdin:
+            print(f"Ywrite: {msg}")
             self.process.stdin.write(msg)
+            self.process.stdin.flush()
+        else:
+            raise Exception("Can not send to stdin because pipe is not enabled.")
 
     def _cleanup(self):
         if self.process is not None:

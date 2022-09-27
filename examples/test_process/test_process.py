@@ -44,11 +44,12 @@ class TestProcess(pykiso.BasicTest):
                 "executable": executable,
                 "args": [
                     "-c",
-                    'import sys;import time;time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();print("hello");sys.stdout.flush();time.sleep(1);print("pykiso2")',
+                    'import sys;import time;print(sys.stdin.readline());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");print("pykiso")',
                 ],
             }
         )
 
+        com_aux.send_message("hi\n")
         while True:
             recv = com_aux.receive_message()
             logging.info(f'Received "{recv}"')
