@@ -40,7 +40,7 @@ def proxy_aux(robot_proxy_aux):
 @pytest.fixture()
 def mpproxy_aux(mocker, cchannel_inst):
     mocker.patch.object(MpProxyAuxiliary, "get_proxy_con")
-    mocker.patch("pykiso.cli.get_logging_options")
+    mocker.patch("pykiso.logging_initializer.get_logging_options")
     mocker.patch.object(
         RobotAuxInterface,
         "_get_aux",

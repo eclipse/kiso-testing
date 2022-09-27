@@ -84,10 +84,10 @@ class CCUdp(connector.CChannel):
 
         # catch the errors linked to the socket timeout without blocking
         except BlockingIOError:
-            log.debug(f"encountered error while receiving message via {self}")
+            log.internal_debug(f"encountered error while receiving message via {self}")
             return {"msg": None}
         except socket.timeout:
-            log.debug(f"encountered error while receiving message via {self}")
+            log.internal_debug(f"encountered error while receiving message via {self}")
             return {"msg": None}
         except BaseException:
             log.exception(f"encountered error while receiving message via {self}")

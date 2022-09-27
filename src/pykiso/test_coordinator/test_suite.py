@@ -20,15 +20,22 @@ gray test-suite for Message Protocol / TestApp usage.
 
 
 """
+from __future__ import annotations
 
 import logging
 import unittest
 from collections.abc import Iterable
-from typing import Callable, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
+from unittest.suite import _isnotsuite
 
 from .. import message
 from ..interfaces.thread_auxiliary import AuxiliaryInterface
 from .test_message_handler import test_app_interaction
+
+if TYPE_CHECKING:
+    from unittest.result import TestResult
+
+    from .test_case import BasicTest
 
 __all__ = [
     "BaseTestSuite",
@@ -364,6 +371,72 @@ class BasicTestSuite(unittest.TestSuite):
         # add sorted test case list to test suite
         self.addTests(test_case_list)
 
+        self.failed_suite_setups = set()
+
+    def check_suite_setup_failed(self, test: BasicTest, result: TestResult) -> None:
+        """Check if the suite setup has failed and store failed suite id.
+        Search in the global unittest result object, which save all the results
+        of the tests performed up to that point, for a BasicTestSuiteSetup tests
+        which has failed. If the suite setup has failed store the suite id.
+
+        :param test: test to check
+        :param result: unittest result object
+        """
+        if isinstance(test, BasicTestSuiteSetup):
+            for suite_type, _ in result.failures:
+                if isinstance(suite_type, BasicTestSuiteSetup):
+                    self.failed_suite_setups.add(test.test_suite_id)
+
+    def run(self, result: TestResult, debug: bool = False) -> TestResult:
+        """Override run method from unittest.suite.TestSuite.
+        Added functionality:
+        Skip suite tests if the parent test suite setup has failed.
+
+        :param result: unittest result storage
+        :param debug: True to enter debug mode, defaults to False
+        :return: test suite result
+        """
+        topLevel = False
+        if getattr(result, "_testRunEntered", False) is False:
+            result._testRunEntered = topLevel = True
+
+        for index, test in enumerate(self):
+            if result.shouldStop:  # pragma: no cover
+                break
+
+            if _isnotsuite(test):
+                self._tearDownPreviousClass(test, result)
+                self._handleModuleFixture(test, result)
+                self._handleClassSetUp(test, result)
+                result._previousTestClass = test.__class__
+
+                if getattr(test.__class__, "_classSetupFailed", False) or getattr(
+                    result, "_moduleSetUpFailed", False
+                ):  # pragma: no cover
+                    continue
+
+            if not debug:
+                if test.test_suite_id in self.failed_suite_setups:
+                    result.addSkip(
+                        test,
+                        f"Suite Setup failed for test suite {test.test_suite_id}",
+                    )
+                else:
+                    test(result)
+                    self.check_suite_setup_failed(test, result)
+
+            else:  # pragma: no cover
+                test.debug()
+
+            if self._cleanup:
+                self._removeTestAtIndex(index)
+
+        if topLevel:
+            self._tearDownPreviousClass(None, result)
+            self._handleModuleTearDown(result)
+            result._testRunEntered = False
+        return result
+
 
 def tc_sort_key(tc):
     """Sort-key for testcases.
@@ -383,7 +456,6 @@ def tc_sort_key(tc):
     elif isinstance(tc, (BasicTestSuiteTeardown, RemoteTestSuiteTeardown)):
         fix_ind = 1
     elif isinstance(tc, unittest.loader._FailedTest):
-        # breakpoint()
         raise tc._exception
     return (fix_ind, tc.test_suite_id, tc.test_case_id)
 

@@ -20,7 +20,6 @@ UDS Auxiliary plugin
 
 """
 
-import threading
 from typing import List, Optional, Union
 
 from robot.api import logger
@@ -42,25 +41,28 @@ class UdsAuxiliary(RobotAuxInterface):
     def __init__(self):
         """Initialize attributes."""
         super().__init__(aux_type=UdsAux)
-        self.sender_stop_event = threading.Event()
-        self.sender = None
 
     @keyword(name="Send uds raw")
     def send_uds_raw(
-        self, msg_to_send: bytes, aux_alias: str, timeout_in_s: float = 6
+        self,
+        msg_to_send: bytes,
+        aux_alias: str,
+        timeout_in_s: float = 6,
+        response_required: bool = True,
     ) -> Union[list, bool]:
         """Send a UDS diagnostic request to the target ECU.
 
         :param msg_to_send: can uds raw bytes to be sent
         :param aux_alias: auxiliary's alias
         :param timeout_in_s: maximum time used to wait for a response.
+        :param response_required: Wait for a response if True
 
         :return: the raw uds response's, or True if a response is
             not expected and the command is properly sent otherwise
             False
         """
         aux = self._get_aux(aux_alias)
-        msg = aux.send_uds_raw(msg_to_send, timeout_in_s)
+        msg = aux.send_uds_raw(msg_to_send, timeout_in_s, response_required)
         return list(msg) if not isinstance(msg, bool) else msg
 
     @keyword(name="Send uds config")
@@ -166,26 +168,20 @@ class UdsAuxiliary(RobotAuxInterface):
         return aux.write_data(parameter, value)
 
     @keyword(name="Start tester present with ${period} seconds ${aux_alias} ")
-    def start_tester_present_sender(self, period: int, aux_alias) -> None:
+    def start_tester_present_sender(self, aux_alias, period: int = 4) -> None:
         """Start to continuously sends tester present messages via UDS
 
         :param period: period in seconds to use for the cyclic sending of tester present
         :param aux_alias: auxiliary's alias
         """
         aux = self._get_aux(aux_alias)
-        self.sender = threading.Thread(
-            name="TesterPresentSender",
-            target=aux._sender_run,
-            args=(period, self.sender_stop_event),
-        )
-        self.sender.start()
+        aux.start_tester_present_sender(period)
 
     @keyword(name="Stop tester present")
-    def stop_tester_present_sender(self) -> None:
+    def stop_tester_present_sender(self, aux_alias) -> None:
         """Stop to continuously sends tester present messages via UDS"""
-        self.sender_stop_event.set()
-        self.sender.join()
-        self.sender_stop_event.clear()
+        aux = self._get_aux(aux_alias)
+        aux.stop_tester_present_sender()
 
     @staticmethod
     def get_service_id(service_name: str) -> int:

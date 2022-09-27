@@ -1,16 +1,16 @@
 .. _uds_server_auxiliary:
 
 UDS protocol handling as a server
-================================
+=================================
 
-The :py:class:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary`_
+The :py:class:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary`
 implements the Unified Diagnostic Services protocol on server side and therefore acts
 as an Electronic Control Unit communicating with a tester.
 
 It allows the registration of callbacks through the helper class
-:py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsCallback`_
+:py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsCallback`
 or simply by specifying the arguments of
-:py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`_,
+:py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`,
 that are then triggered when the registered UDS request is received, allowing to respond with
 user-defined UDS messages.
 
@@ -19,15 +19,15 @@ Configuration
 
 To configure the UDS server auxiliary 1 parameter is mandatory :
 
-- `config_ini_path`_: path to the UDS parameters configuration file (see format below).
+- ``config_ini_path``: path to the UDS parameters configuration file (see format below).
 
 It also accepts three optional parameters:
 
-- `request_id`_: CAN identifier of the UDS responses send by the auxiliary
+- ``request_id``: CAN identifier of the UDS responses send by the auxiliary
     (overrides the one defined in the config.ini file)
-- `response_id`_: CAN identifier of the UDS requests received by the auxiliary
+- ``response_id``: CAN identifier of the UDS requests received by the auxiliary
     (overrides the one defined in the config.ini file)
-- `odx_file_path`_: path to the ECU diagnostic definition file in ODX format
+- ``odx_file_path``: path to the ECU diagnostic definition file in ODX format
 
 .. note:: the configuration through an ODX file is not supported yet.
 
@@ -115,52 +115,52 @@ Configuring UDS callbacks
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to configure callbacks to be triggered on a received request, the
-:py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`_
+:py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`
 needs to be called.
 
 The available parameters for defining a callback are the following:
 
-- `request`_ (mandatory): the incoming UDS request on which the corresponding callback should be executed.
-    The request can be passed as an integer (e.g. `0x1003`_ or as a list of integers `[0x10, 0x03]`_).
-- `response`_ (optional): the UDS response to send if the registered request is received.
+- ``request`` (mandatory): the incoming UDS request on which the corresponding callback should be executed.
+    The request can be passed as an integer (e.g. ``0x1003`` or as a list of integers ``[0x10, 0x03]``).
+- ``response`` (optional): the UDS response to send if the registered request is received.
     Passed format is the same as for the request parameter.
-- `response_data`_ (optional): the UDS data to send with the response. If the response is specified
+- ``response_data`` (optional): the UDS data to send with the response. If the response is specified
     the data is simply appended to the response. This parameter can be passed as an integer or as
-    bytes (e.g. `b"DATA"`_).
-- `data_length`_ (optional): the expected length of the data to send within the response, as an integer.
-    This parameter in only taken into account if the `response_data`_ parameter is specified and
+    bytes (e.g. ``b"DATA"``).
+- ``data_length`` (optional): the expected length of the data to send within the response, as an integer.
+    This parameter in only taken into account if the ``response_data`` parameter is specified and
     applied zero-padding to the response if the data to send is expected to have a fixed length.
-- `callback`_ (optional): a user-defined callback function to execute. If this parameter is provided,
+- ``callback`` (optional): a user-defined callback function to execute. If this parameter is provided,
     all others optional parameters are discarded. The callback function must admit 2 positional
     arguments: the request on which the callback function is executed and the
-    :py:class:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary`_ instance
+    :py:class:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary` instance
     that registered the callback.
 
 .. note::
-    If the `response`_ parameter is not specified, the response will be built based on the
-    `request`_ parameter. For example, a request `0x10020304`_ will produce the corresponding
-    response `0x50020304`_.
+    If the ``response`` parameter is not specified, the response will be built based on the
+    ``request`` parameter. For example, a request ``0x10020304`` will produce the corresponding
+    response ``0x50020304``.
 
 In order to define and register callbacks for a test, two ways are made possible:
 
-- With the helper class :py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsCallback`_
+- With the helper class :py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsCallback`
     in order to define the callbacks, and register them later.
-- With the method :py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`_
+- With the method :py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`
     in order to define and register a callback at the same time.
 
 Split definition and registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsCallback`_ can be imported
+The :py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsCallback` can be imported
 from directly from :py:mod:`pykiso.lib.udsaux` and allow an easy definition of callbacks that
 are common to multiple test cases.
 
-It takes the same parameters as :py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`_
+It takes the same parameters as :py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`
 but allows to define the callbacks in order to register them afterwards.
 
 Pykiso also defined a callback subclass for the UDS data download functional unit that can be
 directly imported and re-used, or taken as a reference in order to implement other functional
-UDS units: :py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsDownloadCallback`_.
+UDS units: :py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsDownloadCallback`.
 
 Find below an example:
 
@@ -189,7 +189,7 @@ Find below an example:
     ]
 
 
-Admitting that this code is added to a `uds_callback_definition.py`_ file at the same level as
+Admitting that this code is added to a ``uds_callback_definition.py`` file at the same level as
 the test case, it can then be registered inside a test as follows:
 
 .. code:: python
@@ -220,10 +220,10 @@ the test case, it can then be registered inside a test as follows:
 In-test definition and registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The method :py:meth:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback`_
+The method :py:meth:``~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.register_callback``
 can be used inside a test case to define and register a callback with one line.
 
-It admits the same parameters as :py:class:`~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsCallback`_
+It admits the same parameters as :py:class:``~pykiso.lib.auxiliaries.udsaux.common.uds_callback.UdsCallback``
 and builds instances of it in the background.
 
 Find below an example showing its usage, along with a custom callback function definition:
@@ -286,9 +286,9 @@ Accessing UDS callbacks
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Once registered, callbacks can be accessed inside a test via the
-:py:attr:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.callbacks`_ attribute.
+:py:attr:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary.callbacks` attribute.
 This attribute is a dictionary linking the registered request as an **uppercase** hexadecimal string
-(e.g. `"0x2E0102"`_) to the corresponding registered callback.
+(e.g. ``"0x2E0102"``) to the corresponding registered callback.
 
 Accessing a callback can be useful for verifying if a callback was called at some point. Based on
 the test snippets above, the following complete test example aims to show this feature and provided
@@ -357,3 +357,11 @@ an overview of all previously described features:
 
             for callback in uds_aux.callbacks:
                 uds_aux.unregister_callback(callback)
+
+Modify the waiting time
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Sending a huge amount of bytes over UDS can take some time and to avoid extra
+waiting time, users can modify the waiting time between two isotp packets of 4096 bytes.
+
+It can be achieved using the public attribute from uds server auxiliary "tp_waiting_time".

@@ -24,6 +24,7 @@ import logging
 from typing import List, Optional
 
 from ..exceptions import AuxiliaryCreationError
+from ..logging_initializer import add_logging_level, initialize_loggers
 from .thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
@@ -34,6 +35,16 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
     thread or mulitprocessing is not necessary.
     """
 
+    def __new__(cls, *args, **kwargs):
+        """Create instance and add internal kiso log levels in
+        case the auxiliary is used outside the pykiso context
+        """
+        if not hasattr(logging, "INTERNAL_WARNING"):
+            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
+        return super(SimpleAuxiliaryInterface, cls).__new__(cls)
+
     def __init__(self, name: str = None, activate_log: List[str] = None) -> None:
         """Auxiliary initialization.
 
@@ -42,7 +53,7 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         """
         self.name = name
         self.is_instance = False
-        self.initialize_loggers(activate_log)
+        initialize_loggers(activate_log)
 
     def __repr__(self) -> str:
         name = self.name if self.name is not None else ""
@@ -50,14 +61,6 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         if name:
             repr_ = repr_[:1] + f"{name} is " + repr_[1:]
         return repr_
-
-    @staticmethod
-    def initialize_loggers(loggers: Optional[List[str]]) -> None:
-        """Deactivate all external loggers except the specified ones.
-
-        :param loggers: list of logger names to keep activated
-        """
-        AuxiliaryInterface.initialize_loggers(loggers)
 
     def create_instance(self) -> bool:
         """Create an auxiliary instance and ensure the communication to it.
@@ -90,14 +93,14 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
         if not self.is_instance:
             self.create_instance()
         else:
-            log.warning(f"Auxiliary '{self}' is already running")
+            log.internal_warning(f"Auxiliary '{self}' is already running")
 
     def suspend(self) -> None:
         """Suspend current auxiliary's run."""
         if self.is_instance:
             self.delete_instance()
         else:
-            log.warning(f"Auxiliary '{self}' is already stopped")
+            log.internal_warning(f"Auxiliary '{self}' is already stopped")
 
     def stop(self):
         """Stop the auxiliary"""

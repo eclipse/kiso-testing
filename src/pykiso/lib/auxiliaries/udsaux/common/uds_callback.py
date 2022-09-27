@@ -228,7 +228,7 @@ class UdsDownloadCallback(UdsCallback):
         # send RequestDownload response
         request_download_response = self.make_request_download_response()
         aux.send_response(request_download_response)
-        log.info(
+        log.internal_info(
             f"Sent response to request {aux.format_data(download_request)}: {aux.format_data(request_download_response)}"
         )
 
@@ -239,7 +239,7 @@ class UdsDownloadCallback(UdsCallback):
 
         # handle data transfer
         while (
-            not aux.stop_event.is_set()
+            not aux.stop_rx.is_set()
             and transfer_size < expected_transfer_size
             and time.perf_counter() - transfer_start_time < self.TRANSFER_TIMEOUT
         ):
@@ -274,7 +274,7 @@ class UdsDownloadCallback(UdsCallback):
 
             # receive block data
             while (
-                not aux.stop_event.is_set()
+                not aux.stop_rx.is_set()
                 and block_data_len < (expected_data_len - 1)
                 and elapsed_time < self.TRANSFER_TIMEOUT
             ):
@@ -289,14 +289,14 @@ class UdsDownloadCallback(UdsCallback):
                 expected_pci = next(transfer_data_pci_sequence)
                 if data[0] != expected_pci:
                     block_data_len += len(data) - 1
-                    log.warning(
+                    log.internal_warning(
                         f"Consecutive frame missed: "
                         f"expected PCI {hex(expected_pci)}, got {hex(data[0])}"
                     )
                 block_data_len += len(data) - 1
 
             transfer_size += block_data_len
-            log.info(
+            log.internal_info(
                 f"Block number {sequence_number}: "
                 f"Received {transfer_size} B out of {expected_transfer_size} B"
             )

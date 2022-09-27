@@ -14,6 +14,7 @@ from functools import partial
 import pytest
 
 from pykiso import cli, retry_test_case
+from pykiso.logging_initializer import LogOptions
 from pykiso.test_coordinator import test_case
 
 
@@ -212,14 +213,14 @@ def test_setUpClass(mocker):
     mocker.patch.object(
         test_case,
         "get_logging_options",
-        return_value=cli.LogOptions(None, "ERROR", "junit"),
+        return_value=LogOptions(None, "ERROR", "junit", False),
     )
     mock_init_log = mocker.patch.object(test_case, "initialize_logging")
     test_case.BasicTest.setUpClass()
-    mock_init_log.assert_called_with(None, "ERROR", "junit")
+    mock_init_log.assert_called_with(None, "ERROR", False, "junit")
 
     test_case.RemoteTest.setUpClass()
-    mock_init_log.assert_called_with(None, "ERROR", "junit")
+    mock_init_log.assert_called_with(None, "ERROR", False, "junit")
 
 
 @pytest.mark.parametrize(

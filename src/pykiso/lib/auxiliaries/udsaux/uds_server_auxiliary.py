@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 from uds import IsoServices
 
@@ -55,7 +55,9 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         self._ecu_config = None
         if self.odx_file_path is not None:
-            log.warning("Callback configuration through ODX files is not supported yet")
+            log.internal_warning(
+                "Callback configuration through ODX files is not supported yet"
+            )
 
         self._callbacks: Dict[str, UdsCallback] = {}
         self._callback_lock = threading.Lock()
@@ -139,7 +141,9 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :param response_data: the UDS response to send.
         """
         to_send = self.uds_config.tp.encode_isotp(
-            response_data, use_external_snd_rcv_functions=True
+            response_data,
+            use_external_snd_rcv_functions=True,
+            tpWaitTime=self.tp_waiting_time,
         )
         if to_send is not None:
             self.transmit(to_send)
@@ -192,6 +196,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         response: Optional[Union[int, List[int]]] = None,
         response_data: Optional[Union[int, bytes]] = None,
         data_length: Optional[int] = None,
+        callback: Optional[Callable] = None,
     ) -> None:
         """Register an automatic response to send if the specified request is received
         from the client.
@@ -207,6 +212,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             positive response containing no data.
         :param data_length: optional length of the data to send if it is supposed
             to have a fixed length (zero-padded).
+        :param callback: custom callback to register
         """
         callback = (
             request
@@ -216,6 +222,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 response=response,
                 response_data=response_data,
                 data_length=data_length,
+                callback=callback,
             )
         )
         self.callbacks[self.format_data(callback.request)] = callback
@@ -255,7 +262,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 uds_data = self.uds_config.tp.decode_isotp(
                     received_data=msg, use_external_snd_rcv_functions=True
                 )
-                log.debug(
+                log.internal_debug(
                     "Received ISO TP data: %s || UDS data: %s",
                     f"0x{msg.hex()}",
                     self.format_data(uds_data),
@@ -279,7 +286,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 callback_to_execute = callback
                 break
         else:
-            log.warning(
+            log.internal_warning(
                 f"Unregistered request received: {self.format_data(received_uds_data)}"
             )
             return

@@ -108,7 +108,7 @@ class CCFdxLauterbach(connector.CChannel):
         if err != 0:
             log.error(f"Error '{err}' while loading the cmm file: {script_path}")
             return err
-        log.info(f"Loading the cmm file: {script_path}")
+        log.internal_info(f"Loading the cmm file: {script_path}")
 
         # Check whether the scrip we just launched has completed or not.
         state = ctypes.c_int(PracticeState.UNKNOWN)
@@ -139,7 +139,7 @@ class CCFdxLauterbach(connector.CChannel):
         # Load Trace32 remote api library
         try:
             self.t32_api = ctypes.CDLL(self.t32_api_path)
-            log.debug("Trace32 remote API loaded")
+            log.internal_debug("Trace32 remote API loaded")
         except Exception as e:
             log.exception(f"Unable to open Trace32: {e}")
             return lauterbach_open_state
@@ -148,12 +148,14 @@ class CCFdxLauterbach(connector.CChannel):
         if self.t32_api.T32_Init() == 0:
             # Quit properly the previous T32 instance
             self.t32_api.T32_Cmd("QUIT".encode("latin-1"))
-            log.debug("Previous process Trace32 closed")
+            log.internal_debug("Previous process Trace32 closed")
 
         # Open a new Trace32 process
         try:
             self.t32_process = subprocess.Popen(self.t32_start_args)
-            log.debug(f"Trace32 process open with arguments {self.t32_start_args}")
+            log.internal_debug(
+                f"Trace32 process open with arguments {self.t32_start_args}"
+            )
         except Exception:
             log.exception("Unable to open Trace32")
             return lauterbach_open_state
@@ -172,18 +174,18 @@ class CCFdxLauterbach(connector.CChannel):
 
         # Ping
         if self.t32_api.T32_Ping() == 0:
-            log.debug(f"ITF connected on {self.node}:{self.port}")
+            log.internal_debug(f"ITF connected on {self.node}:{self.port}")
         else:
             log.fatal(f"Unable to connect on port :{self.port}")
             return lauterbach_open_state
 
         # Clear the FDX buffer if script provided
         if self.load_script(self.t32_fdx_clr_buf_script_path) == 0:
-            log.info(f"script {self.t32_fdx_clr_buf_script_path} loaded")
+            log.internal_info(f"script {self.t32_fdx_clr_buf_script_path} loaded")
 
         # Load the cmm script
         if self.load_script(self.t32_main_script_path) == 0:
-            log.debug(f"script {self.t32_main_script_path} loaded")
+            log.internal_debug(f"script {self.t32_main_script_path} loaded")
         else:
             log.fatal(f"Unable to load {self.t32_main_script_path}")
             return lauterbach_open_state
@@ -213,15 +215,19 @@ class CCFdxLauterbach(connector.CChannel):
 
         # Close FDX receiver communication
         fdxin_state = self.t32_api.T32_Fdx_Close(self.fdxin)
-        log.debug(f"Disconnected from FDX {self.fdxin} with state {fdxin_state}")
+        log.internal_debug(
+            f"Disconnected from FDX {self.fdxin} with state {fdxin_state}"
+        )
 
         # Close FDX sender communication
         fdxout_state = self.t32_api.T32_Fdx_Close(self.fdxout)
-        log.debug(f"Disconnected from FDX {self.fdxout} with state {fdxout_state}")
+        log.internal_debug(
+            f"Disconnected from FDX {self.fdxout} with state {fdxout_state}"
+        )
 
         # Reset Target
         reset_cpu_state = self.t32_api.T32_ResetCPU()
-        log.debug(f"Reset the CPU with state {reset_cpu_state}")
+        log.internal_debug(f"Reset the CPU with state {reset_cpu_state}")
 
         # Reset the target if script provided
         if self.t32_reset_script_path is not None:
@@ -237,8 +243,8 @@ class CCFdxLauterbach(connector.CChannel):
 
         :return: poll length
         """
-        log.debug(f"===> {msg}")
-        log.debug(f"Sent on channel {self.fdxout}")
+        log.internal_debug(f"===> {msg}")
+        log.internal_debug(f"Sent on channel {self.fdxout}")
 
         # Create and fill the buffer with the message
         buffer = ctypes.pointer(ctypes.create_string_buffer(len(msg)))
@@ -298,9 +304,11 @@ class CCFdxLauterbach(connector.CChannel):
 
             # Check if a message has been received
             elif poll_len > 0:
-                log.info(f"Message size: {poll_len}")
-                log.info(f"<=== {Message.parse_packet(buffer.contents.raw[:poll_len])}")
-                log.debug(f"Received on channel {self.fdxin}")
+                log.internal_info(f"Message size: {poll_len}")
+                log.internal_info(
+                    f"<=== {Message.parse_packet(buffer.contents.raw[:poll_len])}"
+                )
+                log.internal_debug(f"Received on channel {self.fdxin}")
                 received_msg = Message.parse_packet(buffer.contents.raw[:poll_len])
                 break
 
@@ -323,29 +331,33 @@ class CCFdxLauterbach(connector.CChannel):
     def reset_board(self) -> None:
         """Executes the board reset."""
 
-        log.debug(f"In Reset Function safety flag is: {self.safe_reset_flag}")
-        log.debug(f"In Reset Function reset flag is: {self.reset_flag}")
+        log.internal_debug(f"In Reset Function safety flag is: {self.safe_reset_flag}")
+        log.internal_debug(f"In Reset Function reset flag is: {self.reset_flag}")
 
         while not self.safe_reset_flag:
-            log.debug(f"Safety flag in while loop is: {self.safe_reset_flag}")
+            log.internal_debug(f"Safety flag in while loop is: {self.safe_reset_flag}")
             time.sleep(0.3)
 
         self.reset_flag = True
-        log.debug("Do the board reset")
+        log.internal_debug("Do the board reset")
 
         self.t32_api.T32_Stop()
 
         # Close FDX receiver communication
         fdxin_state = self.t32_api.T32_Fdx_Close(self.fdxin)
-        log.debug(f"Disconnected from FDX {self.fdxin} with state {fdxin_state}")
+        log.internal_debug(
+            f"Disconnected from FDX {self.fdxin} with state {fdxin_state}"
+        )
 
         # Close FDX sender communication
         fdxout_state = self.t32_api.T32_Fdx_Close(self.fdxout)
-        log.debug(f"Disconnected from FDX {self.fdxout} with state {fdxout_state}")
+        log.internal_debug(
+            f"Disconnected from FDX {self.fdxout} with state {fdxout_state}"
+        )
 
         # Reset Target
         reset_cpu_state = self.t32_api.T32_ResetCPU()
-        log.debug(f"Reset the CPU with state {reset_cpu_state}")
+        log.internal_debug(f"Reset the CPU with state {reset_cpu_state}")
 
         # Run reset script
         if self.t32_in_test_reset_script_path is not None:
@@ -363,4 +375,4 @@ class CCFdxLauterbach(connector.CChannel):
 
         self.t32_api.T32_Go()
         self.reset_flag = False
-        log.debug("Reset finished")
+        log.internal_debug("Reset finished")

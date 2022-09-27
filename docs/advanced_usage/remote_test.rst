@@ -1,3 +1,5 @@
+.. _remote_test:
+
 Remote Test
 ===========
 
@@ -40,10 +42,11 @@ Communication Channel
 
 In case of the *device under test*, we have a specific communication protocol. Please see the next paragraph.
 
-Flashing
-^^^^^^^^
+Flasher
+^^^^^^^
 
-The Flasher Connectors usually provide only one method, :py:meth:`Flasher.flash`, which will transfer the configured binary file to the target.
+The Flasher Connectors usually provide only one method, :py:meth:`~pykiso.connector.Flasher.flash`,
+which will transfer the configured binary file to the target.
 
 
 .. _flashing-1:
@@ -243,8 +246,8 @@ Flashing
 ~~~~~~~~
 
 The flashing is usually needed to put the test-software containing the tests we would like to run into the *Device under test* .
-Flashing is done via a flashing connector, which has to be configured with the correct binary file.
-The flashing connector is in turn called from an appropriate auxiliary (usually in its setup phase).
+Flashing is done via a flasher connector, which has to be configured with the correct binary file.
+The flasher connector is in turn called from an appropriate auxiliary (usually in its setup phase).
 
 
 Implementation of Remote Tests
@@ -322,7 +325,7 @@ Find below a full example for a test suite/case declaration in case the Message 
 Config File for remote tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For details see :ref:`../getting_started/config_file`.
+For details see :ref:`config_file`.
 
 Find below an example of config for used for remote testing (is that case using *device under test* auxiliary)
 

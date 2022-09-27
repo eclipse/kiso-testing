@@ -10,9 +10,7 @@
 """
 test_suite_1
 ************
-
 :module: test_suite_1
-
 :synopsis: Basic example on how to write and configure test suite and
 case on ITF side in order to communicate with the device under test
 using TestApp.
@@ -33,25 +31,25 @@ side_effect = cycle([False, False, True])
 class SuiteSetup(pykiso.RemoteTestSuiteSetup):
     """This test suite setup will be executed using base behavior
     given by RemoteTestSuiteSetup.
-
-
     Using decorator define_test_parameters the following parameters will
     be applied on test suite setup :
-
     -> suite_id : set to 1
     -> aux_list : test suite setup executed using aux1 and aux2 (see
     yaml configuration file)
     """
+
+    def test_suite_setUp(self):
+        module = importlib.import_module("pykiso.auxiliaries")
+        attribute = dir(module)
+        logging.error(f"this is the attribute of pykiso.auxiliaries: {attribute}")
 
 
 @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
 class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     """This test suite teardown will be executed using base behavior
     given by RemoteTestSuiteSetup.
-
     Using decorator define_test_parameters the following parameters will
     be applied on test suite teardown :
-
     -> suite_id : set to 1
     -> aux_list : test suite teardown executed using aux1 and aux2 (see
     yaml configuration file)
@@ -68,10 +66,8 @@ class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
 class MyTest1(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
     given by RemoteTest only for setUp and tearDown method.
-
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp and tearDown:
-
     -> suite_id : set to 1
     -> case_id : set to 1
     -> aux_list : test case test_run, setUp, and tearDown executed using
@@ -94,7 +90,6 @@ class MyTest1(pykiso.BasicTest):
         """In this case the default test_run method is overridden and
         instead of calling test_run from RemoteTest class the following
         code is called.
-
         Here, the test pass at the 3rd attempt out of 5. The setup and
         tearDown methods are called for each attempt.
         """
@@ -127,10 +122,8 @@ class MyTest1(pykiso.BasicTest):
 class MyTest2(pykiso.RemoteTest):
     """This test case definition will be executed using base behavior
     given by RemoteTest.
-
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp, test_run and tearDown:
-
     -> suite_id : set to 1
     -> case_id : set to 2
     -> aux_list : test case test_run, setUp, and tearDown executed using
@@ -143,7 +136,6 @@ class MyTest2(pykiso.RemoteTest):
     report from device under test otherwise an abort command is sent.
     -> test_ids: [optional] store the requirements into the report
     -> tag: [optional] allows the run of subset of tests
-
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.
     """
@@ -155,7 +147,6 @@ class MyTest2(pykiso.RemoteTest):
         """In this case the default test_run method is called using the
         python syntax super(), in addition aux3, aux2 running is paused
         and resumed.
-
         This test will be run 3 times in order to test stability (setUp
         and tearDown excluded as the flags are set to False).
         """
@@ -181,10 +172,8 @@ class MyTest2(pykiso.RemoteTest):
 class MyTest3(pykiso.RemoteTest):
     """This test case definition will be executed using base behavior
     given by RemoteTest.
-
     Using decorator define_test_parameters the following parameters will
     be applied on test case setUp, test_run and tearDown:
-
     -> suite_id : set to 1
     -> case_id : set to 3
     -> aux_list : test case test_run, setUp, and tearDown executed using
@@ -197,7 +186,6 @@ class MyTest3(pykiso.RemoteTest):
     report from device under test otherwise an abort command is sent.
     -> test_ids: [optional] store the requirements into the report
     -> tag: [optional] allows the run of subset of tests
-
     If setup_timeout, run_timeout and teardown_timeout are not given the
     default timeout value is 10 seconds for each.
     """

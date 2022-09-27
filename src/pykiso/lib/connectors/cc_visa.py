@@ -52,7 +52,7 @@ class VISAChannel(CChannel):
 
     def _cc_close(self) -> None:
         """Close a resource"""
-        log.info(f"Close VISA resource: {self.resource_name}")
+        log.internal_info(f"Close VISA resource: {self.resource_name}")
         self.resource.close()
 
     def _process_request(self, request: str, request_data: str = "") -> str:
@@ -67,13 +67,13 @@ class VISAChannel(CChannel):
         recv = ""
         try:
             if request == "read":
-                log.debug(f"Reading {self.resource_name} ")
+                log.internal_debug(f"Reading {self.resource_name} ")
                 recv = self.resource.read().strip()
             elif request == "query":
-                log.debug(f"Querying {request_data} to {self.resource_name}")
+                log.internal_debug(f"Querying {request_data} to {self.resource_name}")
                 recv = self.resource.query(request_data).strip()
             else:
-                log.warning(f"Unknown request '{request}'!")
+                log.internal_warning(f"Unknown request '{request}'!")
 
         except pyvisa.errors.InvalidSession:
             log.exception(
@@ -86,7 +86,7 @@ class VISAChannel(CChannel):
         except Exception as e:
             log.exception(f"Request {request}: {request_data} failed!\n{e}")
         else:
-            log.debug(f"Response received: {recv}")
+            log.internal_debug(f"Response received: {recv}")
         finally:
             response = {"msg": str(recv)}
             return response
@@ -99,7 +99,7 @@ class VISAChannel(CChannel):
         if isinstance(msg, bytes):
             msg = msg.decode()
 
-        log.debug(f"Writing {msg} to {self.resource_name}")
+        log.internal_debug(f"Writing {msg} to {self.resource_name}")
         self.resource.write(msg)
 
     def _cc_receive(self, timeout: float = 0.1, size: Optional[int] = None) -> str:
@@ -144,7 +144,7 @@ class VISASerial(VISAChannel):
 
     def _cc_open(self) -> None:
         """Open an instrument via serial"""
-        log.info(f"Open VISA resource: {self.resource_name}")
+        log.internal_info(f"Open VISA resource: {self.resource_name}")
         # check if the resource is available (for Serial only)
         if self.resource_name not in self.ResourceManager.list_resources():
             raise ConnectionRefusedError(
@@ -183,5 +183,5 @@ class VISATcpip(VISAChannel):
 
     def _cc_open(self) -> None:
         """Open a remote instrument via TCPIP"""
-        log.info(f"Open VISA resource: {self.resource_name}")
+        log.internal_info(f"Open VISA resource: {self.resource_name}")
         self.resource = self.ResourceManager.open_resource(self.resource_name)

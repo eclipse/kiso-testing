@@ -23,44 +23,19 @@ from pykiso.lib.robot_framework.uds_auxiliary import (
 from pykiso.test_setup.config_registry import ConfigRegistry
 
 
-def create_config():
-    cfg = """
-[can]
-interface=peak
-canfd=True
-baudrate=500000
-data_baudrate=2000000
-defaultReqId=0xAB
-defaultResId=0xAC
-    """
-    return cfg
-
-
 @pytest.fixture
-def tmp_config_ini(tmp_path):
-    uds_folder = tmp_path / "fake_robot_uds"
-    uds_folder.mkdir()
-    config_ini = uds_folder / "_config.ini"
-    config_ini.write_text(create_config())
-    import logging
-
-    logging.error(config_ini)
-    return config_ini
-
-
-@pytest.fixture(scope="function")
-def robot_uds_aux(mocker, tmp_config_ini):
+def robot_uds_aux(mocker):
     mocker.patch(
         "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run", return_value=None
     )
     mocker.patch(
         "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
-        return_value={"uds_aux": UdsAux("", tmp_config_ini)},
+        return_value={"uds_aux": UdsAux("", tp_layer={}, uds_layer={})},
     )
     return UdsAuxiliary()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def uds_aux(robot_uds_aux):
     return robot_uds_aux._get_aux("uds_aux")
 
@@ -72,7 +47,7 @@ def test_send_uds_raw_with_response(mocker, robot_uds_aux, uds_aux):
 
     response = robot_uds_aux.send_uds_raw(b"\x10\x01", "uds_aux", 6)
 
-    uds_raw_mock.assert_called_with(b"\x10\x01", 6)
+    uds_raw_mock.assert_called_with(b"\x10\x01", 6, True)
     assert isinstance(response, list)
     assert response.pop() == 0x03
     assert response.pop() == 0x50
@@ -83,7 +58,7 @@ def test_send_uds_raw_with_state(mocker, robot_uds_aux, uds_aux):
 
     response = robot_uds_aux.send_uds_raw(b"\x10\x01", "uds_aux", 6)
 
-    uds_raw_mock.assert_called_with(b"\x10\x01", 6)
+    uds_raw_mock.assert_called_with(b"\x10\x01", 6, True)
     assert isinstance(response, bool)
 
 
@@ -179,7 +154,9 @@ def test_tester_present_sender(mocker, robot_uds_aux, uds_aux):
     send_mock = mocker.patch.object(uds_aux, "send_uds_raw")
     mocker.patch("time.sleep", return_value=None)
 
-    robot_uds_aux.start_tester_present_sender(1, "uds_aux")
-    robot_uds_aux.stop_tester_present_sender()
+    robot_uds_aux.start_tester_present_sender("uds_aux", period=1)
+    robot_uds_aux.stop_tester_present_sender("uds_aux")
 
-    send_mock.assert_called_with(UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE)
+    send_mock.assert_called_with(
+        UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE, response_required=False
+    )

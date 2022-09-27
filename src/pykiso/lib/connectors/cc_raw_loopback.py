@@ -18,7 +18,7 @@ Loopback CChannel
 .. currentmodule:: cc_raw_loopback
 
 """
-
+import threading
 from collections import deque
 from typing import Dict, Optional
 
@@ -36,6 +36,7 @@ class CCLoopback(CChannel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._loopback_buffer = None
+        self.lock = threading.Lock()
 
     def _cc_open(self) -> None:
         """Open loopback channel."""
@@ -53,7 +54,8 @@ class CCLoopback(CChannel):
 
         :param msg: message to send, should be Message type or bytes.
         """
-        self._loopback_buffer.append(msg)
+        with self.lock:
+            self._loopback_buffer.append(msg)
 
     def _cc_receive(
         self, timeout: float, size: Optional[int] = None
@@ -64,8 +66,9 @@ class CCLoopback(CChannel):
 
         :return: Message or raw bytes if successful, otherwise None
         """
-        try:
-            recv_msg = self._loopback_buffer.popleft()
-            return {"msg": recv_msg}
-        except IndexError:
-            return {"msg": None}
+        with self.lock:
+            try:
+                recv_msg = self._loopback_buffer.popleft()
+                return {"msg": recv_msg}
+            except IndexError:
+                return {"msg": None}

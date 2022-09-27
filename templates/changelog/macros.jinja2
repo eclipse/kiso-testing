@@ -1,9 +1,0 @@
-{% macro section(title, notes) %}
-{%- if notes -%}
-#### {{ title }}
-
-{% for note in notes -%}
-*{% if note.scope %} ({{ note.scope }}):{% endif %} {{ note.description }}
-{% endfor -%}
-{% endif -%}
-{% endmacro -%}

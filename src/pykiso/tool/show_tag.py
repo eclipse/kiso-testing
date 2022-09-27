@@ -32,6 +32,7 @@ import click
 from tabulate import tabulate
 
 from pykiso.config_parser import parse_config
+from pykiso.exceptions import TestCollectionError
 from pykiso.test_coordinator import test_execution
 from pykiso.test_coordinator.test_case import BasicTest
 from pykiso.types import PathType
@@ -268,6 +269,11 @@ def main(
                     f"Failed to load test cases from config file {config_file.name}: {e.args[0]}"
                 )
                 continue
+            except TestCollectionError as e:
+                click.echo(
+                    f"Failed to load test cases from config file {config_file.name}: {e}"
+                )
+                continue
 
             tags = get_test_tags(test_cases)
 
@@ -284,6 +290,8 @@ def main(
 
     if output is None:
         return
+
+    output = Path(output)
 
     with open(output, "w", encoding="utf-8") as f:
         if ".json" in output.suffixes:

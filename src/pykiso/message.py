@@ -208,7 +208,7 @@ class Message:
                 if isinstance(key, TlvKnownTags):
                     parsed_key = struct.pack("B", int(key))
                 else:
-                    log.warning("{} is not a supported format".format(key))
+                    log.internal_warning("{} is not a supported format".format(key))
                 parsed_value = b""
                 if isinstance(value, str):  # If string given
                     parsed_value = parsed_value.join(
@@ -221,7 +221,7 @@ class Message:
                 elif isinstance(value, bytes):
                     parsed_value = value
                 else:
-                    log.warning("{} is not a supported format".format(value))
+                    log.internal_warning("{} is not a supported format".format(value))
                 # Add the TLV element:
                 payload += parsed_key
                 payload += struct.pack("B", len(parsed_value))
@@ -334,7 +334,7 @@ class Message:
         ):
             return True
         else:
-            log.info(
+            log.internal_info(
                 "ack_message: {} \ndifferent of \nthis message: {}".format(
                     str(ack_message), str(self)
                 )

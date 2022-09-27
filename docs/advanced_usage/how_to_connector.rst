@@ -167,12 +167,12 @@ see the example below with the cc_pcan_can connector and the return of the remot
                 timestamp = received_msg.timestamp
                 if not raw:
                     payload = Message.parse_packet(payload)
-                log.debug(f"received CAN Message: {frame_id}, {payload}, {timestamp}")
+                log.internal_debug(f"received CAN Message: {frame_id}, {payload}, {timestamp}")
                 return {"msg": payload, "remote_id": frame_id}
             else:
                 return {"msg": None}
         except can.CanError as can_error:
-            log.debug(f"encountered can error: {can_error}")
+            log.internal_debug(f"encountered can error: {can_error}")
             return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")

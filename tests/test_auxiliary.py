@@ -7,19 +7,18 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import queue
-import threading
+import logging
 import time
-import unittest
-from threading import Thread
+from multiprocessing.connection import deliver_challenge
 
 import pytest
 
+import pykiso
 from pykiso import (
     AuxiliaryInterface,
     MpAuxiliaryInterface,
     SimpleAuxiliaryInterface,
-    cli,
+    logging_initializer,
 )
 from pykiso.auxiliary import AuxiliaryCommon
 from pykiso.exceptions import AuxiliaryCreationError
@@ -72,7 +71,9 @@ def mock_thread_aux(mocker):
 def mock_mp_aux(mocker):
     class MockMpAux(MpAuxiliaryInterface):
         def __init__(self, param_1=None, param_2=None, **kwargs):
-            cli.log_options = cli.LogOptions(None, "ERROR", None)
+            logging_initializer.log_options = logging_initializer.LogOptions(
+                None, "ERROR", None, False
+            )
             self.param_1 = param_1
             self.param_2 = param_2
             super().__init__(name="mp_aux", **kwargs)
@@ -96,6 +97,43 @@ def mock_simple_aux(mocker):
         _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
 
     return MockSimpleAux()
+
+
+def test_add_internal_log_levels():
+
+    # does the opposite of add_logging_level, so log levels addition can be tested
+    def del_logging_level(level_name):
+        method_name = level_name.lower()
+
+        delattr(logging, level_name)
+        delattr(logging.getLoggerClass(), method_name)
+        delattr(logging, method_name)
+
+    del_logging_level("INTERNAL_WARNING")
+    del_logging_level("INTERNAL_INFO")
+    del_logging_level("INTERNAL_DEBUG")
+
+    assert not hasattr(logging, "INTERNAL_INFO")
+    assert not hasattr(logging, "INTERNAL_DEBUG")
+    assert not hasattr(logging, "INTERNAL_WARNING")
+
+    class DummyAux(AuxiliaryCommon):
+        def __init__(self):
+            super().__init__()
+
+        def create_instance(self):
+            pass
+
+        def delete_instance(self):
+            pass
+
+        def run(self):
+            pass
+
+    my_dummy_aux = DummyAux()
+    assert hasattr(logging, "INTERNAL_INFO")
+    assert hasattr(logging, "INTERNAL_DEBUG")
+    assert hasattr(logging, "INTERNAL_WARNING")
 
 
 def test_thread_aux_raise_creation_error(mock_thread_aux):

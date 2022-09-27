@@ -27,10 +27,6 @@ class TestUdsServerAuxiliary:
     @pytest.fixture(scope="function")
     def uds_server_aux_inst(self, mocker, ccpcan_inst, tmp_uds_config_ini):
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run",
-            return_value=None,
-        )
-        mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
@@ -44,7 +40,10 @@ class TestUdsServerAuxiliary:
         )
 
         TestUdsServerAuxiliary.uds_aux_instance_odx = UdsServerAuxiliary(
-            com=ccpcan_inst, config_ini_path=tmp_uds_config_ini, odx_file_path="odx"
+            com=ccpcan_inst,
+            request_id=0x123,
+            config_ini_path=tmp_uds_config_ini,
+            odx_file_path="odx",
         )
         return TestUdsServerAuxiliary.uds_aux_instance_odx
 
@@ -67,8 +66,8 @@ class TestUdsServerAuxiliary:
             com=ccpcan_inst, config_ini_path=tmp_uds_config_ini
         )
 
-        assert uds_server_inst.req_id == 0xAB
-        assert uds_server_inst.res_id == 0xAC
+        assert uds_server_inst.req_id == None
+        assert uds_server_inst.res_id == None
 
     def test_constructor_odx(
         self, uds_server_aux_inst, tmp_uds_config_ini, ccpcan_inst, caplog
@@ -107,7 +106,7 @@ class TestUdsServerAuxiliary:
             ]
         )
 
-    @pytest.mark.parametrize("req_id, expected_req_id", [(None, 0xAB), (0x42, 0x42)])
+    @pytest.mark.parametrize("req_id, expected_req_id", [(None, 0x123), (0x42, 0x42)])
     def test_transmit(self, mocker, uds_server_aux_inst, req_id, expected_req_id):
         data = [1, 2, 3, 4]
         mock_pad = mocker.patch.object(
@@ -131,8 +130,10 @@ class TestUdsServerAuxiliary:
     def test_receive(
         self, mocker, uds_server_aux_inst, cc_receive_return, expected_received_data
     ):
-        mock_channel = mocker.patch.object(uds_server_aux_inst, "channel")
-        mock_channel._cc_receive.return_value = cc_receive_return
+        mock_channel = mocker.patch.object(
+            uds_server_aux_inst.channel, "_cc_receive", return_value=cc_receive_return
+        )
+        uds_server_aux_inst.res_id = 0xAC
 
         received_data = uds_server_aux_inst.receive()
 
@@ -147,7 +148,9 @@ class TestUdsServerAuxiliary:
         uds_server_aux_inst.send_response(b"plop")
 
         uds_mock.tp.encode_isotp.assert_called_with(
-            b"plop", use_external_snd_rcv_functions=True
+            b"plop",
+            use_external_snd_rcv_functions=True,
+            tpWaitTime=uds_server_aux_inst.tp_waiting_time,
         )
         mock_transmit.assert_called_with("NOT NONE")
 

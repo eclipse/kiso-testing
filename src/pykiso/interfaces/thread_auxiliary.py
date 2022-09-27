@@ -32,6 +32,7 @@ from pykiso.auxiliary import AuxiliaryCommon
 from pykiso.test_setup.dynamic_loader import PACKAGE
 
 from ..exceptions import AuxiliaryCreationError
+from ..logging_initializer import initialize_loggers
 from ..types import MsgType
 
 log = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         """
         # Initialize thread class
         super().__init__()
-        self.initialize_loggers(activate_log)
+        initialize_loggers(activate_log)
         # Save the name
         self.name = name
         # Define thread control attributes & methods
@@ -90,40 +91,6 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
             super().start()
             if not self.auto_start:
                 self.create_instance()
-
-    @staticmethod
-    def initialize_loggers(loggers: Optional[List[str]]) -> None:
-        """Deactivate all external loggers except the specified ones.
-
-        :param loggers: list of logger names to keep activated
-        """
-        if loggers is None:
-            loggers = list()
-        # keyword 'all' should keep all loggers to the configured level
-        if "all" in loggers:
-            log.warning(
-                "All loggers are activated, this could lead to performance issues."
-            )
-            return
-        # keep package and auxiliary loggers
-        relevant_loggers = {
-            name: logger
-            for name, logger in logging.root.manager.loggerDict.items()
-            if not (name.startswith(PACKAGE) or name.endswith("auxiliary"))
-            and not isinstance(logger, logging.PlaceHolder)
-        }
-        # keep child loggers
-        childs = [
-            logger
-            for logger in relevant_loggers.keys()
-            for parent in loggers
-            if (logger.startswith(parent) or parent.startswith(logger))
-        ]
-        loggers += childs
-        # keep original level for specified loggers
-        loggers_to_deactivate = set(relevant_loggers) - set(loggers)
-        for logger_name in loggers_to_deactivate:
-            logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     def create_instance(self) -> bool:
         """Create an auxiliary instance and ensure the communication to it.
@@ -198,8 +165,10 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
                 self.queue_out.put(self._abort_command())
             elif request != "":
                 # A request was received but could not be processed
-                log.warning(f"Unknown request '{request}', will not be processed!")
-                log.warning(f"Aux status: {self.__dict__}")
+                log.internal_warning(
+                    f"Unknown request '{request}', will not be processed!"
+                )
+                log.internal_warning(f"Aux status: {self.__dict__}")
 
             # Step 2: Check if something was received from the aux instance if instance was created
             if self.is_instance:
@@ -213,7 +182,7 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
                 time.sleep(0.050)
 
         # Thread stop command was set
-        log.info("{} was stopped".format(self))
+        log.internal_info("{} was stopped".format(self))
         # Delete auxiliary external instance if not done
         if self.is_instance:
             self._delete_auxiliary_instance()

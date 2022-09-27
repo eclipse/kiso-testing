@@ -49,7 +49,7 @@ class CCTcpip(CChannel):
 
     def _cc_open(self) -> None:
         """Connect to socket with configured port and IP address."""
-        log.info(
+        log.internal_info(
             f"Connection to socket at address {self.dest_ip} port {self.dest_port}"
         )
         self.socket.settimeout(3)
@@ -57,7 +57,7 @@ class CCTcpip(CChannel):
 
     def _cc_close(self) -> None:
         """Close UDP socket."""
-        log.info(
+        log.internal_info(
             f"Disconnect from socket at address {self.dest_ip}, port {self.dest_port}"
         )
         self.socket.close()
@@ -70,7 +70,7 @@ class CCTcpip(CChannel):
 
         :param msg: message to send
         """
-        log.debug(f"Sending {msg} via socket to {self.dest_ip}")
+        log.internal_debug(f"Sending {msg} via socket to {self.dest_ip}")
         self.socket.send(msg)
 
     def _cc_receive(
@@ -87,8 +87,7 @@ class CCTcpip(CChannel):
 
         try:
             msg_received = self.socket.recv(self.max_msg_size)
-
-            log.debug(f"Socket at {self.dest_ip} received: {msg_received}")
+            log.internal_debug(f"Socket at {self.dest_ip} received: {msg_received}")
         except socket.timeout:
             log.exception(
                 f"encountered timeout error while receiving message via {self}"

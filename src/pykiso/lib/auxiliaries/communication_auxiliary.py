@@ -20,8 +20,13 @@ CommunicationAuxiliary
 
 
 """
+from __future__ import annotations
+
+import functools
 import logging
 import queue
+import threading
+from contextlib import ContextDecorator
 from typing import Any, Optional
 
 from pykiso import CChannel, Message
@@ -32,6 +37,28 @@ from pykiso.interfaces.dt_auxiliary import (
 )
 
 log = logging.getLogger(__name__)
+
+
+class _collect_messages(ContextDecorator):
+    """Context manager and decorator for the communication auxiliary
+    allowing messages collection (putting them in the queue).
+    """
+
+    def __init__(self, com_aux: CommunicationAuxiliary):
+        """Constructor used to inherit some of communication auxiliary
+        features.
+        """
+        self.com_aux = com_aux
+
+    def __enter__(self):
+        """Set the queue event to allow messages collection."""
+        log.internal_debug("Start queueing received messages.")
+        self.com_aux.queueing_event.set()
+
+    def __exit__(self, *exc):
+        """Clear queue event to stop messages collection."""
+        log.internal_debug("Stop queueing received messages.")
+        self.com_aux.queueing_event.clear()
 
 
 class CommunicationAuxiliary(DTAuxiliaryInterface):
@@ -47,6 +74,8 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         )
         self.channel = com
         self.queue_tx = queue.Queue()
+        self.queueing_event = threading.Event()
+        self.collect_messages = functools.partial(_collect_messages, com_aux=self)
 
     @open_connector
     def _create_auxiliary_instance(self) -> bool:
@@ -54,7 +83,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
 
         :return: True if the channel is correctly opened otherwise False
         """
-        log.info("Auxiliary instance created")
+        log.internal_info("Auxiliary instance created")
         return True
 
     @close_connector
@@ -63,7 +92,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
 
         :return: always True
         """
-        log.info("Auxiliary instance deleted")
+        log.internal_info("Auxiliary instance deleted")
         return True
 
     def send_message(self, raw_msg: bytes) -> bool:
@@ -97,14 +126,14 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
             False
         """
         with self.lock:
-            log.debug(
+            log.internal_debug(
                 f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
             )
             state = None
             self.queue_in.put((cmd_message, cmd_data))
             try:
                 state = self.queue_tx.get(blocking, timeout_in_s)
-                log.debug(
+                log.internal_debug(
                     f"command '{cmd_message}' successfully sent for {self.name} aux"
                 )
             except queue.Empty:
@@ -114,7 +143,9 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         return state
 
     def receive_message(
-        self, blocking: bool = True, timeout_in_s: float = None
+        self,
+        blocking: bool = True,
+        timeout_in_s: float = None,
     ) -> Optional[bytes]:
         """Receive a raw message.
 
@@ -123,11 +154,23 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
 
         :returns: raw message
         """
-        log.debug(
+
+        # Evaluate if we are in the context manager or not
+        in_ctx_manager = False
+        if self.queueing_event.is_set():
+            in_ctx_manager = True
+
+        log.internal_debug(
             f"retrieving message in {self} (blocking={blocking}, timeout={timeout_in_s})"
         )
+        # In case we are not in the context manager, we have a enable the receiver thread (and afterwards disable it)
+        if not in_ctx_manager:
+            self.queueing_event.set()
         response = self.wait_for_queue_out(blocking=blocking, timeout_in_s=timeout_in_s)
-        log.debug(f"retrieved message '{response}' in {self}")
+        if not in_ctx_manager:
+            self.queueing_event.clear()
+
+        log.internal_debug(f"retrieved message '{response}' in {self}")
 
         # if queue.Empty exception is raised None is returned so just
         # directly return it
@@ -141,6 +184,12 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         if remote_id is not None:
             return (msg, remote_id)
         return msg
+
+    def clear_buffer(self) -> None:
+        """Clear buffer from old stacked objects"""
+        log.internal_info("Clearing buffer. Previous responses will be deleted.")
+        with self.queue_out.mutex:
+            self.queue_out.queue.clear()
 
     def _run_command(self, cmd_message: str, cmd_data: bytes = None) -> bool:
         """Run the corresponding command.
@@ -160,25 +209,24 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
                     f"encountered error while sending message '{cmd_data}' to {self.channel}"
                 )
         elif isinstance(cmd_message, Message):
-            log.debug(f"ignored command '{cmd_message} in {self}'")
+            log.internal_debug(f"ignored command '{cmd_message} in {self}'")
         else:
-            log.warning(f"received unknown command '{cmd_message} in {self}'")
+            log.internal_warning(f"received unknown command '{cmd_message} in {self}'")
 
         self.queue_tx.put(state)
 
-    def _receive_message(self, timeout_in_s: float) -> bytes:
-        """Get a message from the associated channel.
+    def _receive_message(self, timeout_in_s: float) -> None:
+        """Get a message from the associated channel. And put the message in
+        the queue, if threading event is set.
 
         :param timeout_in_s: maximum amount of time (seconds) to wait
             for a message
-
-        :return: received message
         """
         try:
             rcv_data = self.channel.cc_receive(timeout=timeout_in_s)
+            log.internal_debug(f"received message '{rcv_data}' from {self.channel}")
             msg = rcv_data.get("msg")
-            if msg is not None:
-                log.debug(f"received message '{rcv_data}' from {self.channel}")
+            if msg is not None and self.queueing_event.is_set():
                 self.queue_out.put(rcv_data)
         except Exception:
             log.exception(
