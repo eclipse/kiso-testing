@@ -115,7 +115,7 @@ class CCProcess(CChannel):
                 line = stream.readline()
                 if len(line) == 0:
                     break
-                log.debug(f" read {name}: {line}")
+                log.debug(f"read {name}: {line}")
                 self.queue_in.put((name, line))
         finally:
             with self.lock:
