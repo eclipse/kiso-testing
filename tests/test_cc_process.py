@@ -48,9 +48,19 @@ def test_process(mocker):
         executable=executable,
         args=[
             "-c",
-            'import sys;import time;print(sys.stdin.readline());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");print("pykiso")',
+            # process:
+            # read line from stdin and write to stdout
+            # sleep 1s
+            # print "error" on stderr
+            # sleep 1s
+            # print "hello" on stdout
+            # print "pykiso" on stdout
+            'import sys;import time;print(sys.stdin.readline().strip());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");print("pykiso")',
         ],
     )
+    # Start the process
+    cc_process.start()
+    # Second start does nothing as the process is already running
     cc_process.start()
     """cc_process.cc_send(
         {
@@ -63,8 +73,7 @@ def test_process(mocker):
         }
     )"""
     cc_process._cc_send("hi\r\n")
-    # cc_process.start()
-    assert cc_process._cc_receive(3) == "hi"
+    assert cc_process.cc_receive(3) == {"msg": {"stdout": "hi\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stderr": "error\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "hello\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "pykiso\n"}}

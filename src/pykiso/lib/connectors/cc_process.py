@@ -13,13 +13,12 @@ Process Channel
 
 :module: cc_process
 
-:synopsis: CChannel implementation for multi-auxiliary usage.
+:synopsis: CChannel implementation for process execution.
 
-CCProxy channel was created, in order to enable the connection of
-multiple auxiliaries on one and only one CChannel. This CChannel
-has to be used with a so called proxy auxiliary.
+The CCProcess channel provides functionality to start a process and
+to communicate with it.
 
-.. currentmodule:: cc_proxy
+.. currentmodule:: cc_process
 
 """
 
@@ -35,6 +34,10 @@ from pykiso.connector import CChannel
 log = logging.getLogger(__name__)
 
 MessageType = Union[str, ByteString]
+
+
+class CCProcessError(BaseException):
+    ...
 
 
 class CCProcess(CChannel):
@@ -75,8 +78,7 @@ class CCProcess(CChannel):
 
     def start(self, executable: Optional[str] = None, args: Optional[List[str]] = None):
         if self.process is not None and self.process.returncode is None:
-            log.error(f"Process is already running: {self.executable}")
-            return
+            raise CCProcessError(f"Process is already running: {self.executable}")
 
         self._cleanup()
         self.ready = 0
@@ -113,7 +115,7 @@ class CCProcess(CChannel):
                 line = stream.readline()
                 if len(line) == 0:
                     break
-                print(f"{name}: {line}")
+                log.debug(f" read {name}: {line}")
                 self.queue_in.put((name, line))
         finally:
             with self.lock:
@@ -127,13 +129,12 @@ class CCProcess(CChannel):
         self._cleanup()
 
     def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
-        print(f"_cc_send: {msg}")
 
         if isinstance(msg, dict) and "command" in msg:
             if msg["command"] == "start":
                 self.start(msg["executable"], msg["args"])
         elif self.pipe_stdin:
-            print(f"Ywrite: {msg}")
+            log.debug(f"write stdin: {msg}")
             self.process.stdin.write(msg)
             self.process.stdin.flush()
         else:
