@@ -1,44 +1,25 @@
+##########################################################################
+# Copyright (c) 2010-2022 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
 import sys
 from pathlib import Path
 
 import pytest
 
-executable = str(Path(sys.executable).resolve())
-from pykiso.lib.connectors.cc_process import CCProcess
-
-
-def test_constructor(mocker):
-
-    popen_mock = mocker.patch("subprocess.Popen")
-
-    cc_process = CCProcess()
-
-
-def test_send(mocker):
-
-    popen_mock = mocker.patch("subprocess.Popen")
-
-    cc_process = CCProcess()
-
-    # cc_process._cc_send({"msg":{"command":"start"}})
-    cc_process._cc_send({"command": "start", "executable": "exe", "args": ["1", "2"]})
-    assert cc_process.process is not None
-
-
-# def test_receive(mocker):
-
-#     popen_mock = mocker.patch("subprocess.Popen")
-
-#     cc_process = CCProcess()
-#     cc_process._cc_send({"command": "start", "executable": "exe", "args": ["1", "2"]})
-
-#     cc_process.process.stdout.readline.return_value = [b"1", b"234"]
-#     x = cc_process._cc_receive()
-#     cc_process.process.stdout.readline.assert_called_once()
-#     assert x == {"msg": {"data": [b"1", b"234"]}}
+from pykiso.lib.connectors.cc_process import CCProcess, CCProcessError
 
 
 def test_process(mocker):
+    """Test most of the CCProcess functionality with a real process"""
+
+    # Get the path of the python executable to start a python process
+    executable = str(Path(sys.executable).resolve())
 
     cc_process = CCProcess(
         shell=False,
@@ -60,8 +41,9 @@ def test_process(mocker):
     )
     # Start the process
     cc_process.start()
-    # Second start does nothing as the process is already running
-    cc_process.start()
+    # Second start raises an exception because the process is already running
+    with pytest.raises(CCProcessError):
+        cc_process.start()
     """cc_process.cc_send(
         {
             "command": "start",
@@ -77,6 +59,6 @@ def test_process(mocker):
     assert cc_process.cc_receive(3) == {"msg": {"stderr": "error\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "hello\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "pykiso\n"}}
-    cc_process.cc_receive(3)
+    assert cc_process.cc_receive(3) == {"msg": {"exit": 0}}
     cc_process._cc_close()
-    cc_process.cc_receive(3)
+    assert cc_process.cc_receive(3) == {"msg": None}

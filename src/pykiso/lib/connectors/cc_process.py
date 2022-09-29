@@ -121,6 +121,7 @@ class CCProcess(CChannel):
             with self.lock:
                 self.ready += 1
                 if self.ready == int(self.pipe_stdout) + int(self.pipe_stderr):
+                    # None marks the termination of all read threads
                     self.queue_in.put(None)
 
     def _cc_close(self) -> None:
@@ -129,7 +130,6 @@ class CCProcess(CChannel):
         self._cleanup()
 
     def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
-
         if isinstance(msg, dict) and "command" in msg:
             if msg["command"] == "start":
                 self.start(msg["executable"], msg["args"])
@@ -138,7 +138,7 @@ class CCProcess(CChannel):
             self.process.stdin.write(msg)
             self.process.stdin.flush()
         else:
-            raise Exception("Can not send to stdin because pipe is not enabled.")
+            raise CCProcessError("Can not send to stdin because pipe is not enabled.")
 
     def _cleanup(self):
         if self.process is not None:
