@@ -26,7 +26,7 @@ import logging
 import queue
 import subprocess
 import threading
-from typing import IO, ByteString, Callable, Dict, List, Optional, Union
+from typing import IO, ByteString, Callable, Dict, List, Optional, Tuple, Union
 
 from pykiso import Message
 from pykiso.connector import CChannel
@@ -55,6 +55,20 @@ class CCProcess(CChannel):
         args: List[str] = [],
         **kwargs,
     ):
+        """Start a process
+
+        :param shell: Start process through shell
+        :param pipe_stderr: Pipe stderr for reading with this connector
+        :param pipe_stdout: Pipe stdout for reading with this connector
+        :param pipe_stdin:  Pipe stdin for writing with this connector
+        :param text: Read/write stdout, stdin, stderr in binary mode
+        :param cwd: The current working directory for the new process
+        :param env: Environment variables for the new process
+        :param encoding: Encoding to use in text mode
+        :param executable: The path of the executable for the process
+        :param args: Process arguments
+
+        """
         super().__init__(**kwargs)
         self.shell = shell
         self.pipe_stderr = pipe_stderr
@@ -74,10 +88,14 @@ class CCProcess(CChannel):
         self.ready = 0
         self.buffer = []
 
-    def _cc_open(self) -> None:
-        pass
-
     def start(self, executable: Optional[str] = None, args: Optional[List[str]] = None):
+        """Start a process
+
+        :param executable: The executable path. Default to path specified in yaml if not given.
+        :param args: The process arguments. Default to arguments specified in yaml if not given.
+
+        :return: The thread object
+        """
         if self.process is not None and self.process.returncode is None:
             raise CCProcessError(f"Process is already running: {self.executable}")
 
@@ -99,11 +117,18 @@ class CCProcess(CChannel):
         )
 
         if self.pipe_stdout:
-            self.stdout_thread = self._start_task(self.process.stdout, "stdout")
+            self.stdout_thread = self._start_read_thread(self.process.stdout, "stdout")
         if self.pipe_stderr:
-            self.stderr_thread = self._start_task(self.process.stderr, "stderr")
+            self.stderr_thread = self._start_read_thread(self.process.stderr, "stderr")
 
-    def _start_task(self, stream: IO, name: str) -> threading.Thread:
+    def _start_read_thread(self, stream: IO, name: str) -> threading.Thread:
+        """Start a read thread
+
+        :param stream: The stream to read from
+        :param name: The name of the stream
+
+        :return: The thread object
+        """
         thread = threading.Thread(
             name=f"cc_process_{name}", target=self._read_thread, args=(stream, name)
         )
@@ -111,6 +136,11 @@ class CCProcess(CChannel):
         return thread
 
     def _read_thread(self, stream: IO, name: str) -> None:
+        """Thread for reading data from stdout or stderr
+
+        :param stream: The stream to read from
+        :param name: The name of the stream
+        """
         try:
             while True:
                 if self.text:
@@ -129,11 +159,13 @@ class CCProcess(CChannel):
                     self.queue_in.put(None)
 
     def _cc_close(self) -> None:
+        """Terminates the process"""
         if self.process is not None:
             self.process.terminate()
         self._cleanup()
 
     def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
+        """Execute process commands or write data to stdin"""
         if isinstance(msg, dict) and "command" in msg:
             if msg["command"] == "start":
                 self.start(msg["executable"], msg["args"])
@@ -145,6 +177,7 @@ class CCProcess(CChannel):
             raise CCProcessError("Can not send to stdin because pipe is not enabled.")
 
     def _cleanup(self):
+        """Cleanup threads and process objects"""
         if self.process is not None:
             self.process.terminate()
             self.process.wait()
@@ -157,14 +190,11 @@ class CCProcess(CChannel):
         if self.queue_in is not None:
             self.queue_in = None
 
-    def stream_name(self, msg):
-        if "stdout" in msg:
-            return "stdout"
-        if "stdin" in msg:
-            return "stdin"
-        return None
+    def _read_existing(self) -> List[Tuple]:
+        """Read buffered messages that where already received from the process
 
-    def read_existing(self):
+        :return: Existing messages as tuple: (streamname, data)
+        """
         messages = self.buffer
         while not self.queue_in.empty():
             messages.append(self.queue_in.get_nowait())
@@ -183,13 +213,13 @@ class CCProcess(CChannel):
         messages = messages[:i]
         if len(messages) == 0:
             return []
-        # if len(messages) == 1:
-        #    return [messages[0]]
+
         r = [(messages[0][0], b"".join([x[1] for x in messages]))]
         print(f"XXX {r}")
         return r
 
     def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
+        """Receive messages"""
         if self.queue_in is None:
             r = {"msg": None}
             print(f"process: {r}")
@@ -198,7 +228,7 @@ class CCProcess(CChannel):
         try:
             read = self.queue_in.get(True, timeout)
         except queue.Empty:
-            existing = [] if self.text else self.read_existing()
+            existing = [] if self.text else self._read_existing()
             print(f"existing: {existing}")
             if len(existing) > 0:
                 r = {"msg": {existing[0][0]: existing[0][1]}}
@@ -212,7 +242,7 @@ class CCProcess(CChannel):
                 r = {"msg": {read[0]: read[1]}}
             else:
                 self.buffer.append(read)
-                existing = self.read_existing()
+                existing = self._read_existing()
                 print(f"existing: {existing}")
                 r = {"msg": {existing[0][0]: existing[0][1]}}
                 print(f"process: {r}")

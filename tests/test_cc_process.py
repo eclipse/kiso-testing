@@ -16,7 +16,7 @@ from pykiso.lib.connectors.cc_process import CCProcess, CCProcessError
 
 
 def test_process(mocker):
-    """Test most of the CCProcess functionality with a real process"""
+    """Test most of the CCProcess functionality with a real process with text output"""
 
     # Get the path of the python executable to start a python process
     executable = str(Path(sys.executable).resolve())
@@ -66,7 +66,7 @@ def test_process(mocker):
 
 
 def test_process_binary(mocker):
-    """Test most of the CCProcess functionality with a real process"""
+    """Test most of the CCProcess functionality with a real process with binary output"""
 
     # Get the path of the python executable to start a python process
     executable = str(Path(sys.executable).resolve())
