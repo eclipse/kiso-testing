@@ -470,7 +470,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pykiso-python-uds"
-version = "3.0.0"
+version = "3.0.1"
 description = "Please use python-uds instead, this is a refactored version with breaking changes, only for pykiso"
 category = "main"
 optional = false
@@ -1508,8 +1508,8 @@ pygments = [
     {file = "Pygments-2.13.0.tar.gz", hash = "sha256:56a8508ae95f98e2b9bdf93a6be5ae3f7d8af858b43e02c5a2ff083726be40c1"},
 ]
 pykiso-python-uds = [
-    {file = "pykiso-python-uds-3.0.0.tar.gz", hash = "sha256:f313df745f6b8f68aac702ff93a98a18f8b3b2f394c013ce02d3458604115d5d"},
-    {file = "pykiso_python_uds-3.0.0-py3-none-any.whl", hash = "sha256:bf0dc8483d292e75ca6433edb6518dbd19de13c8fef33021faab1b9cf6bd3035"},
+    {file = "pykiso-python-uds-3.0.1.tar.gz", hash = "sha256:f90df1fe0e45ed5accbacfb8f25c3e053379929f7af6073be3b44833ee3d439e"},
+    {file = "pykiso_python_uds-3.0.1-py3-none-any.whl", hash = "sha256:1a392b8e7537d70f07cf100d6c4fe3d6d4dac0d4efae550d88d2d0d48c72e7a5"},
 ]
 pylink-square = [
     {file = "pylink-square-0.14.2.tar.gz", hash = "sha256:c43638e72cbd49703dfcea4c681405260ee0fe057e68e0109ae716ac4c8ddbf4"},
