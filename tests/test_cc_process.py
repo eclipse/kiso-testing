@@ -26,6 +26,7 @@ def test_process(mocker):
         pipe_stderr=True,
         pipe_stdout=True,
         pipe_stdin=True,
+        Text=True,
         executable=executable,
         args=[
             "-c",
@@ -59,6 +60,57 @@ def test_process(mocker):
     assert cc_process.cc_receive(3) == {"msg": {"stderr": "error\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "hello\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "pykiso\n"}}
+    assert cc_process.cc_receive(3) == {"msg": {"exit": 0}}
+    cc_process._cc_close()
+    assert cc_process.cc_receive(3) == {"msg": None}
+
+
+def test_process_binary(mocker):
+    """Test most of the CCProcess functionality with a real process"""
+
+    # Get the path of the python executable to start a python process
+    executable = str(Path(sys.executable).resolve())
+
+    cc_process = CCProcess(
+        shell=False,
+        pipe_stderr=True,
+        pipe_stdout=True,
+        pipe_stdin=True,
+        text=False,
+        executable=executable,
+        args=[
+            "-c",
+            # process:
+            # read line from stdin and write to stdout
+            # sleep 1s
+            # print "error" on stderr
+            # sleep 1s
+            # print "hello" on stdout
+            # sleep 1s
+            # print "pykiso" on stdout
+            'import sys;import time;print(sys.stdin.readline().strip());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");sys.stdout.flush();time.sleep(1);print("pykiso")',
+        ],
+    )
+    # Start the process
+    cc_process.start()
+    # Second start raises an exception because the process is already running
+    with pytest.raises(CCProcessError):
+        cc_process.start()
+    """cc_process.cc_send(
+        {
+            "command": "start",
+            "executable": executable,
+            "args": [
+                "-c",
+                'import sys;import time;print(sys.stdin.readline().strip());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");sys.stdout.flush();time.sleep(1);print("pykiso")',
+            ],
+        }
+    )"""
+    cc_process._cc_send(b"hi\n")
+    assert cc_process.cc_receive(3) == {"msg": {"stdout": b"hi\r\n"}}
+    assert cc_process.cc_receive(3) == {"msg": {"stderr": b"error\r\n"}}
+    assert cc_process.cc_receive(3) == {"msg": {"stdout": b"hello\r\n"}}
+    assert cc_process.cc_receive(3) == {"msg": {"stdout": b"pykiso\r\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"exit": 0}}
     cc_process._cc_close()
     assert cc_process.cc_receive(3) == {"msg": None}
