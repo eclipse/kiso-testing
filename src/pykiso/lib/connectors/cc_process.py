@@ -26,7 +26,7 @@ import logging
 import queue
 import subprocess
 import threading
-from typing import ByteString, Callable, Dict, List, Optional, Union
+from typing import IO, ByteString, Callable, Dict, List, Optional, Union
 
 from pykiso import Message
 from pykiso.connector import CChannel
@@ -72,6 +72,7 @@ class CCProcess(CChannel):
         self.stderr_thread = None
         self.lock = threading.Lock()
         self.ready = 0
+        self.buffer = []
 
     def _cc_open(self) -> None:
         pass
@@ -102,21 +103,24 @@ class CCProcess(CChannel):
         if self.pipe_stderr:
             self.stderr_thread = self._start_task(self.process.stderr, "stderr")
 
-    def _start_task(self, stream, name) -> threading.Thread:
+    def _start_task(self, stream: IO, name: str) -> threading.Thread:
         thread = threading.Thread(
             name=f"cc_process_{name}", target=self._read_thread, args=(stream, name)
         )
         thread.start()
         return thread
 
-    def _read_thread(self, stream, name) -> None:
+    def _read_thread(self, stream: IO, name: str) -> None:
         try:
             while True:
-                line = stream.readline()
-                if len(line) == 0:
+                if self.text:
+                    data = stream.readline()
+                else:
+                    data = stream.read(1)
+                if len(data) == 0:
                     break
-                log.debug(f"read {name}: {line}")
-                self.queue_in.put((name, line))
+                # print(data)
+                self.queue_in.put((name, data))
         finally:
             with self.lock:
                 self.ready += 1
@@ -153,17 +157,68 @@ class CCProcess(CChannel):
         if self.queue_in is not None:
             self.queue_in = None
 
+    def stream_name(self, msg):
+        if "stdout" in msg:
+            return "stdout"
+        if "stdin" in msg:
+            return "stdin"
+        return None
+
+    def read_existing(self):
+        messages = self.buffer
+        while not self.queue_in.empty():
+            messages.append(self.queue_in.get_nowait())
+        i = 1
+        while (
+            i < len(messages)
+            and messages[0] is not None
+            and messages[i] is not None
+            and messages[0][0] == messages[i][0]
+        ):
+            print(i)
+            i += 1
+
+        self.buffer = messages[i:]
+
+        messages = messages[:i]
+        if len(messages) == 0:
+            return []
+        # if len(messages) == 1:
+        #    return [messages[0]]
+        r = [(messages[0][0], b"".join([x[1] for x in messages]))]
+        print(f"XXX {r}")
+        return r
+
     def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
         if self.queue_in is None:
+            r = {"msg": None}
+            print(f"process: {r}")
             return {"msg": None}
 
         try:
             read = self.queue_in.get(True, timeout)
         except queue.Empty:
-            return {"msg": None}
+            existing = [] if self.text else self.read_existing()
+            print(f"existing: {existing}")
+            if len(existing) > 0:
+                r = {"msg": {existing[0][0]: existing[0][1]}}
+            else:
+                r = {"msg": None}
+            print(f"process: {r}")
+            return r
 
-        if read:
-            return {"msg": {read[0]: read[1]}}
+        if read is not None:
+            if self.text:
+                r = {"msg": {read[0]: read[1]}}
+            else:
+                self.buffer.append(read)
+                existing = self.read_existing()
+                print(f"existing: {existing}")
+                r = {"msg": {existing[0][0]: existing[0][1]}}
+                print(f"process: {r}")
+            return r
         else:
             self._cleanup()
+            r = {"msg": {"exit": self.process.returncode}}
+            print(f"process: {r}")
             return {"msg": {"exit": self.process.returncode}}
