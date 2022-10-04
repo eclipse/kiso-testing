@@ -190,6 +190,10 @@ class CCProcess(CChannel):
         if self.queue_in is not None:
             self.queue_in = None
 
+    def _cc_open(self) -> None:
+        """Implement abstract method"""
+        pass
+
     def _read_existing(self) -> List[Tuple]:
         """Read buffered messages that where already received from the process
 
