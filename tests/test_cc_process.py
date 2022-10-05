@@ -26,7 +26,7 @@ def test_process(mocker):
         pipe_stderr=True,
         pipe_stdout=True,
         pipe_stdin=True,
-        Text=True,
+        text=True,
         executable=executable,
         args=[
             "-c",
