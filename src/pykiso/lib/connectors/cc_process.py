@@ -85,7 +85,9 @@ class CCProcess(CChannel):
         self.stdout_thread = None
         self.stderr_thread = None
         self.lock = threading.Lock()
+        # Counter for finished threads
         self.ready = 0
+        # Buffer for messages that where read from the process but not yet returned by _cc_receive
         self.buffer = []
 
     def start(self, executable: Optional[str] = None, args: Optional[List[str]] = None):
@@ -159,9 +161,6 @@ class CCProcess(CChannel):
                     self.queue_in.put(None)
 
     def _cc_close(self) -> None:
-        """Terminates the process"""
-        if self.process is not None:
-            self.process.terminate()
         self._cleanup()
 
     def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
@@ -200,38 +199,42 @@ class CCProcess(CChannel):
         :return: Existing messages as tuple: (streamname, data)
         """
         messages = self.buffer
+
+        # Get all messages from the process that are available
         while not self.queue_in.empty():
             messages.append(self.queue_in.get_nowait())
         i = 1
+        # Find messages from the same stream(first entry in the tuple) as the first message
         while (
             i < len(messages)
             and messages[0] is not None
             and messages[i] is not None
             and messages[0][0] == messages[i][0]
         ):
-            print(i)
             i += 1
 
+        # Save the remaining messages for next time
         self.buffer = messages[i:]
 
+        # Process only messages from the same stream
         messages = messages[:i]
         if len(messages) == 0:
             return []
 
+        # Join messages
         r = [(messages[0][0], b"".join([x[1] for x in messages]))]
         return r
 
     def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
         """Receive messages"""
         if self.queue_in is None:
-            r = {"msg": None}
             return {"msg": None}
 
         try:
             read = self.queue_in.get(True, timeout)
         except queue.Empty:
+            # Get previously received messages when in binary mode
             existing = [] if self.text else self._read_existing()
-            print(f"existing: {existing}")
             if len(existing) > 0:
                 r = {"msg": {existing[0][0]: existing[0][1]}}
             else:
@@ -242,11 +245,12 @@ class CCProcess(CChannel):
             if self.text:
                 r = {"msg": {read[0]: read[1]}}
             else:
+                # Add message to the buffer and join messages
                 self.buffer.append(read)
                 existing = self._read_existing()
                 r = {"msg": {existing[0][0]: existing[0][1]}}
             return r
         else:
+            # None is the marker for process finish. Get the exit code.
             self._cleanup()
-            r = {"msg": {"exit": self.process.returncode}}
             return {"msg": {"exit": self.process.returncode}}
