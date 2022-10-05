@@ -219,14 +219,12 @@ class CCProcess(CChannel):
             return []
 
         r = [(messages[0][0], b"".join([x[1] for x in messages]))]
-        print(f"XXX {r}")
         return r
 
     def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
         """Receive messages"""
         if self.queue_in is None:
             r = {"msg": None}
-            print(f"process: {r}")
             return {"msg": None}
 
         try:
@@ -238,7 +236,6 @@ class CCProcess(CChannel):
                 r = {"msg": {existing[0][0]: existing[0][1]}}
             else:
                 r = {"msg": None}
-            print(f"process: {r}")
             return r
 
         if read is not None:
@@ -247,12 +244,9 @@ class CCProcess(CChannel):
             else:
                 self.buffer.append(read)
                 existing = self._read_existing()
-                print(f"existing: {existing}")
                 r = {"msg": {existing[0][0]: existing[0][1]}}
-                print(f"process: {r}")
             return r
         else:
             self._cleanup()
             r = {"msg": {"exit": self.process.returncode}}
-            print(f"process: {r}")
             return {"msg": {"exit": self.process.returncode}}
