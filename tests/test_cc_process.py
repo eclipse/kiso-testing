@@ -45,16 +45,9 @@ def test_process(mocker):
     # Second start raises an exception because the process is already running
     with pytest.raises(CCProcessError):
         cc_process.start()
-    """cc_process.cc_send(
-        {
-            "command": "start",
-            "executable": executable,
-            "args": [
-                "-c",
-                'import sys;import time;print(sys.stdin.readline());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");print("pykiso")',
-            ],
-        }
-    )"""
+
+    # Receive nothing as process waits for input
+    assert cc_process.cc_receive(3) == {"msg": None}
     cc_process._cc_send("hi\r\n")
     assert cc_process.cc_receive(3) == {"msg": {"stdout": "hi\n"}}
     assert cc_process.cc_receive(3) == {"msg": {"stderr": "error\n"}}
@@ -95,7 +88,7 @@ def test_process_binary(mocker):
     cc_process.start()
     # Second start raises an exception because the process is already running
     with pytest.raises(CCProcessError):
-        cc_process.start()
+        cc_process._cc_send({"command": "start", "executable": "", "args": ""})
 
     cc_process._cc_send(b"hi\n")
     assert cc_process.cc_receive(3) == {"msg": {"stdout": b"hi"}}
@@ -105,3 +98,33 @@ def test_process_binary(mocker):
     assert cc_process.cc_receive(3) == {"msg": {"exit": 0}}
     cc_process._cc_close()
     assert cc_process.cc_receive(3) == {"msg": None}
+
+
+def test_send_without_pipe_exception(mocker):
+    """Test most of the CCProcess functionality with a real process with text output"""
+
+    cc_process = CCProcess(
+        shell=False,
+        pipe_stderr=True,
+        pipe_stdout=True,
+        pipe_stdin=False,
+        text=False,
+    )
+
+    with pytest.raises(CCProcessError):
+        cc_process._cc_send("hi")
+
+
+def test_send_without_process(mocker):
+    """Test most of the CCProcess functionality with a real process with text output"""
+
+    cc_process = CCProcess(
+        shell=False,
+        pipe_stderr=True,
+        pipe_stdout=True,
+        pipe_stdin=True,
+        text=False,
+    )
+
+    with pytest.raises(CCProcessError):
+        cc_process._cc_send("hi")

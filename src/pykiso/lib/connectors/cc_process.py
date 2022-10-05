@@ -169,6 +169,8 @@ class CCProcess(CChannel):
             if msg["command"] == "start":
                 self.start(msg["executable"], msg["args"])
         elif self.pipe_stdin:
+            if self.process is None:
+                raise CCProcessError("Process is not running.")
             log.debug(f"write stdin: {msg}")
             self.process.stdin.write(msg)
             self.process.stdin.flush()
