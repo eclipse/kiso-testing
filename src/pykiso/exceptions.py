@@ -46,3 +46,18 @@ class AuxiliaryCreationError(PykisoError):
         """
         self.message = f"Auxiliary {aux_name} failed at instance creation"
         super().__init__(self.message)
+
+
+class AuxiliaryConnectorRequiredError(PykisoError):
+    """Raised when an auxiliary instance creation failed."""
+
+    def __init__(self, aux_name: str) -> None:
+        """Initialize attributes.
+
+        :param aux_name: configured auxiliary alias.
+        """
+        self.message = (
+            f"{aux_name} is connector dependent and "
+            f"none was provided in the yaml config file"
+        )
+        super().__init__(self.message)

@@ -45,7 +45,11 @@ class SimpleAuxiliaryInterface(metaclass=abc.ABCMeta):
             add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
         return super(SimpleAuxiliaryInterface, cls).__new__(cls)
 
-    def __init__(self, name: str = None, activate_log: List[str] = None) -> None:
+    def __init__(
+        self,
+        name: str = None,
+        activate_log: List[str] = None,
+    ) -> None:
         """Auxiliary initialization.
 
         :param activate_log: loggers to deactivate
