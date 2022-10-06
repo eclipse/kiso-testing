@@ -7,7 +7,7 @@ pipeline
             containerTemplate
             {
                 name 'kiso-build-env'
-                image 'eclipse/kiso-build-env:v0.1.0'
+                image 'eclipse/kiso-build-env:v0.2.0'
                 alwaysPullImage 'true'
                 ttyEnabled true
                 resourceRequestCpu '2'
