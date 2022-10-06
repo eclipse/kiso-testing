@@ -26,6 +26,7 @@ import logging
 import queue
 import subprocess
 import threading
+from dataclasses import dataclass
 from typing import IO, ByteString, Callable, Dict, List, Optional, Tuple, Union
 
 from pykiso import Message
@@ -38,6 +39,12 @@ MessageType = Union[str, ByteString]
 
 class CCProcessError(BaseException):
     ...
+
+
+@dataclass
+class ProcessMessage:
+    stream: str
+    data: Union[str, bytes]
 
 
 class CCProcess(CChannel):
@@ -80,15 +87,15 @@ class CCProcess(CChannel):
         self.text = text
         self.cwd = cwd
         self.env = env
-        self.process = None
-        self.queue_in = None
-        self.stdout_thread = None
-        self.stderr_thread = None
-        self.lock = threading.Lock()
+        self.process: Optional[subprocess.Popen] = None
+        self.queue_in: Optional[queue.Queue[Optional[ProcessMessage]]] = None
+        self.stdout_thread: Optional[threading.Thread] = None
+        self.stderr_thread: Optional[threading.Thread] = None
+        self.lock: threading.Lock = threading.Lock()
         # Counter for finished threads
-        self.ready = 0
+        self.ready: int = 0
         # Buffer for messages that where read from the process but not yet returned by _cc_receive
-        self.buffer = []
+        self.buffer: List[Optional[ProcessMessage]] = []
 
     def start(self, executable: Optional[str] = None, args: Optional[List[str]] = None):
         """Start a process
@@ -152,7 +159,7 @@ class CCProcess(CChannel):
                 if len(data) == 0:
                     break
                 # print(data)
-                self.queue_in.put((name, data))
+                self.queue_in.put(ProcessMessage(name, data))
         finally:
             with self.lock:
                 self.ready += 1
@@ -195,7 +202,7 @@ class CCProcess(CChannel):
         """Implement abstract method"""
         pass
 
-    def _read_existing(self) -> List[Tuple]:
+    def _read_existing(self) -> List[ProcessMessage]:
         """Read buffered messages that where already received from the process
 
         :return: Existing messages as tuple: (streamname, data)
@@ -211,7 +218,7 @@ class CCProcess(CChannel):
             i < len(messages)
             and messages[0] is not None
             and messages[i] is not None
-            and messages[0][0] == messages[i][0]
+            and messages[0].stream == messages[i].stream
         ):
             i += 1
 
@@ -224,7 +231,7 @@ class CCProcess(CChannel):
             return []
 
         # Join messages
-        r = [(messages[0][0], b"".join([x[1] for x in messages]))]
+        r = [ProcessMessage(messages[0].stream, b"".join([x.data for x in messages]))]
         return r
 
     def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
@@ -238,19 +245,19 @@ class CCProcess(CChannel):
             # Get previously received messages when in binary mode
             existing = [] if self.text else self._read_existing()
             if len(existing) > 0:
-                r = {"msg": {existing[0][0]: existing[0][1]}}
+                r = {"msg": {existing[0].stream: existing[0].data}}
             else:
                 r = {"msg": None}
             return r
 
         if read is not None:
             if self.text:
-                r = {"msg": {read[0]: read[1]}}
+                r = {"msg": {read.stream: read.data}}
             else:
                 # Add message to the buffer and join messages
                 self.buffer.append(read)
                 existing = self._read_existing()
-                r = {"msg": {existing[0][0]: existing[0][1]}}
+                r = {"msg": {existing[0].stream: existing[0].data}}
             return r
         else:
             # None is the marker for process finish. Get the exit code.
