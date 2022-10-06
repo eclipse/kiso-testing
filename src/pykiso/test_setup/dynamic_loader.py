@@ -255,7 +255,9 @@ class AuxiliaryCache(ModuleCache):
             self.configs[name][cn] = self.con_cache.get_instance(con)
         inst = super().get_instance(name)
 
-        if inst.channel is None and getattr(inst, "connector_required", True) is True:
+        if getattr(inst, "connector_required", True) and not getattr(
+            inst, "channel", False
+        ):
             self.instances.pop(name)
             raise AuxiliaryConnectorRequiredError(inst.name)
         # if auto start is needed start the auxiliary otherwise store
