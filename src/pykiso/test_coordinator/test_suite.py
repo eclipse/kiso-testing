@@ -456,7 +456,6 @@ def tc_sort_key(tc):
     elif isinstance(tc, (BasicTestSuiteTeardown, RemoteTestSuiteTeardown)):
         fix_ind = 1
     elif isinstance(tc, unittest.loader._FailedTest):
-        # breakpoint()
         raise tc._exception
     return (fix_ind, tc.test_suite_id, tc.test_case_id)
 

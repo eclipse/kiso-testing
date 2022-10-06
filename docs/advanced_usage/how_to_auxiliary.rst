@@ -279,3 +279,40 @@ More examples are available under :py:mod:`pykiso.lib.auxiliaries`.
     of threading, only the base class needs to be changed from
     ``AuxiliaryInterface`` to ``MpAuxiliaryInterface``. The actual
     implementation does not need any adaptation.
+
+.. _aux_without_connector:
+
+Auxiliary without connector
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If by default all auxiliaries require a connector, it is possible to create
+one without a connector. To do this, an attribute connector_required will have
+to be set to False when the auxiliary is initialized.
+Then, no connector option should be specified in the yaml configuration file.
+
+See bellow an example of an auxiliary without connector:
+
+.. code:: python
+
+  class ExampleAuxiliary(SimpleAuxiliaryInterface):
+    """Example auxiliary without a connector"""
+
+    def __init__(self) -> None:
+      """Initialize the auxiliary"""
+      self.connector_required = False
+      super().__init__()
+
+
+See bellow for an example of its yaml config file:
+
+.. code:: python
+
+  auxiliaries:
+    aux1:
+      config: null
+      type: pykiso.lib.auxiliaries.dut_auxiliary:ExampleAuxiliary
+
+  test_suite_list:
+  - suite_dir: test_suite_1
+    test_filter_pattern: '*.py'
+    test_suite_id: 1
