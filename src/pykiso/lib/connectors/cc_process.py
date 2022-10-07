@@ -9,7 +9,7 @@
 
 """
 Process Channel
-*************
+***************
 
 :module: cc_process
 
@@ -43,11 +43,17 @@ class CCProcessError(BaseException):
 
 @dataclass
 class ProcessMessage:
+    """Holds the data that is read from the process"""
+
+    # Stream name: stdout or stderr
     stream: str
+    # Data as bytes or string
     data: Union[str, bytes]
 
 
 class CCProcess(CChannel):
+    """Channel to run processes"""
+
     def __init__(
         self,
         shell: bool = False,
@@ -62,7 +68,7 @@ class CCProcess(CChannel):
         args: List[str] = [],
         **kwargs,
     ):
-        """Start a process
+        """Initialize a process
 
         :param shell: Start process through shell
         :param pipe_stderr: Pipe stderr for reading with this connector
@@ -158,7 +164,6 @@ class CCProcess(CChannel):
                     data = stream.read(1)
                 if len(data) == 0:
                     break
-                # print(data)
                 self.queue_in.put(ProcessMessage(name, data))
         finally:
             with self.lock:
@@ -168,17 +173,23 @@ class CCProcess(CChannel):
                     self.queue_in.put(None)
 
     def _cc_close(self) -> None:
+        """Close the channel."""
         self._cleanup()
 
     def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
-        """Execute process commands or write data to stdin"""
+        """Execute process commands or write data to stdin
+
+        :param msg: data to send
+        :param raw: unused
+
+        """
         if isinstance(msg, dict) and "command" in msg:
             if msg["command"] == "start":
                 self.start(msg["executable"], msg["args"])
         elif self.pipe_stdin:
             if self.process is None:
                 raise CCProcessError("Process is not running.")
-            log.debug(f"write stdin: {msg}")
+            log.internal_debug(f"write stdin: {msg}")
             self.process.stdin.write(msg)
             self.process.stdin.flush()
         else:
@@ -187,8 +198,10 @@ class CCProcess(CChannel):
     def _cleanup(self):
         """Cleanup threads and process objects"""
         if self.process is not None:
+            # Terminate the process if still running
             self.process.terminate()
             self.process.wait()
+        # Wait for the threads to finish
         if self.stdout_thread is not None:
             self.stdout_thread.join()
             self.stdout_thread = None
@@ -203,9 +216,11 @@ class CCProcess(CChannel):
         pass
 
     def _read_existing(self) -> List[ProcessMessage]:
-        """Read buffered messages that where already received from the process
+        """Read buffered messages that where already received from the process.
+        Messages from the same stream are combined.
+        This is only used in binary mode.
 
-        :return: Existing messages as tuple: (streamname, data)
+        :return: Existing messages
         """
         messages = self.buffer
 
@@ -231,34 +246,43 @@ class CCProcess(CChannel):
             return []
 
         # Join messages
-        r = [ProcessMessage(messages[0].stream, b"".join([x.data for x in messages]))]
-        return r
+        ret = [ProcessMessage(messages[0].stream, b"".join([x.data for x in messages]))]
+        return ret
 
     def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
-        """Receive messages"""
+        """Receive messages
+
+        :param timeout: Time to wait in seconds for a message to be received
+        :param raw: unused
+
+        return The received message
+        """
         if self.queue_in is None:
             return {"msg": None}
 
+        # Get message from the queue
         try:
             read = self.queue_in.get(True, timeout)
         except queue.Empty:
-            # Get previously received messages when in binary mode
+            # Queue is empty, but there might be previously received messages when in binary mode
             existing = [] if self.text else self._read_existing()
             if len(existing) > 0:
-                r = {"msg": {existing[0].stream: existing[0].data}}
+                ret = {"msg": {existing[0].stream: existing[0].data}}
             else:
-                r = {"msg": None}
-            return r
+                ret = {"msg": None}
+            return ret
 
         if read is not None:
+            # A message was received
             if self.text:
-                r = {"msg": {read.stream: read.data}}
+                # Just return that message when in text mode
+                ret = {"msg": {read.stream: read.data}}
             else:
-                # Add message to the buffer and join messages
+                # Add message to the buffer and join messages for binary mode
                 self.buffer.append(read)
                 existing = self._read_existing()
-                r = {"msg": {existing[0].stream: existing[0].data}}
-            return r
+                ret = {"msg": {existing[0].stream: existing[0].data}}
+            return ret
         else:
             # None is the marker for process finish. Get the exit code.
             self._cleanup()

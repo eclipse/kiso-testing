@@ -1,19 +1,28 @@
 auxiliaries:
+  # Communication auxiliary to access the process connector
   com_aux:
     connectors:
+        # Connect to process1
         com: process1
     type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
 connectors:
   process1:
     config:
+      # Executable to start, can be overriden in the test. Here we execute a python program
       executable: C:\Python38\python.exe
+      # Arguments to use, can be overriden in the test
       args:
         - -c
-        - print("bla");print("bla2")
+        - print("hello");print("pykiso")
+      # If the process is invoked by shell
       shell: False
+      # Pipe stderr to read it in the test, otherwise it will be printed on the console
       pipe_stderr: True
+      # Pipe stdout to read it in the test, otherwise it will be printed on the console
       pipe_stdout: True
+      # Attach pipe to stdin to send data to the process, otherwise it will read from the console
       pipe_stdin: True
+      # Read/write process data in text mode
       text: True
     type: pykiso.lib.connectors.cc_process:CCProcess
 
