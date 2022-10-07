@@ -109,6 +109,8 @@ class CCProcess(CChannel):
         :param executable: The executable path. Default to path specified in yaml if not given.
         :param args: The process arguments. Default to arguments specified in yaml if not given.
 
+        :raises CCProcessError: Process is already running
+
         :return: The thread object
         """
         if self.process is not None and self.process.returncode is None:
@@ -181,6 +183,8 @@ class CCProcess(CChannel):
 
         :param msg: data to send
         :param raw: unused
+
+        :raises CCProcessError: Stdin pipe is not enabled
 
         """
         if isinstance(msg, dict) and "command" in msg:
