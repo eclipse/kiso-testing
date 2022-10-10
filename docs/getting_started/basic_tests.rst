@@ -34,8 +34,10 @@ gives access to the following parameters:
 - ``aux_list``: list of used auxiliaries
 
 
-``suite_id`` and ``case_id`` are used to clearly define a test execution order but remain optional(still remain
-mandatory for remote testing). If both are not defined (by default ``suite_id`` and ``case_id`` are equal to 0),
+``suite_id`` and ``case_id`` are used to coordinate and define a clear test execution order.
+It is now optional for ``pykiso.BasicTest`` but still mandatory in case of ``pykiso.RemoteTest``.
+
+If both ids are not defined (by default ``suite_id`` and ``case_id`` are equal to 0),
 the alphabetical order will be applied on each .py modudle and each contained test class.
 
 In other words, If we have the following test suite folder organisation:
