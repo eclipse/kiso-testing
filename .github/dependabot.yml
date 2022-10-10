@@ -4,7 +4,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     reviewers:
       - "sebastianpfischer"
       - "BKaDamien"
@@ -15,7 +15,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "./ci/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     reviewers:
       - "sebastianpfischer"
       - "Pog3k"
