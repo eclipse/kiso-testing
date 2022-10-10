@@ -33,6 +33,35 @@ gives access to the following parameters:
 - ``case_id``: current test case identification number (optional for test suite setup and teardown)
 - ``aux_list``: list of used auxiliaries
 
+
+``suite_id`` and ``case_id`` are used to clearly define a test execution order but remain optional(still remain
+mandatory for remote testing). If both are not defined (by default ``suite_id`` and ``case_id`` are equal to 0),
+the alphabetical order will be applied on each .py modudle and each contained test class.
+
+In other words, If we have the following test suite folder organisation:
+
+---> test_suite_folder
+ |
+ ----> a.py module with classes B/C/A (declare in this order)
+ |
+ ----> b.py module with classes Z/G (declare in this order)
+ |
+ ----> c.py module with classes S/T + Suite Setup/Teardown
+
+The framework will execute the tests in the below order:
+
+ .. code:: bash
+
+    test_suite_setUp (c.SuiteSetup-0-0)
+    test_run (a.A-0-0)
+    test_run (a.B-0-0)
+    test_run (a.C-0-0)
+    test_run (b.G-0-0)
+    test_run (b.Z-0-0)
+    test_run (c.S-0-0)
+    test_run (c.T-0-0)
+    test_suite_tearDown (c.SuiteTearDown-0-0)
+
 In order to utilise the SetUp/TearDown test-suite feature, users have to define a class inheriting from
 :py:class:`~pykiso.test_coordinator.test_suite.BasicTestSuiteSetup` or
 :py:class:`~pykiso.test_coordinator.test_suite.BasicTestSuiteTeardown`.
