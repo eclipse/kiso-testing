@@ -51,6 +51,14 @@ class ProcessMessage:
     data: Union[str, bytes]
 
 
+class ProcessExit:
+    ...
+
+
+# Marker for process exit in queue_in
+PROCESS_EXIT = ProcessExit()
+
+
 class CCProcess(CChannel):
     """Channel to run processes"""
 
@@ -94,14 +102,14 @@ class CCProcess(CChannel):
         self.cwd = cwd
         self.env = env
         self.process: Optional[subprocess.Popen] = None
-        self.queue_in: Optional[queue.Queue[Optional[ProcessMessage]]] = None
+        self.queue_in: Optional[queue.Queue[Union[ProcessMessage, ProcessExit]]] = None
         self.stdout_thread: Optional[threading.Thread] = None
         self.stderr_thread: Optional[threading.Thread] = None
         self.lock: threading.Lock = threading.Lock()
         # Counter for finished threads
         self.ready: int = 0
         # Buffer for messages that where read from the process but not yet returned by _cc_receive
-        self.buffer: List[Optional[ProcessMessage]] = []
+        self.buffer: List[Union[ProcessMessage, ProcessExit]] = []
 
     def start(self, executable: Optional[str] = None, args: Optional[List[str]] = None):
         """Start a process
@@ -110,8 +118,6 @@ class CCProcess(CChannel):
         :param args: The process arguments. Default to arguments specified in yaml if not given.
 
         :raises CCProcessError: Process is already running
-
-        :return: The thread object
         """
         if self.process is not None and self.process.returncode is None:
             raise CCProcessError(f"Process is already running: {self.executable}")
@@ -171,8 +177,8 @@ class CCProcess(CChannel):
             with self.lock:
                 self.ready += 1
                 if self.ready == int(self.pipe_stdout) + int(self.pipe_stderr):
-                    # None marks the termination of all read threads
-                    self.queue_in.put(None)
+                    # PROCESS_EXIT marks the termination of all read threads
+                    self.queue_in.put(PROCESS_EXIT)
 
     def _cc_close(self) -> None:
         """Close the channel."""
@@ -187,9 +193,8 @@ class CCProcess(CChannel):
         :raises CCProcessError: Stdin pipe is not enabled
 
         """
-        if isinstance(msg, dict) and "command" in msg:
-            if msg["command"] == "start":
-                self.start(msg["executable"], msg["args"])
+        if isinstance(msg, dict) and msg.get("command") == "start":
+            self.start(msg.get("executable"), msg.get("args"))
         elif self.pipe_stdin:
             if self.process is None:
                 raise CCProcessError("Process is not running.")
@@ -199,7 +204,7 @@ class CCProcess(CChannel):
         else:
             raise CCProcessError("Can not send to stdin because pipe is not enabled.")
 
-    def _cleanup(self):
+    def _cleanup(self) -> None:
         """Cleanup threads and process objects"""
         if self.process is not None:
             # Terminate the process if still running
@@ -219,7 +224,7 @@ class CCProcess(CChannel):
         """Implement abstract method"""
         pass
 
-    def _read_existing(self) -> List[ProcessMessage]:
+    def _read_existing(self) -> Optional[ProcessMessage]:
         """Read buffered messages that where already received from the process.
         Messages from the same stream are combined.
         This is only used in binary mode.
@@ -235,8 +240,8 @@ class CCProcess(CChannel):
         # Find messages from the same stream(first entry in the tuple) as the first message
         while (
             i < len(messages)
-            and messages[0] is not None
-            and messages[i] is not None
+            and messages[0] is not PROCESS_EXIT
+            and messages[i] is not PROCESS_EXIT
             and messages[0].stream == messages[i].stream
         ):
             i += 1
@@ -247,10 +252,25 @@ class CCProcess(CChannel):
         # Process only messages from the same stream
         messages = messages[:i]
         if len(messages) == 0:
-            return []
+            return None
+
+        if messages[0] is PROCESS_EXIT:
+            return messages[0]
 
         # Join messages
-        ret = [ProcessMessage(messages[0].stream, b"".join([x.data for x in messages]))]
+        return ProcessMessage(messages[0].stream, b"".join([x.data for x in messages]))
+
+    def _create_message_dict(self, msg: Union[ProcessMessage, ProcessExit]) -> dict:
+        """Create a dict from an entry in the process queue
+
+        :param msg: The message to convert
+
+        :return: The dictionary
+        """
+        if isinstance(msg, ProcessMessage):
+            ret = {"msg": {msg.stream: msg.data}}
+        elif msg is PROCESS_EXIT:
+            ret = {"msg": {"exit": self.process.returncode}}
         return ret
 
     def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
@@ -269,25 +289,25 @@ class CCProcess(CChannel):
             read = self.queue_in.get(True, timeout)
         except queue.Empty:
             # Queue is empty, but there might be previously received messages when in binary mode
-            existing = [] if self.text else self._read_existing()
-            if len(existing) > 0:
-                ret = {"msg": {existing[0].stream: existing[0].data}}
+            existing = None if self.text else self._read_existing()
+            if existing is not None:
+                ret = self._create_message_dict(existing)
             else:
                 ret = {"msg": None}
             return ret
 
-        if read is not None:
+        if read is not PROCESS_EXIT:
             # A message was received
             if self.text:
                 # Just return that message when in text mode
-                ret = {"msg": {read.stream: read.data}}
+                ret = self._create_message_dict(read)
             else:
                 # Add message to the buffer and join messages for binary mode
                 self.buffer.append(read)
                 existing = self._read_existing()
-                ret = {"msg": {existing[0].stream: existing[0].data}}
+                ret = self._create_message_dict(existing)
             return ret
         else:
             # None is the marker for process finish. Get the exit code.
             self._cleanup()
-            return {"msg": {"exit": self.process.returncode}}
+            return self._create_message_dict(PROCESS_EXIT)
