@@ -35,10 +35,11 @@ gives access to the following parameters:
 
 
 ``suite_id`` and ``case_id`` are used to coordinate and define a clear test execution order.
-It is now optional for ``pykiso.BasicTest`` but still mandatory in case of ``pykiso.RemoteTest``.
+It is now optional for ``pykiso.BasicTest`` but still mandatory in case of ``pykiso.RemoteTest`` as
+the TestApp protocol relies on these identifiers.
 
-If both ids are not defined (by default ``suite_id`` and ``case_id`` are equal to 0),
-the alphabetical order will be applied on each .py modudle and each contained test class.
+If none of these IDs are defined, the default value of 0 will be used and the alphabetical order
+will be applied on each .py module and each contained test class.
 
 In other words, If we have the following test suite folder organisation:
 
@@ -50,7 +51,7 @@ In other words, If we have the following test suite folder organisation:
  |
  ----> c.py module with classes S/T + Suite Setup/Teardown
 
-The framework will execute the tests in the below order:
+The framework will execute the tests in the following order:
 
  .. code:: bash
 
@@ -64,7 +65,7 @@ The framework will execute the tests in the below order:
     test_run (c.T-0-0)
     test_suite_tearDown (c.SuiteTearDown-0-0)
 
-In order to utilise the SetUp/TearDown test-suite feature, users have to define a class inheriting from
+In order to make use of the SetUp/TearDown test-suite feature, users have to define a class inheriting from
 :py:class:`~pykiso.test_coordinator.test_suite.BasicTestSuiteSetup` or
 :py:class:`~pykiso.test_coordinator.test_suite.BasicTestSuiteTeardown`.
 For each of these classes, the following methods ``test_suite_setUp`` or ``test_suite_tearDown`` must be
