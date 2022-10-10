@@ -264,9 +264,9 @@ def define_test_parameters(
         # in the test results in the console and in the report.
         # Changing __name__ is necessary to make the test name appear in the test results in the console.
         # Changing __qualname__ is necessary to make the test name appear in the test results in the report.
-        NewClass.__name__ = DecoratedClass.__name__ + f"-{suite_id}-{case_id}"
-        NewClass.__qualname__ = DecoratedClass.__qualname__ + f"-{suite_id}-{case_id}"
-
+        ids = "" if suite_id == 0 and case_id == 0 else f"-{suite_id}-{case_id}"
+        NewClass.__name__ = f"{DecoratedClass.__name__}{ids}"
+        NewClass.__qualname__ = f"{DecoratedClass.__qualname__}{ids}"
         return NewClass
 
     return generate_modified_class
