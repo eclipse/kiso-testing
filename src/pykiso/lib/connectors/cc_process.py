@@ -209,7 +209,13 @@ class CCProcess(CChannel):
         if self.process is not None:
             # Terminate the process if still running
             self.process.terminate()
-            self.process.wait()
+            try:
+                self.process.wait(5)
+            except subprocess.TimeoutExpired:
+                log.internal_warning(
+                    f"Process {self.executable} could not be terminated"
+                )
+                self.process.kill()
         # Wait for the threads to finish
         if self.stdout_thread is not None:
             self.stdout_thread.join()
