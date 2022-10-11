@@ -8,6 +8,7 @@
 ##########################################################################
 
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -128,3 +129,33 @@ def test_send_without_process(mocker):
 
     with pytest.raises(CCProcessError):
         cc_process._cc_send("hi")
+
+
+def test_process_terminate(mocker):
+    """Test process termination"""
+
+    # Get the path of the python executable to start a python process
+    executable = str(Path(sys.executable).resolve())
+
+    cc_process = CCProcess(
+        shell=False,
+        pipe_stderr=True,
+        pipe_stdout=True,
+        pipe_stdin=True,
+        text=False,
+        executable=executable,
+        args=[
+            "-c",
+            "import time;time.sleep(60)",
+        ],
+    )
+    # Start the process
+    cc_process.start()
+    start = time.time()
+
+    # This will terminate the process and threads
+    cc_process._cc_close()
+
+    # Check if the process was terminated in time
+    elapsed_time = time.time() - start
+    assert elapsed_time < 1
