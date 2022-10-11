@@ -1,11 +1,29 @@
 auxiliaries:
   aux1:
+    connectors:
+        com: chan1
     config: null
     type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
   aux2:
+    connectors:
+        com:   chan2
     type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
   aux3:
+    connectors:
+        com:   chan4
+        flash: chan3
     type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+connectors:
+  chan1:
+    config: null
+    type: ext_lib/cc_example.py:CCExample
+  chan2:
+    type: ext_lib/cc_example.py:CCExample
+  chan4:
+    type: ext_lib/cc_example.py:CCExample
+  chan3:
+    config: null
+    type: pykiso.lib.connectors.cc_flasher_example:FlasherExample
 test_suite_list:
 - suite_dir: test_suite_1
   test_filter_pattern: '*.py'
