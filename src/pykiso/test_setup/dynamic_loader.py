@@ -259,7 +259,7 @@ class AuxiliaryCache(ModuleCache):
             inst, "channel", False
         ):
             self.instances.pop(name)
-            raise AuxiliaryConnectorRequiredError(inst.name)
+            raise AuxiliaryConnectorRequiredError(name)
         # if auto start is needed start the auxiliary otherwise store
         # the created instance
         auto_start = getattr(inst, "auto_start", True)
