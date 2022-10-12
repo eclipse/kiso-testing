@@ -285,10 +285,17 @@ More examples are available under :py:mod:`pykiso.lib.auxiliaries`.
 Auxiliary without connector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If by default all auxiliaries require a connector, it is possible to create
-one without a connector. To do this, an attribute connector_required will have
-to be set to False when the auxiliary is initialized.
-Then, no connector option should be specified in the yaml configuration file.
+If by default all auxiliaries require a connector, in some specific cases,
+it may complicate the total implementation. Therefor `connector_required`
+parameter was defined.
+
+.. note::
+    Auxiliaries that should fall into this category will need to be discussed
+    case by case.
+
+.. warning::
+    Auxiliaries entering this category will raise an error if a connector is indeed
+    assigned to it in the .yaml. Hybrid cases do not exist.
 
 See below an example of an auxiliary without connector:
 
@@ -310,7 +317,7 @@ See below for an example of its yaml config file:
   auxiliaries:
     aux1:
       config: null
-      type: pykiso.lib.auxiliaries.dut_auxiliary:ExampleAuxiliary
+      type: pykiso.lib.auxiliaries.example_auxiliary:ExampleAuxiliary
 
   test_suite_list:
   - suite_dir: test_suite_1

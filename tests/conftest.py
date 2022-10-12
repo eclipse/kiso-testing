@@ -66,8 +66,10 @@ class TestAux:
         self.args = args
         self.kwargs = kwargs
         self.is_instance = False
+
     def create_instance(self):
         self.is_instance = True
+
     def stop(self):
         self.is_instance = False
 
@@ -77,8 +79,10 @@ class TestAuxNoConnector:
         self.args = args
         self.kwargs = kwargs
         self.is_instance = False
+
     def create_instance(self):
         self.is_instance = True
+
     def stop(self):
         self.is_instance = False
 """
