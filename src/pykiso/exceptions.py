@@ -48,7 +48,7 @@ class AuxiliaryCreationError(PykisoError):
         super().__init__(self.message)
 
 
-class AuxiliaryConnectorRequiredError(PykisoError):
+class ConnectorRequiredError(PykisoError):
     """Raised when an auxiliary instance creation failed because a connector is
     required and none is provided
     """

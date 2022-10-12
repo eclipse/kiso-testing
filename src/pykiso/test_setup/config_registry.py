@@ -39,12 +39,11 @@ class ConfigRegistry:
         """
         ConfigRegistry._linker = DynamicImportLinker()
         ConfigRegistry._linker.install()
-        if not config["connectors"] is None:
-            for connector, con_details in config["connectors"].items():
-                cfg = con_details.get("config") or dict()
-                ConfigRegistry._linker.provide_connector(
-                    connector, con_details["type"], **cfg
-                )
+        for connector, con_details in config["connectors"].items():
+            cfg = con_details.get("config") or dict()
+            ConfigRegistry._linker.provide_connector(
+                connector, con_details["type"], **cfg
+            )
         for auxiliary, aux_details in config["auxiliaries"].items():
             cfg = aux_details.get("config") or dict()
             ConfigRegistry._linker.provide_auxiliary(

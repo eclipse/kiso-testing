@@ -11,7 +11,7 @@ import sys
 
 import pytest
 
-from pykiso.exceptions import AuxiliaryConnectorRequiredError
+from pykiso.exceptions import ConnectorRequiredError
 from pykiso.test_setup.dynamic_loader import DynamicFinder, DynamicImportLinker
 
 
@@ -124,7 +124,7 @@ def test_import_aux_without_connector(linker):
 
 
 def test_import_aux_without_connector_error(linker):
-    with pytest.raises(AuxiliaryConnectorRequiredError):
+    with pytest.raises(ConnectorRequiredError):
         from pykiso.auxiliaries import aux_no_connector_error
 
 

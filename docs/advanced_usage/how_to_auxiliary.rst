@@ -290,7 +290,7 @@ one without a connector. To do this, an attribute connector_required will have
 to be set to False when the auxiliary is initialized.
 Then, no connector option should be specified in the yaml configuration file.
 
-See bellow an example of an auxiliary without connector:
+See below an example of an auxiliary without connector:
 
 .. code:: python
 
@@ -303,7 +303,7 @@ See bellow an example of an auxiliary without connector:
       super().__init__()
 
 
-See bellow for an example of its yaml config file:
+See below for an example of its yaml config file:
 
 .. code:: python
 

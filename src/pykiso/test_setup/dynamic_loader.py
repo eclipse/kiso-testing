@@ -34,7 +34,7 @@ import types
 import pykiso
 
 #################################################################################
-from pykiso.exceptions import AuxiliaryConnectorRequiredError
+from pykiso.exceptions import ConnectorRequiredError
 
 PACKAGE = __package__.split(".")[0]
 
@@ -259,7 +259,7 @@ class AuxiliaryCache(ModuleCache):
             inst, "channel", False
         ):
             self.instances.pop(name)
-            raise AuxiliaryConnectorRequiredError(name)
+            raise ConnectorRequiredError(name)
         # if auto start is needed start the auxiliary otherwise store
         # the created instance
         auto_start = getattr(inst, "auto_start", True)

@@ -19,7 +19,7 @@ import pytest
 import yaml
 
 from pykiso.config_parser import YamlLoader, check_requirements, parse_config
-from pykiso.exceptions import AuxiliaryConnectorRequiredError
+from pykiso.exceptions import ConnectorRequiredError
 
 
 @pytest.fixture
@@ -409,7 +409,7 @@ def test_parse_config_env_var(tmp_cfg_env_var, mocker, tmp_path):
 def test_parse_config_without_connector(tmp_cfg_without_connector):
 
     cfg = parse_config(tmp_cfg_without_connector)
-    assert cfg["connectors"] is None
+    assert cfg["connectors"] == {}
 
 
 def test_parse_config_folder_name_eq_entity_name(tmp_cfg_mod):
