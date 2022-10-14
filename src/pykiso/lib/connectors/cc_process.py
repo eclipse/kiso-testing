@@ -51,12 +51,11 @@ class ProcessMessage:
     data: Union[str, bytes]
 
 
+@dataclass
 class ProcessExit:
-    ...
+    """Contains information about process exit"""
 
-
-# Marker for process exit in queue_in
-PROCESS_EXIT = ProcessExit()
+    exit_code: int
 
 
 class CCProcess(CChannel):
@@ -91,25 +90,24 @@ class CCProcess(CChannel):
 
         """
         super().__init__(**kwargs)
-        self.shell = shell
-        self.pipe_stderr = pipe_stderr
-        self.pipe_stdout = pipe_stdout
-        self.pipe_stdin = pipe_stdin
-        self.encoding = encoding
-        self.executable = executable
-        self.args = args
-        self.text = text
-        self.cwd = cwd
-        self.env = env
-        self.process: Optional[subprocess.Popen] = None
-        self.queue_in: Optional[queue.Queue[Union[ProcessMessage, ProcessExit]]] = None
-        self.stdout_thread: Optional[threading.Thread] = None
-        self.stderr_thread: Optional[threading.Thread] = None
-        self.lock: threading.Lock = threading.Lock()
-        # Counter for finished threads
-        self.ready: int = 0
+        self._shell = shell
+        self._pipe_stderr = pipe_stderr
+        self._pipe_stdout = pipe_stdout
+        self._pipe_stdin = pipe_stdin
+        self._encoding = encoding
+        self._executable = executable
+        self._args = args
+        self._text = text
+        self._cwd = cwd
+        self._env = env
+        self._process: Optional[subprocess.Popen] = None
+        self._queue_in: Optional[queue.Queue[Union[ProcessMessage, ProcessExit]]] = None
+        self._stdout_thread: Optional[threading.Thread] = None
+        self._stderr_thread: Optional[threading.Thread] = None
+        self._lock = threading.Lock()
+        self._finished_threads_count = 0
         # Buffer for messages that where read from the process but not yet returned by _cc_receive
-        self.buffer: List[Union[ProcessMessage, ProcessExit]] = []
+        self._buffer: List[Union[ProcessMessage, ProcessExit]] = []
 
     def start(self, executable: Optional[str] = None, args: Optional[List[str]] = None):
         """Start a process
@@ -119,30 +117,34 @@ class CCProcess(CChannel):
 
         :raises CCProcessError: Process is already running
         """
-        if self.process is not None and self.process.returncode is None:
-            raise CCProcessError(f"Process is already running: {self.executable}")
+        if self._process is not None and self._process.returncode is None:
+            raise CCProcessError(f"Process is already running: {self._executable}")
 
         self._cleanup()
-        self.ready = 0
-        self.queue_in = queue.Queue()
+        self._finished_threads_count = 0
+        self._queue_in = queue.Queue()
 
-        self.process = subprocess.Popen(
-            ([executable] if executable is not None else [self.executable])
-            + (args if args is not None else self.args),
-            stderr=subprocess.PIPE if self.pipe_stderr else None,
-            stdout=subprocess.PIPE if self.pipe_stdout else None,
-            stdin=subprocess.PIPE if self.pipe_stdin else None,
-            shell=self.shell,
-            text=self.text,
-            encoding=self.encoding,
-            cwd=self.cwd,
-            env=self.env,
+        self._process = subprocess.Popen(
+            ([executable] if executable is not None else [self._executable])
+            + (args if args is not None else self._args),
+            stderr=subprocess.PIPE if self._pipe_stderr else None,
+            stdout=subprocess.PIPE if self._pipe_stdout else None,
+            stdin=subprocess.PIPE if self._pipe_stdin else None,
+            shell=self._shell,
+            text=self._text,
+            encoding=self._encoding,
+            cwd=self._cwd,
+            env=self._env,
         )
 
-        if self.pipe_stdout:
-            self.stdout_thread = self._start_read_thread(self.process.stdout, "stdout")
-        if self.pipe_stderr:
-            self.stderr_thread = self._start_read_thread(self.process.stderr, "stderr")
+        if self._pipe_stdout:
+            self._stdout_thread = self._start_read_thread(
+                self._process.stdout, "stdout"
+            )
+        if self._pipe_stderr:
+            self._stderr_thread = self._start_read_thread(
+                self._process.stderr, "stderr"
+            )
 
     def _start_read_thread(self, stream: IO, name: str) -> threading.Thread:
         """Start a read thread
@@ -166,19 +168,21 @@ class CCProcess(CChannel):
         """
         try:
             while True:
-                if self.text:
+                if self._text:
                     data = stream.readline()
                 else:
                     data = stream.read(1)
                 if len(data) == 0:
                     break
-                self.queue_in.put(ProcessMessage(name, data))
+                self._queue_in.put(ProcessMessage(name, data))
         finally:
-            with self.lock:
-                self.ready += 1
-                if self.ready == int(self.pipe_stdout) + int(self.pipe_stderr):
-                    # PROCESS_EXIT marks the termination of all read threads
-                    self.queue_in.put(PROCESS_EXIT)
+            with self._lock:
+                self._finished_threads_count += 1
+                if self._finished_threads_count == int(self._pipe_stdout) + int(
+                    self._pipe_stderr
+                ):
+                    # ProcessExit marks the termination of all read threads
+                    self._queue_in.put(ProcessExit(self._process.wait()))
 
     def _cc_close(self) -> None:
         """Close the channel."""
@@ -195,36 +199,36 @@ class CCProcess(CChannel):
         """
         if isinstance(msg, dict) and msg.get("command") == "start":
             self.start(msg.get("executable"), msg.get("args"))
-        elif self.pipe_stdin:
-            if self.process is None:
+        elif self._pipe_stdin:
+            if self._process is None:
                 raise CCProcessError("Process is not running.")
             log.internal_debug(f"write stdin: {msg}")
-            self.process.stdin.write(msg)
-            self.process.stdin.flush()
+            self._process.stdin.write(msg)
+            self._process.stdin.flush()
         else:
             raise CCProcessError("Can not send to stdin because pipe is not enabled.")
 
     def _cleanup(self) -> None:
         """Cleanup threads and process objects"""
-        if self.process is not None:
+        if self._process is not None:
             # Terminate the process if still running
-            self.process.terminate()
+            self._process.terminate()
             try:
-                self.process.wait(5)
+                self._process.wait(5)
             except subprocess.TimeoutExpired:
                 log.internal_warning(
-                    f"Process {self.executable} could not be terminated"
+                    f"Process {self._executable} could not be terminated"
                 )
-                self.process.kill()
+                self._process.kill()
         # Wait for the threads to finish
-        if self.stdout_thread is not None:
-            self.stdout_thread.join()
-            self.stdout_thread = None
-        if self.stderr_thread is not None:
-            self.stderr_thread.join()
-            self.stderr_thread = None
-        if self.queue_in is not None:
-            self.queue_in = None
+        if self._stdout_thread is not None:
+            self._stdout_thread.join()
+            self._stdout_thread = None
+        if self._stderr_thread is not None:
+            self._stderr_thread.join()
+            self._stderr_thread = None
+        if self._queue_in is not None:
+            self._queue_in = None
 
     def _cc_open(self) -> None:
         """Implement abstract method"""
@@ -237,36 +241,37 @@ class CCProcess(CChannel):
 
         :return: Existing messages
         """
-        messages = self.buffer
+        messages = self._buffer
 
         # Get all messages from the process that are available
-        while not self.queue_in.empty():
-            messages.append(self.queue_in.get_nowait())
+        while not self._queue_in.empty():
+            messages.append(self._queue_in.get_nowait())
         i = 1
         # Find messages from the same stream(first entry in the tuple) as the first message
         while (
             i < len(messages)
-            and messages[0] is not PROCESS_EXIT
-            and messages[i] is not PROCESS_EXIT
+            and not isinstance(messages[0], ProcessExit)
+            and not isinstance(messages[i], ProcessExit)
             and messages[0].stream == messages[i].stream
         ):
             i += 1
 
         # Save the remaining messages for next time
-        self.buffer = messages[i:]
+        messages, self._buffer = messages[:i], messages[i:]
 
         # Process only messages from the same stream
         messages = messages[:i]
         if len(messages) == 0:
             return None
 
-        if messages[0] is PROCESS_EXIT:
+        if isinstance(messages[0], ProcessExit):
             return messages[0]
 
         # Join messages
         return ProcessMessage(messages[0].stream, b"".join([x.data for x in messages]))
 
-    def _create_message_dict(self, msg: Union[ProcessMessage, ProcessExit]) -> dict:
+    @staticmethod
+    def _create_message_dict(msg: Union[ProcessMessage, ProcessExit]) -> dict:
         """Create a dict from an entry in the process queue
 
         :param msg: The message to convert
@@ -275,8 +280,8 @@ class CCProcess(CChannel):
         """
         if isinstance(msg, ProcessMessage):
             ret = {"msg": {msg.stream: msg.data}}
-        elif msg is PROCESS_EXIT:
-            ret = {"msg": {"exit": self.process.returncode}}
+        elif isinstance(msg, ProcessExit):
+            ret = {"msg": {"exit": msg.exit_code}}
         return ret
 
     def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
@@ -287,33 +292,33 @@ class CCProcess(CChannel):
 
         return The received message
         """
-        if self.queue_in is None:
+        if self._queue_in is None:
             return {"msg": None}
 
         # Get message from the queue
         try:
-            read = self.queue_in.get(True, timeout)
+            read = self._queue_in.get(True, timeout)
         except queue.Empty:
             # Queue is empty, but there might be previously received messages when in binary mode
-            existing = None if self.text else self._read_existing()
+            existing = None if self._text else self._read_existing()
             if existing is not None:
-                ret = self._create_message_dict(existing)
+                ret = CCProcess._create_message_dict(existing)
             else:
                 ret = {"msg": None}
             return ret
 
-        if read is not PROCESS_EXIT:
+        if not isinstance(read, ProcessExit):
             # A message was received
-            if self.text:
+            if self._text:
                 # Just return that message when in text mode
-                ret = self._create_message_dict(read)
+                ret = CCProcess._create_message_dict(read)
             else:
                 # Add message to the buffer and join messages for binary mode
-                self.buffer.append(read)
+                self._buffer.append(read)
                 existing = self._read_existing()
-                ret = self._create_message_dict(existing)
+                ret = CCProcess._create_message_dict(existing)
             return ret
         else:
-            # None is the marker for process finish. Get the exit code.
+            # Process has exited
             self._cleanup()
-            return self._create_message_dict(PROCESS_EXIT)
+            return CCProcess._create_message_dict(read)
