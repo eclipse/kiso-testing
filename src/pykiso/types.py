@@ -12,9 +12,11 @@ Define some recurring typing definitions
 """
 
 import pathlib
-import typing
+from types import TracebackType
+from typing import Tuple, Type, Union
 
 from . import message
 
-PathType = typing.Union[str, pathlib.Path]
-MsgType = typing.Union[message.Message, bytes, str]
+PathType = Union[str, pathlib.Path]
+MsgType = Union[message.Message, bytes, str]
+ExcInfoType = Tuple[Type[BaseException], BaseException, TracebackType]

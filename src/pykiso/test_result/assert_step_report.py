@@ -236,7 +236,7 @@ def _add_step(
     )
 
 
-def assert_decorator(func):
+def assert_decorator(assert_method: types.MethodType):
     """Decorator to gather assertion information
 
     - MyTestClass
@@ -263,7 +263,7 @@ def assert_decorator(func):
     return: The func output if it exists. Otherwise, None
     """
 
-    @functools.wraps(func)
+    @functools.wraps(assert_method)
     def func_wrapper(*args, **kwargs):
         """Decorator Main
         Fetch the assert step: message, var_name, expected, received
@@ -276,24 +276,23 @@ def assert_decorator(func):
             currentframe = inspect.currentframe()
             f_back = currentframe.f_back
             test_name = f_back.f_code.co_name
-            test_class = func.__self__
-            test_class_name = type(test_class).__name__
-            assert_name = func.__name__
+            test_case_inst: TestCase = assert_method.__self__
+            test_class_name = type(test_case_inst).__name__
+            assert_name = assert_method.__name__
 
             # filter parent call, only known function recorded
             parent_method = re.findall(_FUNCTION_TO_APPLY, test_name.lower())
             if parent_method:
                 # Assign variables to signature
-                signature = inspect.signature(func)
+                signature = inspect.signature(assert_method)
                 arguments = signature.bind(*args, **kwargs).arguments
-                test_name = test_class.step_report.current_table or test_name
+                test_name = test_case_inst.step_report.current_table or test_name
 
                 # 1. Gather message, var_name, expected, received
                 # 1.1 Get message. default value: ""
-
-                if test_class.step_report.message:
-                    message = test_class.step_report.message
-                    test_class.step_report.message = ""
+                if test_case_inst.step_report.message:
+                    message = test_case_inst.step_report.message
+                    test_case_inst.step_report.message = ""
                 else:
                     message = arguments.get("msg", "")
 
@@ -313,7 +312,7 @@ def assert_decorator(func):
 
                 # 2. Update report data
                 # 2.1 Ensure report ready for update
-                _prepare_report(test_class, test_name)
+                _prepare_report(test_case_inst, test_name)
 
                 # 2.2. Add new step
                 _add_step(
@@ -323,24 +322,24 @@ def assert_decorator(func):
         except Exception as e:
             log.error(f"Unable to update Step due to exception: {e}")
 
-        # Run the assert method
-        # When exception is thrown set test as failed and handle
-        # the test assertion exception so that report doesn`t interrupt
+        # Run the assert method and mark the test as failed if the AssertionError is raised
         try:
-            # if not test_class.step_report.continue_on_error and not test_class.step_report.success:
-            #     raise Exception(test_class.step_report.last_error_message)
-            return func(*args, **kwargs)
-        except Exception as e:
+            return assert_method(*args, **kwargs)
+        except test_case_inst.failureException as e:
             log.error(f"Assert step exception: {e}")
-            test_class.step_report.last_error_message = f"{e}"
+            test_case_inst.step_report.last_error_message = f"{e}"
             if parent_method:
                 ALL_STEP_REPORT[test_class_name]["test_list"][test_name][-1][
                     "succeed"
                 ] = False
                 ALL_STEP_REPORT[test_class_name]["succeed"] = False
-            test_class.step_report.success = False
-            if not test_class.step_report.continue_on_error:
-                raise e
+
+            test_case_inst.step_report.success = False
+
+            # repeat the assertion failure as first element in the traceback
+            frame = currentframe.f_back
+            tb = types.TracebackType(None, frame, frame.f_lasti, frame.f_lineno)
+            raise e.with_traceback(tb)
 
     return func_wrapper
 
