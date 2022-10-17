@@ -22,16 +22,29 @@ in the config yaml:
   auxiliaries:
     # Zephyr test auxiliary
     zephyr_aux:
+      connectors:
+        com: twister
       config:
-        # Path to twister tool, will default to "twister"
-        twister_path: twister
         # The location of the Zephyr test project
         test_directory: ./test_zephyr/zephyr_test_project
         # The name of the test in the test directory
         test_name: testing.ztest
         # Wait for test start on target when started
         wait_for_start: True
+        activate_log :
+          - all
       type: pykiso.lib.auxiliaries.zephyr:ZephyrTestAuxiliary
+  connectors:
+    # configure the twister process here
+    twister:
+      config:
+        executable: twister
+        shell: False
+        pipe_stderr: True
+        pipe_stdout: False
+        pipe_stdin: False
+        text: True
+      type: pykiso.lib.connectors.cc_process:CCProcess
 
 Remarks:
 
