@@ -187,7 +187,9 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
     return exit_code
 
 
-def enable_step_report(all_tests_to_run: unittest.suite.TestSuite) -> None:
+def enable_step_report(
+    all_tests_to_run: unittest.suite.TestSuite, step_report: Path
+) -> None:
     """Decorate all assert method from Test-Case
 
         This will allow to save the assert inputs in
@@ -199,20 +201,19 @@ def enable_step_report(all_tests_to_run: unittest.suite.TestSuite) -> None:
     # Step report header fed during test
     base_suite = test_suite.flatten(all_tests_to_run)
     for tc in base_suite:
-        # for any test, show ITF version
-        tc.step_report = StepReportData(
-            header=OrderedDict({"ITF version": pykiso.__version__})
-        )
-
-        # Decorate All assert method
-        assert_method_list = [
-            method for method in dir(tc) if method.startswith("assert")
-        ]
-        for method_name in assert_method_list:
-            # Get method from name
-            method = getattr(tc, method_name)
-            # Add decorator to the existing method
-            setattr(tc, method_name, assert_decorator(method))
+        tc.step_report = StepReportData()
+        if step_report is not None:
+            # for any test, show ITF version
+            tc.step_report.header = OrderedDict({"ITF version": pykiso.__version__})
+            # Decorate All assert method
+            assert_method_list = [
+                method for method in dir(tc) if method.startswith("assert")
+            ]
+            for method_name in assert_method_list:
+                # Get method from name
+                method = getattr(tc, method_name)
+                # Add decorator to the existing method
+                setattr(tc, method_name, assert_decorator(method))
 
 
 def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
@@ -297,12 +298,13 @@ def execute(
         )
         # Group all the collected test suites in one global test suite
         all_tests_to_run = unittest.TestSuite(test_suites)
+
         # filter test cases based on variant and branch-level options
         if user_tags:
             apply_tag_filter(all_tests_to_run, user_tags)
+
         # Enable step report
-        if step_report is not None:
-            enable_step_report(all_tests_to_run)
+        enable_step_report(all_tests_to_run, step_report)
 
         if test_file_pattern.test_class:
             all_tests_to_run = apply_test_case_filter(
