@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional
 
-from pykiso import CChannel, SimpleAuxiliaryInterface
+from pykiso import CChannel
 from pykiso.interfaces.dt_auxiliary import (
     DTAuxiliaryInterface,
     close_connector,
@@ -40,7 +40,7 @@ class ZephyrError(Exception):
     pass
 
 
-class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
+class ZephyrTestAuxiliary(DTAuxiliaryInterface):
     """Auxiliary for Zephyr test interaction using the twister commandline tool
 
     The functionality includes test case execution and result collection.
@@ -63,12 +63,20 @@ class ZephyrTestAuxiliary(SimpleAuxiliaryInterface):
         :param wait_for_start: Wait for Zyephyr test start
 
         """
-        super().__init__(**kwargs)
+        super().__init__(
+            is_proxy_capable=True, tx_task_on=False, rx_task_on=False, **kwargs
+        )
         self.test_directory = test_directory
         self.test_name = test_name
         self.wait_for_start = wait_for_start
         self.channel = com
         self.running = False
+
+    def _run_command(self, cmd_message: str, cmd_data: bytes = None) -> bool:
+        return True
+
+    def _receive_message(self, timeout_in_s: float) -> None:
+        pass
 
     def start_test(
         self, test_directory: Optional[str] = None, test_name: Optional[str] = None
