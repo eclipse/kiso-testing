@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Union
-from unittest.case import TestCase
+from unittest.case import TestCase, _SubTest
 
 import jinja2
 
@@ -54,7 +54,7 @@ ALL_STEP_REPORT = OrderedDict()
 # Step result keys used by Jinja for columns name
 REPORT_KEYS = ["message", "var_name", "expected_result", "actual_result", "succeed"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
-_FUNCTION_TO_APPLY = r"|".join(["test", "run", "setup", "teardown"])
+_FUNCTION_TO_APPLY = r"|".join(["test", "setup", "teardown", "handle_interaction"])
 
 # Jinja template location
 SCRIPT_PATH = str(Path(__file__).resolve().parent)
@@ -210,9 +210,7 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
         ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(type(test))
         # Store the result (start, stop, elapsed time)
         ALL_STEP_REPORT[test_class_name]["time_result"] = OrderedDict()
-        ALL_STEP_REPORT[test_class_name]["time_result"][
-            "Start Time"
-        ] = '"--junit" required'
+        ALL_STEP_REPORT[test_class_name]["time_result"]["Start Time"] = 0
         # Store the tests list
         ALL_STEP_REPORT[test_class_name]["test_list"] = OrderedDict()
 
@@ -227,7 +225,7 @@ def _add_step(
     message: str,
     var_name: str,
     expected: typing.Any,
-    received: any,
+    received: typing.Any,
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
 
@@ -283,6 +281,10 @@ def assert_decorator(assert_method: types.MethodType):
             # filter parent call, only known function recorded
             parent_method = re.findall(_FUNCTION_TO_APPLY, test_name.lower())
             if parent_method:
+                # get the decorated test fixture name (setUp, tearDown, ...)
+                if parent_method[0] == "handle_interaction":
+                    test_name = f_back.f_locals["func"].__name__
+
                 # Assign variables to signature
                 signature = inspect.signature(assert_method)
                 arguments = signature.bind(*args, **kwargs).arguments
@@ -365,6 +367,7 @@ def generate_step_report(
     :param output_file: Report output file path
     """
     global ALL_STEP_REPORT, SCRIPT_PATH, REPORT_TEMPLATE
+    test_result.stream.writeln("Generating HTML reports...")
 
     succeeded_tests = test_result.successes + test_result.expectedFailures
     failed_test = (
@@ -382,17 +385,22 @@ def generate_step_report(
             # Case of non success
             test_info = test_case[0]
 
-        if isinstance(test_info, TestCase):
+        if isinstance(test_info, _SubTest):
+            class_name = test_info.test_case.__class__.__name__
+            start_time = _parse_timestamp(test_info.test_case.start_time)
+            stop_time = _parse_timestamp(test_info.test_case.stop_time)
+            elapsed_time = test_info.test_case.elapsed_time
+        elif isinstance(test_info, TestCase):
             class_name = test_info.__class__.__name__
             start_time = _parse_timestamp(test_info.start_time)
             stop_time = _parse_timestamp(test_info.stop_time)
-        else:
+            elapsed_time = test_info.elapsed_time
+        elif isinstance(test_info, TestInfo):
             # test_info is TestInfo
             class_name = test_info.test_name.split(".")[-1]
             start_time = _parse_timestamp(test_info.test_result.start_time)
             stop_time = _parse_timestamp(test_info.test_result.stop_time)
-
-        elapsed_time = test_info.elapsed_time
+            elapsed_time = test_info.elapsed_time
 
         # Update test_case
         if class_name in ALL_STEP_REPORT:

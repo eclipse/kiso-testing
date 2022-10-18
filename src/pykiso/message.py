@@ -74,6 +74,9 @@ class MessageReportType(enum.IntEnum):
     TEST_FAILED = 1
     TEST_NOT_IMPLEMENTED = 2
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}.{self.name}"
+
 
 @enum.unique
 class MessageAckType(enum.IntEnum):
