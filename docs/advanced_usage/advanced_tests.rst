@@ -273,11 +273,10 @@ the `subTest <https://docs.python.org/3/library/unittest.html#unittest.TestCase.
             the execution when failing by using subTest.
             """
             with self.subTest("Verify that 1 == 2"):
-                self.assertEqual(1, 2, msg="Get back to elementary school")
+                self.assertEqual(1, 2)
 
-            logging.info("The rest of the test case will still be executed!")
-            self.assertTrue(next(side_effect))
-            logging.info(f"I HAVE RUN 0.1.1 for variant {self.variant}!")
+            logging.info("The rest of the test case will still be executed")
+            self.assertTrue(False)
 
 
 Implementation of Advanced Tests - Repeat testCases
