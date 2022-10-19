@@ -163,7 +163,7 @@ def _get_expected(func_name: str, arguments: dict) -> str:
         # "expected value" always 2nd position
         expected_val = args.pop(arguments_keys[1], None)
         # Add expected value to string
-        expected += f" to {expected_val}"
+        expected += f" to {str(expected_val)}"
         # Add the additional parameter if exist
         if args:
             # only param are left in args
