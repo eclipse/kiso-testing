@@ -88,7 +88,7 @@ def test_result():
     return result
 
 
-def test_assert_step_report_single_input(mocker, test_case):
+def test_assert_decorator_no_message(mocker, test_case):
     step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
     data_to_test = True
@@ -96,15 +96,60 @@ def test_assert_step_report_single_input(mocker, test_case):
 
     step_result.assert_called_once_with(
         "TestCase",
-        "test_assert_step_report_single_input",
+        "test_assert_decorator_no_message",
         "",
         "data_to_test",
         "True",
-        True,
+        data_to_test,
     )
 
 
-def test_assert_step_report_remote_test(mocker, remote_test_case):
+def test_assert_decorator_step_report_message(mocker, test_case):
+    step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
+
+    test_case.step_report.message = "Dummy message"
+    data_to_test = True
+    test_case.assertTrue(data_to_test)
+
+    assert test_case.step_report.message == ""
+    step_result.assert_called_once_with(
+        "TestCase",
+        "test_assert_decorator_step_report_message",
+        "Dummy message",
+        "data_to_test",
+        "True",
+        data_to_test,
+    )
+
+
+def test_assert_decorator_reraise(mocker, test_case):
+    step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
+    assert_step_report.ALL_STEP_REPORT = OrderedDict()
+    assert_step_report.ALL_STEP_REPORT["TestCase"] = {
+        "test_list": {"test_assert_decorator_reraise": [{"succeed": True}]}
+    }
+
+    data_to_test = False
+    with pytest.raises(AssertionError, match="False is not true : Dummy message"):
+        test_case.assertTrue(data_to_test, msg="Dummy message")
+
+    assert (
+        assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
+            "test_assert_decorator_reraise"
+        ][-1]["succeed"]
+        == False
+    )
+    step_result.assert_called_once_with(
+        "TestCase",
+        "test_assert_decorator_reraise",
+        "Dummy message",
+        "data_to_test",
+        "True",
+        data_to_test,
+    )
+
+
+def test_assert_decorator_remote_test(mocker, remote_test_case):
     step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
     remote_test_case.test_run()
@@ -119,33 +164,17 @@ def test_assert_step_report_remote_test(mocker, remote_test_case):
     )
 
 
-def test_assert_step_report_no_var_name_test(mocker, test_case):
+def test_assert_decorator_no_var_name(mocker, test_case):
     step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
     test_case.assertTrue(True)
 
     step_result.assert_called_once_with(
-        "TestCase", "test_assert_step_report_no_var_name_test", "", "True", "True", True
+        "TestCase", "test_assert_decorator_no_var_name", "", "True", "True", True
     )
 
 
-def test_assert_step_report_message(mocker, test_case):
-    step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
-
-    data_to_test = True
-    test_case.assertTrue(data_to_test, "message")
-
-    step_result.assert_called_once_with(
-        "TestCase",
-        "test_assert_step_report_message",
-        "message",
-        "data_to_test",
-        "True",
-        True,
-    )
-
-
-def test_assert_step_report_multi_input(mocker, test_case):
+def test_assert_decorator_multi_input(mocker, test_case):
     step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
     data_to_test = 4.5
@@ -156,7 +185,7 @@ def test_assert_step_report_multi_input(mocker, test_case):
 
     step_result.assert_called_once_with(
         "TestCase",
-        "test_assert_step_report_multi_input",
+        "test_assert_decorator_multi_input",
         "Test the step report",
         "data_to_test",
         "Almost Equal to 4.5; with delta=1",
@@ -164,7 +193,7 @@ def test_assert_step_report_multi_input(mocker, test_case):
     )
 
 
-def test_assert_step_report_generate(mocker, test_result):
+def test_generate(mocker, test_result):
     assert_step_report.ALL_STEP_REPORT = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestClassName"] = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestClassName"]["time_result"] = OrderedDict()
@@ -185,7 +214,7 @@ def test_assert_step_report_generate(mocker, test_result):
     mock_path.parent.mkdir.assert_called_once()
 
 
-def test_assert_step_report_add_step(mocker):
+def test_add_step():
 
     assert_step_report.ALL_STEP_REPORT["TestCase"] = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"] = OrderedDict()
