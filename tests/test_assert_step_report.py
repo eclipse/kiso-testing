@@ -15,7 +15,6 @@ from pykiso.test_result.xml_result import TestInfo, XmlTestResult
 
 # prevent pytest from collecting these as test cases
 RemoteTest.__test__ = False
-TestCase.__test__ = False
 _SubTest.__test__ = False
 
 
