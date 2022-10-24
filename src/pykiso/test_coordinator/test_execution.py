@@ -82,11 +82,9 @@ def create_test_suite(
         'test_filter_pattern', 'test_suite_id'
     """
     return test_suite.BasicTestSuite(
-        modules_to_add_dir=test_suite_dict["suite_dir"],
-        test_filter_pattern=test_suite_dict["test_filter_pattern"],
-        test_suite_id=test_suite_dict["test_suite_id"],
-        args=[],
-        kwargs={},
+        test_suite_dict["suite_dir"],
+        test_suite_dict["test_filter_pattern"],
+        test_suite_dict["test_suite_id"],
     )
 
 
@@ -335,7 +333,10 @@ def execute(
         else:
             with ResultStream(log_file_path) as stream:
                 test_runner = unittest.TextTestRunner(
-                    stream=stream, resultclass=BannerTestResult, failfast=failfast
+                    stream=stream,
+                    resultclass=BannerTestResult,
+                    failfast=failfast,
+                    verbosity=0,
                 )
                 result = test_runner.run(all_tests_to_run)
 

@@ -84,9 +84,12 @@ def mock_PCANBasic(mocker):
         def GetErrorText(self, error):
             return PCANBasic.PCAN_ERROR_OK, "ErrorText"
 
-        SetValue = mocker.stub(name="SetValue")
+        def SetValue(self, Channel, Parameter, Buffer):
+            pass
+
         Uninitialize = mocker.stub(name="Uninitialize")
 
+    mocker.patch.object(MockPCANBasic, "SetValue", return_value=PCANBasic.PCAN_ERROR_OK)
     mocker.patch.object(PCANBasic, "PCANBasic", new=MockPCANBasic)
     return PCANBasic
 
@@ -246,6 +249,19 @@ def test_cc_open(
     assert mock_pcan_configure_trace.called == logging_requested
 
 
+@mock.patch("sys.platform", "darwin")
+def test_macos_instantiation(mock_can_bus, mock_PCANBasic, mocker, caplog):
+    # Instantiation to test
+    connector = CCPCanCan(logging_activated=True)
+    # Run the action to test
+    with caplog.at_level(logging.DEBUG):
+        connector._cc_open()
+    # Validation of the warning popped
+    assert "TRACE_FILE_SEGMENTED deactivated for macos!" in [
+        record.getMessage() for record in caplog.records
+    ]
+
+
 @pytest.mark.parametrize(
     "side_effects, os_makedirs_error, logging_info_count, logging_error_count, logging_path, trace_option",
     [
@@ -299,6 +315,7 @@ def test_cc_open(
         ),
     ],
 )
+@mock.patch("sys.platform", "linux")
 def test_pcan_configure_trace(
     caplog,
     side_effects,

@@ -1,0 +1,23 @@
+auxiliaries:
+  com_aux:
+    connectors:
+        com: process1
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+connectors:
+  process1:
+    config:
+      executable: C:\Python38\python.exe
+      args:
+        - -c
+        - print("bla");print("bla2")
+      shell: False
+      pipe_stderr: True
+      pipe_stdout: True
+      pipe_stdin: True
+      text: False
+    type: pykiso.lib.connectors.cc_process:CCProcess
+
+test_suite_list:
+- suite_dir: test_process
+  test_filter_pattern: 'test_process_binary.py'
+  test_suite_id: 1

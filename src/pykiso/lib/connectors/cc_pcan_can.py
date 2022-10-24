@@ -20,6 +20,7 @@ Can Communication Channel using PCAN hardware
 """
 
 import logging
+import sys
 from pathlib import Path
 from typing import Dict, Union
 
@@ -226,18 +227,21 @@ class CCPCanCan(CChannel):
                     f"Tracefile path in PCAN device configured to {self.trace_path}"
                 )
 
-            log.internal_info("Segmented option of trace file activated.")
-            self._pcan_set_value(
-                pcan_channel,
-                PCANBasic.TRACE_FILE_SEGMENTED,
-                PCANBasic.PCAN_PARAMETER_ON,
-            )
-
-            if self.trace_size != 10:
-                log.internal_info(f"Trace size set to {self.trace_size} MB.")
+            if sys.platform != "darwin":
+                log.internal_info("Segmented option of trace file activated.")
                 self._pcan_set_value(
-                    pcan_channel, PCANBasic.PCAN_TRACE_SIZE, self.trace_size
+                    pcan_channel,
+                    PCANBasic.TRACE_FILE_SEGMENTED,
+                    PCANBasic.PCAN_PARAMETER_ON,
                 )
+
+                if self.trace_size != 10:
+                    log.internal_info(f"Trace size set to {self.trace_size} MB.")
+                    self._pcan_set_value(
+                        pcan_channel, PCANBasic.PCAN_TRACE_SIZE, self.trace_size
+                    )
+            else:
+                log.internal_warning("TRACE_FILE_SEGMENTED deactivated for macos!")
 
             self._pcan_set_value(
                 pcan_channel,

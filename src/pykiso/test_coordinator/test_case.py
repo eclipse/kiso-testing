@@ -20,94 +20,22 @@ TestCase for Message Protocol / TestApp usage.
 
 .. note:: TODO later on will inherit from a metaclass to get the id parameters
 """
+from __future__ import annotations
 
 import functools
 import logging
 import unittest
-from typing import Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
 from .. import message
 from ..interfaces.thread_auxiliary import AuxiliaryInterface
 from ..logging_initializer import get_logging_options, initialize_logging
 from .test_message_handler import test_app_interaction
 
+if TYPE_CHECKING:
+    from .test_suite import BaseTestSuite
+
 log = logging.getLogger(__name__)
-
-
-def retry_test_case(
-    max_try: int = 2,
-    rerun_setup: bool = False,
-    rerun_teardown: bool = False,
-    stability_test: bool = False,
-):
-    """Decorator: retry mechanism for testCase.
-
-    The aim is to cover the 2 following cases:
-
-        - Unstable test : get the test pass within the {max_try} attempt
-
-        - Stability test : run {max_try} time the test expecting no error
-
-    The **retry_test_case** comes with the possibility to re-run the setUp and
-    tearDown methods automatically.
-
-    :param max_try: maximum number of try to get the test pass.
-    :param rerun_setup: call the "setUp" method of the test.
-    :param rerun_teardown: call the "tearDown" method of the test.
-    :param stability_test: run {max_try} time the test and raise an exception if an error occurs.
-
-    :return: None, a testCase is not supposed to return anything.
-    :raise Exception: if stability_test, the exception that occurred during the execution; if
-        not stability_test, the exception that occurred at the last try.
-    """
-
-    def decorator(func):
-        @functools.wraps(func)
-        def func_wrapper(self) -> None:
-            # track the current execution for logging
-            current_execution = None
-
-            for retry_nb in range(1, max_try + 1):
-                try:
-                    # by the 2nd attempt, end the test with the teardown and start with setUp
-                    if retry_nb > 1:
-                        if rerun_teardown:
-                            current_execution = self.tearDown
-                            self.tearDown()
-                        if rerun_setup:
-                            current_execution = self.setUp
-                            self.setUp()
-
-                    # run the method (eg: test_run(self))
-                    current_execution = func
-                    func(self)
-                    if not stability_test:
-                        break
-                    else:
-                        # Clearly separate tests
-                        log.info(
-                            f">>>>>>>>>> Stability test {retry_nb}/{max_try} succeed <<<<<<<<<<"
-                        )
-
-                except Exception as e:
-                    # log: test_name (class), method (setUp, test_run, tearDown) and the error.
-                    log.warning(
-                        f"{self.__class__.__name__}.{current_execution.__name__} failed with exception: {e}."
-                    )
-
-                    # raise the exception that occurred during the latest attempt
-                    if retry_nb == max_try or stability_test:
-                        log.error(
-                            f">>>>>>>>>> Test {retry_nb}/{max_try} failed <<<<<<<<<<"
-                        )
-                        raise e
-
-                    # print counter only after failing test to avoid spamming the console
-                    log.info(f">>>>>>>>>> Attempt: {retry_nb +1}/{max_try} <<<<<<<<<<")
-
-        return func_wrapper
-
-    return decorator
 
 
 class BasicTest(unittest.TestCase):
@@ -123,8 +51,8 @@ class BasicTest(unittest.TestCase):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: tuple,
-        kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize generic test-case.
 
@@ -139,7 +67,8 @@ class BasicTest(unittest.TestCase):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
-        :param tag: dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
+        :param tag: dictionary allowing users to filter the tests based
+            on the keys and their value.
         """
         # Initialize base class
         super().__init__(*args, **kwargs)
@@ -150,6 +79,7 @@ class BasicTest(unittest.TestCase):
         self.test_case_id = test_case_id
         self.test_ids = test_ids
         self.tag = tag
+        self.start_time = self.stop_time = self.elapsed_time = 0
         if any([setup_timeout, run_timeout, teardown_timeout]) and not isinstance(
             self, RemoteTest
         ):
@@ -211,8 +141,8 @@ class RemoteTest(BasicTest):
         teardown_timeout: Union[int, None],
         test_ids: Union[dict, None],
         tag: Union[Dict[str, List[str]], None],
-        args: tuple,
-        kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ):
         """Initialize TestApp test-case.
 
@@ -227,7 +157,8 @@ class RemoteTest(BasicTest):
             wait for a report during teardown execution
         :param test_ids: jama references to get the coverage
             eg: {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
-        :param tag: dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
+        :param tag: dictionary containing lists of variants and/or test
+            levels when only a subset of tests needs to be executed
         """
         super().__init__(
             test_suite_id,
@@ -238,8 +169,8 @@ class RemoteTest(BasicTest):
             teardown_timeout,
             test_ids,
             tag,
-            args,
-            kwargs,
+            *args,
+            **kwargs,
         )
         self.setup_timeout = setup_timeout or RemoteTest.response_timeout
         self.run_timeout = run_timeout or RemoteTest.response_timeout
@@ -279,7 +210,9 @@ def define_test_parameters(
 ):
     """Decorator to fill out test parameters of the BasicTest and RemoteTest automatically."""
 
-    def generate_modified_class(DecoratedClass):
+    def generate_modified_class(
+        DecoratedClass: Type[Union[BasicTest, BaseTestSuite]]
+    ) -> Type[Union[BasicTest, BaseTestSuite]]:
         """For basic test-case, generates the same class but with the test IDs
         already filled. It works as a partially filled-out call to the __init__ method.
         """
@@ -308,8 +241,8 @@ def define_test_parameters(
                     teardown_timeout,
                     test_ids,
                     tag,
-                    args,
-                    kwargs,
+                    *args,
+                    **kwargs,
                 )
 
         NewClass.__doc__ = NewClass.__doc__.format(
@@ -331,9 +264,85 @@ def define_test_parameters(
         # in the test results in the console and in the report.
         # Changing __name__ is necessary to make the test name appear in the test results in the console.
         # Changing __qualname__ is necessary to make the test name appear in the test results in the report.
-        NewClass.__name__ = DecoratedClass.__name__ + f"-{suite_id}-{case_id}"
-        NewClass.__qualname__ = DecoratedClass.__qualname__ + f"-{suite_id}-{case_id}"
-
+        ids = "" if suite_id == 0 and case_id == 0 else f"-{suite_id}-{case_id}"
+        NewClass.__name__ = f"{DecoratedClass.__name__}{ids}"
+        NewClass.__qualname__ = f"{DecoratedClass.__qualname__}{ids}"
         return NewClass
 
     return generate_modified_class
+
+
+def retry_test_case(
+    max_try: int = 2,
+    rerun_setup: bool = False,
+    rerun_teardown: bool = False,
+    stability_test: bool = False,
+):
+    """Decorator: retry mechanism for testCase.
+
+    The aim is to cover the 2 following cases:
+
+        - Unstable test : get the test pass within the {max_try} attempt
+
+        - Stability test : run {max_try} time the test expecting no error
+
+    The **retry_test_case** comes with the possibility to re-run the setUp and
+    tearDown methods automatically.
+
+    :param max_try: maximum number of try to get the test pass.
+    :param rerun_setup: call the "setUp" method of the test.
+    :param rerun_teardown: call the "tearDown" method of the test.
+    :param stability_test: run {max_try} time the test and raise an exception if an error occurs.
+
+    :return: None, a testCase is not supposed to return anything.
+    :raise Exception: if stability_test, the exception that occurred during the execution; if
+        not stability_test, the exception that occurred at the last try.
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def func_wrapper(self: BasicTest) -> None:
+            # track the current execution for logging
+            current_execution = None
+
+            for retry_nb in range(1, max_try + 1):
+                try:
+                    # by the 2nd attempt, end the test with the teardown and start with setUp
+                    if retry_nb > 1:
+                        if rerun_teardown:
+                            current_execution = self.tearDown
+                            self.tearDown()
+                        if rerun_setup:
+                            current_execution = self.setUp
+                            self.setUp()
+
+                    # run the method (eg: test_run(self))
+                    current_execution = func
+                    func(self)
+                    if not stability_test:
+                        break
+                    else:
+                        # Clearly separate tests
+                        log.info(
+                            f">>>>>>>>>> Stability test {retry_nb}/{max_try} succeed <<<<<<<<<<"
+                        )
+
+                except Exception as e:
+                    # log: test_name (class), method (setUp, test_run, tearDown) and the error.
+                    log.warning(
+                        f"{self.__class__.__name__}.{current_execution.__name__} failed with exception: {e}."
+                    )
+
+                    # raise the exception that occurred during the latest attempt
+                    if retry_nb == max_try or stability_test:
+                        log.error(
+                            f">>>>>>>>>> Test {retry_nb}/{max_try} failed <<<<<<<<<<"
+                        )
+                        raise e
+
+                    # print counter only after failing test to avoid spamming the console
+                    log.info(f">>>>>>>>>> Attempt: {retry_nb +1}/{max_try} <<<<<<<<<<")
+
+        return func_wrapper
+
+    return decorator
