@@ -319,4 +319,7 @@ def parse_config(file_name: PathType) -> Dict:
     if requirements:
         check_requirements(requirements)
 
+    if "connectors" not in cfg:
+        cfg["connectors"] = {}
+        logging.internal_warning("No connector has been defined in yaml config file")
     return cfg

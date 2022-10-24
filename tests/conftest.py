@@ -64,13 +64,29 @@ class TestConnector:
         self.kwargs = kwargs
 
 class TestAux:
-    def __init__(self, com, *args, **kwargs):
-        self.com = com
+    def __init__(self, com = None, *args, **kwargs):
+        self.channel = com
+        self.connector_required = True
         self.args = args
         self.kwargs = kwargs
         self.is_instance = False
+
     def create_instance(self):
         self.is_instance = True
+
+    def stop(self):
+        self.is_instance = False
+
+class TestAuxNoConnector:
+    def __init__(self, *args, **kwargs):
+        self.connector_required = False
+        self.args = args
+        self.kwargs = kwargs
+        self.is_instance = False
+
+    def create_instance(self):
+        self.is_instance = True
+
     def stop(self):
         self.is_instance = False
 """

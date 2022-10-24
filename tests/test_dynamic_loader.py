@@ -11,6 +11,7 @@ import sys
 
 import pytest
 
+from pykiso.exceptions import ConnectorRequiredError
 from pykiso.test_setup.dynamic_loader import DynamicFinder, DynamicImportLinker
 
 
@@ -45,6 +46,14 @@ def linker(example_module):
             "connectors": {"com": "chan1"},
             "type": str(example_module)[:-3] + "-nope.py:None",
         },
+        "aux_no_connector": {
+            "config": {"aux_param": 4},
+            "type": str(example_module) + ":TestAuxNoConnector",
+        },
+        "aux_no_connector_error": {
+            "config": {"aux_param": 4},
+            "type": str(example_module) + ":TestAux",
+        },
     }
     con_cfg = {
         "chan1": {
@@ -57,12 +66,20 @@ def linker(example_module):
         linker.provide_connector(connector, con_details["type"], **cfg)
     for auxiliary, aux_details in aux_cfg.items():
         cfg = aux_details.get("config") or dict()
-        linker.provide_auxiliary(
-            auxiliary,
-            aux_details["type"],
-            aux_cons=aux_details["connectors"],
-            **cfg,
-        )
+        try:
+            linker.provide_auxiliary(
+                auxiliary,
+                aux_details["type"],
+                aux_cons=aux_details["connectors"],
+                **cfg,
+            )
+        except KeyError:
+            linker.provide_auxiliary(
+                auxiliary,
+                aux_details["type"],
+                aux_cons={},
+                **cfg,
+            )
 
     linker.install()
     return linker
@@ -83,20 +100,32 @@ def test_import_aux_cfg(linker):
 def test_import_con_cfg(linker):
     from pykiso.auxiliaries import aux11
 
-    assert aux11.com.kwargs["con_param"] == 1
+    assert aux11.channel.kwargs["con_param"] == 1
 
 
 def test_import_aux_com(linker):
     from pykiso.auxiliaries import aux11
 
-    assert aux11.com.__class__.__name__ == "TestConnector"
+    assert aux11.channel.__class__.__name__ == "TestConnector"
 
 
 def test_import_aux_instances(linker):
     from pykiso.auxiliaries import aux11, aux12
 
     assert aux11 != aux12
-    assert aux11.com == aux12.com
+    assert aux11.channel == aux12.channel
+
+
+def test_import_aux_without_connector(linker):
+    from pykiso.auxiliaries import aux_no_connector
+
+    assert aux_no_connector.kwargs["aux_param"] == 4
+    assert not getattr(aux_no_connector, "channel", False)
+
+
+def test_import_aux_without_connector_error(linker):
+    with pytest.raises(ConnectorRequiredError):
+        from pykiso.auxiliaries import aux_no_connector_error
 
 
 def test_bad_type_spec(linker):
