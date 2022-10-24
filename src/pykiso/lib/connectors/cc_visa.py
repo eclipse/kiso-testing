@@ -21,6 +21,7 @@ Communication Channel using VISA protocol
 
 import abc
 import logging
+from typing import Optional
 
 import pyvisa
 
@@ -83,39 +84,34 @@ class VISAChannel(CChannel):
                 f"Request {request}:{request_data} failed! Timeout expired before operation completed."
             )
         except Exception as e:
-            log.exception(f"Request {request}:{request_data} failed!\n{e}")
+            log.exception(f"Request {request}: {request_data} failed!\n{e}")
         else:
             log.internal_debug(f"Response received: {recv}")
         finally:
             response = {"msg": str(recv)}
             return response
 
-    def _cc_send(self, msg: MsgType, raw: bool = False) -> None:
+    def _cc_send(self, msg: MsgType) -> None:
         """Send a write request to the instrument
 
         :param msg: message to send
-        :param raw: is the message in a raw format (True) or is it a string (False)?
         """
-        if raw:
-            msg = msg.decode()
+        msg = msg.decode()
 
         log.internal_debug(f"Writing {msg} to {self.resource_name}")
         self.resource.write(msg)
 
-    def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> str:
+    def _cc_receive(self, timeout: float = 0.1) -> str:
         """Send a read request to the instrument
 
         :param timeout: time in second to wait for reading a message
-        :param raw: should the message be returned raw or should it be interpreted as a
-            pykiso.Message?
+
 
         :return: the received response message, or an empty string if the request
             expired with a timeout.
         """
-        if raw:
-            return {"msg": self._process_request("read")["msg"].encode()}
-        else:
-            return self._process_request("read")
+
+        return {"msg": self._process_request("read")["msg"].encode()}
 
     def query(self, query_command: str) -> str:
         """Send a query request to the instrument

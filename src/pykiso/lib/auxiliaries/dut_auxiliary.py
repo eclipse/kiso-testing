@@ -19,7 +19,6 @@ Device Under Test Auxiliary
 .. currentmodule:: dut_auxiliary
 
 """
-
 from __future__ import annotations
 
 import functools
@@ -27,14 +26,13 @@ import logging
 import queue
 from typing import Callable, Optional
 
-from pykiso import CChannel, Flasher, message
+from pykiso import CChannel, Flasher, Message, message
 from pykiso.interfaces.dt_auxiliary import (
     DTAuxiliaryInterface,
     close_connector,
     flash_target,
     open_connector,
 )
-from pykiso.types import MsgType
 
 log = logging.getLogger(__name__)
 
@@ -333,7 +331,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
 
     def wait_and_get_report(
         self, blocking: bool = False, timeout_in_s: int = 0
-    ) -> Optional[message.Message]:
+    ) -> Optional[Message]:
         """Wait for the report coming from the DUT.
 
         :param blocking: True: wait for timeout to expire, False: return
@@ -353,7 +351,9 @@ class DUTAuxiliary(DTAuxiliaryInterface):
             return None
 
     def _run_command(
-        self, cmd_message: message.Message, cmd_data: bytes = None
+        self,
+        cmd_message: message.Message,
+        cmd_data: bytes = None,
     ) -> None:
         """Simply send the given command using the associated channel.
 
@@ -361,7 +361,9 @@ class DUTAuxiliary(DTAuxiliaryInterface):
         :param cmd_data: not use
         """
         try:
-            self.channel.cc_send(msg=cmd_message, raw=False)
+            cmd_message = cmd_message.serialize()
+            # We send the the bytes
+            self.channel.cc_send(msg=cmd_message)
         except Exception:
             log.exception(
                 f"encountered error while sending message '{cmd_message}' to {self.channel}"
@@ -372,21 +374,24 @@ class DUTAuxiliary(DTAuxiliaryInterface):
 
         :param timeout_in_s: Time in seconds to wait for an answer
         """
-        recv = self.channel.cc_receive(timeout_in_s)
-        response = recv.get("msg")
+
+        recv_response = self.channel.cc_receive(timeout_in_s)
+        response = recv_response.get("msg")
 
         if response is None:
             return
+        elif isinstance(response, str):
+            response = response.encode()
+        response = Message.parse_packet(response)
 
         # If a message was received just automatically acknowledge it
         # and populate the queue_out
         if response.msg_type != MESSAGE_TYPE.ACK:
             ack_cmd = response.generate_ack_message(message.MessageAckType.ACK)
             try:
-                self.channel.cc_send(msg=ack_cmd, raw=False)
+                self.channel.cc_send(msg=ack_cmd.serialize())
             except Exception:
                 log.exception(
                     f"encountered error while sending acknowledge message for {response}!"
                 )
-
         self.queue_out.put(response)

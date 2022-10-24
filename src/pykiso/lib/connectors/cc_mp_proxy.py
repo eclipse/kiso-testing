@@ -76,13 +76,12 @@ class CCMpProxy(CChannel):
         log.internal_debug(f"put at proxy level: {args} {kwargs}")
         self.queue_in.put((args, kwargs))
 
-    def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
+    def _cc_receive(self, timeout: float = 0.1) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
 
         :param timeout: not used
-        :param raw: not used
 
-        :return: raw bytes and source when it exist. if queue timeout
+        :return: bytes and source when it exist. if queue timeout
             is reached return None
         """
         try:

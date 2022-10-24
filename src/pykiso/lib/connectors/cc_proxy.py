@@ -90,13 +90,12 @@ class CCProxy(CChannel):
             # call the attached ProxyAuxiliary's run_command method
             self._tx_callback(self, *args, **kwargs)
 
-    def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
+    def _cc_receive(self, timeout: float = 0.1) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
 
         :param timeout: not used
-        :param raw: not used
 
-        :return: raw bytes and source when it exist. if queue timeout
+        :return: bytes and source when it exist. if queue timeout
             is reached return None
         """
         try:

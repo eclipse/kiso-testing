@@ -300,7 +300,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             for a message
         """
         try:
-            recv_response = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
+            recv_response = self.channel.cc_receive(timeout=timeout_in_s)
             received_data = recv_response.get("msg")
             # if data are received, populate connector's queue_out
             if received_data is not None:

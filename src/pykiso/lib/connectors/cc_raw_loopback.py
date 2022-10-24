@@ -20,7 +20,7 @@ Loopback CChannel
 """
 import threading
 from collections import deque
-from typing import Dict
+from typing import Dict, Optional
 
 from pykiso import CChannel
 from pykiso.types import MsgType
@@ -46,20 +46,21 @@ class CCLoopback(CChannel):
         """Close loopback channel."""
         self._loopback_buffer = None
 
-    def _cc_send(self, msg: MsgType, raw: bool = True) -> None:
+    def _cc_send(
+        self,
+        msg: MsgType,
+    ) -> None:
         """Send a message by simply putting message in deque.
 
         :param msg: message to send, should be Message type or bytes.
-        :param raw: if raw is True simply send it as it is, otherwise apply serialization
         """
         with self.lock:
             self._loopback_buffer.append(msg)
 
-    def _cc_receive(self, timeout: float, raw: bool = True) -> Dict[str, MsgType]:
+    def _cc_receive(self, timeout: float) -> Dict[str, Optional[MsgType]]:
         """Read message by simply removing an element from the left side of deque.
 
         :param timeout: timeout applied on receive event
-        :param raw: if raw is True return raw bytes, otherwise Message type like
 
         :return: Message or raw bytes if successful, otherwise None
         """

@@ -264,15 +264,13 @@ class CCRttSegger(connector.CChannel):
             self.jlink.close()
             log.internal_info("RTT communication closed")
 
-    def _cc_send(self, msg: Message or bytes, raw: bool = False) -> None:
+    def _cc_send(self, msg: bytes) -> None:
         """Send message using the corresponding RTT buffer.
 
-        :param msg: message to send, should be Message type or bytes.
-        :param raw: if raw is True simply send it as it is, otherwise apply serialization
+        :param msg: message to send, should be bytes.
         """
         try:
-            if not raw:
-                msg = msg.serialize()
+
             msg = list(msg)
             bytes_written = self.jlink.rtt_write(self.tx_buffer_idx, msg)
             log.internal_debug(
@@ -286,19 +284,16 @@ class CCRttSegger(connector.CChannel):
                 f"ERROR occurred while sending {len(msg)} bytes on buffer {self.tx_buffer_idx}"
             )
 
-    def _cc_receive(
-        self, timeout: float = 0.1, raw: bool = False
-    ) -> Dict[str, Union[Message, bytes, None]]:
+    def _cc_receive(self, timeout: float = 0.1, **kwargs) -> Dict[str, Optional[bytes]]:
         """Read message from the corresponding RTT buffer.
 
         :param timeout: timeout applied on receive event
-        :param raw: if raw is True return raw bytes, otherwise Message type like
 
         :return: Message or raw bytes if successful, otherwise None
         """
         is_timeout = False
         # maximum amount of bytes to read out
-        size = self.rx_buffer_size if raw else Message().header_size
+        size = kwargs.get("size") or self.rx_buffer_size
         t_start = time.perf_counter()
 
         # rtt_read is not a blocking method due to this fact a while loop is used
@@ -309,12 +304,6 @@ class CCRttSegger(connector.CChannel):
                 msg_received = self.jlink.rtt_read(self.rx_buffer_idx, size)
                 # if a message is received
                 if msg_received:
-                    if not raw:
-                        # Read the payload and CRC
-                        msg_received += self.jlink.rtt_read(
-                            self.rx_buffer_idx,
-                            msg_received[-1] + Message().crc_byte_size,
-                        )
                     # Parse the bytes list into bytes string
                     msg_received = bytes(msg_received)
                     log.internal_debug(
@@ -323,8 +312,6 @@ class CCRttSegger(connector.CChannel):
                         msg_received,
                         len(msg_received),
                     )
-                    if not raw:
-                        msg_received = Message.parse_packet(msg_received)
                     break
             except Exception:
                 log.exception(

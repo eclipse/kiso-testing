@@ -23,6 +23,7 @@ import abc
 import multiprocessing
 import pathlib
 import threading
+from typing import Optional
 
 from .types import MsgType, PathType
 
@@ -96,28 +97,25 @@ class CChannel(Connector):
         with self._lock:
             self._cc_close()
 
-    def cc_send(self, msg: MsgType, raw: bool = False, **kwargs) -> None:
+    def cc_send(self, msg: MsgType, **kwargs) -> None:
         """Send a thread-safe message on the channel and wait for an acknowledgement.
 
         :param msg: message to send
-        :param raw: should the message be converted as pykiso.Message
-            or sent as it is
         :param kwargs: named arguments
         """
         with self._lock_tx:
-            self._cc_send(msg=msg, raw=raw, **kwargs)
+            self._cc_send(msg=msg, **kwargs)
 
-    def cc_receive(self, timeout: float = 0.1, raw: bool = False) -> dict:
+    def cc_receive(self, timeout: float = 0.1, **kwargs) -> bytes:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
-        :param raw: should the message be returned as pykiso.Message or
-            sent as it is
+        :param kwargs: named arguments
 
         :return: the received message
         """
         with self._lock_rx:
-            return self._cc_receive(timeout=timeout, raw=raw)
+            return self._cc_receive(timeout=timeout, **kwargs)
 
     @abc.abstractmethod
     def _cc_open(self) -> None:
@@ -130,23 +128,21 @@ class CChannel(Connector):
         pass
 
     @abc.abstractmethod
-    def _cc_send(self, msg: MsgType, raw: bool = False, **kwargs) -> None:
+    def _cc_send(self, msg: MsgType, **kwargs) -> None:
         """Sends the message on the channel.
 
         :param msg: Message to send out
-        :param raw: send raw message without further work (default: False)
         :param kwargs: named arguments
         """
         pass
 
     @abc.abstractmethod
-    def _cc_receive(self, timeout: float, raw: bool = False) -> dict:
+    def _cc_receive(self, timeout: float, **kwargs) -> bytes:
         """How to receive something from the channel.
 
         :param timeout: Time to wait in second for a message to be received
-        :param raw: send raw message without further work (default: False)
-
-        :return: message.Message() - If one received / None - If not
+        :param kwargs: named arguments
+        :return: bytes - If one received / None - If not
         """
         pass
 

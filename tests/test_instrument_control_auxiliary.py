@@ -114,7 +114,7 @@ def test_handle_write_without_validation(aux_inst, cchannel_inst):
     req = "SYST:LOCK ON"
     response = aux_inst.handle_write(req)
 
-    cchannel_inst._cc_send.assert_called_with(msg="SYST:LOCK ON\n", raw=False)
+    cchannel_inst._cc_send.assert_called_with(msg="SYST:LOCK ON\n")
     assert response == "NO_VALIDATION"
 
 
@@ -129,7 +129,7 @@ def test_handle_write_with_validation(mocker, aux_inst, cchannel_inst):
 
     response = aux_inst.handle_write(req, validation)
 
-    cchannel_inst._cc_send.assert_called_with(msg="SYST:LOCK ON\n", raw=False)
+    cchannel_inst._cc_send.assert_called_with(msg="SYST:LOCK ON\n")
     handle_query_mock.assert_called_with(validation[0])
     assert response == "SUCCESS"
 
@@ -194,7 +194,7 @@ def test_handle_read(aux_inst, cchannel_inst):
 
     aux_inst.handle_read()
 
-    cchannel_inst._cc_receive.assert_called_with(timeout=0.1, raw=False)
+    cchannel_inst._cc_receive.assert_called_with(timeout=0.1)
 
 
 def test_handle_query(mocker, aux_inst, cchannel_inst):
@@ -203,9 +203,9 @@ def test_handle_query(mocker, aux_inst, cchannel_inst):
     aux_inst.handle_query(query)
 
     cchannel_inst._cc_send.assert_called_with(
-        msg=f"{query}{aux_inst.write_termination}", raw=False
+        msg=f"{query}{aux_inst.write_termination}",
     )
-    cchannel_inst._cc_receive.assert_called_with(timeout=0.1, raw=False)
+    cchannel_inst._cc_receive.assert_called_with(timeout=0.1)
 
 
 def test_handle_query_with_visa_cc(mocker, aux_inst, cc_visa_inst):
