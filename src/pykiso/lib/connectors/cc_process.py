@@ -27,9 +27,8 @@ import queue
 import subprocess
 import threading
 from dataclasses import dataclass
-from typing import IO, ByteString, Callable, Dict, List, Optional, Tuple, Union
+from typing import IO, ByteString, List, Optional, Union
 
-from pykiso import Message
 from pykiso.connector import CChannel
 
 log = logging.getLogger(__name__)
@@ -188,11 +187,10 @@ class CCProcess(CChannel):
         """Close the channel."""
         self._cleanup()
 
-    def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
+    def _cc_send(self, msg: MessageType, **kwargs) -> None:
         """Execute process commands or write data to stdin
 
         :param msg: data to send
-        :param raw: unused
 
         :raises CCProcessError: Stdin pipe is not enabled
 
@@ -284,11 +282,11 @@ class CCProcess(CChannel):
             ret = {"msg": {"exit": msg.exit_code}}
         return ret
 
-    def _cc_receive(self, timeout: float = 0.0001, raw: bool = False) -> MessageType:
+    def _cc_receive(self, timeout: float = 0.0001, size: int = None) -> MessageType:
         """Receive messages
 
         :param timeout: Time to wait in seconds for a message to be received
-        :param raw: unused
+        :param size: unused
 
         return The received message
         """

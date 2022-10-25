@@ -236,7 +236,7 @@ class CCFdxLauterbach(connector.CChannel):
         # Close Trace32 application
         self.t32_api.T32_Cmd("QUIT".encode("latin-1"))
 
-    def _cc_send(self, msg: Message or bytes) -> int:
+    def _cc_send(self, msg: bytes) -> int:
         """Sends a message using FDX channel.
 
         :param msg: message

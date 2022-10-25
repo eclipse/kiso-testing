@@ -52,7 +52,7 @@ class CCExample(connector.CChannel):
         """Close the channel."""
         log.internal_info("close channel")
 
-    def _cc_send(self, msg: message.Message) -> None:
+    def _cc_send(self, msg: bytes) -> None:
         """Sends the message on the channel.
 
         :param msg: message to send.
@@ -79,7 +79,7 @@ class CCExample(connector.CChannel):
 
     def _cc_receive(
         self, timeout: float = 0.1, size: Optional[int] = None
-    ) -> Dict[str, Optional[message.Message]]:
+    ) -> Dict[str, Optional[bytes]]:
         """Reads from the channel - decorator usage for test.
 
         :param timeout: not use

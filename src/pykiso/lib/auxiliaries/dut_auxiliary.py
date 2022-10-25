@@ -33,11 +33,6 @@ from pykiso.interfaces.dt_auxiliary import (
     flash_target,
     open_connector,
 )
-from pykiso.lib.connectors.cc_example import CCExample
-from pykiso.lib.connectors.cc_rtt_segger import CCRttSegger
-from pykiso.lib.connectors.cc_tcp_ip import CCTcpip
-from pykiso.lib.connectors.cc_visa import VISAChannel
-from pykiso.types import MsgType
 
 log = logging.getLogger(__name__)
 
@@ -336,7 +331,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
 
     def wait_and_get_report(
         self, blocking: bool = False, timeout_in_s: int = 0
-    ) -> Optional[message.Message]:
+    ) -> Optional[bytes]:
         """Wait for the report coming from the DUT.
 
         :param blocking: True: wait for timeout to expire, False: return

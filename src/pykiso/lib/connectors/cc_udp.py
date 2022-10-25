@@ -23,9 +23,9 @@ Communication Channel Via Udp
 
 import logging
 import socket
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 
-from pykiso import Message, connector
+from pykiso import connector
 
 log = logging.getLogger(__name__)
 
@@ -60,17 +60,17 @@ class CCUdp(connector.CChannel):
         """Close the udp socket."""
         self.udp_socket.close()
 
-    def _cc_send(self, msg: bytes or Message) -> None:
+    def _cc_send(self, msg: bytes) -> None:
         """Send message using udp socket
 
-        :param msg: message to send, should be Message type or bytes.
+        :param msg: message to send, should bytes.
         """
 
         self.udp_socket.sendto(msg, (self.dest_ip, self.dest_port))
 
     def _cc_receive(
         self, timeout: float = 0.0000001, size: Optional[int] = None
-    ) -> Dict[str, Union[Message, None]]:
+    ) -> Dict[str, Optional[bytes]]:
         """Read message from socket.
 
         :param timeout: timeout applied on receive event

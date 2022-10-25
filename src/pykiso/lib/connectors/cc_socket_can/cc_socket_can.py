@@ -180,8 +180,6 @@ class CCSocketCan(CChannel):
     ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
-
-
         :param timeout: timeout applied on reception
 
         :return: tuple containing the received data and the source can id

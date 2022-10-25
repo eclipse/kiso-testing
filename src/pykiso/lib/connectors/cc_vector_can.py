@@ -132,10 +132,7 @@ class CCVectorCan(CChannel):
 
         """
         _data = msg
-        remote_id = kwargs.get("remote_id")
-
-        if remote_id is None:
-            remote_id = self.remote_id
+        remote_id = kwargs.get("remote_id") or self.remote_id
 
         can_msg = can.Message(
             arbitration_id=remote_id,
