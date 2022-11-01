@@ -695,11 +695,11 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "robotframework"
-version = "3.2.2"
+version = "6.0"
 description = "Generic automation framework for acceptance testing and robotic process automation (RPA)"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 
 [[package]]
 name = "setuptools"
@@ -1006,7 +1006,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "8f8beb9688da24b623c68d5d691fc41bc818ab7f5edb7d03823a83698b7742da"
+content-hash = "4a6bfefbdff20b5ae9f47b10327ef21ca3a04324cd45ca04ca984b5b6800bbbe"
 
 [metadata.files]
 alabaster = [
@@ -1610,8 +1610,8 @@ requests = [
     {file = "requests-2.28.1.tar.gz", hash = "sha256:7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983"},
 ]
 robotframework = [
-    {file = "robotframework-3.2.2-py2.py3-none-any.whl", hash = "sha256:a0c325e79dc6dcdaba0398db8c3afefc337799b7b36b336f04b07be4fe4a9dd2"},
-    {file = "robotframework-3.2.2.zip", hash = "sha256:a0786a916d0572bd9d6afe26e95c6021e3df5dcafa0ece6b302e36366e58c24e"},
+    {file = "robotframework-6.0-py3-none-any.whl", hash = "sha256:fe3f4c6a88a93b8b404ccdbec35e022d237e8a381747523e651dddb501445b1f"},
+    {file = "robotframework-6.0.zip", hash = "sha256:db9498dad21369a6702384db057994628cd2cf0a172f5685be941c4bf94e242f"},
 ]
 setuptools = [
     {file = "setuptools-65.3.0-py3-none-any.whl", hash = "sha256:2e24e0bec025f035a2e72cdd1961119f557d78ad331bb00ff82efb2ab8da8e82"},

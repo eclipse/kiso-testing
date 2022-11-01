@@ -45,7 +45,7 @@ pyserial = "^3.0"
 python-can = {version = "^4.0.0", extras = ["pcan"]}
 PyVISA = "^1.12.0"
 PyVISA-py = "~0.5.3"
-robotframework = "3.2.2"
+robotframework = "6.0"
 unittest-xml-reporting = "^3.2.0"
 click = ">=7.0.0,<9.0.0"
 pykiso-python-uds = "^3.0.0"
