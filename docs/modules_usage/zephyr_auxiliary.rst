@@ -3,7 +3,7 @@
 Interacting with a Zephyr test
 ==============================
 
-The Zephyr auxiliary uses the Twister tool(https://docs.zephyrproject.org/latest/develop/test/twister.html) to execute Zephyr tests from a pykiso test.
+The Zephyr auxiliary uses the :ref:`Twister tool <https://docs.zephyrproject.org/latest/develop/test/twister.html>` to execute Zephyr tests from a pykiso test.
 A common use case is a pykiso test that interacts with a test on an embedded device via a communication interface.
 
 Prerequisites

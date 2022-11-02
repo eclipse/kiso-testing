@@ -34,14 +34,6 @@ class MyTest1(pykiso.BasicTest):
     -> tag: [optional] allows the run of subset of tests
     """
 
-    def setUp(self):
-        """Hook method from unittest in order to execute code before test case run.
-        In this case the default setUp method is overridden, allowing us to apply the
-        retry_test_case's decorator. The syntax super() access to the BasicTest and
-        we will run the default setUp()
-        """
-        super().setUp()
-
     def test_run(self):
         """In this case the default test_run method is overridden and
         instead of calling test_run from RemoteTest class the following
@@ -67,11 +59,3 @@ class MyTest1(pykiso.BasicTest):
         logging.info(f"Zephyr test has finished: {result}")
         # The test case can decide how to handle test results from device under test.
         self.assertEqual(result, TestResult.PASSED)
-
-    def tearDown(self):
-        """Hook method from unittest in order to execute code after the test case ran.
-        In this case the default tearDown method is overridden, allowing us to apply the
-        retry_test_case's decorator. The syntax super() access to the BasicTest and
-        we will run the default tearDown()
-        """
-        super().tearDown()

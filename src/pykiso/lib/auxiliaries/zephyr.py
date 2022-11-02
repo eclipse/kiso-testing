@@ -47,6 +47,11 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
 
     """
 
+    TEST_OUTPUT_PATTERN = "- OUTPUT:"
+    TEST_PASS_PATTERN = "OUTPUT:  PASS - "
+    TEST_START_PATTERN = "OUTPUT: START - "
+    TEST_FAIL_PATTERN = "OUTPUT:  FAIL - "
+
     def __init__(
         self,
         com: CChannel = None,
@@ -57,7 +62,6 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
     ) -> None:
         """Initialize the auxiliary
 
-        :param twister_path: Path to the twister tool
         :param test_directory: The directory to search for the Zephyr test project
         :param testcase_name: The name of the Zephyr test
         :param wait_for_start: Wait for Zyephyr test start
@@ -86,10 +90,8 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
         :param test_directory: The directory to search for the Zephyr test project. Defaults to the test_directory from YAML.
         :param testcase_name: The name of the Zephyr test. Defaults to the testcase_name from YAML.
         """
-        test_directory = (
-            test_directory if test_directory is not None else self.test_directory
-        )
-        test_name = test_name if test_name is not None else self.test_name
+        test_directory = test_directory or self.test_directory
+        test_name = test_name or self.test_name
         if test_directory is None:
             raise ZephyrError("test_directory parameter is not set.")
         if test_name is None:
@@ -99,7 +101,7 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
             raise ZephyrError("Twister test is already running")
 
         self.outdir = str(Path(test_directory).resolve() / "twister-out")
-        logging.internal_info(f"Using Twister output directory: {self.outdir}")
+        log.internal_info(f"Using Twister output directory: {self.outdir}")
         self.channel.cc_send(
             {
                 "command": "start",
@@ -125,7 +127,7 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
                 if line is None:
                     return
 
-                if "OUTPUT: START - " in line:
+                if self.TEST_START_PATTERN in line:
                     log.internal_debug("Zephyr test started.")
                     return
 
@@ -138,7 +140,7 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
             return None
 
         while True:
-            msg = self.channel.cc_receive(timeout=None)["msg"]
+            msg = self.channel.cc_receive(timeout=None).get("msg")
             if msg is None:
                 return None
             line = msg.get("stderr")
@@ -148,11 +150,10 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
                     return None
 
             # Twister outputs many lines without a real message, remove those
-            test_output_pattern = "- OUTPUT:"
-            output = line.find(test_output_pattern)
+            output = line.find(self.TEST_OUTPUT_PATTERN)
             if output != -1:
-                message = line[output + len(test_output_pattern) :]
-                if len(message) == 0 or message.isspace():
+                message = line[output + len(self.TEST_OUTPUT_PATTERN) :]
+                if not message.strip():
                     continue
             log.internal_debug(f"Twister: {line}")
             return line
@@ -171,9 +172,9 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
             if line is None:
                 break
             # Look for relevant messages in the output
-            if "OUTPUT:  PASS - " in line:
+            if self.TEST_PASS_PATTERN in line:
                 log.internal_debug("Zephyr test PASSED.")
-            elif "OUTPUT:  FAIL - " in line:
+            elif self.TEST_FAIL_PATTERN in line:
                 log.internal_debug("Zephyr test FAILED.")
 
         # Get the result from the xunit file
@@ -183,6 +184,8 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
 
     def _parse_xunit(self, file_path: str) -> TestResult:
         """Parse xunit file
+
+        :param file_path: Path to the xunit file
 
         :return: The result of a single test case
         """
