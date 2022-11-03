@@ -110,21 +110,15 @@ def test_cc_close(constructor_params_serial):
     assert visa_inst._cc_close() is None
 
 
-@pytest.mark.parametrize(
-    "constructor_params_serial, raw_value, expected_return",
-    [
-        (constructor_params_serial, True, {"msg": b"read response"}),
-        (constructor_params_serial, False, {"msg": "read response"}),
-    ],
-)
-def test_cc_receive(mocker, constructor_params_serial, raw_value, expected_return):
+def test_cc_receive(
+    mocker,
+):
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
     message_received = visa_inst._cc_receive()
-    if raw_value:
-        message_received["msg"] = message_received["msg"].encode()
+    message_received["msg"] = message_received["msg"]
 
-    assert message_received == expected_return
+    assert message_received == {"msg": b"read response"}
 
 
 @pytest.mark.parametrize(
@@ -180,10 +174,10 @@ def test__cc_send(mocker, constructor_params_serial, scpi_cmds):
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
 
     # Test with string input
-    assert visa_inst._cc_send(scpi_cmds["example"]) is None
+    assert visa_inst._cc_send(scpi_cmds["example"].encode()) is None
 
     # Test with bytes input
-    assert visa_inst._cc_send(b"example".decode()) is None
+    assert visa_inst._cc_send(b"example") is None
 
 
 @pytest.mark.parametrize(

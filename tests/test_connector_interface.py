@@ -91,7 +91,7 @@ def test_channel_cc_receive(channel_obj):
     cc_inst = channel_obj(name="thread-channel")
     cc_inst.cc_receive()
 
-    cc_inst._cc_receive.assert_called_with(timeout=0.1, size=None)
+    cc_inst._cc_receive.assert_called_with(timeout=0.1)
 
 
 def test_channel_invalid_interface():

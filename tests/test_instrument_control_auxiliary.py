@@ -194,7 +194,7 @@ def test_handle_read(aux_inst, cchannel_inst):
 
     aux_inst.handle_read()
 
-    cchannel_inst._cc_receive.assert_called_with(timeout=0.1, size=None)
+    cchannel_inst._cc_receive.assert_called_with(timeout=0.1)
 
 
 def test_handle_query(mocker, aux_inst, cchannel_inst):
@@ -205,7 +205,7 @@ def test_handle_query(mocker, aux_inst, cchannel_inst):
     cchannel_inst._cc_send.assert_called_with(
         msg=f"{query}{aux_inst.write_termination}",
     )
-    cchannel_inst._cc_receive.assert_called_with(timeout=0.1, size=None)
+    cchannel_inst._cc_receive.assert_called_with(timeout=0.1)
 
 
 def test_handle_query_with_visa_cc(mocker, aux_inst, cc_visa_inst):
