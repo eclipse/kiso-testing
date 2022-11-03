@@ -7,7 +7,7 @@ auxiliaries:
       # The location of the Zephyr test project
       test_directory: ./test_zephyr/zephyr_test_project
       # The name of the test in the test directory
-      test_name: testing.ztest
+      test_name: testing.ztest.assert
       # Wait for test start on target when started
       wait_for_start: True
       activate_log :

@@ -107,9 +107,9 @@ class ZephyrTestAuxiliary(DTAuxiliaryInterface):
                 "command": "start",
                 "args": [
                     "-vv",
-                    "-T",
+                    "--testsuite-root",
                     test_directory,
-                    "-s",
+                    "--test",
                     test_name,
                     "--outdir",
                     self.outdir,
