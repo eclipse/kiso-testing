@@ -69,9 +69,7 @@ class CCUdpServer(connector.CChannel):
         log.internal_debug(f"UDP server send: {msg} at {self.address}")
         self.udp_socket.sendto(msg, self.address)
 
-    def _cc_receive(
-        self, timeout=0.0000001, size: Optional[int] = None
-    ) -> Dict[str, Union[Message, bytes, None]]:
+    def _cc_receive(self, timeout=0.0000001) -> Dict[str, Union[Message, bytes, None]]:
         """Read message from UDP socket.
 
         :param timeout: timeout applied on receive event

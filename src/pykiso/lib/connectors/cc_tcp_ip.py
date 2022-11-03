@@ -73,9 +73,7 @@ class CCTcpip(CChannel):
         log.internal_debug(f"Sending {msg} via socket to {self.dest_ip}")
         self.socket.send(msg)
 
-    def _cc_receive(
-        self, timeout=0.01, size: Optional[int] = None
-    ) -> Dict[str, Union[bytes, str, None]]:
+    def _cc_receive(self, timeout=0.01) -> Dict[str, Union[bytes, str, None]]:
         """Read message from socket.
 
         :param timeout: time in second to wait for reading a message

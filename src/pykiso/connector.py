@@ -106,16 +106,16 @@ class CChannel(Connector):
         with self._lock_tx:
             self._cc_send(msg=msg, **kwargs)
 
-    def cc_receive(self, timeout: float = 0.1, size: Optional[int] = None) -> dict:
+    def cc_receive(self, timeout: float = 0.1, **kwargs) -> bytes:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
-        :param size: size of the message to receive
+        :param kwargs: named arguments
 
         :return: the received message
         """
         with self._lock_rx:
-            return self._cc_receive(timeout=timeout, size=size)
+            return self._cc_receive(timeout=timeout, **kwargs)
 
     @abc.abstractmethod
     def _cc_open(self) -> None:
@@ -137,12 +137,12 @@ class CChannel(Connector):
         pass
 
     @abc.abstractmethod
-    def _cc_receive(self, timeout: float, size: Optional[int] = None) -> dict:
+    def _cc_receive(self, timeout: float, **kwargs) -> bytes:
         """How to receive something from the channel.
 
         :param timeout: Time to wait in second for a message to be received
-
-        :return: message.Message() - If one received / None - If not
+        :param kwargs: named arguments
+        :return: bytes - If one received / None - If not
         """
         pass
 

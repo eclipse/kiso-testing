@@ -22,7 +22,7 @@ Can Communication Channel using PCAN hardware
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import can
 import can.bus
@@ -306,7 +306,7 @@ class CCPCanCan(CChannel):
     def _cc_send(self, msg: MessageType, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
-        If remote_id parameter is not given take configured ones, in addition if
+        If remote_id parameter is not given take configured ones
 
         :param msg: data to send
         :param kwargs: named arguments
@@ -327,7 +327,7 @@ class CCPCanCan(CChannel):
         log.internal_debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
 
     def _cc_receive(
-        self, timeout: float = 0.0001, size: int = None
+        self, timeout: float = 0.0001
     ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 

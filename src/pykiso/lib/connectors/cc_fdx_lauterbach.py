@@ -258,11 +258,8 @@ class CCFdxLauterbach(connector.CChannel):
             )
         return poll_len
 
-    def _cc_receive(
-        self, timeout: float = 0.1, size: Optional[int] = None
-    ) -> Dict[str, Union[bytes, str, None]]:
+    def _cc_receive(self, timeout: float = 0.1) -> Dict[str, Union[bytes, str, None]]:
         """Receive message using the FDX channel.
-
 
         :return: message
         """

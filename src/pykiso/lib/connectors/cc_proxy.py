@@ -92,9 +92,7 @@ class CCProxy(CChannel):
         if self._tx_callback is not None:
             self._tx_callback(self, *args, **kwargs)
 
-    def _cc_receive(
-        self, timeout: float = 0.1, size: Optional[int] = None
-    ) -> ProxyReturn:
+    def _cc_receive(self, timeout: float = 0.1) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
 
         :param timeout: not used

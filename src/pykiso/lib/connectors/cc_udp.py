@@ -68,9 +68,7 @@ class CCUdp(connector.CChannel):
 
         self.udp_socket.sendto(msg, (self.dest_ip, self.dest_port))
 
-    def _cc_receive(
-        self, timeout: float = 0.0000001, size: Optional[int] = None
-    ) -> Dict[str, Optional[bytes]]:
+    def _cc_receive(self, timeout: float = 0.0000001) -> Dict[str, Optional[bytes]]:
         """Read message from socket.
 
         :param timeout: timeout applied on receive event

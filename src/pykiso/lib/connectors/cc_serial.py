@@ -127,7 +127,6 @@ class CCSerial(connector.CChannel):
         """Sends data to the serial port
 
         :param msg: data to send
-        :param raw: unused
         :param timeout: write timeout in seconds. None sets it to blocking,
           defaults to None
         :raises: SerialTimeoutException - In case a write timeout is configured
@@ -139,15 +138,12 @@ class CCSerial(connector.CChannel):
 
         self.serial.write(msg)
 
-    def _cc_receive(
-        self, timeout=0.00001, size: Optional[int] = None
-    ) -> Dict[str, bytes]:
+    def _cc_receive(self, timeout=0.00001) -> Dict[str, bytes]:
         """Read bytes from the serial port.
         Try to read one byte in blocking mode. After blocking read check
         remaining bytes and read them without a blocking call.
 
         :param timeout: timeout in seconds, 0 for non blocking read, defaults to 0.00001
-        :param raw: raw mode only, defaults to True
         :raises NotImplementedError: if raw is to True
         :return: received bytes
         """

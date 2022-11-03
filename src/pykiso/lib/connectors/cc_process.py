@@ -282,7 +282,7 @@ class CCProcess(CChannel):
             ret = {"msg": {"exit": msg.exit_code}}
         return ret
 
-    def _cc_receive(self, timeout: float = 0.0001, size: int = None) -> MessageType:
+    def _cc_receive(self, timeout: float = 0.0001) -> MessageType:
         """Receive messages
 
         :param timeout: Time to wait in seconds for a message to be received

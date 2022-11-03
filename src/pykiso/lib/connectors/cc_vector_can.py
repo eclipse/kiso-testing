@@ -145,9 +145,7 @@ class CCVectorCan(CChannel):
 
         log.internal_debug(f"sent CAN Message: {can_msg}")
 
-    def _cc_receive(
-        self, timeout=0.0001, size: Optional[int] = None
-    ) -> Dict[str, Union[MessageType, int]]:
+    def _cc_receive(self, timeout=0.0001) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
         :param timeout: timeout applied on reception

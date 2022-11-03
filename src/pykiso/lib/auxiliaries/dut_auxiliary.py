@@ -331,7 +331,7 @@ class DUTAuxiliary(DTAuxiliaryInterface):
 
     def wait_and_get_report(
         self, blocking: bool = False, timeout_in_s: int = 0
-    ) -> Optional[bytes]:
+    ) -> Optional[Message]:
         """Wait for the report coming from the DUT.
 
         :param blocking: True: wait for timeout to expire, False: return
@@ -369,15 +369,13 @@ class DUTAuxiliary(DTAuxiliaryInterface):
                 f"encountered error while sending message '{cmd_message}' to {self.channel}"
             )
 
-    def _receive_message(self, timeout_in_s: float, size: Optional[int] = None) -> None:
+    def _receive_message(self, timeout_in_s: float) -> None:
         """Get message from the device under test.
 
         :param timeout_in_s: Time in seconds to wait for an answer
         """
 
-        recv_response = self.channel.cc_receive(
-            timeout_in_s, size=Message.max_message_size
-        )
+        recv_response = self.channel.cc_receive(timeout_in_s)
         response = recv_response.get("msg")
 
         if response is None:
