@@ -30,8 +30,8 @@ For the remote test approach, auxiliaries should be composed by 2 blocks:
 One example of implementation of such an auxiliary is the *device under test* auxiliary used with the TestApp.
 In this specific case we have:
 
-  -  As communication channel (**cchannel**) usually *UART*
-  -  As flashing channel (**flashing**) usually *JTAG*
+-  As communication channel (**cchannel**) usually *UART*
+-  As flashing channel (**flashing**) usually *JTAG*
 
 
 Connector

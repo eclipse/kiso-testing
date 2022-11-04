@@ -51,13 +51,13 @@ Find below a full example for a test suite/case declaration :
 
 .. code:: python
 
-  """
-  Add test suite setup fixture, run once at test suite's beginning.
-  Test Suite Setup Information:
-  -> suite_id : set to 1
-  -> case_id : Parameter case_id is not mandatory for setup.
-  -> aux_list : used aux1 and aux2 is used
-  """
+    """
+    Add test suite setup fixture, run once at test suite's beginning.
+    Test Suite Setup Information:
+    -> suite_id : set to 1
+    -> case_id : Parameter case_id is not mandatory for setup.
+    -> aux_list : used aux1 and aux2 is used
+    """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
         def test_suite_setUp():
@@ -67,28 +67,28 @@ Find below a full example for a test suite/case declaration :
             aux2.configure()
             callback_registering()
 
-  """
-  Add test suite teardown fixture, run once at test suite's end.
-  Test Suite Teardown Information:
-  -> suite_id : set to 1
-  -> case_id : Parameter case_id is not mandatory for setup.
-  -> aux_list : used aux1 and aux2 is used
-  """
+    """
+    Add test suite teardown fixture, run once at test suite's end.
+    Test Suite Teardown Information:
+    -> suite_id : set to 1
+    -> case_id : Parameter case_id is not mandatory for setup.
+    -> aux_list : used aux1 and aux2 is used
+    """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
         def test_suite_tearDown():
             logging.info("I HAVE RUN THE TEST SUITE TEARDOWN!")
             callback_unregistering()
 
-  """
-  Add a test case 1 from test suite 1 using auxiliary 1.
-    Test Suite Teardown Information:
-  -> suite_id : set to 1
-  -> case_id : set to 1
-  -> aux_list : used aux1 and aux2 is used
-  -> test_ids: [optional] store the requirements into the report
-  -> tag: [optional] dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
-  """
+    """
+    Add a test case 1 from test suite 1 using auxiliary 1.
+        Test Suite Teardown Information:
+    -> suite_id : set to 1
+    -> case_id : set to 1
+    -> aux_list : used aux1 and aux2 is used
+    -> test_ids: [optional] store the requirements into the report
+    -> tag: [optional] dictionary containing lists of variants and/or test levels when only a subset of tests needs to be executed
+    """
     @pykiso.define_test_parameters(
             suite_id=1,
             case_id=1,
@@ -137,14 +137,14 @@ Implementation of Advanced Tests - Custom Setup
 If you need to have more complex tests, you can do the following:
 
 -  ``BasicTest`` is a specific implementation of ``unittest.TestCase``
-   therefore it contains 3 steps/methods **setUp()**, **tearDown()** and
-   **test_run()** that can be overwritten.
+   therefore it contains 2 steps/methods ``setUp()`` and ``tearDown()``
+   that can be overwritten.
 -  ``BasicTest`` will contain the list of **auxiliaries** you can use.
    It will be hold in the attribute ``test_auxiliary_list``.
 -  ``BasicTest`` also contains the following information
    ``test_section_id``, ``test_suite_id``, ``test_case_id``.
 -  Import *logging* or/and *message* (if needed) to communicate with the
-   **auxiliary**(in that case use RemoteTest instead of BasicTest)
+   **auxiliary** (in that case use RemoteTest instead of BasicTest)
 
 **test_suite_2.py**:
 
@@ -161,21 +161,32 @@ If you need to have more complex tests, you can do the following:
     @pykiso.define_test_parameters(suite_id=2, case_id=1, aux_list=[aux1])
     class MyTest(pykiso.BasicTest):
         def setUp(self):
-           # I loop through all the auxiliaries
-           for aux in self.test_auxiliary_list:
-               if aux.name == "aux1": # If I find the auxiliary to which I need to send a special message, I compose the message and send it.
-                   # Compose the message to send with some additional information
-                   tlv = { TEST_REPORT:"Give me something" }
-                   testcase_setup_special_message = message.Message(msg_type=message.MessageType.COMMAND, sub_type=message.MessageCommandType.TEST_CASE_SETUP,
-                                                           test_section=self.test_section_id, test_suite=self.test_suite_id, test_case=self.test_case_id, tlv_dict=tlv)
-                   # Send the message
-                   aux.run_command(testcase_setup_special_message, blocking=True, timeout_in_s=10)
-               else: # Do not forget to send a setup message to the other auxiliaries!
-                   # Compose the normal message
-                   testcase_setup_basic_message = message.Message(msg_type=message.MessageType.COMMAND, sub_type=message.MessageCommandType.TEST_CASE_SETUP,
-                                                           test_section=self.test_section_id, test_suite=self.test_suite_id, test_case=self.test_case_id)
-                   # Send the message
-                   aux.run_command(testcase_setup_basic_message, blocking=True, timeout_in_s=10)
+            # I loop through all the auxiliaries
+            for aux in self.test_auxiliary_list:
+                if aux.name == "aux1": # If I find the auxiliary to which I need to send a special message, I compose the message and send it.
+                    # Compose the message to send with some additional information
+                    tlv = {TEST_REPORT: "Give me something"}
+                    testcase_setup_special_message = message.Message(
+                        msg_type=message.MessageType.COMMAND,
+                        sub_type=message.MessageCommandType.TEST_CASE_SETUP,
+                        test_section=self.test_section_id,
+                        test_suite=self.test_suite_id,
+                        test_case=self.test_case_id,
+                        tlv_dict=tlv
+                     )
+                    # Send the message
+                    aux.run_command(testcase_setup_special_message, blocking=True, timeout_in_s=10)
+                else: # Do not forget to send a setup message to the other auxiliaries!
+                    # Compose the normal message
+                    testcase_setup_basic_message = message.Message(
+                        msg_type=message.MessageType.COMMAND,
+                        sub_type=message.MessageCommandType.TEST_CASE_SETUP,
+                        test_section=self.test_section_id,
+                        test_suite=self.test_suite_id,
+                        test_case=self.test_case_id
+                    )
+                    # Send the message
+                    aux.run_command(testcase_setup_basic_message, blocking=True, timeout_in_s=10)
 
 .. _implementation-of-the-tests-advance-1:
 
@@ -195,34 +206,43 @@ implement parts of the framework to fulfil your needs. For example:
 
 
     class MyTestTemplate(pykiso.BasicTest):
-       def test_run(self):
-           # Prepare message to send
-           testcase_run_message = message.Message(msg_type=message.MessageType.COMMAND, sub_type=message.MessageCommandType.TEST_CASE_RUN,
-                                                       test_section=self.test_section_id, test_suite=self.test_suite_id, test_case=self.test_case_id)
-           # Send test start through all auxiliaries
-           for aux in self.test_auxiliary_list:
-               if aux.run_command(testcase_run_message, blocking=True, timeout_in_s=10) is not True:
-                   self.cleanup_and_skip("{} could not be run!".format(aux))
-           # Device will reboot, wait for the reboot report
-           for aux in self.test_auxiliary_list:
-               if aux.name == "DeviceUnderTest":
-                   report = aux.wait_and_get_report(blocking=True, timeout_in_s=10) # Wait for a report from the DeviceUnderTest
-                   break
-           # Check if the report for the reboot was received.
-           report is not None and report.get_message_type() == message.MessageType.REPORT and report.get_message_sub_type() == message.MessageReportType.TEST_PASS:
-               pass # We can continue
-           else:
-               self.cleanup_and_skip("Device failed rebooting")
-           # Loop until all reports are received
-           list_of_aux_with_received_reports = [False]*len(self.test_auxiliary_list)
-           while False in list_of_aux_with_received_reports:
-               # Loop through all auxiliaries
-               for i, aux in enumerate(self.test_auxiliary_list):
-                   if list_of_aux_with_received_reports[i] == False:
-                       # Wait for a report
-                       reported_message = aux.wait_and_get_report()
-                       # Check the received message
-                       list_of_aux_with_received_reports[i] = self.evaluate_message(aux, reported_message)
+        def test_run(self):
+            # Prepare message to send
+            testcase_run_message = message.Message(
+                msg_type=message.MessageType.COMMAND,
+                sub_type=message.MessageCommandType.TEST_CASE_RUN,
+                test_section=self.test_section_id,
+                test_suite=self.test_suite_id,
+                test_case=self.test_case_id
+            )
+            # Send test start through all auxiliaries
+            for aux in self.test_auxiliary_list:
+                if aux.run_command(testcase_run_message, blocking=True, timeout_in_s=10) is not True:
+                    self.cleanup_and_skip("{} could not be run!".format(aux))
+            # Device will reboot, wait for the reboot report
+            for aux in self.test_auxiliary_list:
+                if aux.name == "DeviceUnderTest":
+                    report = aux.wait_and_get_report(blocking=True, timeout_in_s=10) # Wait for a report from the DeviceUnderTest
+                    break
+            # Check if the report for the reboot was received.
+            if (
+                report is not None
+                and report.get_message_type() == message.MessageType.REPORT
+                and report.get_message_sub_type() == message.MessageReportType.TEST_PASS
+            ):
+                pass # We can continue
+            else:
+                self.cleanup_and_skip("Device failed rebooting")
+            # Loop until all reports are received
+            list_of_aux_with_received_reports = [False]*len(self.test_auxiliary_list)
+            while False in list_of_aux_with_received_reports:
+                # Loop through all auxiliaries
+                for i, aux in enumerate(self.test_auxiliary_list):
+                    if list_of_aux_with_received_reports[i] == False:
+                        # Wait for a report
+                        reported_message = aux.wait_and_get_report()
+                        # Check the received message
+                        list_of_aux_with_received_reports[i] = self.evaluate_message(aux, reported_message)
 
     @pykiso.define_test_parameters(suite_id=3, case_id=1, aux_list=[aux1])
     class MyTest(MyTestTemplate):
@@ -231,6 +251,32 @@ implement parts of the framework to fulfil your needs. For example:
     @pykiso.define_test_parameters(suite_id=3, case_id=2, aux_list=[aux1])
     class MyTest2(MyTestTemplate):
        pass
+
+
+Implementation of Advanced Tests - Continue a test case on a failed assertion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `Python unittest framework <https://docs.python.org/3/library/unittest.html>`_ has
+a built-in solution in order to isolate assertions from the rest of the test:
+the `subTest <https://docs.python.org/3/library/unittest.html#unittest.TestCase.subTest>`_.
+
+
+.. code:: python
+
+    @pykiso.define_test_parameters(suite_id=1, case_id=1)
+    class MyTest1(pykiso.BasicTest):
+        """Simple test case example that shows a possible usage of subTest."""
+
+        def test_run(self):
+            """
+            In this test case we want to perform assertions that won't interrupt
+            the execution when failing by using subTest.
+            """
+            with self.subTest("Verify that 1 == 2"):
+                self.assertEqual(1, 2)
+
+            logging.info("The rest of the test case will still be executed")
+            self.assertTrue(False)
 
 
 Implementation of Advanced Tests - Repeat testCases
@@ -253,11 +299,11 @@ Implementation of Advanced Tests - Repeat testCases
         @pykiso.retry_test_case(max_try=3)
         def setUp(self):
             """Hook method from unittest in order to execute code before test case run.
-            In this case the default setUp method is overridden, allowing us to apply the
-            retry_test_case's decorator. The syntax super() access to the BasicTest and
-            we will run the default setUp()
+
+            In this case the default setUp method is implemented, allowing us to apply the
+            retry_test_case's decorator.
             """
-            super().setUp()
+            pass
 
         @pykiso.retry_test_case(max_try=5, rerun_setup=True, rerun_teardown=False)
         def test_run(self):
@@ -268,18 +314,15 @@ Implementation of Advanced Tests - Repeat testCases
             Here, the test pass at the 3rd attempt out of 5. The setup and
             tearDown methods are called for each attempt.
             """
-            logging.info(
-                f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
-            )
             self.assertTrue(next(side_effect))
             logging.info(f"I HAVE RUN 0.1.1 for variant {self.variant}!")
 
         @pykiso.retry_test_case(max_try=3, stability_test=True)
         def tearDown(self):
             """Hook method from unittest in order to execute code after the test case ran.
-            In this case the default tearDown method is overridden, allowing us to apply the
-            retry_test_case's decorator. The syntax super() access to the BasicTest and
-            we will run the default tearDown().
+
+            In this case the default tearDown method is implemented, allowing us to apply the
+            retry_test_case's decorator.
 
             The retry_test_case has stability test activated, so the tearDown method will
             be run 3 times.

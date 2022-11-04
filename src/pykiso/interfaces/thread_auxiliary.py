@@ -26,20 +26,15 @@ import queue
 import threading
 import time
 import warnings
-from typing import List, Optional
+from typing import List
 
 from pykiso.auxiliary import AuxiliaryCommon
-from pykiso.test_setup.dynamic_loader import PACKAGE
 
 from ..exceptions import AuxiliaryCreationError
 from ..logging_initializer import initialize_loggers
 from ..types import MsgType
 
 log = logging.getLogger(__name__)
-
-warnings.warn(
-    "AuxiliaryInterface will be deprecated in a few releases!", category=FutureWarning
-)
 
 
 # Ensure lock and queue unique reference: needed because python will do
@@ -82,6 +77,11 @@ class AuxiliaryInterface(threading.Thread, AuxiliaryCommon):
         self.is_instance = False
         self.auto_start = auto_start
         self._aux_copy = None
+
+        warnings.warn(
+            "AuxiliaryInterface will be deprecated in a few releases!",
+            category=FutureWarning,
+        )
 
     def start(self) -> None:
         """Start the thread and create the auxiliary only if auto_start

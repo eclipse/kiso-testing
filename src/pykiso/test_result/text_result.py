@@ -29,15 +29,14 @@ import time
 import typing
 from contextlib import nullcontext
 from shutil import get_terminal_size
-from types import TracebackType
-from typing import List, Optional, TextIO, Tuple, Type, Union
+from typing import List, Optional, TextIO, Union
 from unittest import TextTestResult
 
 from ..test_coordinator.test_case import BasicTest
 from ..test_coordinator.test_suite import BaseTestSuite
 
 if typing.TYPE_CHECKING:
-    from ..types import PathType
+    from ..types import ExcInfoType, PathType
 
 log = logging.getLogger(__name__)
 
@@ -210,9 +209,7 @@ class BannerTestResult(TextTestResult):
         super().stopTest(test)
 
     def addFailure(
-        self,
-        test: Union[BasicTest, BaseTestSuite],
-        err: Tuple[Type[BaseException], BaseException, TracebackType],
+        self, test: Union[BasicTest, BaseTestSuite], err: ExcInfoType
     ) -> None:
         """Set the error flag when a failure occurs in order to get the
         individual test case result.
@@ -228,14 +225,9 @@ class BannerTestResult(TextTestResult):
 
         :param test: running testcase
         """
-        if isinstance(test, (BasicTest, BaseTestSuite)):
-            self.successes.append(test)
+        self.successes.append(test)
 
-    def addError(
-        self,
-        test: Union[BasicTest, BaseTestSuite],
-        err: Tuple[Type[BaseException], BaseException, TracebackType],
-    ) -> None:
+    def addError(self, test: Union[BasicTest, BaseTestSuite], err: ExcInfoType) -> None:
         """Set the error flag when an error occurs in order to get the
         individual test case result.
 

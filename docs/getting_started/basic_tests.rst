@@ -84,13 +84,13 @@ Find below a full example for a test suite/case declaration :
 
 .. code:: python
 
-  """
-  Add test suite setup fixture, run once at test suite's beginning.
-  Test Suite Setup Information:
-  -> suite_id : set to 1
-  -> case_id : Parameter case_id is not mandatory for setup.
-  -> aux_list : used aux1 and aux2 is used
-  """
+    """
+    Add test suite setup fixture, run once at test suite's beginning.
+    Test Suite Setup Information:
+    -> suite_id : set to 1
+    -> case_id : Parameter case_id is not mandatory for setup.
+    -> aux_list : used aux1 and aux2 is used
+    """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
         def test_suite_setUp():
@@ -100,26 +100,26 @@ Find below a full example for a test suite/case declaration :
             aux2.configure()
             callback_registering()
 
-  """
-  Add test suite teardown fixture, run once at test suite's end.
-  Test Suite Teardown Information:
-  -> suite_id : set to 1
-  -> case_id : Parameter case_id is not mandatory for setup.
-  -> aux_list : used aux1 and aux2 is used
-  """
+    """
+    Add test suite teardown fixture, run once at test suite's end.
+    Test Suite Teardown Information:
+    -> suite_id : set to 1
+    -> case_id : Parameter case_id is not mandatory for setup.
+    -> aux_list : used aux1 and aux2 is used
+    """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
         def test_suite_tearDown():
             logging.info("I HAVE RUN THE TEST SUITE TEARDOWN!")
             callback_unregistering()
 
-  """
-  Add a test case 1 from test suite 1 using auxiliary 1.
-    Test Suite Teardown Information:
-  -> suite_id : set to 1
-  -> case_id : set to 1
-  -> aux_list : used aux1 and aux2 is used
-  """
+    """
+    Add a test case 1 from test suite 1 using auxiliary 1.
+        Test Suite Teardown Information:
+    -> suite_id : set to 1
+    -> case_id : set to 1
+    -> aux_list : used aux1 and aux2 is used
+    """
     @pykiso.define_test_parameters(
             suite_id=1,
             case_id=1,
@@ -139,38 +139,38 @@ Implementation of Basic Tests
 
 .. code:: python
 
-   """
-   I want to run the following tests documented in the following test-specs <TEST_CASE_SPECS>.
-   """
+    """
+    I want to run the following tests documented in the following test-specs <TEST_CASE_SPECS>.
+    """
     import pykiso
     from pykiso.auxiliaries import aux1, aux2
 
-  """
-  Add test suite setup fixture, run once at test suite's beginning.
-  Parameter case_id is not mandatory for setup.
-  """
+    """
+    Add test suite setup fixture, run once at test suite's beginning.
+    Parameter case_id is not mandatory for setup.
+    """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteSetup(pykiso.BasicTestSuiteSetup):
         pass
 
-  """
-  Add test suite teardown fixture, run once at test suite's end.
-  Parameter case_id is not mandatory for teardown.
-  """
+    """
+    Add test suite teardown fixture, run once at test suite's end.
+    Parameter case_id is not mandatory for teardown.
+    """
     @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
     class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
         pass
 
-  """
-  Add a test case 1 from test suite 1 using auxiliary 1.
-  """
+    """
+    Add a test case 1 from test suite 1 using auxiliary 1.
+    """
     @pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=[aux1])
     class MyTest(pykiso.BasicTest):
         pass
 
-  """
-  Add a test case 2 from test suite 1 using auxiliary 2.
-  """
+    """
+    Add a test case 2 from test suite 1 using auxiliary 2.
+    """
     @pykiso.define_test_parameters(suite_id=1, case_id=2, aux_list=[aux2])
     class MyTest2(pykiso.BasicTest):
         pass
@@ -220,22 +220,31 @@ The pykiso will call the elements in the following order:
 .. code:: bash
 
     TestSuiteSetup().test_suite_setUp
-    TestCase1.setUpClass
-        TestCase1().setUp
-        TestCase1().test_run
-        TestCase1().tearDown
-        TestCase1().setUp
-        TestCase1().test_run_2
-        TestCase1().tearDown
-    TestCase1.tearDownClass
-    TestCase2.setUpClass
-        TestCase2().setUp
-        TestCase2().test_run
-        TestCase2().tearDown
-        TestCase2().setUp
-        TestCase2().test_run_2
-        TestCase2().tearDown
-    TestCase2.tearDownClass
+
+        TestCase1.setUpClass
+
+            TestCase1().setUp
+            TestCase1().test_run
+            TestCase1().tearDown
+
+            TestCase1().setUp
+            TestCase1().test_run_2
+            TestCase1().tearDown
+
+        TestCase1.tearDownClass
+
+        TestCase2.setUpClass
+
+            TestCase2().setUp
+            TestCase2().test_run
+            TestCase2().tearDown
+
+            TestCase2().setUp
+            TestCase2().test_run_2
+            TestCase2().tearDown
+
+        TestCase2.tearDownClass
+
     TestSuiteTeardown().test_suite_tearDown
 
 

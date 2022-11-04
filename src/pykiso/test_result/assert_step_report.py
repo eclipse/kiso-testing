@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Union
-from unittest.case import TestCase
+from unittest.case import TestCase, _SubTest
 
 import jinja2
 
@@ -54,7 +54,7 @@ ALL_STEP_REPORT = OrderedDict()
 # Step result keys used by Jinja for columns name
 REPORT_KEYS = ["message", "var_name", "expected_result", "actual_result", "succeed"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
-_FUNCTION_TO_APPLY = r"|".join(["test", "run", "setup", "teardown"])
+_FUNCTION_TO_APPLY = r"|".join(["test", "setup", "teardown", "handle_interaction"])
 
 # Jinja template location
 SCRIPT_PATH = str(Path(__file__).resolve().parent)
@@ -163,7 +163,7 @@ def _get_expected(func_name: str, arguments: dict) -> str:
         # "expected value" always 2nd position
         expected_val = args.pop(arguments_keys[1], None)
         # Add expected value to string
-        expected += f" to {expected_val}"
+        expected += f" to {str(expected_val)}"
         # Add the additional parameter if exist
         if args:
             # only param are left in args
@@ -210,9 +210,7 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
         ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(type(test))
         # Store the result (start, stop, elapsed time)
         ALL_STEP_REPORT[test_class_name]["time_result"] = OrderedDict()
-        ALL_STEP_REPORT[test_class_name]["time_result"][
-            "Start Time"
-        ] = '"--junit" required'
+        ALL_STEP_REPORT[test_class_name]["time_result"]["Start Time"] = 0
         # Store the tests list
         ALL_STEP_REPORT[test_class_name]["test_list"] = OrderedDict()
 
@@ -227,7 +225,7 @@ def _add_step(
     message: str,
     var_name: str,
     expected: typing.Any,
-    received: any,
+    received: typing.Any,
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
 
@@ -236,7 +234,7 @@ def _add_step(
     )
 
 
-def assert_decorator(func):
+def assert_decorator(assert_method: types.MethodType):
     """Decorator to gather assertion information
 
     - MyTestClass
@@ -263,7 +261,7 @@ def assert_decorator(func):
     return: The func output if it exists. Otherwise, None
     """
 
-    @functools.wraps(func)
+    @functools.wraps(assert_method)
     def func_wrapper(*args, **kwargs):
         """Decorator Main
         Fetch the assert step: message, var_name, expected, received
@@ -276,24 +274,27 @@ def assert_decorator(func):
             currentframe = inspect.currentframe()
             f_back = currentframe.f_back
             test_name = f_back.f_code.co_name
-            test_class = func.__self__
-            test_class_name = type(test_class).__name__
-            assert_name = func.__name__
+            test_case_inst: TestCase = assert_method.__self__
+            test_class_name = type(test_case_inst).__name__
+            assert_name = assert_method.__name__
 
             # filter parent call, only known function recorded
             parent_method = re.findall(_FUNCTION_TO_APPLY, test_name.lower())
             if parent_method:
+                # get the decorated test fixture name (setUp, tearDown, ...)
+                if parent_method[0] == "handle_interaction":
+                    test_name = f_back.f_locals["func"].__name__
+
                 # Assign variables to signature
-                signature = inspect.signature(func)
+                signature = inspect.signature(assert_method)
                 arguments = signature.bind(*args, **kwargs).arguments
-                test_name = test_class.step_report.current_table or test_name
+                test_name = test_case_inst.step_report.current_table or test_name
 
                 # 1. Gather message, var_name, expected, received
                 # 1.1 Get message. default value: ""
-
-                if test_class.step_report.message:
-                    message = test_class.step_report.message
-                    test_class.step_report.message = ""
+                if test_case_inst.step_report.message:
+                    message = test_case_inst.step_report.message
+                    test_case_inst.step_report.message = ""
                 else:
                     message = arguments.get("msg", "")
 
@@ -313,7 +314,7 @@ def assert_decorator(func):
 
                 # 2. Update report data
                 # 2.1 Ensure report ready for update
-                _prepare_report(test_class, test_name)
+                _prepare_report(test_case_inst, test_name)
 
                 # 2.2. Add new step
                 _add_step(
@@ -323,24 +324,24 @@ def assert_decorator(func):
         except Exception as e:
             log.error(f"Unable to update Step due to exception: {e}")
 
-        # Run the assert method
-        # When exception is thrown set test as failed and handle
-        # the test assertion exception so that report doesn`t interrupt
+        # Run the assert method and mark the test as failed if the AssertionError is raised
         try:
-            # if not test_class.step_report.continue_on_error and not test_class.step_report.success:
-            #     raise Exception(test_class.step_report.last_error_message)
-            return func(*args, **kwargs)
-        except Exception as e:
+            return assert_method(*args, **kwargs)
+        except test_case_inst.failureException as e:
             log.error(f"Assert step exception: {e}")
-            test_class.step_report.last_error_message = f"{e}"
+            test_case_inst.step_report.last_error_message = f"{e}"
             if parent_method:
                 ALL_STEP_REPORT[test_class_name]["test_list"][test_name][-1][
                     "succeed"
                 ] = False
                 ALL_STEP_REPORT[test_class_name]["succeed"] = False
-            test_class.step_report.success = False
-            if not test_class.step_report.continue_on_error:
-                raise e
+
+            test_case_inst.step_report.success = False
+
+            # repeat the assertion failure as first element in the traceback
+            frame = currentframe.f_back
+            tb = types.TracebackType(None, frame, frame.f_lasti, frame.f_lineno)
+            raise e.with_traceback(tb)
 
     return func_wrapper
 
@@ -366,6 +367,7 @@ def generate_step_report(
     :param output_file: Report output file path
     """
     global ALL_STEP_REPORT, SCRIPT_PATH, REPORT_TEMPLATE
+    test_result.stream.writeln("Generating HTML reports...")
 
     succeeded_tests = test_result.successes + test_result.expectedFailures
     failed_test = (
@@ -383,17 +385,22 @@ def generate_step_report(
             # Case of non success
             test_info = test_case[0]
 
-        if isinstance(test_info, TestCase):
+        if isinstance(test_info, _SubTest):
+            class_name = test_info.test_case.__class__.__name__
+            start_time = _parse_timestamp(test_info.test_case.start_time)
+            stop_time = _parse_timestamp(test_info.test_case.stop_time)
+            elapsed_time = test_info.test_case.elapsed_time
+        elif isinstance(test_info, TestCase):
             class_name = test_info.__class__.__name__
             start_time = _parse_timestamp(test_info.start_time)
             stop_time = _parse_timestamp(test_info.stop_time)
-        else:
+            elapsed_time = test_info.elapsed_time
+        elif isinstance(test_info, TestInfo):
             # test_info is TestInfo
             class_name = test_info.test_name.split(".")[-1]
             start_time = _parse_timestamp(test_info.test_result.start_time)
             stop_time = _parse_timestamp(test_info.test_result.stop_time)
-
-        elapsed_time = test_info.elapsed_time
+            elapsed_time = test_info.elapsed_time
 
         # Update test_case
         if class_name in ALL_STEP_REPORT:
