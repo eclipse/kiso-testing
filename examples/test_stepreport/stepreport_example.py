@@ -21,23 +21,17 @@ import logging
 from itertools import cycle
 
 import pykiso
-from pykiso.auxiliaries import aux1, aux2, aux3
 
 
 @pykiso.define_test_parameters(
     suite_id=1,
     case_id=1,
-    aux_list=[aux1],
 )
 class StepReportTest(pykiso.BasicTest):
     """This example demonstrates the step report"""
 
     def setUp(self):
-        """Hook method from unittest in order to execute code before test case run.
-        In this case the default setUp method is overridden, allowing us to apply the
-        retry_test_case's decorator. The syntax super() access to the BasicTest and
-        we will run the default setUp().
-        """
+        """Set header information and check setup conditions"""
         super().setUp()
         self.assertTrue(True, msg="Check my device is ready")
         # additional data to include in the step-report
@@ -77,17 +71,12 @@ class StepReportTest(pykiso.BasicTest):
 @pykiso.define_test_parameters(
     suite_id=1,
     case_id=2,
-    aux_list=[aux1],
 )
 class TableTest(pykiso.BasicTest):
     """This test shows multiple tables in the step report"""
 
     def setUp(self):
-        """Hook method from unittest in order to execute code before test case run.
-        In this case the default setUp method is overridden, allowing us to apply the
-        retry_test_case's decorator. The syntax super() access to the BasicTest and
-        we will run the default setUp().
-        """
+        """Set header information and check setup conditions"""
         super().setUp()
         # additional data to include in the step-report
         self.step_report.header["Version_device"] = "2022-1234"
