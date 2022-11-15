@@ -284,16 +284,18 @@ class CCRttSegger(connector.CChannel):
                 f"ERROR occurred while sending {len(msg)} bytes on buffer {self.tx_buffer_idx}"
             )
 
-    def _cc_receive(self, timeout: float = 0.1, **kwargs) -> Dict[str, Optional[bytes]]:
+    def _cc_receive(
+        self, timeout: float = 0.1, size: int = None, **kwargs
+    ) -> Dict[str, Optional[bytes]]:
         """Read message from the corresponding RTT buffer.
 
         :param timeout: timeout applied on receive event
-
-        :return: Message or raw bytes if successful, otherwise None
+        :param size: maximum amount of bytes to read
+        :return: dictionary containing the received bytes if successful, otherwise None
         """
         is_timeout = False
         # maximum amount of bytes to read out
-        size = kwargs.get("size") or self.rx_buffer_size
+        size = size or self.rx_buffer_size
         t_start = time.perf_counter()
 
         # rtt_read is not a blocking method due to this fact a while loop is used

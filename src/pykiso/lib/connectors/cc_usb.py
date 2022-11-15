@@ -30,10 +30,7 @@ class CCUsb(cc_uart.CCUart):
     def __init__(self, serial_port):
         super().__init__(serial_port, baudrate=9600)
 
-    def _cc_send(
-        self,
-        msg,
-    ):
+    def _cc_send(self, msg):
 
         raw_packet = msg.serialize()
         crc = self._calculate_crc32(raw_packet)

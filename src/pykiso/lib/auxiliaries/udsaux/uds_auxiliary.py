@@ -85,10 +85,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         :param extended: True if addressing mode is extended otherwise
             False
         """
-        self.channel._cc_send(
-            msg=data,
-            remote_id=req_id,
-        )
+        self.channel._cc_send(msg=data, remote_id=req_id)
 
     def send_uds_raw(
         self,

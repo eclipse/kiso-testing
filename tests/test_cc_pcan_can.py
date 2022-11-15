@@ -489,7 +489,6 @@ def test_cc_send(mock_can_bus, parameters, raw, mock_PCANBasic):
     ],
 )
 def test_can_recv(
-    mocker,
     mock_can_bus,
     raw_data,
     can_id,
@@ -498,19 +497,18 @@ def test_can_recv(
     expected_type,
     mock_PCANBasic,
 ):
-    mock_bus_recv = mocker.patch(
-        "can.interface.Bus.recv",
-        return_value=python_can.Message(data=raw_data, arbitration_id=can_id),
+    mock_can_bus.Bus.recv.return_value = python_can.Message(
+        data=raw_data, arbitration_id=can_id
     )
+
     with CCPCanCan() as can:
         response = can._cc_receive(timeout)
 
     msg_received = response.get("msg")
-    id_received = response.get("remote_id")
     if not raw:
         msg_received = Message.parse_packet(msg_received)
-    assert isinstance(msg_received, expected_type) == True
-    assert id_received == can_id
+    assert isinstance(msg_received, expected_type)
+    assert response.get("remote_id") == can_id
     mock_can_bus.Bus.recv.assert_called_once_with(timeout=timeout or 1e-6)
     mock_can_bus.Bus.shutdown.assert_called_once()
 

@@ -21,7 +21,7 @@ Communication Channel using VISA protocol
 
 import abc
 import logging
-from typing import Optional
+from typing import Dict, Optional
 
 import pyvisa
 
@@ -101,7 +101,7 @@ class VISAChannel(CChannel):
         log.internal_debug(f"Writing {msg} to {self.resource_name}")
         self.resource.write(msg)
 
-    def _cc_receive(self, timeout: float = 0.1) -> str:
+    def _cc_receive(self, timeout: float = 0.1) -> Dict[str, Optional[bytes]]:
         """Send a read request to the instrument
 
         :param timeout: time in second to wait for reading a message

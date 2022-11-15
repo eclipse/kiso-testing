@@ -312,23 +312,22 @@ class CCPCanCan(CChannel):
         :param kwargs: named arguments
 
         """
-        _data = msg
         remote_id = kwargs.get("remote_id") or self.remote_id
 
         can_msg = can.Message(
             arbitration_id=remote_id,
-            data=_data,
+            data=msg,
             is_extended_id=self.is_extended_id,
             is_fd=self.is_fd,
             bitrate_switch=self.enable_brs,
         )
         self.bus.send(can_msg)
 
-        log.internal_debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
+        log.internal_debug(f"{self} sent CAN Message: {can_msg}, data: {msg}")
 
     def _cc_receive(
         self, timeout: float = 0.0001
-    ) -> Dict[str, Union[MessageType, int]]:
+    ) -> Dict[str, Union[bytes, int, None]]:
         """Receive a can message using configured filters.
 
         :param timeout: timeout applied on reception

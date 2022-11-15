@@ -46,10 +46,7 @@ class CCLoopback(CChannel):
         """Close loopback channel."""
         self._loopback_buffer = None
 
-    def _cc_send(
-        self,
-        msg: MsgType,
-    ) -> None:
+    def _cc_send(self, msg: MsgType) -> None:
         """Send a message by simply putting message in deque.
 
         :param msg: message to send, should be Message type or bytes.
@@ -57,12 +54,12 @@ class CCLoopback(CChannel):
         with self.lock:
             self._loopback_buffer.append(msg)
 
-    def _cc_receive(self, timeout: float) -> Dict[str, Optional[MsgType]]:
+    def _cc_receive(self, timeout: float) -> Dict[str, Optional[bytes]]:
         """Read message by simply removing an element from the left side of deque.
 
         :param timeout: timeout applied on receive event
 
-        :return: Message or raw bytes if successful, otherwise None
+        :return: dictionary containing the received bytes if successful, otherwise None
         """
         with self.lock:
             try:

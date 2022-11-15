@@ -73,7 +73,7 @@ class CCUdp(connector.CChannel):
 
         :param timeout: timeout applied on receive event
 
-        :return: Message
+        :return: dictionary containing the received bytes if successful, otherwise None
         """
         self.udp_socket.settimeout(timeout or self.timeout)
 

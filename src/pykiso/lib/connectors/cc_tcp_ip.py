@@ -62,10 +62,7 @@ class CCTcpip(CChannel):
         )
         self.socket.close()
 
-    def _cc_send(
-        self,
-        msg: bytes or str,
-    ) -> None:
+    def _cc_send(self, msg: bytes or str) -> None:
         """Send a message via socket.
 
         :param msg: message to send
@@ -73,11 +70,10 @@ class CCTcpip(CChannel):
         log.internal_debug(f"Sending {msg} via socket to {self.dest_ip}")
         self.socket.send(msg)
 
-    def _cc_receive(self, timeout=0.01) -> Dict[str, Union[bytes, str, None]]:
+    def _cc_receive(self, timeout=0.01) -> Dict[str, Optional[bytes]]:
         """Read message from socket.
 
         :param timeout: time in second to wait for reading a message
-            pykiso.Message?
 
         :return: Message if successful, otherwise none
         """

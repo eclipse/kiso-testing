@@ -340,7 +340,7 @@ def test__run_command_exception(mocker, aux_inst, caplog):
 
 
 def test__receive_message(mocker, aux_inst):
-    response = message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_RUN)
+    response = message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_SUITE_RUN)
     send_mock = mocker.patch.object(aux_inst.channel, "_cc_send")
     recv_mock = mocker.patch.object(
         aux_inst.channel, "_cc_receive", return_value={"msg": response.serialize()}
@@ -370,7 +370,7 @@ def test__receive_message_no_response(mocker, aux_inst):
 
 
 def test__receive_message_failed_ack(mocker, aux_inst):
-    response = message.Message(MESSAGE_TYPE.COMMAND, COMMAND_TYPE.TEST_SUITE_RUN)
+    response = message.Message(MESSAGE_TYPE.LOG, COMMAND_TYPE.TEST_SUITE_RUN)
     send_mock = mocker.patch.object(
         aux_inst.channel, "_cc_send", side_effect=AttributeError
     )

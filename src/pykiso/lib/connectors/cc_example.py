@@ -78,11 +78,11 @@ class CCExample(connector.CChannel):
                 self.report_requested_message = msg.serialize()
 
     def _cc_receive(self, timeout: float = 0.1) -> Dict[str, Optional[bytes]]:
-        """Reads from the channel - decorator usage for test.
+        """Craft a Message that would be received from the device under test.
 
         :param timeout: not use
 
-        :return: Message if successful, otherwise None
+        :return: dictionary containing the received bytes if successful, otherwise None
         """
         with self.lock:
             received_message = None

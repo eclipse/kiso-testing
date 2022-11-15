@@ -152,7 +152,7 @@ class CCSocketCan(CChannel):
 
     def _cc_send(self, msg: MessageType, **kwargs) -> None:
         """Send a CAN message at the configured id.
-
+        If remote_id parameter is not given take configured ones
 
         :param msg: data to send
         :param remote_id: destination can id used
@@ -175,9 +175,7 @@ class CCSocketCan(CChannel):
 
         log.internal_debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
 
-    def _cc_receive(
-        self, timeout: float = 0.0001
-    ) -> Dict[str, Union[MessageType, int]]:
+    def _cc_receive(self, timeout: float = 0.0001) -> Dict[str, Union[bytes, int]]:
         """Receive a can message using configured filters.
 
         :param timeout: timeout applied on reception

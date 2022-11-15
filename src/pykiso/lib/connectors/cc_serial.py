@@ -138,7 +138,7 @@ class CCSerial(connector.CChannel):
 
         self.serial.write(msg)
 
-    def _cc_receive(self, timeout=0.00001) -> Dict[str, bytes]:
+    def _cc_receive(self, timeout=0.00001) -> Dict[str, Optional[bytes]]:
         """Read bytes from the serial port.
         Try to read one byte in blocking mode. After blocking read check
         remaining bytes and read them without a blocking call.

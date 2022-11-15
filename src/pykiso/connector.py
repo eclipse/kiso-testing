@@ -23,7 +23,7 @@ import abc
 import multiprocessing
 import pathlib
 import threading
-from typing import Optional
+from typing import Dict, Optional
 
 from .types import MsgType, PathType
 
@@ -106,7 +106,7 @@ class CChannel(Connector):
         with self._lock_tx:
             self._cc_send(msg=msg, **kwargs)
 
-    def cc_receive(self, timeout: float = 0.1, **kwargs) -> bytes:
+    def cc_receive(self, timeout: float = 0.1, **kwargs) -> Dict[str, Optional[bytes]]:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
@@ -137,12 +137,12 @@ class CChannel(Connector):
         pass
 
     @abc.abstractmethod
-    def _cc_receive(self, timeout: float, **kwargs) -> bytes:
+    def _cc_receive(self, timeout: float, **kwargs) -> Dict[str, Optional[bytes]]:
         """How to receive something from the channel.
 
         :param timeout: Time to wait in second for a message to be received
         :param kwargs: named arguments
-        :return: bytes - If one received / None - If not
+        :return: dictionary containing the received bytes if successful, otherwise None
         """
         pass
 

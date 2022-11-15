@@ -114,7 +114,7 @@ The connector then becomes:
         def _cc_send(self, data: bytes):
             self.my_connection.send(data_bytes)
 
-        def _cc_receive(self, timeout)->Optional[bytes]:
+        def _cc_receive(self, timeout) -> Optional[bytes]:
             received_data = self.my_connection.receive(timeout=timeout)
             if received_data:
                 return received_data

@@ -361,9 +361,8 @@ class DUTAuxiliary(DTAuxiliaryInterface):
         :param cmd_data: not use
         """
         try:
-            cmd_message = cmd_message.serialize()
-            # We send the the bytes
-            self.channel.cc_send(msg=cmd_message)
+            # Serialize and send the message
+            self.channel.cc_send(msg=cmd_message.serialize())
         except Exception:
             log.exception(
                 f"encountered error while sending message '{cmd_message}' to {self.channel}"

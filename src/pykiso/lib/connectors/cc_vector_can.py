@@ -131,12 +131,11 @@ class CCVectorCan(CChannel):
         :param kwargs: destination can id used
 
         """
-        _data = msg
         remote_id = kwargs.get("remote_id") or self.remote_id
 
         can_msg = can.Message(
             arbitration_id=remote_id,
-            data=_data,
+            data=msg,
             is_extended_id=self.is_extended_id,
             is_fd=self.fd,
             bitrate_switch=self.enable_brs,
