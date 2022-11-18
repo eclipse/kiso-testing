@@ -32,6 +32,7 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Ensure default behaviour when (suite case) id is 0 ([#177](https://github.com/orhun/git-cliff/issues/177))
 - Process connector ([#165](https://github.com/orhun/git-cliff/issues/165))
 - Add stepreport example ([#192](https://github.com/orhun/git-cliff/issues/192))
+- Make release 0.20.0 ([#194](https://github.com/orhun/git-cliff/issues/194))
 
 ### Ci[dependabot]
 
