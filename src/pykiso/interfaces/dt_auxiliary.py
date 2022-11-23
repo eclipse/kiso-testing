@@ -63,6 +63,7 @@ class DTAuxiliaryInterface(abc.ABC):
         self,
         name: str = None,
         is_proxy_capable: bool = False,
+        connector_required: bool = True,
         activate_log: List[str] = None,
         tx_task_on=True,
         rx_task_on=True,
@@ -73,6 +74,8 @@ class DTAuxiliaryInterface(abc.ABC):
         :param name: alias of the auxiliary instance
         :param is_proxy_capable: notify if the current auxiliary could
             be (or not) associated to a proxy-auxiliary.
+        :param connector_required: define if a connector is required for
+            this auxiliary.
         :param activate_log: loggers to deactivate
         :param tx_task_on: enable or not the tx thread
         :param rx_task_on: enable or not the rx thread
@@ -94,6 +97,7 @@ class DTAuxiliaryInterface(abc.ABC):
         self.rx_thread = None
         self.recv_timeout = 1
         self.is_instance = False
+        self.connector_required = connector_required
 
     def run_command(
         self,
