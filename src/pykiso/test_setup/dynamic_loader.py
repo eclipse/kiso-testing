@@ -32,6 +32,8 @@ import types
 # TODO: remove it after all auxes are adapted to DTAuxiliaryInterface
 #################################################################################
 import pykiso
+from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
+from pykiso.lib.connectors.cc_proxy import CCProxy
 
 #################################################################################
 from pykiso.exceptions import ConnectorRequiredError
@@ -248,11 +250,17 @@ class AuxiliaryCache(ModuleCache):
         self.connectors[name] = connectors
         super().provide(name, module, **config_params)
 
+    def provide_proxy(self, con):
+        return ProxyAuxiliary()
+
     def get_instance(self, name: str):
         """Get an instance of alias <name> (create and configure one of not existed)."""
         for cn, con in self.connectors.get(name, dict()).items():
             # add connector-instances as configs
-            self.configs[name][cn] = self.con_cache.get_instance(con)
+            if cn not in self.configs[name]:
+                self.configs[name][cn] = self.con_cache.get_instance(con)
+            else:
+                self.configs[name][cn] = CCProxy()
         inst = super().get_instance(name)
 
         if getattr(inst, "connector_required", True) and not getattr(
@@ -274,7 +282,6 @@ class AuxiliaryCache(ModuleCache):
             inst.create_instance()
             log.internal_debug(f"called create_instance on {name}")
         #################################################################################
-
         elif not inst.is_instance and auto_start:
             # if auxiliary is type of thread
             if start_method is not None:

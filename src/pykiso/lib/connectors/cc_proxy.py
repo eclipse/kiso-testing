@@ -26,10 +26,13 @@ has to be used with a so called proxy auxiliary.
 import logging
 import queue
 import threading
-from typing import Callable, Dict, Union
+from typing import TYPE_CHECKING, Callable, Dict, Union
 
 from pykiso import Message
 from pykiso.connector import CChannel
+
+if TYPE_CHECKING:
+    from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
 
 ProxyReturn = Union[
     Dict[str, Union[bytes, int]],
@@ -39,6 +42,9 @@ ProxyReturn = Union[
 ]
 
 log = logging.getLogger(__name__)
+
+# aux1.channel.cc_send("bla")  -> cc_px.cc_send()
+# aux1.channel.remote_id = 123 -> cc_px.proxy_aux.channel.remote_id = 123
 
 
 class CCProxy(CChannel):
@@ -51,6 +57,18 @@ class CCProxy(CChannel):
         self.timeout = 1
         self._lock = threading.Lock()
         self._tx_callback = None
+        self.__proxy = None
+        self.__real_channel = None
+
+    def bind_channel_info(self, proxy_aux: ProxyAuxiliary):
+        self.__proxy = proxy_aux
+        self.__real_channel = proxy_aux.channel
+
+    def __getattr__(self, name):
+        if self.__real_channel is not None:
+            with self.__proxy.lock:
+                return getattr(self.__real_channel, name)
+        return super().__getattr__(name)
 
     def detach_tx_callback(self) -> None:
         """Detach the current callback."""
@@ -89,7 +107,7 @@ class CCProxy(CChannel):
         """
         log.internal_debug(f"put at proxy level: {args} {kwargs}")
         if self._tx_callback is not None:
-            self._tx_callback(self, *args, **kwargs)
+            self._tx_callback(self, *args, **kwargs)  # proxy.run_command()
 
     def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
