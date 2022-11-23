@@ -301,18 +301,17 @@ See below an example of an auxiliary without connector:
 
 .. code:: python
 
-  class ExampleAuxiliary(SimpleAuxiliaryInterface):
+  class ExampleAuxiliary(DTAuxiliaryInterface):
     """Example auxiliary without a connector"""
 
     def __init__(self) -> None:
       """Initialize the auxiliary"""
-      self.connector_required = False
-      super().__init__()
+      super().__init__(connector_required=False)
 
 
 See below for an example of its yaml config file:
 
-.. code:: python
+.. code:: yaml
 
   auxiliaries:
     aux1:
