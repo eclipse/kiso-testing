@@ -303,16 +303,19 @@ class CCPCanCan(CChannel):
             finally:
                 self.raw_pcan_interface = None
 
-    def _cc_send(self, msg: MessageType, **kwargs) -> None:
+    def _cc_send(
+        self, msg: MessageType, remote_id: Optional[int] = None, **kwargs
+    ) -> None:
         """Send a CAN message at the configured id.
 
         If remote_id parameter is not given take configured ones
 
         :param msg: data to send
+        :param remote_id: destination can id used
         :param kwargs: named arguments
-
         """
-        remote_id = kwargs.get("remote_id") or self.remote_id
+
+        remote_id = remote_id or self.remote_id
 
         can_msg = can.Message(
             arbitration_id=remote_id,

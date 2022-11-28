@@ -150,7 +150,9 @@ class CCSocketCan(CChannel):
             del self.logger
             self.logger = None
 
-    def _cc_send(self, msg: MessageType, **kwargs) -> None:
+    def _cc_send(
+        self, msg: MessageType, remote_id: Optional[int] = None, **kwargs
+    ) -> None:
         """Send a CAN message at the configured id.
         If remote_id parameter is not given take configured ones
 
@@ -158,22 +160,18 @@ class CCSocketCan(CChannel):
         :param remote_id: destination can id used
 
         """
-        _data = msg
-        remote_id = kwargs.get("remote_id")
-
-        if remote_id is None:
-            remote_id = self.remote_id
+        remote_id = remote_id or self.remote_id
 
         can_msg = can.Message(
             arbitration_id=remote_id,
-            data=_data,
+            data=msg,
             is_extended_id=self.is_extended_id,
             is_fd=self.is_fd,
             bitrate_switch=self.enable_brs,
         )
         self.bus.send(can_msg)
 
-        log.internal_debug(f"{self} sent CAN Message: {can_msg}, data: {_data}")
+        log.internal_debug(f"{self} sent CAN Message: {can_msg}, data: {msg}")
 
     def _cc_receive(self, timeout: float = 0.0001) -> Dict[str, Union[bytes, int]]:
         """Receive a can message using configured filters.

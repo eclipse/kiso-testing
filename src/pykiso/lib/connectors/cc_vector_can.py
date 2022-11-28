@@ -122,16 +122,17 @@ class CCVectorCan(CChannel):
         self.bus.shutdown()
         self.bus = None
 
-    def _cc_send(self, msg, **kwargs) -> None:
+    def _cc_send(self, msg, remote_id: Optional[int] = None, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
         If remote_id parameter is not given take configured ones.
 
         :param msg: data to send
-        :param kwargs: destination can id used
+        :param remote_id: destination can id used
+        :param kwargs: named arguments
 
         """
-        remote_id = kwargs.get("remote_id") or self.remote_id
+        remote_id = remote_id or self.remote_id
 
         can_msg = can.Message(
             arbitration_id=remote_id,

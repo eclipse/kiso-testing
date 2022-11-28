@@ -116,7 +116,6 @@ def test_cc_receive(
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
     message_received = visa_inst._cc_receive()
-    message_received["msg"] = message_received["msg"]
 
     assert message_received == {"msg": b"read response"}
 
