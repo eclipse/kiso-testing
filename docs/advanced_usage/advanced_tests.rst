@@ -26,7 +26,11 @@ In order to run only a subset of tests, an additional reference can be added to 
 Both parameters (variant/branch_level), will play the role of filter to fine
 tune the test collection and at the end ensure the execution of very specific tests subset.
 
-.. note:: cli tags must be given in pairs. If one key has multiple values seperate them with a comma
+.. note:: Cli tags must be given in pairs. If one key has multiple values separate them with a comma.
+
+.. note:: The cli will only allow you to use the character ``-`` instead of ``_`` for tags. If you call for example 
+    ``--branch-level`` in the cli, you can use following corresponding tags in your test case: ``branch-level``,
+    ``branch_level`` or ``branchlevel``.
 
 .. code:: bash
 
@@ -38,13 +42,16 @@ tune the test collection and at the end ensure the execution of very specific te
    =======================================================  ===============================  ========
    test case tags                                           cli tags                         executed
    =======================================================  ===============================  ========
-   "branch_level": ["daily","nightly"]                      branch_level nightly             🗸
-   "branch_level": ["daily","nightly"]                      branch_level nightly,daily       🗸
-   "branch_level": ["daily","nightly"]                      branch_level master              ✗
-   "branch_level": ["daily","nightly"],"variant":["var1"]   branch_level nightly             🗸
+   "branch_level": ["daily","nightly"]                      branch-level nightly             🗸
+   "branch-level": ["daily","nightly"]                      branch-level nightly             🗸
+   "branch_level": ["daily","nightly"]                      branch-level nightly,daily       🗸
+   "branch_level": ["daily","nightly"]                      branch-level master              ✗
+   "branch_level": ["daily","nightly"],"variant":["var1"]   branch-level daily variant var9  🗸
+   "branch_level": ["daily","nightly"],"variant":["var1"]   branch-level nightly             🗸
    "branch_level": ["daily","nightly"],"variant":["var1"]   variant var1                     🗸
    "branch_level": ["daily","nightly"],"variant":["var1"]   variant var2                     ✗
-   "branch_level": ["daily","nightly"],"variant":["var1"]   branch_level daily variant var1  ✗
+   "branch_level": ["daily","nightly"],"variant":["var1"]   branch-level daily variant var1  ✗
+   "variant":["var1"]                                       branch-level daily               ✗
    =======================================================  ===============================  ========
 
 Find below a full example for a test suite/case declaration :

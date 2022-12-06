@@ -290,6 +290,60 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
                 "variant": [
                     "omicron",
                 ],
+                "branch_level": [
+                    "some_branch",
+                ],
+            },  # tc_tags
+            {
+                "branch-level": "some_branch",
+            },  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "daily,nightly",
+                ],
+            },  # tc_tags
+            {
+                "branch-level": "daily,nightly",
+            },  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {},  # tc_tags
+            {
+                "branch-level": "nightly",
+            },  # cli_tags
+            False,  # is_test_running
+        ),
+        (
+            {},  # tc_tags
+            {},  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch-level": [
+                    "some_branch",
+                ],
+            },  # tc_tags
+            {
+                "branch_level": "some_branch",
+            },  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
                 "branch_level": [],
             },  # tc_tags
             {
@@ -356,7 +410,7 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
                 "k1": "v1",
                 "k2": "v10",
             },  # cli_tags
-            False,  # is_test_running
+            True,  # is_test_running
         ),
         (
             {
