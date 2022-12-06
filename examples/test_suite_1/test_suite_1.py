@@ -61,7 +61,7 @@ class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     case_id=1,
     aux_list=[aux1],
     test_ids={"Component1": ["Req1", "Req2"], "Component2": ["Req3"]},
-    tag={"variant": ["variant1"], "branch_level": ["daily", "nightly"]},
+    tag={"variant": ["variant1"], "branch_level": ["daily"]},
 )
 class MyTest1(pykiso.BasicTest):
     """This test case definition will be executed using base behavior
@@ -93,6 +93,7 @@ class MyTest1(pykiso.BasicTest):
         Here, the test pass at the 3rd attempt out of 5. The setup and
         tearDown methods are called for each attempt.
         """
+        logging.info("TAG daily")
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
@@ -151,6 +152,7 @@ class MyTest2(pykiso.RemoteTest):
         and tearDown excluded as the flags are set to False).
         """
         logging.info(f"------------suspend auxiliaries run-------------")
+        logging.info("TAG nightly")
         aux3.suspend()
         aux2.suspend()
         logging.info(f"------------resume auxiliaries run--------------")

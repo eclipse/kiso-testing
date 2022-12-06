@@ -54,6 +54,8 @@ tabulate = ">=0.8.9,<0.10.0"
 Jinja2 = ">=2.11.0,<4.0.0"
 MarkupSafe = "~2.0.1" # Allow support for Jinja2 between 2.11 < x < 3
 importlib-metadata = {version = ">=4.12,<6.0", python = "<3.8"}
+pyreadline3 = {version = "^3.4.1", python = "^3.5"}
+
 
 [tool.poetry.dev-dependencies]
 black = "22.10.0"

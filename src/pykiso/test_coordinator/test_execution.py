@@ -98,18 +98,33 @@ def apply_tag_filter(
 
     def is_skip_test(test_case: BasicTest) -> bool:
         """Check if test shall be skipped by evaluating the test case tag
-        attribute
+        attribute.
         :param test_case: test_case to check
         :return: True if test shall be skipped else False
         """
-        for tag_id, tag_value in usr_tags.items():
+        if test_case.tag is None:
+            return False
+        mod_usr_tags = usr_tags
+        # Tags shall match when "_" are used instead of "-" or vise versa
+        for character in ["-", "_"]:
+            mod_usr_tags = {
+                key.replace(character, ""): value
+                for (key, value) in mod_usr_tags.items()
+            }
+            test_case.tag = {
+                key.replace(character, ""): value
+                for (key, value) in test_case.tag.items()
+            }
+
+        for tag_id, tag_value in mod_usr_tags.items():
             if tag_id in test_case.tag.keys():
                 items = tag_value if isinstance(tag_value, list) else [tag_value]
                 for item in items:
                     if item in test_case.tag[tag_id]:
-                        continue
+                        return False
                     else:
-                        return True
+                        continue
+                return True
             else:
                 return True
         return False
