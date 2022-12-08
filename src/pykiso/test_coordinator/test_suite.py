@@ -378,16 +378,15 @@ class BasicTestSuite(unittest.TestSuite):
     ) -> None:
         """Check if the suite setup has failed and store failed suite id.
         Search in the global unittest result object, which save all the results
-        of the tests performed up to that point, for a BasicTestSuiteSetup tests
-        which has failed. If the suite setup has failed store the suite id.
+        of the tests performed up to that point, if the suite setup that runned
+        has failed then store the suite id.
 
         :param test: test to check
         :param result: unittest result object
         """
         if isinstance(test, BasicTestSuiteSetup):
-            for suite_type, _ in result.failures:
-                if isinstance(suite_type, BasicTestSuiteSetup):
-                    self.failed_suite_setups.add(test.test_suite_id)
+            if result.error_occurred:
+                self.failed_suite_setups.add(test.test_suite_id)
 
     def run(self, result: BannerTestResult, debug: bool = False) -> BannerTestResult:
         """Override run method from unittest.suite.TestSuite.
