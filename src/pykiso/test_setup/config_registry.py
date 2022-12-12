@@ -20,86 +20,150 @@ Config Registry
 """
 
 from collections import defaultdict
-from typing import Any, List
-
-from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
-from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
-from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
-from pykiso.lib.connectors.cc_proxy import CCProxy
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
 
 from .dynamic_loader import DynamicImportLinker
+
+if TYPE_CHECKING:
+    from pykiso.auxiliary import AuxiliaryCommon
+    from pykiso.types import (
+        AuxiliaryAlias,
+        AuxiliaryConfig,
+        ConfigDict,
+        ConnectorAlias,
+        ConnectorConfig,
+    )
 
 
 class ConfigRegistry:
     """Register auxiliaries with connectors to provide systemwide import
     statements.
+
+    Internally patch the user-configuration if multiple auxiliaries share
+    a same communication channel.
     """
 
     _linker = None
 
     @staticmethod
-    def _make_proxy_channel_config(aux_name: str, multiprocessing: bool):
-        con_class = CCProxy if not multiprocessing else CCMpProxy
+    def _make_proxy_channel_config(
+        aux_name: AuxiliaryConfig, multiprocessing: bool
+    ) -> Tuple[ConnectorAlias, ConnectorConfig]:
+        """Craft the configuration dictionary for a proxy communication
+        channel to attach to the auxiliary instead of the 'physical' channel.
+
+        :param aux_name: name of the auxiliary to which the proxy channel
+            should be plugged.
+        :param multiprocessing: whether the auxiliary is multiprocessing-
+            based or thread-based.
+        :return: the resulting proxy channel name and its configuration as
+            as a tuple.
+        """
+        from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
+        from pykiso.lib.connectors.cc_proxy import CCProxy
+
+        cchannel_class = CCProxy if not multiprocessing else CCMpProxy
         name = f"proxy_channel_{aux_name}"
         config = {
             "config": None,
-            "type": f"{con_class.__module__}:{con_class.__name__}",
+            "type": f"{cchannel_class.__module__}:{cchannel_class.__name__}",
         }
         return name, config
 
     @staticmethod
     def _make_proxy_aux_config(
-        con_name: str, aux_list: List[str], multiprocessing: bool
-    ):
+        channel_name: ConnectorAlias,
+        aux_list: List[AuxiliaryAlias],
+        multiprocessing: bool,
+    ) -> Tuple[AuxiliaryAlias, AuxiliaryConfig]:
+        """Craft the configuration dictionary for a proxy auxiliary to be
+        attached to all auxiliaries sharing a communication channel.
+
+        :param channel_name: name of the 'physical' channel that should
+            be attached to the proxy auxiliary (the only direct connection).
+        :param multiprocessing: whether the communication channel is
+            multiprocessing-based or thread-based.
+        :return: the resulting proxy auxiliary name and its configuration as
+            as a tuple.
+        """
+        from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
+        from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
+
         aux_class = ProxyAuxiliary if not multiprocessing else MpProxyAuxiliary
-        name = f"proxy_aux_{con_name}"
+        name = f"proxy_aux_{channel_name}"
         config = {
-            "connectors": {"channel": con_name},
+            "connectors": {"com": channel_name},
             "config": {"aux_list": aux_list},
             "type": f"{aux_class.__module__}:{aux_class.__name__}",
         }
         return name, config
 
+    @staticmethod
+    def _link_cchannel_to_auxiliaries(
+        config: ConfigDict,
+    ) -> Dict[ConnectorAlias, List[AuxiliaryAlias]]:
+        """Go through each auxiliary configuration, link each found
+        channel name to the auxiliary(s) that hold it.
+
+        :param config: dictionary containing yaml configuration content
+        :return: a dictionary linking each channel name to the list of
+            auxiliaries that are connected to the channel.
+        """
+        cchannel_to_auxiliaries = defaultdict(list)
+        for auxiliary, aux_details in config["auxiliaries"].items():
+            try:
+                cchannel = aux_details["connectors"]["com"]
+            except KeyError:
+                # auxiliary doesn't have a communication channel attached
+                continue
+
+            cchannel_to_auxiliaries[cchannel].append(auxiliary)
+        return cchannel_to_auxiliaries
+
     @classmethod
-    def register_aux_con(cls, config: dict) -> None:
+    def register_aux_con(cls, config: ConfigDict) -> None:
         """Create import hooks. Register auxiliaries and connectors.
 
         :param config: dictionary containing yaml configuration content
         """
-        # Possibility 1: Pre-parse aux configurations and replace them directly with a Proxy setup config
         # 1. Detect required proxy setups
-        cchannel_to_auxiliaries = defaultdict(list)
-        for auxiliary, aux_details in config["auxiliaries"].items():
-            try:
-                cchannel = aux_details["config"]["connectors"]["com"]
-            except KeyError:
-                continue
-            cchannel_to_auxiliaries[cchannel].append(auxiliary)
+        cchannel_to_auxiliaries = cls._link_cchannel_to_auxiliaries(config)
 
         # 2. Overwrite auxiliary and connector config with required proxies
         for channel_name, auxiliaries in cchannel_to_auxiliaries.items():
             if len(auxiliaries) < 2:
+                # only one auxiliary holds the channel so there's nothing to patch
                 continue
-            mp_enabled = config["connectors"][channel_name]["config"].get(
-                "processing", False
-            )
-            proxy_aux_name, proxy_aux_cfg = ConfigRegistry._make_proxy_aux_config(
+
+            # detect if communication channel is multiprocessing-based
+            mp_enabled = False
+            if config["connectors"][channel_name].get("config") is not None:
+                mp_enabled = config["connectors"][channel_name]["config"].get(
+                    "processing", False
+                )
+
+            # create a proxy auxiliary config for this shared channel
+            proxy_aux_name, proxy_aux_cfg = cls._make_proxy_aux_config(
                 channel_name, auxiliaries, mp_enabled
             )
             config["auxiliaries"][proxy_aux_name] = proxy_aux_cfg
+
+            # create a proxy channel config for each of the auxiliaries sharing the channel
             for aux_name in auxiliaries:
-                cc_proxy_name, cc_proxy_cfg = ConfigRegistry._make_proxy_channel_config(
+                cc_proxy_name, cc_proxy_cfg = cls._make_proxy_channel_config(
                     aux_name, mp_enabled
                 )
                 config["connectors"][cc_proxy_name] = cc_proxy_cfg
 
+        # 3. Create and install the auxiliary import hook
         cls._linker = DynamicImportLinker()
         cls._linker.install()
+
+        # 4. Provide auxiliaries and connectors from potentially patched configuration
         for connector, con_details in config["connectors"].items():
             cfg = con_details.get("config") or dict()
             cls._linker.provide_connector(connector, con_details["type"], **cfg)
 
-        # 3. Provide auxiliaries and connectors from patched configuration
         for auxiliary, aux_details in config["auxiliaries"].items():
             cfg = aux_details.get("config") or dict()
             cls._linker.provide_auxiliary(
@@ -109,8 +173,6 @@ class ConfigRegistry:
                 **cfg,
             )
 
-        # Possibility 2: Pre-parse aux configurations and provide requires_proxy to the linker
-
     @classmethod
     def delete_aux_con(cls) -> None:
         """Deregister the import hooks, close all running threads,
@@ -119,7 +181,7 @@ class ConfigRegistry:
         cls._linker.uninstall()
 
     @classmethod
-    def get_all_auxes(cls) -> dict:
+    def get_all_auxes(cls) -> Dict[AuxiliaryAlias, AuxiliaryCommon]:
         """Return all auxiliaires instances and alias
 
         :return: dictionary with alias as keys and instances as values
@@ -127,7 +189,9 @@ class ConfigRegistry:
         return cls._linker._aux_cache.instances
 
     @classmethod
-    def get_auxes_by_type(cls, aux_type: Any) -> dict:
+    def get_auxes_by_type(
+        cls, aux_type: Type[AuxiliaryCommon]
+    ) -> Dict[str, AuxiliaryCommon]:
         """Return all auxiliaries who match a specific type.
 
         :param aux_type: auxiliary class type (DUTAuxiliary,
@@ -143,28 +207,26 @@ class ConfigRegistry:
         }
 
     @classmethod
-    def get_aux_by_alias(cls, alias: str) -> Any:
+    def get_aux_by_alias(cls, alias: AuxiliaryAlias) -> AuxiliaryCommon:
         """Return the associated auxiliary instance to the given alias.
 
         :param alias: auxiliary's alias
-
         :return: auxiliary instance created by the dymanic loader
         """
         return cls._linker._aux_cache.get_instance(alias)
 
     @classmethod
-    def get_aux_config(cls, name: str) -> dict:
+    def get_aux_config(cls, name: AuxiliaryAlias) -> AuxiliaryConfig:
         """Return the registered auxiliary configuration based on his
         name.
 
-        :param name: auxiliary alias
-
+        :param name: auxiliary's alias
         :return: auxiliary's configuration (yaml content)
         """
         return cls._linker._aux_cache.configs[name]
 
     @classmethod
-    def get_auxes_alias(cls) -> list:
+    def get_auxes_alias(cls) -> List[AuxiliaryAlias]:
         """return all created auxiliaries alias.
 
         :return: list containing all auxiliaries alias

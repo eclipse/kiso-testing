@@ -52,7 +52,7 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 from pykiso import AuxiliaryInterface, CChannel
 from pykiso.interfaces.dt_auxiliary import (

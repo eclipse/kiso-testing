@@ -23,22 +23,20 @@ has to be used with a so called proxy auxiliary.
 
 """
 
+from __future__ import annotations
+
 import logging
 import multiprocessing
 import queue
-from typing import Dict, Union
+from typing import TYPE_CHECKING, Any
 
-from pykiso import Message
 from pykiso.connector import CChannel
 
-log = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
+    from pykiso.types import ProxyReturn
 
-ProxyReturn = Union[
-    Dict[str, Union[bytes, int]],
-    Dict[str, Union[bytes, None]],
-    Dict[str, Union[Message, None]],
-    Dict[str, Union[None, None]],
-]
+log = logging.getLogger(__name__)
 
 
 class CCMpProxy(CChannel):
@@ -51,6 +49,38 @@ class CCMpProxy(CChannel):
         self.queue_in = multiprocessing.Queue()
         self.queue_out = multiprocessing.Queue()
         self.timeout = 1
+        # used for physical channel attributes access from main auxiliary
+        self._proxy = None
+        self._physical_channel = None
+
+    def bind_channel_info(self, proxy_aux: MpProxyAuxiliary):
+        """Bind a :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`
+        instance that is instanciated in order to handle the connection of
+        multiple auxiliaries to a single communication channel in order to
+        hide the underlying proxy setup.
+
+        :param proxy_aux: the proxy auxiliary instance that is holding the
+            real communication channel.
+        """
+        self._proxy = proxy_aux
+        self._physical_channel = proxy_aux.channel
+
+    def __getattr__(self, name: str) -> Any:
+        """Implement getattr to retrieve attributes from the real channel attached
+        to the underlying :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`.
+
+        :param name: name of the attribute to get.
+        :raises AttributeError: if the attribute is not part of the real
+            channel instance or if the real channel hasn't been bound to
+            this proxy channel yet.
+        :return: the found attribute value.
+        """
+        if self._physical_channel is not None:
+            with self._proxy.lock:
+                return getattr(self._physical_channel, name)
+        raise AttributeError(
+            f"{self.__class__.__name__} object has no attribute {name}"
+        )
 
     def _cc_open(self) -> None:
         """Open proxy channel.
@@ -60,6 +90,8 @@ class CCMpProxy(CChannel):
         works even if suspend or resume is called.
         """
         log.internal_debug("Open proxy channel")
+        if self._proxy is not None and not self._proxy.is_instance:
+            self._proxy.create_instance()
 
     def _cc_close(self) -> None:
         """Close proxy channel.

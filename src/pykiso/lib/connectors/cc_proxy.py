@@ -26,20 +26,14 @@ has to be used with a so called proxy auxiliary.
 import logging
 import queue
 import threading
-from typing import TYPE_CHECKING, Callable, Dict, Union
+from typing import TYPE_CHECKING, Any, Callable
 
-from pykiso import Message
 from pykiso.connector import CChannel
+from pykiso.types import ProxyReturn
 
 if TYPE_CHECKING:
     from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
 
-ProxyReturn = Union[
-    Dict[str, Union[bytes, int]],
-    Dict[str, Union[bytes, None]],
-    Dict[str, Union[Message, None]],
-    Dict[str, Union[None, None]],
-]
 
 log = logging.getLogger(__name__)
 
@@ -48,7 +42,7 @@ log = logging.getLogger(__name__)
 
 
 class CCProxy(CChannel):
-    """Proxy CChannel for multi auxiliary usage."""
+    """Proxy CChannel to bind multiple auxiliaries to a single 'physical' CChannel."""
 
     def __init__(self, **kwargs):
         """Initialize attributes."""
@@ -57,18 +51,37 @@ class CCProxy(CChannel):
         self.timeout = 1
         self._lock = threading.Lock()
         self._tx_callback = None
-        self.__proxy = None
-        self.__real_channel = None
+        self._proxy = None
+        self._physical_channel = None
 
     def bind_channel_info(self, proxy_aux: ProxyAuxiliary):
-        self.__proxy = proxy_aux
-        self.__real_channel = proxy_aux.channel
+        """Bind a :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`
+        instance that is instanciated in order to handle the connection of
+        multiple auxiliaries to a single communication channel in order to
+        hide the underlying proxy setup.
 
-    def __getattr__(self, name):
-        if self.__real_channel is not None:
-            with self.__proxy.lock:
-                return getattr(self.__real_channel, name)
-        return super().__getattr__(name)
+        :param proxy_aux: the proxy auxiliary instance that is holding the
+            real communication channel.
+        """
+        self._proxy = proxy_aux
+        self._physical_channel = proxy_aux.channel
+
+    def __getattr__(self, name: str) -> Any:
+        """Implement getattr to retrieve attributes from the real channel attached
+        to the underlying :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`.
+
+        :param name: name of the attribute to get.
+        :raises AttributeError: if the attribute is not part of the real
+            channel instance or if the real channel hasn't been bound to
+            this proxy channel yet.
+        :return: the found attribute value.
+        """
+        if self._physical_channel is not None:
+            with self._proxy.lock:
+                return getattr(self._physical_channel, name)
+        raise AttributeError(
+            f"{self.__class__.__name__} object has no attribute {name}"
+        )
 
     def detach_tx_callback(self) -> None:
         """Detach the current callback."""
@@ -93,21 +106,25 @@ class CCProxy(CChannel):
         """Open proxy channel."""
         log.internal_debug("Open proxy channel")
         self.queue_out = queue.Queue()
+        if self._proxy is not None and not self._proxy.is_instance:
+            self._proxy.create_instance()
 
     def _cc_close(self) -> None:
         """Close proxy channel."""
         log.internal_debug("Close proxy channel")
         self.queue_out = queue.Queue()
 
-    def _cc_send(self, *args: tuple, **kwargs: dict) -> None:
-        """Populate the queue in of the proxy connector.
+    def _cc_send(self, *args: Any, **kwargs: Any) -> None:
+        """Call the attached ProxyAuxiliary's transmission callback
+        with the provided arguments.
 
-        :param args: tuple containing positionnal arguments
-        :param kwargs: dictionary containing named arguments
+        :param args: positionnal arguments to pass to the callback
+        :param kwargs: named arguments to pass to the callback
         """
         log.internal_debug(f"put at proxy level: {args} {kwargs}")
         if self._tx_callback is not None:
-            self._tx_callback(self, *args, **kwargs)  # proxy.run_command()
+            # call the attached ProxyAuxiliary's run_command method
+            self._tx_callback(self, *args, **kwargs)
 
     def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
