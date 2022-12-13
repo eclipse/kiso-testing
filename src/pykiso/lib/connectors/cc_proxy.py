@@ -22,6 +22,7 @@ has to be used with a so called proxy auxiliary.
 .. currentmodule:: cc_proxy
 
 """
+from __future__ import annotations
 
 import logging
 import queue
@@ -37,9 +38,6 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-# aux1.channel.cc_send("bla")  -> cc_px.cc_send()
-# aux1.channel.remote_id = 123 -> cc_px.proxy_aux.channel.remote_id = 123
-
 
 class CCProxy(CChannel):
     """Proxy CChannel to bind multiple auxiliaries to a single 'physical' CChannel."""
@@ -54,8 +52,8 @@ class CCProxy(CChannel):
         self._proxy = None
         self._physical_channel = None
 
-    def bind_channel_info(self, proxy_aux: ProxyAuxiliary):
-        """Bind a :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`
+    def _bind_channel_info(self, proxy_aux: ProxyAuxiliary):
+        """Bind a :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
         instance that is instanciated in order to handle the connection of
         multiple auxiliaries to a single communication channel in order to
         hide the underlying proxy setup.
@@ -68,7 +66,7 @@ class CCProxy(CChannel):
 
     def __getattr__(self, name: str) -> Any:
         """Implement getattr to retrieve attributes from the real channel attached
-        to the underlying :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`.
+        to the underlying :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`.
 
         :param name: name of the attribute to get.
         :raises AttributeError: if the attribute is not part of the real
@@ -104,10 +102,10 @@ class CCProxy(CChannel):
 
     def _cc_open(self) -> None:
         """Open proxy channel."""
-        log.internal_debug("Open proxy channel")
+        log.internal_info("Open proxy channel")
         self.queue_out = queue.Queue()
-        if self._proxy is not None and not self._proxy.is_instance:
-            self._proxy.create_instance()
+        # if self._proxy is not None and not self._proxy.is_instance:
+        #    self._proxy.create_instance()
 
     def _cc_close(self) -> None:
         """Close proxy channel."""

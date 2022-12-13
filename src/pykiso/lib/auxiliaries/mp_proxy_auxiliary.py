@@ -156,7 +156,7 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
         :return: tuple containing all connectors associated to
             all given auxiliaries
         """
-        channel_inst = []
+        channel_inst: List[CCMpProxy] = []
 
         for aux_name in aux_list:
             aux_inst = sys.modules.get(f"{PACKAGE}.auxiliaries.{aux_name}")
@@ -184,7 +184,7 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
         # Finally bind the physical channel to the proxy channels to
         # share its API to the user's auxiliaries
         for channel in channel_inst:
-            channel.bind_channel_info(self)
+            channel._bind_channel_info(self)
 
         return tuple(channel_inst)
 

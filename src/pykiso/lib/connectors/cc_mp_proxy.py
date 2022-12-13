@@ -53,7 +53,7 @@ class CCMpProxy(CChannel):
         self._proxy = None
         self._physical_channel = None
 
-    def bind_channel_info(self, proxy_aux: MpProxyAuxiliary):
+    def _bind_channel_info(self, proxy_aux: MpProxyAuxiliary):
         """Bind a :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`
         instance that is instanciated in order to handle the connection of
         multiple auxiliaries to a single communication channel in order to

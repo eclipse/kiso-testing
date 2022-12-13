@@ -18,6 +18,7 @@ Config Registry
 .. currentmodule:: config_registry
 
 """
+from __future__ import annotations
 
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
@@ -128,6 +129,7 @@ class ConfigRegistry:
         """
         # 1. Detect required proxy setups
         cchannel_to_auxiliaries = cls._link_cchannel_to_auxiliaries(config)
+        proxies = []
 
         # 2. Overwrite auxiliary and connector config with required proxies
         for channel_name, auxiliaries in cchannel_to_auxiliaries.items():
@@ -147,13 +149,19 @@ class ConfigRegistry:
                 channel_name, auxiliaries, mp_enabled
             )
             config["auxiliaries"][proxy_aux_name] = proxy_aux_cfg
+            proxies.append(proxy_aux_name)
 
             # create a proxy channel config for each of the auxiliaries sharing the channel
             for aux_name in auxiliaries:
                 cc_proxy_name, cc_proxy_cfg = cls._make_proxy_channel_config(
                     aux_name, mp_enabled
                 )
+                config["auxiliaries"][aux_name]["connectors"]["com"] = cc_proxy_name
                 config["connectors"][cc_proxy_name] = cc_proxy_cfg
+
+        from pprint import pprint
+
+        pprint(config, indent=2)
 
         # 3. Create and install the auxiliary import hook
         cls._linker = DynamicImportLinker()
@@ -169,9 +177,13 @@ class ConfigRegistry:
             cls._linker.provide_auxiliary(
                 auxiliary,
                 aux_details["type"],
-                aux_cons=aux_details.get("connectors") or dict(),
+                aux_cons=aux_details.get("connectors", dict()),
                 **cfg,
             )
+
+        # 5. Finally, import required ProxyAuxiliary instances so that user doesn't have to
+        for proxy_aux in proxies:
+            cls._linker._aux_cache.get_instance(proxy_aux)
 
     @classmethod
     def delete_aux_con(cls) -> None:

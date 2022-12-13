@@ -174,7 +174,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # alias list
             elif aux in ConfigRegistry.get_auxes_alias():
                 log.internal_warning(
-                    f"Auxiliary : {aux} is not using import magic mechanism (pre-loaded)"
+                    f"Auxiliary '{aux}' is not using import magic mechanism (pre-loaded)"
                 )
                 # load it using ConfigRegistry _aux_cache
                 aux_inst = ConfigRegistry.get_aux_by_alias(aux)
@@ -183,7 +183,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # the given auxiliary alias doesn't exist or refer to a
             # invalid one
             else:
-                log.error(f"Auxiliary : {aux} doesn't exist")
+                log.error(f"Auxiliary '{aux}' doesn't exist")
 
         # Check if auxes/connectors are compatible with the proxy aux
         self._check_channels_compatibility(channel_inst)
@@ -191,7 +191,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         # Finally bind the physical channel to the proxy channels to
         # share its API to the user's auxiliaries
         for channel in channel_inst:
-            channel.bind_channel_info(self)
+            channel._bind_channel_info(self)
 
         return tuple(channel_inst)
 

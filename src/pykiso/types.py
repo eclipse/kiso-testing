@@ -42,12 +42,12 @@ ConnectorAlias = NewType("ConnectorAlias", str)
 
 class AuxiliaryConfig(TypedDict):
     connectors: Dict[str, ConnectorAlias]
-    config: Optional[Dict[str, Any]]
+    config: Dict[str, Optional[Dict[str, Any]]]
     type: str
 
 
 class ConnectorConfig(TypedDict):
-    config: Dict[str, Any]
+    config: Dict[str, Optional[Dict[str, Any]]]
     type: str
 
 
