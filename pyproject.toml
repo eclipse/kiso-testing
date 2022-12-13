@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.20.1"
+version = "0.20.2"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -12,8 +12,8 @@ packages = [
     { include = "pykiso", from = "src" }
 ]
 include = [
-    "src/pykiso/test_coordinator/assert_step_report/report_template.html.j2",
-    "src/pykiso/test_coordinator/assert_step_report/report_template.css",
+    "src/pykiso/test_result/templates/report_template.html.j2",
+    "src/pykiso/test_result/templates/report_template.css",
 ]
 keywords = [
     "testing",
@@ -49,7 +49,7 @@ PyVISA-py = "~0.5.3"
 robotframework = "3.2.2"
 unittest-xml-reporting = "^3.2.0"
 click = ">=7.0.0,<9.0.0"
-pykiso-python-uds = "^3.0.0"
+pykiso-python-uds = "~3.0.2"
 tabulate = ">=0.8.9,<0.10.0"
 Jinja2 = ">=2.11.0,<4.0.0"
 MarkupSafe = "~2.0.1" # Allow support for Jinja2 between 2.11 < x < 3

@@ -334,12 +334,11 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         received_data = recv_response.get("msg")
         arbitration_id = recv_response.get("remote_id")
 
-        if received_data is not None:
+        if received_data is not None and arbitration_id == self.res_id:
             can_msg = can.Message(
                 data=received_data, arbitration_id=arbitration_id, is_extended_id=False
             )
-            if arbitration_id == self.res_id:
-                self.uds_config.tp.callback_onReceive(can_msg)
+            self.uds_config.tp.callback_onReceive(can_msg)
 
     def _run_command(self, cmd_message, cmd_data=None) -> Union[dict, bytes, bool]:
         """Not used."""
