@@ -55,8 +55,10 @@ class CCProxy(CChannel):
     def _bind_channel_info(self, proxy_aux: ProxyAuxiliary):
         """Bind a :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
         instance that is instanciated in order to handle the connection of
-        multiple auxiliaries to a single communication channel in order to
-        hide the underlying proxy setup.
+        multiple auxiliaries to a single communication channel.
+
+        This allows to access the real communication channel's attributes
+        and hides the underlying proxy setup.
 
         :param proxy_aux: the proxy auxiliary instance that is holding the
             real communication channel.

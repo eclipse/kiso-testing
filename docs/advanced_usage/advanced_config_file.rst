@@ -118,6 +118,78 @@ Relative paths in the sub-YAML file are then resolved **relative to the sub-YAML
     :language: yaml
     :lines: 28-37
 
+
+Sharing a communication channel between multiple auxiliaries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to attach a single communication channel to multiple defined auxiliaries, it is sufficient
+to use the same channel name for all auxiliaries.
+
+Under the hood, ``pykiso`` will automatically create a :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
+that will be the only auxiliary having direct access to the communication channel, along with a
+:py:class:`~pykiso.lib.connectors.cc_proxy.CCProxy` for each defined auxiliary. This allows to
+keep a minimalistic :py:class:`~pykiso.connector.CChannel` implementation.
+
+An illustration of the resulting internal setup can be found at :ref:`proxy_aux`.
+
+In other words, if you define such YAML configuration file:
+
+.. code:: yaml
+  auxiliaries:
+    aux1:
+      connectors:
+          com: chan1
+      config: null
+      type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+    aux2:
+      connectors:
+          com: chan1
+      type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+
+  connectors:
+    chan1:
+      config: null
+      type: pykiso.lib.connectors.cc_example:CCExample
+
+
+Then, ``pykiso`` will internally modify this configuration to become:
+
+
+.. code:: yaml
+ auxiliaries:
+  proxy_aux:
+    connectors:
+      com: chan1
+    config:
+      aux_list: [aux1, aux2]
+    type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
+  aux1:
+    connectors:
+        com: cc_proxy_aux1
+    config: null
+    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+  aux2:
+    connectors:
+        com: chan2
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+  connectors:
+    chan1:
+      config: null
+      type: pykiso.lib.connectors.cc_example:CCExample
+    cc_proxy_aux1:
+      config: null
+      type: pykiso.lib.connectors.cc_proxy:CCProxy
+    cc_proxy_aux2:
+      config: null
+      type: pykiso.lib.connectors.cc_proxy:CCProxy
+
+
+.. note::
+  Keep in mind that an auxiliary connected through a
+  :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
+  will receive the other auxiliaries' messages.
+
+
 Make a proxy auxiliary trace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -148,6 +220,7 @@ Everything is handled at configuration level and especially at yaml file :
       # otherwise user should specify his own name
       trace_name: can_trace
     type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
+
 
 Delay an auxiliary start-up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

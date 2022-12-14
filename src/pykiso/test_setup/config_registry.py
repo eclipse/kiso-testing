@@ -159,10 +159,6 @@ class ConfigRegistry:
                 config["auxiliaries"][aux_name]["connectors"]["com"] = cc_proxy_name
                 config["connectors"][cc_proxy_name] = cc_proxy_cfg
 
-        from pprint import pprint
-
-        pprint(config, indent=2)
-
         # 3. Create and install the auxiliary import hook
         cls._linker = DynamicImportLinker()
         cls._linker.install()
@@ -177,7 +173,7 @@ class ConfigRegistry:
             cls._linker.provide_auxiliary(
                 auxiliary,
                 aux_details["type"],
-                aux_cons=aux_details.get("connectors", dict()),
+                aux_cons=aux_details.get("connectors") or dict(),
                 **cfg,
             )
 
