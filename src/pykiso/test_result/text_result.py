@@ -126,6 +126,10 @@ class BannerTestResult(TextTestResult):
         self.width = size.columns - 1
         self.successes: List[Union[BasicTest, BaseTestSuite]] = []
 
+    @property
+    def error_occurred(self):
+        return self._error_occurred
+
     def _banner(
         self, text: Union[List, str], width: Optional[int] = None, sym: str = "#"
     ) -> str:

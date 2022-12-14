@@ -16,6 +16,7 @@ import unittest
 import pytest
 
 from pykiso.test_coordinator import test_case, test_suite
+from pykiso.test_result.text_result import BannerTestResult
 
 EX_TEST_CASE = """
 import unittest
@@ -65,7 +66,9 @@ class IntegrationTestSuite(unittest.TestCase):
         self.init.prepare_default_test_suites(
             IntegrationTestSuite.test_suite_directory, "*.py", 1
         )
-        result = unittest.TextTestRunner().run(self.init.custom_test_suite)
+        result = unittest.TextTestRunner(resultclass=BannerTestResult).run(
+            self.init.custom_test_suite
+        )
 
         self.assertEqual(result.wasSuccessful(), False)
         self.assertEqual(len(result.errors), 0)
