@@ -144,7 +144,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
 
         return logger
 
-    def get_proxy_con(self, aux_list: List[str]) -> Tuple[CCProxy, ...]:
+    def get_proxy_con(self, aux_list: List[str]) -> Tuple:
         """Retrieve all connector associated to all given existing Auxiliaries.
 
         If auxiliary alias exists but auxiliary instance was not created
@@ -155,7 +155,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         :return: tuple containing all connectors associated to
             all given auxiliaries
         """
-        channel_inst: List[CCProxy] = []
+        channel_inst = []
 
         for aux in aux_list:
             # aux_list can contain a auxiliary instance just grab the
@@ -174,7 +174,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # alias list
             elif aux in ConfigRegistry.get_auxes_alias():
                 log.internal_warning(
-                    f"Auxiliary '{aux}' is not using import magic mechanism (pre-loaded)"
+                    f"Auxiliary : {aux} is not using import magic mechanism (pre-loaded)"
                 )
                 # load it using ConfigRegistry _aux_cache
                 aux_inst = ConfigRegistry.get_aux_by_alias(aux)
@@ -183,15 +183,10 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # the given auxiliary alias doesn't exist or refer to a
             # invalid one
             else:
-                log.error(f"Auxiliary '{aux}' doesn't exist")
-
-        # Check if auxes/connectors are compatible with the proxy aux
+                log.error(f"Auxiliary : {aux} doesn't exist")
+        # Finally just check if auxes/connectors are compatible with
+        # the proxy aux
         self._check_channels_compatibility(channel_inst)
-
-        # Finally bind the physical channel to the proxy channels to
-        # share its API to the user's auxiliaries
-        for channel in channel_inst:
-            channel._bind_channel_info(self)
 
         return tuple(channel_inst)
 
