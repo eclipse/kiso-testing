@@ -30,10 +30,9 @@ import threading
 from typing import TYPE_CHECKING, Any, Callable
 
 from pykiso.connector import CChannel
-from pykiso.types import ProxyReturn
 
 if TYPE_CHECKING:
-    from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
+    from pykiso.types import ProxyReturn
 
 
 log = logging.getLogger(__name__)

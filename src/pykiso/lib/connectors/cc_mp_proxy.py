@@ -28,12 +28,11 @@ from __future__ import annotations
 import logging
 import multiprocessing
 import queue
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pykiso.connector import CChannel
 
 if TYPE_CHECKING:
-    from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
     from pykiso.types import ProxyReturn
 
 log = logging.getLogger(__name__)
@@ -58,8 +57,6 @@ class CCMpProxy(CChannel):
         works even if suspend or resume is called.
         """
         log.internal_debug("Open proxy channel")
-        if self._proxy is not None and not self._proxy.is_instance:
-            self._proxy.create_instance()
 
     def _cc_close(self) -> None:
         """Close proxy channel.
