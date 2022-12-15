@@ -126,24 +126,25 @@ In order to attach a single communication channel to multiple defined auxiliarie
 to use the same channel name for all auxiliaries.
 
 Under the hood, ``pykiso`` will automatically create a :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
-that will be the only auxiliary having direct access to the communication channel, along with a
-:py:class:`~pykiso.lib.connectors.cc_proxy.CCProxy` for each defined auxiliary. This allows to
+that will have exclusive access to the communication channel. A
+:py:class:`~pykiso.lib.connectors.cc_proxy.CCProxy` will be plugged between each declared auxiliary and
+the created :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`. This allows to
 keep a minimalistic :py:class:`~pykiso.connector.CChannel` implementation.
 
 An illustration of the resulting internal setup can be found at :ref:`proxy_aux`.
 
-In other words, if you define such YAML configuration file:
+In other words, if you define the following YAML configuration file:
 
 .. code:: yaml
   auxiliaries:
     aux1:
       connectors:
-          com: chan1
+        com: chan1
       config: null
       type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
     aux2:
       connectors:
-          com: chan1
+        com: chan1
       type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
 
   connectors:
@@ -156,32 +157,32 @@ Then, ``pykiso`` will internally modify this configuration to become:
 
 
 .. code:: yaml
- auxiliaries:
-  proxy_aux:
-    connectors:
-      com: chan1
-    config:
-      aux_list: [aux1, aux2]
-    type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
-  aux1:
-    connectors:
+  auxiliaries:
+    proxy_aux:
+      connectors:
+        com: chan1
+      config:
+        aux_list: [aux1, aux2]
+      type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
+    aux1:
+      connectors:
         com: cc_proxy_aux1
-    config: null
-    type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
-  aux2:
-    connectors:
+      config: null
+      type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+    aux2:
+      connectors:
         com: chan2
-    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
-  connectors:
-    chan1:
-      config: null
-      type: pykiso.lib.connectors.cc_example:CCExample
-    cc_proxy_aux1:
-      config: null
-      type: pykiso.lib.connectors.cc_proxy:CCProxy
-    cc_proxy_aux2:
-      config: null
-      type: pykiso.lib.connectors.cc_proxy:CCProxy
+      type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+    connectors:
+      chan1:
+        config: null
+        type: pykiso.lib.connectors.cc_example:CCExample
+      cc_proxy_aux1:
+        config: null
+        type: pykiso.lib.connectors.cc_proxy:CCProxy
+      cc_proxy_aux2:
+        config: null
+        type: pykiso.lib.connectors.cc_proxy:CCProxy
 
 
 .. note::
