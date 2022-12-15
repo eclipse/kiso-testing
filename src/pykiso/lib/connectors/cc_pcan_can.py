@@ -20,6 +20,7 @@ Can Communication Channel using PCAN hardware
 """
 
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Union
@@ -139,6 +140,7 @@ class CCPCanCan(CChannel):
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
+        self.trc_names = []
         """
         Extract the base logging directory from the logging module, so we can
         create our logging folder in the correct place.
@@ -254,6 +256,7 @@ class CCPCanCan(CChannel):
                 pcan_channel, PCANBasic.PCAN_TRACE_STATUS, PCANBasic.PCAN_PARAMETER_ON
             )
             log.internal_info("Trace activated")
+            self.trc_names.append(pcan_path_argument)
         except RuntimeError:
             log.error(f"Logging for {self.channel} not activated")
         except OSError as e:
@@ -369,3 +372,31 @@ class CCPCanCan(CChannel):
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
             return {"msg": None}
+
+    def merge_trc(self):
+
+        trace_name = self.trc_names[0]
+
+        with open(trace_name, "r") as trc:
+            merged_data = trc.read()
+            self.trc_names.pop(0)
+
+        trc_start = 33
+
+        for file in self.trc_names:
+            with open(file, "r") as fin:
+                data = fin.read().splitlines(True)
+            with open(file, "w") as fout:
+                fout.writelines(data[trc_start:])
+            with open(file, "r") as trc2:
+                data = trc2.read()
+
+            merged_data += data
+            os.remove(file)
+
+        with open(trace_name, "w") as trc:
+            trc.write(merged_data)
+
+    def __del__(self) -> None:
+        self.merge_trc()
+        super().__del__()
