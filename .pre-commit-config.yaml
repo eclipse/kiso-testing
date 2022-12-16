@@ -21,7 +21,7 @@ repos:
         args: [--unsafe]
     -   id: debug-statements
 -   repo: https://github.com/pycqa/flake8.git
-    rev : 3.8.4
+    rev : 5.0.4
     hooks:
       - id: flake8
         args:

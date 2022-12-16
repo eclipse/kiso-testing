@@ -25,7 +25,7 @@ class TestUdsServerAuxiliary:
     uds_aux_instance_raw = None
 
     @pytest.fixture(scope="function")
-    def uds_server_aux_inst(self, mocker, ccpcan_inst, tmp_uds_config_ini):
+    def uds_server_aux_inst(self, mocker, ccpcan_inst):
         mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
@@ -42,17 +42,13 @@ class TestUdsServerAuxiliary:
         TestUdsServerAuxiliary.uds_aux_instance_odx = UdsServerAuxiliary(
             com=ccpcan_inst,
             request_id=0x123,
-            config_ini_path=tmp_uds_config_ini,
             odx_file_path="odx",
         )
         return TestUdsServerAuxiliary.uds_aux_instance_odx
 
-    def test_constructor_no_odx(
-        self, uds_server_aux_inst, tmp_uds_config_ini, ccpcan_inst
-    ):
+    def test_constructor_no_odx(self, uds_server_aux_inst, ccpcan_inst):
         uds_server_inst = UdsServerAuxiliary(
             com=ccpcan_inst,
-            config_ini_path=tmp_uds_config_ini,
             request_id=0x123,
             response_id=0x321,
         )
@@ -62,20 +58,15 @@ class TestUdsServerAuxiliary:
         assert uds_server_inst.req_id == 0x123
         assert uds_server_inst.res_id == 0x321
 
-        uds_server_inst = UdsServerAuxiliary(
-            com=ccpcan_inst, config_ini_path=tmp_uds_config_ini
-        )
+        uds_server_inst = UdsServerAuxiliary(com=ccpcan_inst)
 
         assert uds_server_inst.req_id == None
         assert uds_server_inst.res_id == None
 
-    def test_constructor_odx(
-        self, uds_server_aux_inst, tmp_uds_config_ini, ccpcan_inst, caplog
-    ):
+    def test_constructor_odx(self, uds_server_aux_inst, ccpcan_inst, caplog):
         with caplog.at_level(logging.WARNING):
             uds_server_inst = UdsServerAuxiliary(
                 com=ccpcan_inst,
-                config_ini_path=tmp_uds_config_ini,
                 request_id=0x123,
                 response_id=0x321,
                 odx_file_path="dummy.odx",

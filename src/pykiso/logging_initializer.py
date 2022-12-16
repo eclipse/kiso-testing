@@ -18,7 +18,6 @@ Integration Test Framework
 .. currentmodule:: logging
 
 """
-import collections
 import logging
 import sys
 import time
@@ -28,10 +27,18 @@ from typing import List, NamedTuple, Optional
 from .test_setup.dynamic_loader import PACKAGE
 from .types import PathType
 
-LogOptions = collections.namedtuple(
-    "LogOptions",
-    "log_path log_level report_type verbose",
-)
+
+class LogOptions(NamedTuple):
+    """
+    Namedtuple containing the available options for logging configuration.
+    """
+
+    log_path: PathType
+    log_level: str
+    report_type: str
+    verbose: bool
+
+
 # use to store the selected logging options
 log_options: Optional[LogOptions] = None
 
@@ -42,6 +49,14 @@ def get_logging_options() -> LogOptions:
     :return: logging options log path, log level and report type
     """
     return log_options
+
+
+def add_internal_log_levels() -> None:
+    """Create pykiso's internal log levels if not already done."""
+    if not hasattr(logging, "INTERNAL_WARNING"):
+        add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
+        add_logging_level("INTERNAL_INFO", logging.INFO + 1)
+        add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
 
 
 def initialize_logging(
@@ -73,9 +88,7 @@ def initialize_logging(
         "ERROR": logging.ERROR,
     }
     # add internal kiso log levels
-    add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
-    add_logging_level("INTERNAL_INFO", logging.INFO + 1)
-    add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
+    add_internal_log_levels()
 
     # update logging options
     global log_options
