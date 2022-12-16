@@ -258,7 +258,7 @@ def test_detect_serial_number(mocker, serial_number_list, serial_number_list_emp
             """
             :param serial: serial number of the channel configuration
             """
-            self.serialNumber = serial
+            self.serial_number = serial
 
     # 1) Detection of the lowest serial number in the channels list:
     mocker.patch(
