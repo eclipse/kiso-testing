@@ -52,7 +52,7 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 from pykiso import AuxiliaryInterface, CChannel
 from pykiso.interfaces.dt_auxiliary import (
@@ -173,8 +173,8 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # check if the given aux_name is in the available aux
             # alias list
             elif aux in ConfigRegistry.get_auxes_alias():
-                log.internal_warning(
-                    f"Auxiliary : {aux} is not using import magic mechanism (pre-loaded)"
+                log.internal_info(
+                    f"Auxiliary '{aux}' is not using import magic mechanism (pre-loaded)"
                 )
                 # load it using ConfigRegistry _aux_cache
                 aux_inst = ConfigRegistry.get_aux_by_alias(aux)
@@ -183,7 +183,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # the given auxiliary alias doesn't exist or refer to a
             # invalid one
             else:
-                log.error(f"Auxiliary : {aux} doesn't exist")
+                log.error(f"Auxiliary '{aux}' doesn't exist")
         # Finally just check if auxes/connectors are compatible with
         # the proxy aux
         self._check_channels_compatibility(channel_inst)

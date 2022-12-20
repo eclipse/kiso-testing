@@ -8,6 +8,7 @@
 ##########################################################################
 
 import itertools
+import json
 import logging
 import shutil
 import subprocess
@@ -16,6 +17,7 @@ import unittest
 from unittest import TestResult
 
 import pytest
+import requests
 
 from pykiso import CChannel, Flasher, cli, message, test_suite
 from pykiso.lib.auxiliaries import dut_auxiliary
@@ -336,6 +338,113 @@ def tmp_test(request, tmp_path, mocker):
 
     # and clean it up afterwards
     shutil.rmtree(str(tmp_base))
+
+
+@pytest.fixture(scope="module")
+def projects_response():
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps(
+        {
+            "offset": 0,
+            "projects": [
+                {"id": 1, "name": "super_project", "announcement": "xyz"},
+                {"id": 2, "name": "best_project", "announcement": "xyz"},
+            ],
+        }
+    )
+    return response
+
+
+@pytest.fixture(scope="module")
+def suites_response():
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps(
+        [
+            {
+                "id": 1,
+                "name": "Setup & Installation",
+                "description": "desc",
+                "is_baseline": True,
+                "is_completed": False,
+            },
+            {
+                "id": 2,
+                "name": "Document Editing",
+                "description": "desc",
+                "is_baseline": True,
+                "is_completed": False,
+            },
+        ]
+    )
+    return response
+
+
+@pytest.fixture(scope="module")
+def cases_response():
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps(
+        {
+            "offset": 0,
+            "cases": [
+                {"id": 1, "title": "...", "custom_field_id": 1234},
+                {"id": 2, "title": "...", "custom_field_id": 1234},
+            ],
+        }
+    )
+    return response
+
+
+@pytest.fixture(scope="module")
+def runs_response():
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps(
+        {"offset": 0, "runs": [{"id": 1, "name": "..."}, {"id": 2, "name": "..."}]}
+    )
+    return response
+
+
+@pytest.fixture(scope="module")
+def milestones_response():
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps(
+        {
+            "offset": 0,
+            "milestones": [{"id": 1, "name": "..."}, {"id": 2, "name": "..."}],
+        }
+    )
+    return response
+
+
+@pytest.fixture(scope="module")
+def add_result_response():
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps(
+        {
+            "id": 1,
+            "status_id": 5,
+            "test_id": 123,
+            "elapsed": "15s",
+            "version": "1.0 RC1 build 3724",
+            "defects": "TR-7",
+        }
+    )
+    return response
+
+
+@pytest.fixture(scope="module")
+def add_run_response():
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps(
+        {"id": 1, "config": "Firefox, Ubuntu 12", "milestone_id": 1, "failed_count": 10}
+    )
+    return response
 
 
 def create_config(aux1, aux2, suite_dir):

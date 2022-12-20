@@ -28,7 +28,7 @@ tune the test collection and at the end ensure the execution of very specific te
 
 .. note:: Cli tags must be given in pairs. If one key has multiple values separate them with a comma.
 
-.. note:: The cli will only allow you to use the character ``-`` instead of ``_`` for tags. If you call for example 
+.. note:: The cli will only allow you to use the character ``-`` instead of ``_`` for tags. If you call for example
     ``--branch-level`` in the cli, you can use following corresponding tags in your test case: ``branch-level``,
     ``branch_level`` or ``branchlevel``.
 

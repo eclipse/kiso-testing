@@ -60,7 +60,11 @@ class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     suite_id=1,
     case_id=1,
     aux_list=[aux1],
-    test_ids={"Component1": ["Req1", "Req2"], "Component2": ["Req3"]},
+    test_ids={
+        "Component1": ["Req1", "Req2"],
+        "Component2": ["Req3"],
+        "VTestId": ["1234456", "123456"],
+    },
     tag={"variant": ["variant1"], "branch_level": ["daily"]},
 )
 class MyTest1(pykiso.BasicTest):

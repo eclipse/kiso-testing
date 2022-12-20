@@ -144,8 +144,8 @@ def test_get_proxy_con_invalid(mocker, caplog, cchannel_inst):
     with caplog.at_level(logging.ERROR):
         proxy_inst = ProxyAuxiliary(cchannel_inst, ["not_exist_aux", "fake_aux"])
 
-    assert "Auxiliary : not_exist_aux doesn't exist" in caplog.text
-    assert "Auxiliary : fake_aux doesn't exist" in caplog.text
+    assert "Auxiliary 'not_exist_aux' doesn't exist" in caplog.text
+    assert "Auxiliary 'fake_aux' doesn't exist" in caplog.text
     assert len(proxy_inst.proxy_channels) == 0
 
 

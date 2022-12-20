@@ -22,27 +22,24 @@ has to be used with a so called proxy auxiliary.
 .. currentmodule:: cc_proxy
 
 """
+from __future__ import annotations
 
 import logging
 import queue
 import threading
-from typing import Callable, Dict, Union
+from typing import TYPE_CHECKING, Any, Callable
 
-from pykiso import Message
 from pykiso.connector import CChannel
 
-ProxyReturn = Union[
-    Dict[str, Union[bytes, int]],
-    Dict[str, Union[bytes, None]],
-    Dict[str, Union[Message, None]],
-    Dict[str, Union[None, None]],
-]
+if TYPE_CHECKING:
+    from pykiso.types import ProxyReturn
+
 
 log = logging.getLogger(__name__)
 
 
 class CCProxy(CChannel):
-    """Proxy CChannel for multi auxiliary usage."""
+    """Proxy CChannel to bind multiple auxiliaries to a single 'physical' CChannel."""
 
     def __init__(self, **kwargs):
         """Initialize attributes."""
@@ -73,7 +70,7 @@ class CCProxy(CChannel):
 
     def _cc_open(self) -> None:
         """Open proxy channel."""
-        log.internal_debug("Open proxy channel")
+        log.internal_info("Open proxy channel")
         self.queue_out = queue.Queue()
 
     def _cc_close(self) -> None:
@@ -81,14 +78,16 @@ class CCProxy(CChannel):
         log.internal_debug("Close proxy channel")
         self.queue_out = queue.Queue()
 
-    def _cc_send(self, *args: tuple, **kwargs: dict) -> None:
-        """Populate the queue in of the proxy connector.
+    def _cc_send(self, *args: Any, **kwargs: Any) -> None:
+        """Call the attached ProxyAuxiliary's transmission callback
+        with the provided arguments.
 
-        :param args: tuple containing positionnal arguments
-        :param kwargs: dictionary containing named arguments
+        :param args: positionnal arguments to pass to the callback
+        :param kwargs: named arguments to pass to the callback
         """
         log.internal_debug(f"put at proxy level: {args} {kwargs}")
         if self._tx_callback is not None:
+            # call the attached ProxyAuxiliary's run_command method
             self._tx_callback(self, *args, **kwargs)
 
     def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
