@@ -22,17 +22,17 @@ has to be used with a so called proxy auxiliary.
 .. currentmodule:: cc_mp_proxy
 
 """
-
 from __future__ import annotations
 
 import logging
 import multiprocessing
 import queue
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pykiso.connector import CChannel
 
 if TYPE_CHECKING:
+    from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
     from pykiso.types import ProxyReturn
 
 log = logging.getLogger(__name__)
@@ -43,11 +43,52 @@ class CCMpProxy(CChannel):
 
     def __init__(self, **kwargs):
         """Initialize attributes."""
+        if "processing" not in kwargs:
+            kwargs.update({"processing": True})
         super().__init__(**kwargs)
         # instantiate directly both queue_in and queue_out
         self.queue_in = multiprocessing.Queue()
         self.queue_out = multiprocessing.Queue()
         self.timeout = 1
+        # used for physical channel attributes access from main auxiliary
+        self._proxy = None
+        self._physical_channel = None
+
+    def _bind_channel_info(self, proxy_aux: MpProxyAuxiliary):
+        """Bind a :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`
+        instance that is instanciated in order to handle the connection of
+        multiple auxiliaries to a single communication channel in order to
+        hide the underlying proxy setup.
+
+        :param proxy_aux: the proxy auxiliary instance that is holding the
+            real communication channel.
+        """
+        self._proxy = proxy_aux
+        self._physical_channel = proxy_aux.channel
+
+    def __getattr__(self, name: str) -> Any:
+        """Implement getattr to retrieve attributes from the real channel attached
+        to the underlying :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`.
+
+        :param name: name of the attribute to get.
+        :raises AttributeError: if the attribute is not part of the real
+            channel instance or if the real channel hasn't been bound to
+            this proxy channel yet.
+        :return: the found attribute value.
+        """
+        # using getattr or dot access causes infinite recursion when process is unpickled
+        if self._physical_channel is not None:
+            with self._proxy.lock:
+                return getattr(self._physical_channel, name)
+        raise AttributeError(
+            f"{self.__class__.__name__} object has no attribute {name}"
+        )
+
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, state):
+        self.__dict__ = state
 
     def _cc_open(self) -> None:
         """Open proxy channel.

@@ -16,6 +16,7 @@ import pytest
 from pykiso.lib.connectors.cc_process import CCProcess, CCProcessError
 
 
+@pytest.mark.slow
 def test_process(mocker):
     """Test most of the CCProcess functionality with a real process with text output"""
 
@@ -59,6 +60,7 @@ def test_process(mocker):
     assert cc_process.cc_receive(3) == {"msg": None}
 
 
+@pytest.mark.slow
 def test_process_binary(mocker):
     """Test most of the CCProcess functionality with a real process with binary output"""
 

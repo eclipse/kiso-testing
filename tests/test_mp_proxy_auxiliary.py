@@ -6,6 +6,7 @@
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
+import importlib
 import logging
 import queue
 import sys
@@ -14,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+import pykiso
 from pykiso.connector import CChannel
 from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 from pykiso.lib.auxiliaries.mp_proxy_auxiliary import (
@@ -21,16 +23,22 @@ from pykiso.lib.auxiliaries.mp_proxy_auxiliary import (
     MpProxyAuxiliary,
     TraceOptions,
 )
+from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
+from pykiso.lib.connectors.cc_proxy import CCProxy
+
+pykiso.logging_initializer.log_options = pykiso.logging_initializer.LogOptions(
+    ".", "INFO", "TEXT", False
+)
 
 
 @pytest.fixture
 def mock_auxiliaries(mocker):
-    class MockProxyCChannel(CChannel):
+    class MockProxyCChannel(CCProxy):
         def __init__(self, name=None, *args, **kwargs):
-            self.name = name
-            self.queue_in = queue.Queue()
-            self.queue_out = queue.Queue()
             super(MockProxyCChannel, self).__init__(*args, **kwargs)
+            self.name = name
+            self.queue_out = queue.Queue()
+            self.queue_in = queue.Queue()
 
         _cc_open = mocker.stub(name="_cc_open")
         open = mocker.stub(name="open")
@@ -161,7 +169,9 @@ def test_init_trace_not_activated(mocker, mp_proxy_auxiliary_inst):
 
 
 def test_get_proxy_con_pre_load(mocker, mp_proxy_auxiliary_inst, caplog):
-    mock_check_comp = mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
+    mock_check_comp = mocker.patch.object(
+        MpProxyAuxiliary, "_check_channels_compatibility"
+    )
 
     mock_get_alias = mocker.patch.object(
         ConfigRegistry, "get_auxes_alias", return_value="later_aux"
@@ -172,9 +182,13 @@ def test_get_proxy_con_pre_load(mocker, mp_proxy_auxiliary_inst, caplog):
         def __init__(self):
             self._aux_cache = AuxCache()
 
+    class FakeCCMpProxy(CCMpProxy):
+        def _bind_channel_info(self, *args, **kwargs):
+            pass
+
     class FakeAux:
         def __init__(self):
-            self.channel = True
+            self.channel = FakeCCMpProxy()
             self.is_proxy_capable = True
 
     class AuxCache:
@@ -183,33 +197,35 @@ def test_get_proxy_con_pre_load(mocker, mp_proxy_auxiliary_inst, caplog):
 
     ConfigRegistry._linker = Linker()
 
-    with caplog.at_level(
-        logging.WARNING,
-    ):
-
+    with caplog.at_level(logging.WARNING):
         result_get_proxy = mp_proxy_auxiliary_inst.get_proxy_con(["later_aux"])
+
     assert (
         "Auxiliary : later_aux is not using import magic mechanism (pre-loaded)"
         in caplog.text
     )
     assert len(result_get_proxy) == 1
-    assert isinstance(result_get_proxy[0], bool)
+    assert isinstance(result_get_proxy[0], FakeCCMpProxy)
     mock_check_comp.assert_called()
     mock_get_alias.get_called()
 
 
-def test_get_proxy_con_valid_(mocker, mp_proxy_auxiliary_inst, mock_auxiliaries):
+def test_get_proxy_con_valid(mocker, mp_proxy_auxiliary_inst, mock_auxiliaries):
     mock_check_comp = mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
+    mock_check_channel_comp = mocker.patch.object(
+        MpProxyAuxiliary, "_check_channels_compatibility"
+    )
 
     AUX_LIST_NAMES = ["MockAux1", "MockAux2"]
     result_get_proxy = mp_proxy_auxiliary_inst.get_proxy_con(AUX_LIST_NAMES)
 
-    assert len(result_get_proxy) == 2
+    assert len(result_get_proxy) == len(AUX_LIST_NAMES)
     assert all(isinstance(items, CChannel) for items in result_get_proxy)
-    mock_check_comp.assert_called()
+    mock_check_channel_comp.assert_called_once()
+    assert mock_check_comp.call_count == len(AUX_LIST_NAMES)
 
 
-def test_get_proxy_con_invalid_(mocker, caplog, mp_proxy_auxiliary_inst):
+def test_get_proxy_con_invalid(mocker, caplog, mp_proxy_auxiliary_inst):
     mock_get_alias = mocker.patch.object(
         ConfigRegistry, "get_auxes_alias", return_value="later_aux"
     )
@@ -224,6 +240,34 @@ def test_get_proxy_con_invalid_(mocker, caplog, mp_proxy_auxiliary_inst):
     assert len(result_get_proxy) == 0
 
     mock_get_alias.assert_called()
+
+
+def test_getattr_physical_cchannel(
+    mocker, cchannel_inst, mp_proxy_auxiliary_inst, mock_auxiliaries
+):
+    mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
+    mocker.patch.object(MpProxyAuxiliary, "_check_channels_compatibility")
+
+    cchannel_inst.some_attribute = object()
+
+    AUX_LIST_NAMES = ["MockAux1", "MockAux2"]
+    proxy_inst = MpProxyAuxiliary(cchannel_inst, AUX_LIST_NAMES, name="aux")
+    proxy_inst.lock = mocker.MagicMock()
+
+    mock_aux1 = importlib.import_module("pykiso.auxiliaries.MockAux1")
+
+    assert isinstance(proxy_inst.channel, type(cchannel_inst))
+
+    assert mock_aux1.channel._physical_channel is cchannel_inst
+
+    assert mock_aux1.channel.some_attribute is cchannel_inst.some_attribute
+    proxy_inst.lock.__enter__.assert_called_once()
+    proxy_inst.lock.__exit__.assert_called_once()
+    proxy_inst.lock.reset_mock()
+
+    assert mock_aux1.channel.cc_send is not cchannel_inst.cc_send
+    proxy_inst.lock.__enter__.assert_not_called()
+    proxy_inst.lock.__exit__.assert_not_called()
 
 
 def test_create_auxiliary_instance(mp_proxy_auxiliary_inst, caplog):
@@ -325,6 +369,7 @@ def test_dispatch_command_invalid(mp_proxy_auxiliary_inst, mock_auxiliaries):
 def test_run_command(mocker, mp_proxy_auxiliary_inst, mock_auxiliaries):
     mock_dispatch_command = mocker.patch.object(MpProxyAuxiliary, "_dispatch_command")
     mocker.patch.object(MpProxyAuxiliary, "_check_compatibility")
+    mocker.patch.object(MpProxyAuxiliary, "_check_channels_compatibility")
     mocker.patch.object(mp_proxy_auxiliary_inst, "channel")
     mock_queue_empty = mocker.patch("queue.Queue.empty", return_value=False)
     mock_queue_get = mocker.patch(

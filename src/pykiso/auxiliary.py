@@ -26,7 +26,6 @@ import queue
 import time
 from typing import Any
 
-from .logging_initializer import add_logging_level
 from .test_setup.config_registry import ConfigRegistry
 from .types import MsgType
 
@@ -37,16 +36,6 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
     """Class use to encapsulate all common methods/attributes for both
     multiprocessing and thread auxiliary interface.
     """
-
-    def __new__(cls: AuxiliaryCommon, *args, **kwargs) -> AuxiliaryCommon:
-        """Create instance and add internal kiso log levels in
-        case the auxiliary is used outside the pykiso context
-        """
-        if not hasattr(logging, "INTERNAL_WARNING"):
-            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
-            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
-            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
-        return super(AuxiliaryCommon, cls).__new__(cls)
 
     def __init__(self) -> None:
         """Auxiliary common attributes initialization."""
