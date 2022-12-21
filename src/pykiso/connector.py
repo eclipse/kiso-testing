@@ -22,52 +22,9 @@ Interface Definition for Connectors, CChannels and Flasher
 import abc
 import multiprocessing
 import pathlib
-import sys
 import threading
 
 from .types import MsgType, PathType
-
-if sys.version_info < (3, 8):
-    from typing_extensions import ContextManager, Protocol
-else:
-    from typing import ContextManager, Protocol, runtime_checkable
-
-# class SupportsOpen(Protocol):
-
-#     def open(self):
-#         pass
-
-# class SupportsClose(Protocol):
-
-#     def close(self):
-#         pass
-
-# class SupportsSend(Protocol):
-
-#     def send(self, msg):
-#         pass
-
-# class SupportsReceive(Protocol):
-
-#     def receive(self, timeout):
-#         pass
-
-# class SupportsFlash(Protocol):
-
-#     def flash(self):
-#         pass
-
-# @runtime_checkable
-# class Connector(SupportsOpen, SupportsClose, ContextManager, Protocol):
-#     ...
-
-# @runtime_checkable
-# class CChannel(Connector, SupportsSend, SupportsReceive, Protocol):
-#     ...
-
-# @runtime_checkable
-# class Flasher(Connector, SupportsFlash, Protocol):
-#     ...
 
 
 class Connector(abc.ABC):
