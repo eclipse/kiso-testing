@@ -36,7 +36,7 @@ from ..test_coordinator.test_case import BasicTest
 from ..test_coordinator.test_suite import BaseTestSuite
 
 if typing.TYPE_CHECKING:
-    from ..types import ExcInfoType, PathType
+    from pykiso.types import ExcInfoType, PathType
 
 log = logging.getLogger(__name__)
 
