@@ -28,7 +28,7 @@ from enum import Enum, unique
 from typing import Any, Callable, List, Optional
 
 from ..exceptions import AuxiliaryCreationError
-from ..logging_initializer import initialize_loggers
+from ..logging_initializer import add_internal_log_levels, initialize_loggers
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +73,7 @@ class DTAuxiliaryInterface(abc.ABC):
              started (magic import) or manually (by user)
         """
         initialize_loggers(activate_log)
+        add_internal_log_levels()
         self.name = name
         self.is_proxy_capable = is_proxy_capable
         self.auto_start = auto_start

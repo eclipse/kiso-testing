@@ -26,8 +26,9 @@ import queue
 import time
 from typing import Any
 
-from .test_setup.config_registry import ConfigRegistry
-from .types import MsgType
+from pykiso.logging_initializer import add_internal_log_levels
+from pykiso.test_setup.config_registry import ConfigRegistry
+from pykiso.types import MsgType
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
 
     def __init__(self) -> None:
         """Auxiliary common attributes initialization."""
+        add_internal_log_levels()
         self.name = None
         self.queue_in = None
         self.lock = None
