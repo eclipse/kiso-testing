@@ -206,7 +206,7 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
         logging.internal_warning(
             "All loggers are activated, this could lead to performance issues."
         )
-        active_loggers.union(set(logging.root.manager.loggerDict.keys()))
+        active_loggers |= set(logging.root.manager.loggerDict.keys())
         return
     # keep package and auxiliary loggers, store all the others to deactivate them
     relevant_loggers = {
@@ -224,8 +224,8 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
     ]
     loggers += childs
 
-    # store previous loggers to keep active
-    active_loggers.union(set(loggers))
+    # store previous loggers to keep active (union of previous and current loggers)
+    active_loggers |= set(loggers)
 
     # set the loggers that are not part of active_loggers to level WARNING
     loggers_to_deactivate = set(relevant_loggers) - set(active_loggers)
