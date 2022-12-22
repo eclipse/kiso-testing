@@ -43,8 +43,7 @@ class CCMpProxy(CChannel):
 
     def __init__(self, **kwargs):
         """Initialize attributes."""
-        if "processing" not in kwargs:
-            kwargs.update({"processing": True})
+        kwargs.update(processing=True)
         super().__init__(**kwargs)
         # instantiate directly both queue_in and queue_out
         self.queue_in = multiprocessing.Queue()

@@ -33,7 +33,7 @@ pykiso.logging_initializer.log_options = pykiso.logging_initializer.LogOptions(
 
 @pytest.fixture
 def mock_auxiliaries(mocker):
-    class MockProxyCChannel(CCProxy):
+    class MockProxyCChannel(CCMpProxy):
         def __init__(self, name=None, *args, **kwargs):
             super(MockProxyCChannel, self).__init__(*args, **kwargs)
             self.name = name
@@ -225,7 +225,36 @@ def test_get_proxy_con_valid(mocker, mp_proxy_auxiliary_inst, mock_auxiliaries):
     assert mock_check_comp.call_count == len(AUX_LIST_NAMES)
 
 
-def test_get_proxy_con_invalid(mocker, caplog, mp_proxy_auxiliary_inst):
+def test_get_proxy_con_invalid_cchannel(mocker, caplog, mp_proxy_auxiliary_inst):
+    mock_get_alias = mocker.patch.object(
+        ConfigRegistry, "get_auxes_alias", return_value="later_aux"
+    )
+    mp_proxy_auxiliary_inst.aux_list = ["later_aux"]
+
+    class Linker:
+        def __init__(self):
+            self._aux_cache = AuxCache()
+
+    class OtherCChannel(CChannel):
+        def _bind_channel_info(self, *args, **kwargs):
+            pass
+
+    class FakeAux:
+        def __init__(self):
+            self.channel = OtherCChannel()
+            self.is_proxy_capable = True
+
+    class AuxCache:
+        def get_instance(self, aux_name):
+            return FakeAux()
+
+    ConfigRegistry._linker = Linker()
+
+    with pytest.raises(TypeError):
+        result_get_proxy = mp_proxy_auxiliary_inst.get_proxy_con(["later_aux"])
+
+
+def test_get_proxy_con_invalid_aux(mocker, caplog, mp_proxy_auxiliary_inst):
     mock_get_alias = mocker.patch.object(
         ConfigRegistry, "get_auxes_alias", return_value="later_aux"
     )
