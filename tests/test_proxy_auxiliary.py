@@ -172,12 +172,20 @@ def test_getattr_physical_cchannel(
 
     assert mock_aux1.channel._physical_channel is cchannel_inst
 
+    # attribute exists in the physical channel instance
     assert mock_aux1.channel.some_attribute is cchannel_inst.some_attribute
     proxy_inst.lock.__enter__.assert_called_once()
     proxy_inst.lock.__exit__.assert_called_once()
     proxy_inst.lock.reset_mock()
 
+    # attribute exists in the proxy channel instance
     assert mock_aux1.channel.cc_send is not cchannel_inst.cc_send
+    proxy_inst.lock.__enter__.assert_not_called()
+    proxy_inst.lock.__exit__.assert_not_called()
+
+    # attribute does not exist
+    with pytest.raises(AttributeError, match="object has no attribute does_not_exist"):
+        mock_aux1.channel.does_not_exist
     proxy_inst.lock.__enter__.assert_not_called()
     proxy_inst.lock.__exit__.assert_not_called()
 

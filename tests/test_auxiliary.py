@@ -30,7 +30,7 @@ def mock_aux(mocker):
         def __init__(self, param_1=None, param_2=None, **kwargs):
             self.param_1 = param_1
             self.param_2 = param_2
-            super().__init__(**kwargs)
+            AuxiliaryInterface.__init__(self, **kwargs)
 
         _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
         _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
@@ -55,7 +55,7 @@ def mock_thread_aux(mocker):
         def __init__(self, param_1=None, param_2=None, **kwargs):
             self.param_1 = param_1
             self.param_2 = param_2
-            super().__init__(**kwargs)
+            AuxiliaryInterface.__init__(self, **kwargs)
 
         _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
         _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
@@ -75,7 +75,7 @@ def mock_mp_aux(mocker):
             )
             self.param_1 = param_1
             self.param_2 = param_2
-            super().__init__(name="mp_aux", **kwargs)
+            MpAuxiliaryInterface.__init__(self, name="mp_aux", **kwargs)
 
         _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
         _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
@@ -90,7 +90,7 @@ def mock_mp_aux(mocker):
 def mock_simple_aux(mocker):
     class MockSimpleAux(SimpleAuxiliaryInterface):
         def __init__(self, **kwargs):
-            super().__init__(**kwargs)
+            SimpleAuxiliaryInterface.__init__(self, **kwargs)
 
         _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
         _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")

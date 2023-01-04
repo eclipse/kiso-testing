@@ -9,7 +9,7 @@ It is no longer necessary to manually defined a ``ProxyAuxiliary`` with
 each auxiliary that has to share it, ``pykiso`` will do the rest for you.
 
 
-Remove reduncancy of activate_log configuration parameter
+Remove redundancy of activate_log configuration parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to activate external loggers, it was previously necessary to
