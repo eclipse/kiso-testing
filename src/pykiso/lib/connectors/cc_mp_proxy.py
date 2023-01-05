@@ -75,15 +75,17 @@ class CCMpProxy(CChannel):
             this proxy channel yet.
         :return: the found attribute value.
         """
-        # using getattr or dot access causes infinite recursion when process is unpickled
         if self._physical_channel is not None:
             with self._proxy.lock:
                 return getattr(self._physical_channel, name)
         raise AttributeError(
-            f"{self.__class__.__name__} object has no attribute {name}"
+            f"{self.__class__.__name__} object has no attribute '{name}'"
         )
 
     def __getstate__(self):
+        """Avoid getattr to be called on pickling before instanciation,
+        which would cause infinite recursion.
+        """
         return self.__dict__
 
     def __setstate__(self, state):

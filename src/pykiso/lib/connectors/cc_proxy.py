@@ -80,7 +80,7 @@ class CCProxy(CChannel):
             with self._proxy.lock:
                 return getattr(self._physical_channel, name)
         raise AttributeError(
-            f"{self.__class__.__name__} object has no attribute {name}"
+            f"{self.__class__.__name__} object has no attribute '{name}'"
         )
 
     def detach_tx_callback(self) -> None:

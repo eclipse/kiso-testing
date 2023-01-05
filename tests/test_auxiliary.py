@@ -98,6 +98,43 @@ def mock_simple_aux(mocker):
     return MockSimpleAux()
 
 
+def test_add_internal_log_levels():
+
+    # does the opposite of add_logging_level, so log levels addition can be tested
+    def del_logging_level(level_name):
+        method_name = level_name.lower()
+
+        delattr(logging, level_name)
+        delattr(logging.getLoggerClass(), method_name)
+        delattr(logging, method_name)
+
+    del_logging_level("INTERNAL_WARNING")
+    del_logging_level("INTERNAL_INFO")
+    del_logging_level("INTERNAL_DEBUG")
+
+    assert not hasattr(logging, "INTERNAL_INFO")
+    assert not hasattr(logging, "INTERNAL_DEBUG")
+    assert not hasattr(logging, "INTERNAL_WARNING")
+
+    class DummyAux(AuxiliaryCommon):
+        def __init__(self):
+            super().__init__()
+
+        def create_instance(self):
+            pass
+
+        def delete_instance(self):
+            pass
+
+        def run(self):
+            pass
+
+    my_dummy_aux = DummyAux()
+    assert hasattr(logging, "INTERNAL_INFO")
+    assert hasattr(logging, "INTERNAL_DEBUG")
+    assert hasattr(logging, "INTERNAL_WARNING")
+
+
 def test_thread_aux_raise_creation_error(mock_thread_aux):
     mock_thread_aux.queue_out.put(False)
     with pytest.raises(AuxiliaryCreationError):
