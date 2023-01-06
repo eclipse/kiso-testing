@@ -230,3 +230,12 @@ def test_add_step():
         4.5,
     )
     assert len(steplist) == 1
+
+
+def test_is_test_success():
+
+    test_ok = [{"succeed": True}, {"succeed": True}, {"succeed": True}]
+    test_fail = [{"succeed": True}, {"succeed": False}, {"succeed": True}]
+
+    assert assert_step_report.is_test_success(test_ok)
+    assert assert_step_report.is_test_success(test_fail) is False

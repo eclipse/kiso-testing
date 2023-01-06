@@ -24,6 +24,10 @@ body {
     line-height: 1.25;
    }
 
+   h3 {
+    display: inline;
+   }
+
    table {
 
        border :1px solid #ccc;
