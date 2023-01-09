@@ -1,0 +1,13 @@
+auxiliaries:
+  aux1:
+    connectors:
+        com: chan1
+    type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+connectors:
+  chan1:
+    config: null
+    type: ext_lib/cc_example.py:CCExample
+test_suite_list:
+- suite_dir: test_stepreport
+  test_filter_pattern: '*.py'
+  test_suite_id: 1

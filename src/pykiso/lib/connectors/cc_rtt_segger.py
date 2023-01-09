@@ -121,7 +121,7 @@ class CCRttSegger(connector.CChannel):
         self.rtt_log_refresh_time = round(1 / rtt_log_speed, 6) if rtt_log_speed else 0
         self.rtt_log_thread = threading.Thread(target=self.receive_log)
         self.rtt_log_path = rtt_log_path
-        self.rtt_log = logging.getLogger(f"{__name__}.RTT")
+        self.rtt_log = logging.getLogger(f"{__name__}{serial_number or ''}.RTT")
         if self.rtt_log_path is not None:
             self.rtt_log_buffer_size = 0
             self.rtt_log_path = Path(rtt_log_path)

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.19.3"
+version = "0.20.2"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -12,8 +12,8 @@ packages = [
     { include = "pykiso", from = "src" }
 ]
 include = [
-    "src/pykiso/test_coordinator/assert_step_report/report_template.html.j2",
-    "src/pykiso/test_coordinator/assert_step_report/report_template.css",
+    "src/pykiso/test_result/templates/report_template.html.j2",
+    "src/pykiso/test_result/templates/report_template.css",
 ]
 keywords = [
     "testing",
@@ -28,6 +28,7 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: POSIX",
     "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
@@ -39,20 +40,23 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
+brainstem = "*"
 PyYAML = "^6.0"
 pylink-square = ">=0.12,<0.15"
 pyserial = "^3.0"
-python-can = {version = "^4.0.0", extras = ["pcan"]}
+python-can = {version = "~4.1.0", extras = ["pcan"]}
 PyVISA = "^1.12.0"
 PyVISA-py = "~0.5.3"
 robotframework = "3.2.2"
 unittest-xml-reporting = "^3.2.0"
 click = ">=7.0.0,<9.0.0"
-pykiso-python-uds = "^3.0.0"
-tabulate = "~0.8.9"
+pykiso-python-uds = "~3.0.2"
+tabulate = ">=0.8.9,<0.10.0"
 Jinja2 = ">=2.11.0,<4.0.0"
 MarkupSafe = "~2.0.1" # Allow support for Jinja2 between 2.11 < x < 3
-importlib-metadata = {version = "^4.12.0", python = "<3.8"}
+importlib-metadata = {version = ">=4.12,<6.0", python = "<3.8"}
+pyreadline3 = {version = "^3.4.1", python = "^3.5"}
+
 
 [tool.poetry.dev-dependencies]
 black = "22.10.0"

@@ -1,17 +1,17 @@
 ##########################################################################
 # Copyright (c) 2010-2022 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
 #
-# This source code is copyright protected and proprietary
-# to Robert Bosch GmbH. Only those rights that have been
-# explicitly granted to you by Robert Bosch GmbH in written
-# form may be exercised. All other rights remain with
-# Robert Bosch GmbH.
+# SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
 import logging
 from time import sleep
 from unittest import mock
 
+import can
 import pytest
 
 from pykiso.lib.auxiliaries.udsaux.common import UDSCommands
@@ -28,7 +28,7 @@ class TestUdsAuxiliary:
     uds_aux_instance_raw = None
 
     @pytest.fixture(scope="function")
-    def uds_odx_aux_inst(self, mocker, ccpcan_inst, tmp_uds_config_ini):
+    def uds_odx_aux_inst(self, mocker, ccpcan_inst):
 
         mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
@@ -47,12 +47,12 @@ class TestUdsAuxiliary:
             return_value=True,
         )
         TestUdsAuxiliary.uds_aux_instance_odx = UdsAuxiliary(
-            ccpcan_inst, tmp_uds_config_ini, "odx"
+            ccpcan_inst, odx_file_path="odx"
         )
         return TestUdsAuxiliary.uds_aux_instance_odx
 
     @pytest.fixture(scope="function")
-    def uds_odx_aux_inst_v(self, mocker, ccvector_inst, tmp_uds_config_ini):
+    def uds_odx_aux_inst_v(self, mocker, ccvector_inst):
 
         mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
@@ -67,12 +67,12 @@ class TestUdsAuxiliary:
             return_value=None,
         )
         TestUdsAuxiliary.uds_aux_instance_odx_v = UdsAuxiliary(
-            ccvector_inst, tmp_uds_config_ini, "odx"
+            ccvector_inst, odx_file_path="odx"
         )
         return TestUdsAuxiliary.uds_aux_instance_odx_v
 
     @pytest.fixture(scope="function")
-    def uds_raw_aux_inst(self, mocker, ccpcan_inst, tmp_uds_config_ini):
+    def uds_raw_aux_inst(self, mocker, ccpcan_inst):
         mocker.patch(
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
@@ -85,20 +85,47 @@ class TestUdsAuxiliary:
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
-        TestUdsAuxiliary.uds_aux_instance_raw = UdsAuxiliary(
-            ccpcan_inst, tmp_uds_config_ini
-        )
+        TestUdsAuxiliary.uds_aux_instance_raw = UdsAuxiliary(ccpcan_inst)
         return TestUdsAuxiliary.uds_aux_instance_raw
 
-    def test_constructor_odx(self, uds_odx_aux_inst, tmp_uds_config_ini):
+    def test_constructor_odx(self, uds_odx_aux_inst):
         assert uds_odx_aux_inst.is_proxy_capable
         assert str(uds_odx_aux_inst.odx_file_path) == "odx"
         assert uds_odx_aux_inst.tp_waiting_time == 0.010
 
-    def test_constructor_raw(self, uds_raw_aux_inst, tmp_uds_config_ini):
+    def test_constructor_raw(self, uds_raw_aux_inst):
         assert uds_raw_aux_inst.is_proxy_capable
         assert uds_raw_aux_inst.odx_file_path is None
         assert uds_raw_aux_inst.tp_waiting_time == 0.010
+
+    def test_constructor_ini_warning(self, ccpcan_inst):
+        with pytest.warns(FutureWarning):
+            UdsAuxiliary(ccpcan_inst, config_ini_path="dummy.ini")
+
+    def test__receive_message(self, uds_raw_aux_inst, mocker):
+        remote_id = 0x42
+        data = bytearray(b"DATA")
+
+        uds_raw_aux_inst.uds_config = mocker.MagicMock()
+
+        uds_raw_aux_inst.channel = mocker.MagicMock()
+        uds_raw_aux_inst.channel.cc_receive.return_value = {
+            "msg": data,
+            "remote_id": remote_id,
+        }
+        uds_raw_aux_inst.res_id = remote_id
+
+        uds_raw_aux_inst._receive_message(timeout_in_s=12)
+
+        uds_raw_aux_inst.uds_config.tp.callback_onReceive.assert_called_once()
+
+        call_arg = uds_raw_aux_inst.uds_config.tp.callback_onReceive.call_args_list[0][
+            0
+        ][0]
+        assert isinstance(call_arg, can.Message)
+        assert call_arg.arbitration_id == remote_id
+        assert call_arg.data == data
+        assert call_arg.is_extended_id == False
 
     def test_send_uds_raw(self, mock_uds_config, uds_odx_aux_inst):
         mock_uds_config.send.return_value = [0x50, 0x03]

@@ -20,8 +20,8 @@ repos:
     -   id: check-yaml
         args: [--unsafe]
     -   id: debug-statements
--   repo: https://gitlab.com/pycqa/flake8
-    rev : 3.8.4
+-   repo: https://github.com/pycqa/flake8.git
+    rev : 5.0.4
     hooks:
       - id: flake8
         args:

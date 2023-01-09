@@ -23,22 +23,19 @@ has to be used with a so called proxy auxiliary.
 
 """
 
+from __future__ import annotations
+
 import logging
 import multiprocessing
 import queue
-from typing import Dict, Union
+from typing import TYPE_CHECKING
 
-from pykiso import Message
 from pykiso.connector import CChannel
 
-log = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from pykiso.types import ProxyReturn
 
-ProxyReturn = Union[
-    Dict[str, Union[bytes, int]],
-    Dict[str, Union[bytes, None]],
-    Dict[str, Union[Message, None]],
-    Dict[str, Union[None, None]],
-]
+log = logging.getLogger(__name__)
 
 
 class CCMpProxy(CChannel):

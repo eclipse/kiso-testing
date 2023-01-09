@@ -36,7 +36,7 @@ from ..test_coordinator.test_case import BasicTest
 from ..test_coordinator.test_suite import BaseTestSuite
 
 if typing.TYPE_CHECKING:
-    from ..types import ExcInfoType, PathType
+    from pykiso.types import ExcInfoType, PathType
 
 log = logging.getLogger(__name__)
 
@@ -125,6 +125,10 @@ class BannerTestResult(TextTestResult):
         # avoid border effects due to newlines
         self.width = size.columns - 1
         self.successes: List[Union[BasicTest, BaseTestSuite]] = []
+
+    @property
+    def error_occurred(self):
+        return self._error_occurred
 
     def _banner(
         self, text: Union[List, str], width: Optional[int] = None, sym: str = "#"

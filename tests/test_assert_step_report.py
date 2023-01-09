@@ -27,7 +27,7 @@ def test_case():
 
     # Add the step-report parameters
     tc.step_report = assert_step_report.StepReportData(
-        header={}, message="", success=True, continue_on_error=False, current_table=None
+        header={}, message="", success=True, current_table=None
     )
 
     return tc
@@ -53,7 +53,7 @@ def remote_test_case(mocker):
 
     # Add the step-report parameters
     tc.step_report = assert_step_report.StepReportData(
-        header={}, message="", success=True, continue_on_error=False, current_table=None
+        header={}, message="", success=True, current_table=None
     )
     return tc
 

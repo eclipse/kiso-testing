@@ -21,7 +21,6 @@ uds_base_auxiliary
 .. currentmodule:: uds_base_auxiliary
 
 """
-import configparser
 import logging
 import warnings
 from pathlib import Path
@@ -35,7 +34,6 @@ from pykiso.interfaces.dt_auxiliary import (
     close_connector,
     open_connector,
 )
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
 

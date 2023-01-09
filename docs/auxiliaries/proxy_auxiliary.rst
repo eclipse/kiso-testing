@@ -1,3 +1,5 @@
+.. _proxy_aux:
+
 proxy_auxiliary
 ===============
 

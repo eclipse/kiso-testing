@@ -61,3 +61,5 @@ from .test_coordinator.test_suite import (
     RemoteTestSuiteSetup,
     RemoteTestSuiteTeardown,
 )
+
+logging_initializer.add_internal_log_levels()

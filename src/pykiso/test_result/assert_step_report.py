@@ -73,8 +73,6 @@ class StepReportData:
     success: bool = True
     # Error message on step fail
     last_error_message: str = ""
-    # Flag used for stopping interruptions on first fail for reporting
-    continue_on_error: bool = False  # or use the failfast value?
     # Current report table
     current_table: typing.Optional[str] = None
 

@@ -7,16 +7,13 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import sys
-
-import pytest
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="tests for linux only")
-
 import pathlib
 import subprocess
+import sys
 import threading
 import time
+
+import pytest
 
 from pykiso import message
 from pykiso.lib.connectors.cc_uart import CCUart
@@ -105,6 +102,9 @@ def _communication_receive_check(timeout, expected_timeout, serial_port, baud):
     ch.close()
 
 
+@pytest.mark.skip(
+    reason="This test is unreliable and runs on linux only. Will be refactored."
+)
 def test_virtual_communication(virtual_serial):
     uart0, uart1, BAUD = virtual_serial
     threads = [

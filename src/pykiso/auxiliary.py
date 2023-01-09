@@ -57,6 +57,7 @@ class AuxiliaryCommon(metaclass=abc.ABCMeta):
         self.is_instance = False
         self.stop_event = None
         self._aux_copy = None
+        self.connector_required = True
 
     def __repr__(self) -> str:
         name = self.name

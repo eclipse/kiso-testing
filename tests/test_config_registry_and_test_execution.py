@@ -13,12 +13,20 @@ import pathlib
 from unittest import TestCase, TestResult
 
 import pytest
+from pytest_mock import MockerFixture
 
 import pykiso
 import pykiso.test_coordinator.test_execution
 from pykiso.config_parser import parse_config
+from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
+from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
+from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
+from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_coordinator import test_execution
-from pykiso.test_setup.config_registry import ConfigRegistry
+from pykiso.test_setup.config_registry import (
+    ConfigRegistry,
+    DynamicImportLinker,
+)
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -255,6 +263,26 @@ def test_config_registry_and_test_execution_with_junit_reporting(tmp_test, capsy
     assert "PASSED" in output.err
 
 
+@pytest.mark.parametrize("tmp_test", [("step_aux1", "step_aux2", False)], indirect=True)
+def test_config_registry_and_test_execution_with_step_report(tmp_test, capsys):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+
+    Validation criteria:
+        -  creates step report file
+    """
+    cfg = parse_config(tmp_test)
+    ConfigRegistry.register_aux_con(cfg)
+    exit_code = test_execution.execute(cfg, step_report="step_report.html")
+    ConfigRegistry.delete_aux_con()
+
+    output = capsys.readouterr()
+    assert "RUNNING TEST: " in output.err
+    assert "END OF TEST: " in output.err
+    assert "->  PASSED" in output.err
+    assert pathlib.Path("step_report.html").is_file()
+
+
 def test_config_registry_and_test_execution_failure_and_error_handling():
     TR_ALL_TESTS_SUCCEEDED = TestResult()
     TR_ONE_OR_MORE_TESTS_FAILED = TestResult()
@@ -285,6 +313,60 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
     "tc_tags ,cli_tags, is_test_running",
     [
         (None, {}, True),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "some_branch",
+                ],
+            },  # tc_tags
+            {
+                "branch-level": "some_branch",
+            },  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch_level": [
+                    "daily,nightly",
+                ],
+            },  # tc_tags
+            {
+                "branch-level": "daily,nightly",
+            },  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {},  # tc_tags
+            {
+                "branch-level": "nightly",
+            },  # cli_tags
+            False,  # is_test_running
+        ),
+        (
+            {},  # tc_tags
+            {},  # cli_tags
+            True,  # is_test_running
+        ),
+        (
+            {
+                "variant": [
+                    "omicron",
+                ],
+                "branch-level": [
+                    "some_branch",
+                ],
+            },  # tc_tags
+            {
+                "branch_level": "some_branch",
+            },  # cli_tags
+            True,  # is_test_running
+        ),
         (
             {
                 "variant": [
@@ -356,7 +438,7 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
                 "k1": "v1",
                 "k2": "v10",
             },  # cli_tags
-            False,  # is_test_running
+            True,  # is_test_running
         ),
         (
             {
@@ -472,21 +554,118 @@ def test_test_execution_apply_tc_name_filter(mocker):
     assert len(new_testsuite._tests) == 0
 
 
-@pytest.mark.parametrize("tmp_test", [("step_aux1", "step_aux2", False)], indirect=True)
-def test_config_registry_and_test_execution_with_step_report(tmp_test, capsys):
-    """Call execute function from test_execution using
-    configuration data coming from parse_config method
+@pytest.fixture
+def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
+    config = {
+        "auxiliaries": {
+            "aux1": {
+                "connectors": {"com": "channel1"},
+                "config": {"aux_param1": 1},
+                "type": "some_module:Auxiliary",
+            },
+            "aux2": {
+                "connectors": {"com": "channel1"},
+                "config": {"aux_param2": 2},
+                "type": "some_other_module:SomeOtherAuxiliary",
+            },
+        },
+        "connectors": {
+            "channel1": {
+                "config": {"channel_param": 42},
+                "type": "channel_module:SomeCChannel",
+            }
+        },
+    }
 
-    Validation criteria:
-        -  creates step report file
-    """
-    cfg = parse_config(tmp_test)
-    ConfigRegistry.register_aux_con(cfg)
-    exit_code = test_execution.execute(cfg, step_report="step_report.html")
-    ConfigRegistry.delete_aux_con()
+    if getattr(request, "param", None) is True:
+        config["connectors"]["channel1"]["config"]["processing"] = True
+        cc_class = CCMpProxy
+        aux_class = MpProxyAuxiliary
+    else:
+        cc_class = CCProxy
+        aux_class = ProxyAuxiliary
 
-    output = capsys.readouterr()
-    assert "RUNNING TEST: " in output.err
-    assert "END OF TEST: " in output.err
-    assert "->  PASSED" in output.err
-    assert pathlib.Path("step_report.html").is_file()
+    expected_provide_connector_calls = [
+        mocker.call(
+            "channel1",
+            "channel_module:SomeCChannel",
+            **config["connectors"]["channel1"]["config"],
+        ),
+        mocker.call("proxy_channel_aux1", f"{cc_class.__module__}:{cc_class.__name__}"),
+        mocker.call("proxy_channel_aux2", f"{cc_class.__module__}:{cc_class.__name__}"),
+    ]
+
+    expected_provide_auxiliary_calls = [
+        mocker.call(
+            "aux1",
+            "some_module:Auxiliary",
+            aux_cons={"com": "proxy_channel_aux1"},
+            aux_param1=1,
+        ),
+        mocker.call(
+            "aux2",
+            "some_other_module:SomeOtherAuxiliary",
+            aux_cons={"com": "proxy_channel_aux2"},
+            aux_param2=2,
+        ),
+        mocker.call(
+            "proxy_aux_channel1",
+            f"{aux_class.__module__}:{aux_class.__name__}",
+            aux_cons={"com": "channel1"},
+            aux_list=["aux1", "aux2"],
+        ),
+    ]
+
+    return config, expected_provide_connector_calls, expected_provide_auxiliary_calls
+
+
+@pytest.mark.parametrize(
+    "sample_config",
+    [(True), (False)],
+    indirect=True,
+    ids=["multiprocessing enabled", "multiprocessing_disabled"],
+)
+def test_config_registry_config_patching(mocker: MockerFixture, sample_config):
+    mock_linker = mocker.MagicMock()
+    mocker.patch(
+        "pykiso.test_setup.config_registry.DynamicImportLinker",
+        return_value=mock_linker,
+    )
+
+    config, provide_connector_calls, provide_auxiliary_calls = sample_config
+
+    ConfigRegistry.register_aux_con(config)
+
+    mock_linker.install.assert_called_once()
+    mock_linker.provide_connector.assert_has_calls(
+        provide_connector_calls, any_order=True
+    )
+    mock_linker.provide_auxiliary.assert_has_calls(
+        provide_auxiliary_calls, any_order=True
+    )
+    mock_linker._aux_cache.get_instance.assert_called_once_with("proxy_aux_channel1")
+
+
+def test_config_registry_config_no_patching(mocker: MockerFixture, sample_config):
+    mock_make_px_channel = mocker.patch.object(
+        ConfigRegistry, "_make_proxy_channel_config"
+    )
+    mock_make_px_aux = mocker.patch.object(ConfigRegistry, "_make_proxy_aux_config")
+    mock_linker = mocker.MagicMock()
+    mocker.patch(
+        "pykiso.test_setup.config_registry.DynamicImportLinker",
+        return_value=mock_linker,
+    )
+
+    config, *_ = sample_config
+    config["auxiliaries"]["aux2"]["connectors"]["com"] = "other_channel"
+
+    ConfigRegistry.register_aux_con(config)
+
+    mock_make_px_channel.assert_not_called()
+    mock_make_px_aux.assert_not_called()
+
+    mock_linker.install.assert_called_once()
+    assert mock_linker.provide_connector.call_count == 1
+    assert mock_linker.provide_auxiliary.call_count == 2
+    mock_linker._aux_cache.get_instance.assert_not_called()

@@ -85,8 +85,8 @@ class TestInfo(xmlrunner.result._TestInfo):
 
         :return: the wrapped test case's representation.
         """
-        module, test_case, test_method = self.test_id.split(".")
-        return f"{test_method} ({module}.{test_case})"
+        *modules, test_case, test_method = self.test_id.split(".")
+        return f"{test_method} ({'.'.join(modules)}.{test_case})"
 
 
 class XmlTestResult(BannerTestResult, xmlrunner.runner._XMLTestResult):

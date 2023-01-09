@@ -201,9 +201,9 @@ def detect_serial_number() -> int:
     # Getting all serial numbers
     serial_numbers = set()
     for channel_config in channel_configs:
-        serial_number = channel_config.serialNumber
+        serial_number = channel_config.serial_number
         if serial_number != 0:
-            serial_numbers.add(channel_config.serialNumber)
+            serial_numbers.add(channel_config.serial_number)
     if serial_numbers:
         # if several devices are discovered, the first Vector Box is chosen
         serial_number = min(serial_numbers)

@@ -101,7 +101,7 @@ See :ref:`uds_auxiliary`
 
 
 Lightweight UDS auxiliary configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The add of an .ini file to configured the UDS auxiliary and it variant (server)
 is no more mandatory, every parameter is now reachable in the .yaml file.
 

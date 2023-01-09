@@ -69,30 +69,22 @@ ERROR_MESSAGES = {
 class AcronameAuxiliary(DTAuxiliaryInterface):
     """Auxiliary used to control acroname usb hubs"""
 
-    MICROVOLT_TO_UNIT = {
-        "uV": 1,
-        "mV": 1e-3,
-        "V": 1e-6,
-    }
+    MICROVOLT_TO_UNIT = {"uV": 1, "mV": 1e-3, "V": 1e-6}
+    MICROAMP_TO_UNIT = {"uA": 1, "mA": 1e-3, "A": 1e-6}
 
-    MICROAMP_TO_UNIT = {
-        "uA": 1,
-        "mA": 1e-3,
-        "A": 1e-6,
-    }
-
-    def __init__(
-        self,
-        serial_number: str = None,
-        **kwargs,
-    ):
+    def __init__(self, serial_number: str = None, **kwargs):
         """Constructor
 
         :param serial_number: serial number to connect to as hex string. Example "0x66F4859B"
         """
         super().__init__(
-            is_proxy_capable=False, tx_task_on=False, rx_task_on=False, **kwargs
+            is_proxy_capable=False,
+            tx_task_on=False,
+            rx_task_on=False,
+            connector_required=False,
+            **kwargs,
         )
+
         self.serial_number = (
             int(serial_number, 16) if isinstance(serial_number, str) else serial_number
         )
