@@ -5,7 +5,6 @@ class name is unique for each test + row combination and gets rendered in by jin
 function toggleDetailsInRow(element, className) {
     element.scrollIntoView();
     const isOpen = element.hasAttribute("open");
-    // const className = element.classList[0];
     const detailsElements = document.getElementsByClassName(className);
     for (detail of detailsElements) {
         detail.open = isOpen;

@@ -125,13 +125,15 @@ class WrapLongTextTest(pykiso.BasicTest):
         self.step_report.header["Version_device"] = "2022-1234"
 
     def test_run(self):
-        """In this test we write a long result to the step report to show how
-        long results are foldable html elements to make the overview more readable
+        """Write long results to the step report to show how foldable html
+        elements get used to make the report overview more readable
         """
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
+        # since we use big results
         self.maxDiff = None
+
         # data to test
         device_on = True
         actual_dummy_result = {"result": True}
@@ -142,7 +144,14 @@ class WrapLongTextTest(pykiso.BasicTest):
                 ridiculus mus.",
         }
 
-        self.assertTrue(device_on, msg="Check my device is ready")
+        # check that it works with multiple tables
+        self.step_report.current_table = "First table"
+
+        self.assertEqual(
+            expected_dummy_result, expected_dummy_result, msg="Check my device is ready"
+        )
+
+        self.step_report.current_table = "Second table"
 
         with self.subTest("Non critical checks"):
             # This check will fail but the test continues
@@ -151,11 +160,13 @@ class WrapLongTextTest(pykiso.BasicTest):
         # assert with custom message
         # assert msg overwritten when step_report_message not null
         self.step_report.message = "Big data message"
+
         self.assertEqual(
             expected_dummy_result, expected_dummy_result, msg="Check big data"
         )
-        # Custom message is reset there
+
         self.assertEqual(
             expected_dummy_result, actual_dummy_result, msg="Check big data"
         )
+
         logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")

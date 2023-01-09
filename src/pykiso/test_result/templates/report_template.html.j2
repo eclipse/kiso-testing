@@ -64,6 +64,7 @@
                                 {% for col_value in row.values() -%}
                                     {# Set the value and apply colors to the cell -#}
                                     <td {% if (col_value or col_value == False) %} style="{{color_cell}}" {% else %} style="{{color_empty_cell}}" {% endif %}>
+                                        {# Use a <details> if content is too long for better overview and snychronize toggling them per row #}
                                         {% if col_value | string | length > 100 %}
                                         <details class="{{class_name}}{{test_name}}row_{{row_index}}" ontoggle="toggleDetailsInRow(this, '{{class_name}}{{test_name}}row_{{row_index}}')">
                                             <summary>Click to expand: {{col_value | string | truncate(30)}}</summary>
