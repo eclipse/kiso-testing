@@ -73,6 +73,17 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     return user_tags
 
 
+def check_file_extension(
+    click_context: click.Context, param: click.Parameter, value: tuple[str]
+) -> str:
+    for path in value:
+        if not path.endswith((".yaml", ".yml")):
+            raise click.BadParameter(
+                f"Configuration needs to be a .yaml file, but {path} was given"
+            )
+    return value
+
+
 @click.command(
     context_settings={
         "help_option_names": ["-h", "--help"],
@@ -86,6 +97,7 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     required=True,
     type=click.Path(exists=True, dir_okay=False, readable=True),
     multiple=True,
+    callback=check_file_extension,
     help="path to the test configuration file (in YAML format)",
 )
 @click.option(
