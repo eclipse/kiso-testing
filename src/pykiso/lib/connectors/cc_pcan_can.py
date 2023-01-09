@@ -19,6 +19,7 @@ Can Communication Channel using PCAN hardware
 
 """
 
+import glob
 import logging
 import os
 import sys
@@ -215,6 +216,9 @@ class CCPCanCan(CChannel):
             pcan_path_argument = PCANBasic.TRACE_FILE_OVERWRITE
         else:
             pcan_path_argument = PCANBasic.TRACE_FILE_DATE | PCANBasic.TRACE_FILE_TIME
+            log.info(f"MY FIST IS THE DATE: {PCANBasic.TRACE_FILE_DATE}")
+            log.info(f"MY SECOND IS THE TIME: {PCANBasic.TRACE_FILE_TIME}")
+            log.info(f"MY TOTAL IS ...: {pcan_path_argument}")
         try:
             if self.trace_path is not None:
                 if not Path(self.trace_path).exists():
@@ -375,15 +379,27 @@ class CCPCanCan(CChannel):
 
     def merge_trc(self):
 
-        trace_name = self.trc_names[0]
+        log.error(f"THE PATH: {self.trace_path}")
+        # try 2:
+        list_of_traces = []
+        list_of_all_traces = glob.glob(str(self.trace_path) + "/*.trc")
+        for _ in range(len(self.trc_names)):
+            latest_trace = max(list_of_all_traces, key=os.path.getctime)
+            list_of_all_traces.pop(list_of_all_traces.index(latest_trace))
+            list_of_traces.append(latest_trace)
 
+        list_of_traces.reverse()
+
+        trace_name = list_of_traces[0]
+
+        log.info(f"The trace names ARE: {list_of_traces}")
         with open(trace_name, "r") as trc:
             merged_data = trc.read()
-            self.trc_names.pop(0)
+            list_of_traces.pop(0)
 
         trc_start = 33
 
-        for file in self.trc_names:
+        for file in list_of_traces:
             with open(file, "r") as fin:
                 data = fin.read().splitlines(True)
             with open(file, "w") as fout:
@@ -395,8 +411,11 @@ class CCPCanCan(CChannel):
             os.remove(file)
 
         with open(trace_name, "w") as trc:
-            trc.write(merged_data)
+            merged_data_lines = merged_data.splitlines(True)
+            for line_number in range(trc_start, len(merged_data_lines)):
+                message_number = str(line_number - trc_start)
+                merged_data_lines[line_number][0:7] = message_number.rjust(7)
+            trc.writelines(merged_data_lines)
 
     def __del__(self) -> None:
         self.merge_trc()
-        super().__del__()
