@@ -109,3 +109,53 @@ class TableTest(pykiso.BasicTest):
         self.assertAlmostEqual(voltage, 4, delta=1, msg="Check voltage device")
 
         logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")
+
+
+@pykiso.define_test_parameters(
+    suite_id=1,
+    case_id=3,
+)
+class WrapLongTextTest(pykiso.BasicTest):
+    """This test shows wrapping of long results into foldable html elements"""
+
+    def setUp(self):
+        """Set header information and check setup conditions"""
+        super().setUp()
+        # additional data to include in the step-report
+        self.step_report.header["Version_device"] = "2022-1234"
+
+    def test_run(self):
+        """In this test we write a long result to the step report to show how
+        long results are foldable html elements to make the overview more readable
+        """
+        logging.info(
+            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
+        )
+        self.maxDiff = None
+        # data to test
+        device_on = True
+        actual_dummy_result = {"result": True}
+        expected_dummy_result = {
+            "text": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. \
+                Aenean commodo ligula eget dolor. Aenean massa. Cum sociis \
+                natoque penatibus et magnis dis parturient montes, nascetur \
+                ridiculus mus.",
+        }
+
+        self.assertTrue(device_on, msg="Check my device is ready")
+
+        with self.subTest("Non critical checks"):
+            # This check will fail but the test continues
+            self.assertFalse(device_on, msg="Some check")
+
+        # assert with custom message
+        # assert msg overwritten when step_report_message not null
+        self.step_report.message = "Big data message"
+        self.assertEqual(
+            expected_dummy_result, expected_dummy_result, msg="Check big data"
+        )
+        # Custom message is reset there
+        self.assertEqual(
+            expected_dummy_result, actual_dummy_result, msg="Check big data"
+        )
+        logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")

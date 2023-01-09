@@ -56,13 +56,26 @@
                                 {% set color_cell = "background-color: rgb(236, 160, 160);" -%}
                                 {% set color_empty_cell = "background-color: rgb(236, 160, 160);" -%}
                             {%- endif %}
+                            {# Needed for setting unique class per row in html in inner loop -#}
+                            {% set row_index = loop.index %}
                             <tr>
                                 <th scope="row" style="{{color_cell}}" >{{loop.index}}</th>
                                 {# Loop over each cell of the row -#}
                                 {% for col_value in row.values() -%}
                                     {# Set the value and apply colors to the cell -#}
                                     <td {% if (col_value or col_value == False) %} style="{{color_cell}}" {% else %} style="{{color_empty_cell}}" {% endif %}>
-                                        {{col_value}}
+                                        {% if col_value | string | length > 100 %}
+                                        <details class="{{class_name}}{{test_name}}row_{{row_index}}" ontoggle="toggleDetailsInRow(this, '{{class_name}}{{test_name}}row_{{row_index}}')">
+                                            <summary>Click to expand: {{col_value | string | truncate(30)}}</summary>
+                                            <p>
+                                            {{col_value}}
+                                            </p>
+                                        </details>
+                                        {% else %}
+                                        <div>
+                                            {{col_value}}
+                                        </div>
+                                        {% endif %}
                                     </td>
                                 {%- endfor %}
                             </tr>
@@ -79,3 +92,7 @@
 <style type="text/css">
 {% include "templates/report_template.css" %}
 </style>
+
+<script>
+{% include "templates/report_template_script.js" %}
+</script>

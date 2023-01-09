@@ -61,6 +61,11 @@ body {
      text-transform: uppercase;
    }
 
+   summary {
+     text-decoration: underline;
+     cursor: pointer;
+   }
+
    /* Media Queries*/
 
    @media screen and (max-width: 600px) {
