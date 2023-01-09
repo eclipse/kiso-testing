@@ -216,9 +216,7 @@ class CCPCanCan(CChannel):
             pcan_path_argument = PCANBasic.TRACE_FILE_OVERWRITE
         else:
             pcan_path_argument = PCANBasic.TRACE_FILE_DATE | PCANBasic.TRACE_FILE_TIME
-            log.info(f"MY FIST IS THE DATE: {PCANBasic.TRACE_FILE_DATE}")
-            log.info(f"MY SECOND IS THE TIME: {PCANBasic.TRACE_FILE_TIME}")
-            log.info(f"MY TOTAL IS ...: {pcan_path_argument}")
+
         try:
             if self.trace_path is not None:
                 if not Path(self.trace_path).exists():
@@ -377,22 +375,19 @@ class CCPCanCan(CChannel):
             log.exception(f"encountered error while receiving message via {self}")
             return {"msg": None}
 
-    def merge_trc(self):
-
-        log.error(f"THE PATH: {self.trace_path}")
-        # try 2:
+    def _merge_trc(self):
+        """Merge multiple trc files in one."""
         list_of_traces = []
         list_of_all_traces = glob.glob(str(self.trace_path) + "/*.trc")
+        log.internal_debug(f"merging following trace files: {list_of_all_traces}")
         for _ in range(len(self.trc_names)):
             latest_trace = max(list_of_all_traces, key=os.path.getctime)
             list_of_all_traces.pop(list_of_all_traces.index(latest_trace))
             list_of_traces.append(latest_trace)
 
         list_of_traces.reverse()
-
         trace_name = list_of_traces[0]
 
-        log.info(f"The trace names ARE: {list_of_traces}")
         with open(trace_name, "r") as trc:
             merged_data = trc.read()
             list_of_traces.pop(0)
@@ -414,8 +409,10 @@ class CCPCanCan(CChannel):
             merged_data_lines = merged_data.splitlines(True)
             for line_number in range(trc_start, len(merged_data_lines)):
                 message_number = str(line_number - trc_start)
-                merged_data_lines[line_number][0:7] = message_number.rjust(7)
+                merged_data_lines[line_number] = (
+                    message_number.rjust(7) + merged_data_lines[line_number][7:]
+                )
             trc.writelines(merged_data_lines)
 
     def __del__(self) -> None:
-        self.merge_trc()
+        self._merge_trc()
