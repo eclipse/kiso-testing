@@ -39,11 +39,8 @@ class LogOptions(NamedTuple):
     verbose: bool
 
 
-# used to store the selected logging options
+# use to store the selected logging options
 log_options: Optional[LogOptions] = None
-
-# used to store the loggers that shouldn't be silenced
-active_loggers = set()
 
 
 def get_logging_options() -> LogOptions:
@@ -167,7 +164,7 @@ def add_logging_level(level_name: str, level_num: int):
 
     Example
     -------
-    >>> add_logging_level('KISO', logging.DEBUG - 5)
+    >>> addLoggingLevel('TRACE', logging.DEBUG - 5)
     >>> logging.getLogger(__name__).setLevel("KISO")
     >>> logging.getLogger(__name__).trace('that worked')
     >>> logging.kiso('so did this')
@@ -198,7 +195,6 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
 
     :param loggers: list of logger names to keep activated
     """
-    global active_loggers
     if loggers is None:
         loggers = list()
     # keyword 'all' should keep all loggers to the configured level
@@ -206,9 +202,8 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
         logging.internal_warning(
             "All loggers are activated, this could lead to performance issues."
         )
-        active_loggers |= set(logging.root.manager.loggerDict.keys())
         return
-    # keep package and auxiliary loggers, store all the others to deactivate them
+    # keep package and auxiliary loggers
     relevant_loggers = {
         name: logger
         for name, logger in logging.root.manager.loggerDict.items()
@@ -223,11 +218,7 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
         if (logger.startswith(parent) or parent.startswith(logger))
     ]
     loggers += childs
-
-    # store previous loggers to keep active (union of previous and current loggers)
-    active_loggers |= set(loggers)
-
-    # set the loggers that are not part of active_loggers to level WARNING
-    loggers_to_deactivate = set(relevant_loggers) - set(active_loggers)
+    # keep original level for specified loggers
+    loggers_to_deactivate = set(relevant_loggers) - set(loggers)
     for logger_name in loggers_to_deactivate:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
