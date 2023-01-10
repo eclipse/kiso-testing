@@ -138,10 +138,7 @@ class WrapLongTextTest(pykiso.BasicTest):
         device_on = True
         actual_dummy_result = {"result": True}
         expected_dummy_result = {
-            "text": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. \
-                Aenean commodo ligula eget dolor. Aenean massa. Cum sociis \
-                natoque penatibus et magnis dis parturient montes, nascetur \
-                ridiculus mus.",
+            "text": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.",
         }
 
         # check that it works with multiple tables
