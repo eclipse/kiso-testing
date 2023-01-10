@@ -74,14 +74,24 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
 
 
 def check_file_extension(
-    click_context: click.Context, param: click.Parameter, value: tuple[str]
-) -> str:
-    for path in value:
+    click_context: click.Context, param: click.Parameter, paths: Tuple[str]
+) -> Tuple[str]:
+    """Check the path strings of all given test configuration files for yaml file
+    extension and raise an exception if the check fails
+
+    :click_context: click context (click callback requirement)
+    :param: click parameter (click callback requirement)
+    :paths: the paths of the files to check
+    :raises click.BadParameter: if one of the files does not have .yaml or .yml
+        as extension
+    :return: the checked paths as they were passed
+    """
+    for path in paths:
         if not path.endswith((".yaml", ".yml")):
             raise click.BadParameter(
                 f"Configuration needs to be a .yaml file, but {path} was given"
             )
-    return value
+    return paths
 
 
 @click.command(
