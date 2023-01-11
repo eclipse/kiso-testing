@@ -143,7 +143,9 @@ class WrapLongTextTest(pykiso.BasicTest):
         self.step_report.current_table = "First table"
 
         self.assertEqual(
-            expected_dummy_result, expected_dummy_result, msg="The very long message should be wrapped"
+            expected_dummy_result,
+            expected_dummy_result,
+            msg="The very long message should be wrapped",
         )
 
         self.step_report.current_table = "Second table"
