@@ -27,8 +27,8 @@
                 {%- endfor %}
             {%- endfor %}
             </p>
-            {# For each test (setUp, run, tearDown) -#}
-            {% for test_name, test_content in class_content["test_list"].items() -%}
+            {#- For each test (setUp, run, tearDown) -#}
+            {% for test_name, test_content in class_content["test_list"].items() %}
                 {% set test_success = is_test_success(test_content) -%}
                 <details {% if not test_success %}open{% endif %}><summary><h3>{{test_name}}
                 {% if test_success -%}<span style="color:green;">Success</span>
