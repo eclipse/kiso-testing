@@ -408,7 +408,7 @@ class CCPCanCan(CChannel):
         with open(trace_name, "w") as trc:
             merged_data_lines = merged_data.splitlines(True)
             for line_number in range(trc_start, len(merged_data_lines)):
-                message_number = str(line_number - trc_start)
+                message_number = str((line_number + 1) - trc_start)
                 merged_data_lines[line_number] = (
                     message_number.rjust(7) + merged_data_lines[line_number][7:]
                 )
