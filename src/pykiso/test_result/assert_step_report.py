@@ -37,7 +37,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 from unittest.case import TestCase, _SubTest
 
 import jinja2
@@ -355,6 +355,20 @@ def _parse_timestamp(timestamp: float) -> str:
     return dt.strftime("%d/%m/%y %H:%M:%S")
 
 
+def is_test_success(test: List) -> bool:
+    """Check if test was successful.
+
+    :param tests: test
+    :return: True if each step in a test was successful else False
+    """
+    return all([step["succeed"] for step in test])
+
+
+jinja_template_functions = {
+    "is_test_success": is_test_success,
+}
+
+
 def generate_step_report(
     test_result: Union[BannerTestResult, XmlTestResult],
     output_file: str,
@@ -411,6 +425,7 @@ def generate_step_report(
     # Render the source template
     render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH))
     template = render_environment.get_template(REPORT_TEMPLATE)
+    template.globals.update(jinja_template_functions)
     output_text = template.render({"ALL_STEP_REPORT": ALL_STEP_REPORT})
 
     output_file = Path(output_file).resolve()
