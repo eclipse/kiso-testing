@@ -1,8 +1,8 @@
 /**
  * synchronize the toggling of all details elements by class name
  * class name is unique for each test + row combination and gets rendered in by jinja
- * @param {*} element the details element being toggled
- * @param {*} className class attribute of all details elements in the row
+ * @param {HTMLDetailsElement} element the details element being toggled
+ * @param {string} className class attribute of all details elements in the row
  */
 function toggleDetailsInRow(element, className) {
     element.scrollIntoView();
@@ -18,8 +18,8 @@ function toggleDetailsInRow(element, className) {
 
 /**
  * set the summary text of the details element
- * @param {*} content new content of the summary element
- * @param {*} detailsElement parent of the summary being modified
+ * @param {string} content new content of the summary element
+ * @param {HTMLDetailsElement} detailsElement parent of the summary being modified
  */
 function setSummary(content, detailsElement) {
     const summaryElement = detailsElement.getElementsByTagName("summary")[0];
@@ -28,8 +28,8 @@ function setSummary(content, detailsElement) {
 
 /**
  * same result as jinja truncate when rendering to set summary after closing
- * @param {*} detailsElement parent of the summary being modified
- * @param {*} length length to cut the content to, default is 50
+ * @param {HTMLDetailsElement} detailsElement parent of the summary being modified
+ * @param {number} length length to cut the content to, default is 50
  * @returns the truncated string
  */
 function setTruncatedSummary(detailsElement, length = 50) {

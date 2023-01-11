@@ -138,7 +138,7 @@ class WrapLongTextTest(pykiso.BasicTest):
         device_on = True
         actual_dummy_result = {"result": True}
         expected_dummy_result = {
-            "text": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.",
+            "result": "pykiso is an integration test framework. With it, it is possible to write: Whitebox integration tests directly on my target device, Graybox integration tests to make sure the communication-link with my target device is working as expected, Blackbox integration tests to make sure my external device interfaces are working as expected",
         }
 
         # check that it works with multiple tables

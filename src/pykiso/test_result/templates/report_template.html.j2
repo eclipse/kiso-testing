@@ -4,31 +4,30 @@
     <div class="navbar-header" style = " background-color: rgb(255, 255, 255); margin:0; padding:0;">
         <img src = "https://github.com/eclipse/kiso-testing/raw/master/docs/images/pykiso_logo.png" alt = "Pykiso report" width="15%" height="15%">
     </div>
-    {# For each TestClass #}
+    {# For each TestClass -#}
     {% for class_name, class_content in ALL_STEP_REPORT.items() -%}
         <hr>
         <div class="col-12 text-left">
-            {# Add Title and description #}
+            {# Add Title and description -#}
             <h2>ITF Test Report for:  <a href="{{class_content["file_path"]}}">{{class_name}}</a>
-            {% if class_content["succeed"] %}
+            {% if class_content["succeed"] -%}
                 -> [<span style="color:green;">Success</span>]
-            {% else %}
+            {% else -%}
                 -> [<span style="color:red;">Fail</span>]
-            {% endif %}
+            {%- endif %}
             </h2>
             <h3>Test Description:</h3>
-            <p>    {{class_content["description"] | replace("\n", "<br/>\n") }}</p>
+            <p>{{class_content["description"] | replace("\n", "<br/>\n") }}</p>
             <h3>Date, Time, Software versions:</h3>
             <p>
-            {# Add additional information from header key #}
+            {# Add additional information from header key -#}
             {% for data in [class_content["time_result"], class_content["header"]] -%}
                 {% for key, value in data.items() -%}
                     <u>{{key}}</u>: {{value}}</br>
                 {%- endfor %}
             {%- endfor %}
             </p>
-
-            {# For each test (setUp, run, tearDown) #}
+            {# For each test (setUp, run, tearDown) -#}
             {% for test_name, test_content in class_content["test_list"].items() -%}
                 {% set test_success = is_test_success(test_content) -%}
                 <details {% if not test_success %}open{% endif %}><summary><h3>{{test_name}}
@@ -38,7 +37,7 @@
                 <table>
                     <thead>
                         <tr>
-                            {# Set Columns name from the first row, excluding succeed flag #}
+                            {# Set Columns name from the first row, excluding succeed flag -#}
                             <th scope="col" style="width: 3%">Step</th>
                             {% for column_name in test_content[0].keys() if column_name != "succeed" -%}
                                 <th scope="col">{{column_name}}</th>
@@ -46,7 +45,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {# Loop over each assert method called (step-report) -#}
+                        {#- Loop over each assert method called (step-report) -#}
                         {% for row in test_content -%}
                             {# Set cell color variable according to the assert result and emptiness -#}
                             {% if row.pop("succeed") -%}
@@ -57,27 +56,27 @@
                                 {% set color_empty_cell = "background-color: rgb(236, 160, 160);" -%}
                             {%- endif %}
                             {# Needed for setting unique class per row in html in inner loop -#}
-                            {% set row_index = loop.index %}
+                            {% set row_index = loop.index -%}
                             <tr>
                                 <th scope="row" style="{{color_cell}}" >{{loop.index}}</th>
-                                {# Loop over each cell of the row -#}
+                                {#- Loop over each cell of the row -#}
                                 {% for col_value in row.values() -%}
-                                    {# Set the value and apply colors to the cell -#}
+                                    {#- Set the value and apply colors to the cell #}
                                     <td {% if (col_value or col_value == False) %} style="{{color_cell}}" {% else %} style="{{color_empty_cell}}" {% endif %}>
-                                        {# Use a <details> if content is too long for better results overview and synchronize toggling them per row #}
-                                        {% if col_value | string | length > 100 %}
+                                        {# Use a <details> if content is too long for better results overview and synchronize toggling them per row -#}
+                                        {% if col_value | string | length > 100 -%}
                                         <details class="{{class_name}}{{test_name}}row_{{row_index}}" ontoggle="toggleDetailsInRow(this, '{{class_name}}{{test_name}}row_{{row_index}}')">
                                             <summary>{{col_value | string | truncate(53, true, leeway = 0)}}</summary>
                                             <br>
                                             <div>
-                                            {{col_value}}
+                                                {{col_value}}
                                             </div>
                                         </details>
-                                        {% else %}
+                                        {%- else -%}
                                         <div>
                                             {{col_value}}
                                         </div>
-                                        {% endif %}
+                                        {%- endif %}
                                     </td>
                                 {%- endfor %}
                             </tr>
