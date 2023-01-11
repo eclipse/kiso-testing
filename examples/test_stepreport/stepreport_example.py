@@ -131,8 +131,6 @@ class WrapLongTextTest(pykiso.BasicTest):
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
-        # since we use big results
-        self.maxDiff = None
 
         # data to test
         device_on = True
