@@ -666,11 +666,10 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
 def test_merge_trc(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
 
     with CCPCanCan() as can:
-        can.trc_names = [str(trc_files[0]), str(trc_files[1]), str(trc_files[2])]
+        can.trc_count = 3
         can.trace_path = tmp_path.parents[0]
 
-        result_path = tmp_path.parents[0] / can.trc_names[0]
-
+        result_path = tmp_path.parents[0] / str(trc_files[0])
         can._merge_trc()
 
         with open(result_path, "r") as trc:

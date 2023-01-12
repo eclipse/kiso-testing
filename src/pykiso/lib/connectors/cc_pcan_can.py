@@ -141,7 +141,7 @@ class CCPCanCan(CChannel):
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
-        self.trc_names = []
+        self.trc_count = 0
         """
         Extract the base logging directory from the logging module, so we can
         create our logging folder in the correct place.
@@ -258,7 +258,7 @@ class CCPCanCan(CChannel):
                 pcan_channel, PCANBasic.PCAN_TRACE_STATUS, PCANBasic.PCAN_PARAMETER_ON
             )
             log.internal_info("Trace activated")
-            self.trc_names.append(pcan_path_argument)
+            self.trc_count += 1
         except RuntimeError:
             log.error(f"Logging for {self.channel} not activated")
         except OSError as e:
@@ -380,7 +380,7 @@ class CCPCanCan(CChannel):
         list_of_traces = []
         list_of_all_traces = glob.glob(str(self.trace_path) + "/*.trc")
         log.internal_debug(f"merging following trace files: {list_of_all_traces}")
-        for _ in range(len(self.trc_names)):
+        for _ in range(self.trc_count):
             latest_trace = max(list_of_all_traces, key=os.path.getctime)
             list_of_all_traces.pop(list_of_all_traces.index(latest_trace))
             list_of_traces.append(latest_trace)
