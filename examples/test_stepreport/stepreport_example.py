@@ -109,3 +109,61 @@ class TableTest(pykiso.BasicTest):
         self.assertAlmostEqual(voltage, 4, delta=1, msg="Check voltage device")
 
         logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")
+
+
+@pykiso.define_test_parameters(
+    suite_id=1,
+    case_id=3,
+)
+class WrapLongTextTest(pykiso.BasicTest):
+    """This test shows wrapping of long results into foldable html elements"""
+
+    def setUp(self):
+        """Set header information and check setup conditions"""
+        super().setUp()
+        # additional data to include in the step-report
+        self.step_report.header["Version_device"] = "2022-1234"
+
+    def test_run(self):
+        """Write long results to the step report to show how foldable html
+        elements get used to make the report overview more readable
+        """
+        logging.info(
+            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
+        )
+
+        # data to test
+        device_on = True
+        actual_dummy_result = {"result": True}
+        expected_dummy_result = {
+            "result": "pykiso is an integration test framework. With it, it is possible to write: Whitebox integration tests directly on my target device, Graybox integration tests to make sure the communication-link with my target device is working as expected, Blackbox integration tests to make sure my external device interfaces are working as expected",
+        }
+
+        # check that it works with multiple tables
+        self.step_report.current_table = "First table"
+
+        self.assertEqual(
+            expected_dummy_result,
+            expected_dummy_result,
+            msg="The very long message should be wrapped",
+        )
+
+        self.step_report.current_table = "Second table"
+
+        with self.subTest("Non critical checks"):
+            # This check will fail but the test continues
+            self.assertFalse(device_on, msg="Some check")
+
+        # assert with custom message
+        # assert msg overwritten when step_report_message not null
+        self.step_report.message = "Big data message"
+
+        self.assertEqual(
+            expected_dummy_result, expected_dummy_result, msg="Check big data"
+        )
+
+        self.assertEqual(
+            expected_dummy_result, actual_dummy_result, msg="Check big data"
+        )
+
+        logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")
