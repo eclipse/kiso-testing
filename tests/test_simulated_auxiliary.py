@@ -236,10 +236,9 @@ def test_virtual_cfg_output(capsys, prepare_config):
     """
     cfg = cli.parse_config(prepare_config)
     with pytest.raises(SystemExit):
-        config_registry = ConfigRegistry(cfg)
-        config_registry.register_aux_con()
+        ConfigRegistry.register_aux_con(cfg)
         exit_code = test_execution.execute(cfg)
-        config_registry.delete_aux_con()
+        ConfigRegistry.delete_aux_con()
         sys.exit(exit_code)
 
     output = capsys.readouterr()

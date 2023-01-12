@@ -28,7 +28,7 @@ from enum import Enum, unique
 from typing import Any, Callable, List, Optional
 
 from ..exceptions import AuxiliaryCreationError
-from ..logging_initializer import add_logging_level, initialize_loggers
+from ..logging_initializer import add_internal_log_levels, initialize_loggers
 
 log = logging.getLogger(__name__)
 
@@ -48,16 +48,6 @@ class DTAuxiliaryInterface(abc.ABC):
     << double threaded >> auxiliary, simply encapsulate two threads one
     for the reception and one for the transmmission.
     """
-
-    def __new__(cls, *args, **kwargs):
-        """Create instance and add internal kiso log levels in
-        case the auxiliary is used outside the pykiso context
-        """
-        if not hasattr(logging, "INTERNAL_WARNING"):
-            add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
-            add_logging_level("INTERNAL_INFO", logging.INFO + 1)
-            add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
-        return super(DTAuxiliaryInterface, cls).__new__(cls)
 
     def __init__(
         self,
@@ -82,10 +72,11 @@ class DTAuxiliaryInterface(abc.ABC):
         :param auto_start: determine if the auxiliayry is automatically
              started (magic import) or manually (by user)
         """
+        initialize_loggers(activate_log)
+        add_internal_log_levels()
         self.name = name
         self.is_proxy_capable = is_proxy_capable
         self.auto_start = auto_start
-        initialize_loggers(activate_log)
         self.lock = threading.RLock()
         self.stop_tx = threading.Event()
         self.stop_rx = threading.Event()
@@ -209,7 +200,7 @@ class DTAuxiliaryInterface(abc.ABC):
             log.internal_debug("reception task is not needed, don't start it")
             return
 
-        log.internal_debug(f"start reception task {self.name}_tx")
+        log.internal_debug(f"start reception task {self.name}_rx")
         self.rx_thread = threading.Thread(
             name=f"{self.name}_rx", target=self._reception_task
         )
