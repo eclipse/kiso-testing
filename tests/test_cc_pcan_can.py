@@ -81,7 +81,7 @@ trc_data = """;$FILEVERSION=2.0
       1       960.695 ST          Rx    00 00 00 00
       2       960.878 FB     0200 Rx 8  00 00 00 00 00 00 00 00
       3       961.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      4       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00"""
+      4       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
 
 
 trc_merge_data = """;$FILEVERSION=2.0
@@ -128,7 +128,7 @@ trc_merge_data = """;$FILEVERSION=2.0
       9       960.695 ST          Rx    00 00 00 00
      10       960.878 FB     0200 Rx 8  00 00 00 00 00 00 00 00
      11       961.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-     12       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00"""
+     12       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
 
 
 @pytest.fixture(scope="module")
@@ -670,6 +670,7 @@ def test_merge_trc(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
         can.trace_path = tmp_path.parents[0]
 
         result_path = tmp_path.parents[0] / can.trc_names[0]
+
         can._merge_trc()
 
         with open(result_path, "r") as trc:

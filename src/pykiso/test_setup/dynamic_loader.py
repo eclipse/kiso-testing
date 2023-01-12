@@ -231,7 +231,6 @@ class ModuleCache:
 
     def delete_all_instances(self):
         for instance in self.instances.values():
-            log.info("i was there :(")
             instance.__del__()
 
 
