@@ -19,3 +19,10 @@ It is no longer necessary to manually defined a ``ProxyAuxiliary`` with
 each auxiliary that has to share it, ``pykiso`` will do the rest for you.
 
 
+Better skipping of test cases based on tags
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The test case filtering strategy based on the test tags has been reworked.
+The resulting skipped test cases now appear explicitly as skiped in the test run output
+
+For more information refer to :ref:`test_tags`

@@ -91,7 +91,8 @@ def create_test_suite(
 def apply_tag_filter(
     all_tests_to_run: unittest.TestSuite, usr_tags: Dict[str, List[str]]
 ) -> None:
-    """Filter the test cases based on user tags.
+    """Filter the test cases based on user tags procided via CLI.
+
     :param all_tests_to_run: a dict containing all testsuites and testcases
     :param usr_tags: encapsulate user's variant choices
     """
@@ -99,51 +100,46 @@ def apply_tag_filter(
     def is_skip_test(test_case: BasicTest) -> bool:
         """Check if test shall be skipped by evaluating the test case tag
         attribute.
+
         :param test_case: test_case to check
         :return: True if test shall be skipped else False
         """
+        should_skip = False
         if test_case.tag is None:
-            return False
-        mod_usr_tags = usr_tags
-        # Tags shall match when "_" are used instead of "-" or vise versa
+            return should_skip
+
+        # Tags shall match when "_" are used instead of "-" or vice versa
+        parsed_usr_tags = usr_tags
         for character in ["-", "_"]:
-            mod_usr_tags = {
+            parsed_usr_tags = {
                 key.replace(character, ""): value
-                for (key, value) in mod_usr_tags.items()
+                for key, value in parsed_usr_tags.items()
             }
             test_case.tag = {
                 key.replace(character, ""): value
-                for (key, value) in test_case.tag.items()
+                for key, value in test_case.tag.items()
             }
 
-        for tag_id, tag_value in mod_usr_tags.items():
-            if tag_id in test_case.tag.keys():
-                items = tag_value if isinstance(tag_value, list) else [tag_value]
-                for item in items:
-                    if item in test_case.tag[tag_id]:
-                        return False
-                    else:
-                        continue
-                return True
-            else:
-                return True
-        return False
+        # Skip only the test cases that have a matching tag name but no matching tag value
+        for tag_id, tag_value in parsed_usr_tags.items():
+            if tag_id not in test_case.tag.keys():
+                continue
+            user_tag_values = tag_value if isinstance(tag_value, list) else [tag_value]
+            if not any(usr_val in test_case.tag[tag_id] for usr_val in user_tag_values):
+                should_skip = True
+                break
+
+        return should_skip
 
     def set_skipped(test_case: BasicTest) -> None:
         """Set testcase to skipped
+
         :param test_case: testcase to be skipped
         """
-        test_case.setUp = lambda: "setup_skipped"
-        setattr(
-            test_case,
-            test_case._testMethodName,
-            lambda: test_case.skipTest("skipped due to non-matching variant value"),
-        )
-        test_case.tearDown = lambda: "tearDown_skipped"
-        log.info(f"Skip test case: {test_case}")
+        skipped_test_cls = unittest.skip("non-matching tag value")(test_case.__class__)
+        return skipped_test_cls()
 
     base_suite: List[BasicTest] = test_suite.flatten(all_tests_to_run)
-
     list(map(set_skipped, filter(is_skip_test, base_suite)))
 
 
@@ -173,7 +169,6 @@ def apply_test_case_filter(
 
         if is_classname_match and test_case_pattern is None:
             return is_classname_match
-
         elif is_classname_match and test_case_pattern:
             return bool(fnmatch(test_case._testMethodName, test_case_pattern))
         else:
@@ -205,10 +200,10 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
 def enable_step_report(
     all_tests_to_run: unittest.suite.TestSuite, step_report: Path
 ) -> None:
-    """Decorate all assert method from Test-Case
+    """Decorate all assert method from Test-Case.
 
-        This will allow to save the assert inputs in
-        order to generate the step-report
+    This will allow to save the assert inputs in
+    order to generate the HTML step report.
 
     :param all_tests_to_run: a dict containing all testsuites and testcases
     """
@@ -233,7 +228,8 @@ def enable_step_report(
 
 def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
     """Parse test selection pattern from cli.
-    For example: test_file.py::test_class::test_case
+
+    For example: ``test_file.py::TestCaseClass::test_method``
 
     :param pattern: test selection pattern
     :return: pattern for file, class name and test case name

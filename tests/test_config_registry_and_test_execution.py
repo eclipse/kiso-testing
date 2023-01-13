@@ -70,19 +70,23 @@ def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
 
 
 @pytest.mark.parametrize("tmp_test", [("aux_1", "aux_2", False)], indirect=True)
-def test_config_registry_and_test_execution_with_user_tags(tmp_test, mocker):
+def test_config_registry_and_test_execution_with_user_tags(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     with additional user tags.
 
     Validation criteria:
-        -  apply_filter called once
+        -  'SKIPPED' is present in test output
     """
-    user_tags = {"variant": ["delta"]}
+    user_tags = {"variant": ["to be skipped"]}
     cfg = parse_config(tmp_test)
     ConfigRegistry.register_aux_con(cfg)
     exit_code = test_execution.execute(cfg, user_tags=user_tags)
     ConfigRegistry.delete_aux_con()
+
+    output = capsys.readouterr()
+    assert "FAIL" not in output.err
+    assert "SKIPPED TEST" in output.err
 
 
 def test_parse_test_selection_pattern():
@@ -310,104 +314,35 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
 
 
 @pytest.mark.parametrize(
-    "tc_tags ,cli_tags, is_test_running",
+    "tc_tags, cli_tags, expect_skip",
     [
-        (None, {}, True),
-        (
+        pytest.param(
+            {"-some_tag_": ["value"]},  # tc_tags
+            {"_some-tag": ["other_value"]},  # cli_tags
+            True,  # expect_skip
+            id="insensitivity to dashes and underscores",
+        ),
+        pytest.param(None, {}, False, id="no tags in tc nor cli"),
+        pytest.param(None, {"k1": "v1"}, False, id="no tags in tc but in cli"),
+        pytest.param(
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "some_branch",
-                ],
+                "k1": ["v1", "v3"],
+                "k2": ["v2", "v5", "v6"],
             },  # tc_tags
-            {
-                "branch-level": "some_branch",
-            },  # cli_tags
-            True,  # is_test_running
+            {"k1": "v2"},  # cli_tags
+            True,  # expect_skip
+            id="one tag name matches but no value",
         ),
-        (
+        pytest.param(
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "daily,nightly",
-                ],
+                "k1": ["v1", "v3"],
+                "k2": ["v2", "v5", "v6"],
             },  # tc_tags
-            {
-                "branch-level": "daily,nightly",
-            },  # cli_tags
-            True,  # is_test_running
+            {"k1": "v2", "k2": ["v12", "v13"]},  # cli_tags
+            True,  # expect_skip
+            id="multple tag names match but no value",
         ),
-        (
-            {},  # tc_tags
-            {
-                "branch-level": "nightly",
-            },  # cli_tags
-            False,  # is_test_running
-        ),
-        (
-            {},  # tc_tags
-            {},  # cli_tags
-            True,  # is_test_running
-        ),
-        (
-            {
-                "variant": [
-                    "omicron",
-                ],
-                "branch-level": [
-                    "some_branch",
-                ],
-            },  # tc_tags
-            {
-                "branch_level": "some_branch",
-            },  # cli_tags
-            True,  # is_test_running
-        ),
-        (
-            {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [],
-            },  # tc_tags
-            {
-                "variant": "omicron",
-            },  # cli_tags
-            True,  # is_test_running
-        ),
-        (
-            {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "leaf",
-                ],
-            },  # tc_tags
-            {
-                "branch_level": "leaf",
-            },  # cli_tags
-            True,  # is_test_running
-        ),
-        (
-            {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "leaf",
-                ],
-            },  # tc_tags
-            {
-                "branch_level": "bud",
-            },  # cli_tags
-            False,  # is_test_running
-        ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v3"],
                 "k2": ["v2", "v5", "v6"],
@@ -416,78 +351,54 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
                 "k1": "v1",
                 "k2": "v2",
             },  # cli_tags
-            True,  # is_test_running
+            False,  # expect_skip
+            id="multiple tag names match and multiple values",
         ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v7"],
                 "k2": ["v2", "v5", "v6"],
             },  # tc_tags
-            {
-                "k1": "v1",
-                "k2": "v2",
-            },  # cli_tags
-            True,  # is_test_running
+            {"k3": "v10"},  # cli_tags
+            False,  # expect_skip
+            id="no name matches, multiple tc tags",
         ),
-        (
-            {
-                "k1": ["v1", "v7"],
-                "k2": ["v2", "v5", "v6"],
-            },  # tc_tags
-            {
-                "k1": "v1",
-                "k2": "v10",
-            },  # cli_tags
-            True,  # is_test_running
+        pytest.param(
+            {"k1": ["v1", "v3"]},  # tc_tags
+            {"k2": ["v2", "v5"]},  # cli_tags
+            False,  # expect_skip
+            id="no name matches, single tc tags",
         ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v3"],
                 "k2": ["v2", "v5", "v6"],
             },  # tc_tags
-            {
-                "k1": "v1",
-            },  # cli_tags
-            True,  # is_test_running
+            {"k1": "v1"},  # cli_tags
+            False,  # expect_skip
+            id="one name matches and one value",
         ),
-        (
-            {
-                "k1": ["v1", "v7"],
-                "k2": ["v2", "v5", "v6"],
-            },  # tc_tags
-            {
-                "k1": "v1",
-            },  # cli_tags
-            True,  # is_test_running
-        ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v3"],
                 "k2": ["v2", "v5", "v6"],
             },  # tc_tags
             {"k1": ["v1", "v3"]},  # cli_tags
-            True,  # is_test_running
+            False,  # expect_skip
+            id="one name matches and multiple values",
         ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v3"],
                 "k2": ["v2", "v5", "v6"],
             },  # tc_tags
             {"k1": ["v1", "v3"], "k2": ["v2", "v5"]},  # cli_tags
-            True,  # is_test_running
-        ),
-        (
-            {
-                "k1": ["v1", "v3"],
-            },  # tc_tags
-            {"k2": ["v2", "v5"]},  # cli_tags
-            False,  # is_test_running
+            False,  # expect_skip
+            id="multiple names match and multiple values",
         ),
     ],
 )
-def test_config_registry_and_test_execution_apply_variant_filter(
-    tc_tags, cli_tags, is_test_running, mocker
-):
+def test_apply_variant_filter(tc_tags, cli_tags, expect_skip, mocker):
     mock_test_case = mocker.Mock()
     mock_test_case.setUp = None
     mock_test_case.tearDown = None
@@ -503,17 +414,16 @@ def test_config_registry_and_test_execution_apply_variant_filter(
     test_execution.apply_tag_filter({}, cli_tags)
 
     mock.assert_called_once()
-    if is_test_running:
-        assert mock_test_case.setUp is None
-        assert mock_test_case.tearDown is None
-        assert mock_test_case.testMethodName is None
+
+    assert mock_test_case.setUp is None
+    assert mock_test_case.tearDown is None
+    assert mock_test_case.testMethodName is None
+    if not expect_skip:
+        assert not hasattr(mock_test_case, "__unittest_skip__")
+        assert not hasattr(mock_test_case, "__unittest_skip_why__")
     else:
-        assert mock_test_case.setUp() == "setup_skipped"
-        assert (
-            mock_test_case.testMethodName()
-            == "skipped due to non-matching variant value"
-        )
-        assert mock_test_case.tearDown() == "tearDown_skipped"
+        assert mock_test_case.__unittest_skip__ == True
+        assert mock_test_case.__unittest_skip_why__ == "non-matching tag value"
 
 
 def test_test_execution_apply_tc_name_filter(mocker):
