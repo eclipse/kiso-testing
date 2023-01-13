@@ -127,6 +127,7 @@ def apply_tag_filter(
             user_tag_values = tag_value if isinstance(tag_value, list) else [tag_value]
             if not any(usr_val in test_case.tag[tag_id] for usr_val in user_tag_values):
                 should_skip = True
+                test_case._non_matching_tag = tag_id
                 break
 
         return should_skip
@@ -136,7 +137,8 @@ def apply_tag_filter(
 
         :param test_case: testcase to be skipped
         """
-        skipped_test_cls = unittest.skip("non-matching tag value")(test_case.__class__)
+        msg = f"non-matching value for tag {test_case._non_matching_tag!r}"
+        skipped_test_cls = unittest.skip(msg)(test_case.__class__)
         return skipped_test_cls()
 
     base_suite: List[BasicTest] = test_suite.flatten(all_tests_to_run)
