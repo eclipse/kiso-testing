@@ -88,13 +88,6 @@ def test_channel_cc_send(channel_obj):
     cc_inst._cc_send.assert_called_with(msg=b"\x01\x02\x03")
 
 
-def test_channel_cc_send(channel_obj):
-    cc_inst = channel_obj(name="thread-channel")
-    cc_inst.cc_send(msg=b"\x01\x02\x03")
-
-    cc_inst._cc_send.assert_called_with(msg=b"\x01\x02\x03")
-
-
 def test_channel_cc_send_raw(channel_obj, caplog):
     cc_inst = channel_obj(name="thread-channel")
 
