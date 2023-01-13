@@ -191,20 +191,16 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         """
         return YKUSH_PORT_STATE_DICT[state]
 
-    def get_serial_number_string(self):
+    def get_serial_number_string(self) -> str:
         """Returns the device serial number string"""
         with self._open_and_close_device():
             return self._ykush_device.get_serial_number_string()
 
     def get_number_of_port(self) -> int:
         """Returns the number of port on the ykush device"""
-
-        status, count = self._raw_sendreceive([0xF1])[:2]
-        # hardware identifier 1 devices will not recognize the operation
-        if status != YKUSH_PROTO_OK_STATUS:
-            # original YKUSH 1,3 port count
-            count = 3
-        # Alber3.3 check if 0xf0cd:YKUSHXS Make it have 1 port
+        # original YKUSH 1,3 port count
+        count = 3
+        # YKUSHXS Make it have 1 port
         if self._product_id == 0xF0CD:
             count = 1
 
@@ -269,7 +265,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         """
         return [self.get_str_state(state) for state in self.get_all_ports_state()]
 
-    def get_firmware_version(self):
+    def get_firmware_version(self) -> Tuple[int]:
         """Returns a tuple with YKUSH firmware version in format (major, minor)."""
 
         status, major, minor = self._raw_sendreceive([0xF0])[:3]
@@ -372,6 +368,13 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         :return: True if a port is on, else False
         """
         return bool(self.get_port_state(port_number))
+
+    def is_port_off(self, port_number: int) -> bool:
+        """Check if a port is off.
+
+        :return: True if a port is off, else False
+        """
+        return not bool(self.get_port_state(port_number))
 
     def _raw_sendreceive(self, packetarray) -> List[int]:
         """Send a message to the device and get the returned message.

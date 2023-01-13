@@ -6,7 +6,7 @@ Example can be found here :ref:`ykush_aux`.
 .. automodule:: pykiso.lib.auxiliaries.ykush_auxiliary
     :members:
 
-.. note::
+.. warning::
     This auxiliary has only been tested on the Ykush Device.
 
     Ykush 3 and Ykush XS have not been tested.

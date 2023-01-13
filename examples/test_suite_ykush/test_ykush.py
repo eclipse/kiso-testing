@@ -43,18 +43,24 @@ class ExampleYkushTest(pykiso.BasicTest):
         logging.info("Power off all ports")
         ykush_aux.set_all_ports_off()
 
-        list_state = ykush_aux.get_all_ports_state()
-        logging.info(f"The state of the ports are :{list_state}")
+        logging.info("Check if all ports are off")
+        self.assertEqual(ykush_aux.get_all_ports_state(), [0, 0, 0])
 
         logging.info("Power on the port 1")
         ykush_aux.set_port_on(port_number=1)
-        logging.info("Get the state of the port 1")
 
+        logging.info("Get the state of the port 1")
         state_port_1 = ykush_aux.get_port_state_str(port_number=1)
         logging.info(f"Port 1 is {state_port_1}")
 
+        logging.info("Check if the port is on")
+        self.assertTrue(ykush_aux.is_port_on(port_number=1))
+
         logging.info("Power off the port number 1")
         ykush_aux.set_port_off(port_number=1)
+
+        logging.info("Check if the port is off")
+        self.assertTrue(ykush_aux.is_port_off(port_number=1))
 
         list_state = ykush_aux.get_all_ports_state_str()
         logging.info(f"The state of the ports are :{list_state}")

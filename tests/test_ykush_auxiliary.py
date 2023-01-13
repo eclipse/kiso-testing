@@ -456,6 +456,19 @@ def test_is_port_on(ykush_aux_instance, mocker, state_port, bool_expected):
     get_port_state_mock.assert_called_once_with(port_number)
 
 
+@pytest.mark.parametrize("state_port,bool_expected", [(1, False), (0, True)])
+def test_is_port_off(ykush_aux_instance, mocker, state_port, bool_expected):
+    get_port_state_mock = mocker.patch.object(
+        ykush_aux_instance, "get_port_state", return_value=state_port
+    )
+    port_number = 1
+
+    state = ykush_aux_instance.is_port_off(port_number)
+
+    assert state == bool_expected
+    get_port_state_mock.assert_called_once_with(port_number)
+
+
 @pytest.mark.parametrize(
     "packet_received,msg_expected",
     [([0x0] * 65, [0x0] * 20), (None, [0xFF] * 20), ([0x0], [0xFF] * 20)],
