@@ -20,12 +20,15 @@ Interface Definition for Connectors, CChannels and Flasher
 
 """
 import abc
+import logging
 import multiprocessing
 import pathlib
 import threading
 from typing import Dict, Optional
 
 from .types import MsgType, PathType
+
+log = logging.getLogger(__name__)
 
 
 class Connector(abc.ABC):
@@ -97,16 +100,22 @@ class CChannel(Connector):
         with self._lock:
             self._cc_close()
 
-    def cc_send(self, msg: MsgType, **kwargs) -> None:
+    def cc_send(self, msg: MsgType, *args, **kwargs) -> None:
         """Send a thread-safe message on the channel and wait for an acknowledgement.
 
         :param msg: message to send
         :param kwargs: named arguments
         """
+        if ("raw" in kwargs) or args:
+            log.internal_warning(
+                "Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_send'."
+            )
         with self._lock_tx:
             self._cc_send(msg=msg, **kwargs)
 
-    def cc_receive(self, timeout: float = 0.1, **kwargs) -> Dict[str, Optional[bytes]]:
+    def cc_receive(
+        self, timeout: float = 0.1, *args, **kwargs
+    ) -> Dict[str, Optional[bytes]]:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
@@ -114,6 +123,10 @@ class CChannel(Connector):
 
         :return: the received message
         """
+        if ("raw" in kwargs) or args:
+            log.internal_warning(
+                "Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_receive'."
+            )
         with self._lock_rx:
             return self._cc_receive(timeout=timeout, **kwargs)
 

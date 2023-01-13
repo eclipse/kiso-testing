@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import logging
 import multiprocessing
 import threading
 
@@ -87,11 +88,43 @@ def test_channel_cc_send(channel_obj):
     cc_inst._cc_send.assert_called_with(msg=b"\x01\x02\x03")
 
 
+def test_channel_cc_send(channel_obj):
+    cc_inst = channel_obj(name="thread-channel")
+    cc_inst.cc_send(msg=b"\x01\x02\x03")
+
+    cc_inst._cc_send.assert_called_with(msg=b"\x01\x02\x03")
+
+
+def test_channel_cc_send_raw(channel_obj, caplog):
+    cc_inst = channel_obj(name="thread-channel")
+
+    with caplog.at_level(logging.WARNING):
+        cc_inst.cc_send(msg=b"\x01\x02\x03", raw=True)
+    assert (
+        "Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_send'."
+        in caplog.text
+    )
+
+    cc_inst._cc_send.assert_called_with(msg=b"\x01\x02\x03", raw=True)
+
+
 def test_channel_cc_receive(channel_obj):
     cc_inst = channel_obj(name="thread-channel")
     cc_inst.cc_receive()
 
     cc_inst._cc_receive.assert_called_with(timeout=0.1)
+
+
+def test_channel_cc_receive_raw(channel_obj, caplog):
+    cc_inst = channel_obj(name="thread-channel")
+
+    with caplog.at_level(logging.WARNING):
+        cc_inst.cc_receive(raw=True)
+    assert (
+        "Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_receive'."
+        in caplog.text
+    )
+    cc_inst._cc_receive.assert_called_with(timeout=0.1, raw=True)
 
 
 def test_channel_invalid_interface():
