@@ -152,5 +152,6 @@ def test_import_aux_instanciated(linker):
     assert aux11.is_instance == True
     linker.uninstall()
     assert aux11.is_instance == False
+    assert aux11.channel.was_deleted is True
     with pytest.raises(ImportError):
         from pykiso.auxiliaries import aux13
