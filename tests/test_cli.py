@@ -85,3 +85,22 @@ def test_eval_user_tags_exception_bad_option_usage(mocker):
     with pytest.raises(click.BadOptionUsage) as exec_info:
         eval_user_tags = cli.eval_user_tags(click_context_mock)
     assert "tag --branch-level" in exec_info.value.format_message()
+
+
+def test_check_file_extension_bad_param(mocker):
+    click_context_mock = mocker.MagicMock()
+    click_param_mock = mocker.MagicMock()
+    not_yaml_file = "./fail.txt"
+    paths = ("./success.yaml", not_yaml_file)
+    with pytest.raises(click.BadParameter) as exec_info:
+        cli.check_file_extension(click_context_mock, click_param_mock, paths)
+    assert not_yaml_file in exec_info.value.format_message()
+    assert "needs to be a .yaml file" in exec_info.value.format_message()
+
+
+def test_check_file_extension(mocker):
+    click_context_mock = mocker.MagicMock()
+    click_param_mock = mocker.MagicMock()
+    paths = ("./complete/success.yaml", "./success.yml")
+    actual = cli.check_file_extension(click_context_mock, click_param_mock, paths)
+    assert actual == paths

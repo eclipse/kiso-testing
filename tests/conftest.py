@@ -24,19 +24,11 @@ from pykiso.lib.auxiliaries import dut_auxiliary
 from pykiso.lib.connectors import cc_example
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
-from pykiso.logging_initializer import (
-    LogOptions,
-    add_logging_level,
-    get_logging_options,
-)
+from pykiso.logging_initializer import LogOptions, get_logging_options
 from pykiso.test_coordinator import test_case
 from pykiso.test_coordinator.test_case import define_test_parameters
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
-# add the internal log levels to avoid errors during unit tests execution
-add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
-add_logging_level("INTERNAL_INFO", logging.INFO + 1)
-add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
 
 ## skip slow test by default
 def pytest_addoption(parser):

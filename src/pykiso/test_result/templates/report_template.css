@@ -24,6 +24,10 @@ body {
     line-height: 1.25;
    }
 
+   h3 {
+    display: inline;
+   }
+
    table {
 
        border :1px solid #ccc;
@@ -55,6 +59,11 @@ body {
      font-size: .85em;
      letter-spacing: .1em;
      text-transform: uppercase;
+   }
+
+   summary {
+     text-decoration: underline;
+     cursor: pointer;
    }
 
    /* Media Queries*/

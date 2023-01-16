@@ -57,6 +57,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from pykiso import AuxiliaryInterface, CChannel, MpAuxiliaryInterface
+from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
 from pykiso.test_setup.config_registry import ConfigRegistry
 from pykiso.test_setup.dynamic_loader import PACKAGE
 
@@ -95,13 +96,13 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
             activate=activate_trace, dir=trace_dir, name=trace_name
         )
         self.proxy_channels = self.get_proxy_con(aux_list)
-        self.logger = None
+        self.logger: logging.Logger = None
         self.aux_list = aux_list
         super().__init__(**kwargs)
 
     def _init_trace(
         self,
-        logger,
+        logger: logging.Logger,
         activate: bool,
         t_dir: Optional[str] = None,
         t_name: Optional[str] = None,
@@ -144,7 +145,7 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
 
-    def get_proxy_con(self, aux_list: List[str]) -> Tuple[AuxiliaryInterface]:
+    def get_proxy_con(self, aux_list: List[str]) -> Tuple[CCMpProxy]:
         """Retrieve all connector associated to all given existing Auxiliaries.
 
         If auxiliary alias exists but auxiliary instance was not created
@@ -155,7 +156,7 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
         :return: tuple containing all connectors associated to
             all given auxiliaries
         """
-        channel_inst = []
+        channel_inst: List[CCMpProxy] = []
 
         for aux_name in aux_list:
             aux_inst = sys.modules.get(f"{PACKAGE}.auxiliaries.{aux_name}")
@@ -177,6 +178,14 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
             else:
                 log.error(f"Auxiliary : {aux_name} doesn't exist")
 
+        # Check if auxes/connectors are compatible with the proxy aux
+        self._check_channels_compatibility(channel_inst)
+
+        # Finally bind the physical channel to the proxy channels to
+        # share its API to the user's auxiliaries
+        for channel in channel_inst:
+            channel._bind_channel_info(self)
+
         return tuple(channel_inst)
 
     @staticmethod
@@ -191,6 +200,22 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
             raise NotImplementedError(
                 f"Auxiliary {aux} is not compatible with a proxy auxiliary"
             )
+
+    @staticmethod
+    def _check_channels_compatibility(channels: List[CChannel]) -> None:
+        """Check if all associated channels are compatible.
+
+        :param channels: all channels collected by the proxy aux
+
+        :raises TypeError: if the connector is not an instance of
+            CCProxy
+        """
+        for channel in channels:
+            if not isinstance(channel, CCMpProxy):
+                raise TypeError(
+                    f"Channel {channel} is not compatible! "
+                    f"Expected a CCMpProxy instance, got {channel.__class__.__name__}"
+                )
 
     def _create_auxiliary_instance(self) -> bool:
         """Open current associated channel.

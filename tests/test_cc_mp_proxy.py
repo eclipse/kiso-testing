@@ -18,6 +18,12 @@ def test_constructor():
     assert isinstance(con_inst.queue_in, type(multiprocessing.Queue()))
     assert isinstance(con_inst.queue_out, type(multiprocessing.Queue()))
 
+    # pickling quick test
+    assert con_inst.__getstate__() == con_inst.__dict__
+    new_dict = {**con_inst.__dict__, **{"some_attr": 12}}
+    con_inst.__setstate__(new_dict)
+    assert con_inst.__getstate__() == new_dict
+
 
 def test_queue_reference():
     con_inst = CCMpProxy()
