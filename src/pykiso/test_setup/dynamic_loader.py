@@ -231,7 +231,8 @@ class ModuleCache:
 
     def delete_all_instances(self):
         for instance in self.instances.values():
-            instance.__del__()
+            if hasattr(instance, "__del__") and callable(getattr(instance, "__del__")):
+                instance.__del__()
 
 
 class AuxiliaryCache(ModuleCache):
