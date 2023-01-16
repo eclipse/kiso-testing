@@ -60,6 +60,7 @@ class CCPCanCan(CChannel):
         channel: str = "PCAN_USBBUS1",
         state: str = "ACTIVE",
         trace_path: str = "",
+        trace_name: str = None,
         trace_size: int = 10,
         bitrate: int = 500000,
         is_fd: bool = True,
@@ -86,6 +87,7 @@ class CCPCanCan(CChannel):
         :param channel: the can interface name
         :param state: BusState of the channel
         :param trace_path: path to write the trace
+        :param trace_name: name of the trace
         :param trace_size: maximum size of the trace (in MB)
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
@@ -112,6 +114,8 @@ class CCPCanCan(CChannel):
         :param logging_activated: boolean used to disable logfile creation
         :param bus_error_warning_filter : if True filter the logging message
         ('Bus error: an error counter')
+
+        :raises ValueError: if a trace name is provided but is not a trc file
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -142,6 +146,11 @@ class CCPCanCan(CChannel):
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
         self.trc_count = 0
+        self.trace_name = trace_name
+        if self.trace_name is not None and self.trace_name.find(".trc") == -1:
+            raise ValueError(
+                f"Trace name {self.trace_name} is incorrect, it should be a trc file"
+            )
         """
         Extract the base logging directory from the logging module, so we can
         create our logging folder in the correct place.
@@ -386,26 +395,32 @@ class CCPCanCan(CChannel):
             list_of_traces.append(latest_trace)
 
         list_of_traces.reverse()
-        trace_name = list_of_traces[0]
 
-        with open(trace_name, "r") as trc:
+        if self.trace_name is None:
+            result_trace = list_of_traces[0]
+        else:
+            result_trace = str(self.trace_path / self.trace_name)
+
+        with open(list_of_traces[0], "r") as trc:
             merged_data = trc.read()
-            list_of_traces.pop(0)
+        if self.trace_name is not None:
+            os.remove(list_of_traces[0])
 
+        list_of_traces.pop(0)
         trc_start = 33
 
         for file in list_of_traces:
-            with open(file, "r") as fin:
-                data = fin.read().splitlines(True)
-            with open(file, "w") as fout:
-                fout.writelines(data[trc_start:])
-            with open(file, "r") as trc2:
-                data = trc2.read()
+            with open(file, "r") as trc:
+                data = trc.read().splitlines(True)
+            with open(file, "w") as trc:
+                trc.writelines(data[trc_start:])
+            with open(file, "r") as trc:
+                data = trc.read()
 
             merged_data += data
             os.remove(file)
 
-        with open(trace_name, "w") as trc:
+        with open(result_trace, "w") as trc:
             merged_data_lines = merged_data.splitlines(True)
             for line_number in range(trc_start, len(merged_data_lines)):
                 message_number = str((line_number + 1) - trc_start)

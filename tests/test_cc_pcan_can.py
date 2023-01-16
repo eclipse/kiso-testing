@@ -131,7 +131,7 @@ trc_merge_data = """;$FILEVERSION=2.0
      12       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def trc_files(tmp_path_factory):
     """
     create a "" at a temporary directory
@@ -206,6 +206,7 @@ def mock_PCANBasic(mocker):
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "",
+                "trace_name": None,
                 "trace_size": 10,
                 "bitrate": 500000,
                 "is_fd": True,
@@ -232,6 +233,7 @@ def mock_PCANBasic(mocker):
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "",
+                "trace_name": None,
                 "trace_size": 1000,
                 "bitrate": 500000,
                 "is_fd": False,
@@ -258,6 +260,7 @@ def mock_PCANBasic(mocker):
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "",
+                "trace_name": None,
                 "trace_size": 10,
                 "bitrate": 500000,
                 "is_fd": False,
@@ -314,6 +317,7 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
     assert can_inst.can_filters == expected_config["can_filters"]
     assert can_inst.logging_activated == expected_config["logging_activated"]
     assert can_inst.timeout == 1e-6
+    assert can_inst.trace_name == expected_config["trace_name"]
 
     if not can_inst.is_fd and can_inst.enable_brs:
         assert "Bitrate switch will have no effect" in caplog.text
@@ -322,6 +326,11 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
         assert "Bus error: an error counter" not in caplog.text
     else:
         assert "Bus error: an error counter" in caplog.text
+
+
+def test_constructor_invalid_trace_name():
+    with pytest.raises(ValueError):
+        can_inst = CCPCanCan(trace_name="result_file.txt")
 
 
 @pytest.mark.parametrize(
@@ -670,6 +679,22 @@ def test_merge_trc(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
         can.trace_path = tmp_path.parents[0]
 
         result_path = tmp_path.parents[0] / str(trc_files[0])
+        can._merge_trc()
+
+        with open(result_path, "r") as trc:
+            result = trc.read()
+
+    assert trc_merge_data == result
+
+
+def test_merge_trc_with_file_name(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
+
+    with CCPCanCan() as can:
+        can.trc_count = 3
+        can.trace_path = tmp_path.parents[0]
+        can.trace_name = "result_file.trc"
+
+        result_path = tmp_path.parents[0] / can.trace_name
         can._merge_trc()
 
         with open(result_path, "r") as trc:
