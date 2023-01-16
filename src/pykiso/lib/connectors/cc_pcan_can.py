@@ -87,7 +87,7 @@ class CCPCanCan(CChannel):
         :param channel: the can interface name
         :param state: BusState of the channel
         :param trace_path: path to write the trace
-        :param trace_name: name of the trace
+        :param trace_name: name of the trace, must be of the .trc format
         :param trace_size: maximum size of the trace (in MB)
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
