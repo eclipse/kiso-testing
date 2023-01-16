@@ -423,7 +423,7 @@ def test_apply_variant_filter(tc_tags, cli_tags, expect_skip, mocker):
         assert not hasattr(mock_test_case, "__unittest_skip_why__")
     else:
         assert mock_test_case.__unittest_skip__ == True
-        assert mock_test_case.__unittest_skip_why__ == "non-matching tag value"
+        assert "non-matching value for tag" in mock_test_case.__unittest_skip_why__
 
 
 def test_test_execution_apply_tc_name_filter(mocker):
