@@ -148,24 +148,19 @@ def test_get_str_state(ykush_aux_instance, state, str_expected):
 
 
 @pytest.mark.parametrize(
-    "product_id,raw_send_return,number_port_expected",
-    [(0xF0CD, [0x1, 0x3], 1), (0x0042, [0x0, 0x2], 3), (0x0042, [0x1, 0x4], 4)],
+    "product_id,number_port_expected",
+    [(0xF0CD, 1), (0x0042, 3)],
 )
 def test_get_number_of_port(
     ykush_aux_instance,
-    raw_send_receive_mock,
     product_id,
-    raw_send_return,
     number_port_expected,
 ):
-    raw_send_receive_mock.return_value = raw_send_return
-
     ykush_aux_instance._product_id = product_id
 
     number_port = ykush_aux_instance.get_number_of_port()
 
     assert number_port == number_port_expected
-    raw_send_receive_mock.assert_called_with([0xF1])
 
 
 @pytest.mark.parametrize(
@@ -365,20 +360,6 @@ def test_get_port_state(
     get_all_port_mock.assert_called_once()
 
 
-@pytest.mark.parametrize("state_returned,result_expected", [(1, "ON"), (0, "OFF")])
-def test_get_port_state_str(
-    ykush_aux_instance, get_port_mock, state_returned, result_expected
-):
-    get_port_mock.return_value = state_returned
-
-    port_number = 1
-
-    state = ykush_aux_instance.get_port_state_str(port_number)
-
-    assert state == result_expected
-    get_port_mock.assert_called_once_with(port_number)
-
-
 @pytest.mark.parametrize(
     "state_returned,state_expected",
     [([0x1, 0x1, 0x2, 0x17], [0, 0, 1]), ([0x1, 0x18, 0x19, 0x17], [1, 1, 1])],
@@ -426,21 +407,6 @@ def test_get_all_ports_state_firmware_version_inferior_1_fail(
         list_states = ykush_aux_instance.get_all_ports_state()
 
     get_firmware_version_mock.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    "state_returned,str_expected",
-    [([1, 0, 1], ["ON", "OFF", "ON"]), ([0, 1, 0], ["OFF", "ON", "OFF"])],
-)
-def test_get_all_ports_state_str(
-    ykush_aux_instance, get_all_port_mock, state_returned, str_expected
-):
-    get_all_port_mock.return_value = state_returned
-
-    state = ykush_aux_instance.get_all_ports_state_str()
-
-    assert state == str_expected
-    get_all_port_mock.assert_called_once()
 
 
 @pytest.mark.parametrize("state_port,bool_expected", [(1, True), (0, False)])

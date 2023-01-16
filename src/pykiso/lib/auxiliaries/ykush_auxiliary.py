@@ -20,6 +20,7 @@ Ykush Auxiliary
 """
 import logging
 from contextlib import contextmanager
+from enum import IntEnum
 from typing import Any, List, Optional, Tuple
 
 import hid
@@ -76,6 +77,11 @@ class YkushPortNumberError(YkushError):
     """Raised when the port number doesn't exist."""
 
     pass
+
+
+class PortState(IntEnum):
+    OFF = 0
+    ON = 1
 
 
 class YkushAuxiliary(DTAuxiliaryInterface):
@@ -206,7 +212,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
 
         return count
 
-    def get_port_state(self, port_number: int) -> int:
+    def get_port_state(self, port_number: int) -> PortState:
         """Returns a specific port state.
 
         :raises YkushStatePortNotRetrieved: If the state couldn't be retrieved
@@ -215,15 +221,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         self.check_port_number(port_number)
         return self.get_all_ports_state()[port_number - 1]
 
-    def get_port_state_str(self, port_number: int) -> str:
-        """Get the state of the port.
-
-        :raises YkushStatePortNotRetrieved: If the state couldn't be retrieved
-        :return: ON, OFF
-        """
-        return self.get_str_state(self.get_port_state(port_number))
-
-    def get_all_ports_state(self) -> List[int]:
+    def get_all_ports_state(self) -> List[PortState]:
         """Returns the state of all the ports.
 
         :raises YkushStatePortNotRetrieved: The states couldn't be retrieved
@@ -233,8 +231,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
             recvbytes = self._raw_sendreceive([0x2A])[: self.number_of_port + 1]
             if recvbytes[0] == YKUSH_PROTO_OK_STATUS:
                 return [
-                    YKUSH_PORT_STATE_ON if p > 0x10 else YKUSH_PORT_STATE_OFF
-                    for p in recvbytes[1:]
+                    PortState.ON if p > 0x10 else PortState.OFF for p in recvbytes[1:]
                 ]
             else:
                 raise YkushStatePortNotRetrieved(
@@ -247,9 +244,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
                 status, port_state = self._raw_sendreceive([0x20 | port_number])[:2]
                 if status == YKUSH_PROTO_OK_STATUS:
                     list_state.append(
-                        YKUSH_PORT_STATE_ON
-                        if port_state > 0x10
-                        else YKUSH_PORT_STATE_OFF
+                        PortState.ON if port_state > 0x10 else PortState.OFF
                     )
                 else:
                     raise YkushStatePortNotRetrieved(
@@ -257,15 +252,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
                     )
             return list_state
 
-    def get_all_ports_state_str(self) -> List[str]:
-        """Get a list of all the states of the ports.
-
-        :raises YkushStatePortNotRetrieved: The state couldn't be retrieved
-        :return: list with ON, OFF
-        """
-        return [self.get_str_state(state) for state in self.get_all_ports_state()]
-
-    def get_firmware_version(self) -> Tuple[int]:
+    def get_firmware_version(self) -> Tuple[int, int]:
         """Returns a tuple with YKUSH firmware version in format (major, minor)."""
 
         status, major, minor = self._raw_sendreceive([0xF0])[:3]
@@ -292,23 +279,23 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         :raises YkushSetStateError: if the operation had an error
         :param state: 1 (port on), 0 (port off)
         """
+        str_state = self.get_str_state(state)
         self.check_port_number(port_number)
         self._raw_sendreceive(
-            [(state == YKUSH_PORT_STATE_ON and 0x10 or 0x0) | port_number]
+            [(0x10 if state == YKUSH_PORT_STATE_ON else 0x0) | port_number]
         )
 
         try:
             state_port = self.get_port_state(port_number)
         except YkushStatePortNotRetrieved as e:
             raise YkushSetStateError(
-                f"The state of the action to power {self.get_str_state(state)}"
+                f"The state of the action to power {str_state}"
                 "couldn't be confirmed because the state of the port can't be retrieved"
             ) from e
-        if state_port != state:
+        if state_port != PortState[str_state]:
             raise YkushSetStateError(
-                "There was an error trying to power "
-                f"{self.get_str_state(state).lower()} the port,"
-                f"the port {port_number} is {self.get_str_state(state_port)}"
+                f"There was an error trying to power {str_state.lower()} the port,"
+                f"the port {port_number} is {state_port}"
             )
 
     def set_port_on(self, port_number: int):
@@ -331,20 +318,21 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         :param state: state wanted 1 for On, 0 for Off
         :raises YkushSetStateError: if the operation had an error
         """
-        self._raw_sendreceive([(state == YKUSH_PORT_STATE_ON and 0x1A or 0x0A)])
+        str_state = self.get_str_state(state)
+        self._raw_sendreceive([(0x1A if state == YKUSH_PORT_STATE_ON else 0x0A)])
 
         try:
             states_port = self.get_all_ports_state()
         except YkushStatePortNotRetrieved as e:
             raise YkushSetStateError(
-                f"The state of the action to power {self.get_str_state(state)}"
+                f"The state of the action to power {str_state}"
                 "couldn't be confirmed because the state of the ports can't be retrieved"
             ) from e
 
-        if not (state == states_port[0] and len(set(states_port)) == 1):
+        if not (PortState[str_state] == states_port[0] and len(set(states_port)) == 1):
             raise YkushSetStateError(
                 "There was an error during the power "
-                f"{self.get_str_state(state).lower()},"
+                f"{str_state.lower()},"
                 f"the ports have the following states : {states_port}"
             )
 

@@ -37,7 +37,7 @@ class ExampleYkushTest(pykiso.BasicTest):
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
-        list_state = ykush_aux.get_all_ports_state_str()
+        list_state = ykush_aux.get_all_ports_state()
         logging.info(f"The state of the ports are :{list_state}")
 
         logging.info("Power off all ports")
@@ -50,7 +50,7 @@ class ExampleYkushTest(pykiso.BasicTest):
         ykush_aux.set_port_on(port_number=1)
 
         logging.info("Get the state of the port 1")
-        state_port_1 = ykush_aux.get_port_state_str(port_number=1)
+        state_port_1 = ykush_aux.get_port_state(port_number=1)
         logging.info(f"Port 1 is {state_port_1}")
 
         logging.info("Check if the port is on")
@@ -62,7 +62,7 @@ class ExampleYkushTest(pykiso.BasicTest):
         logging.info("Check if the port is off")
         self.assertTrue(ykush_aux.is_port_off(port_number=1))
 
-        list_state = ykush_aux.get_all_ports_state_str()
+        list_state = ykush_aux.get_all_ports_state()
         logging.info(f"The state of the ports are :{list_state}")
 
     def tearDown(self):
