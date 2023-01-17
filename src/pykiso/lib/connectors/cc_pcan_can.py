@@ -387,8 +387,17 @@ class CCPCanCan(CChannel):
     def _merge_trc(self) -> None:
         """Merge multiple trc files in one."""
         list_of_traces = []
-        list_of_all_traces = glob.glob(str(self.trace_path) + "/*.trc")
+
+        if self.trace_path is None:
+            self.trace_path = Path(".")
+        elif isinstance(self.trace_path, str):
+            self.trace_path = Path(self.trace_path)
+
+        # Get all trc files in trace path
+        list_of_all_traces = list(self.trace_path.glob("*.trc"))
+
         log.internal_debug(f"merging following trace files: {list_of_all_traces}")
+        # Select a number of the lastest trace files corresponding to the number of traces created.
         for _ in range(self.trc_count):
             try:
                 latest_trace = max(list_of_all_traces, key=os.path.getctime)
@@ -399,6 +408,7 @@ class CCPCanCan(CChannel):
 
         list_of_traces.reverse()
         try:
+            # If name not provided, take the fist trace created as results file
             if self.trace_name is None:
                 result_trace = list_of_traces[0]
             else:
@@ -425,6 +435,8 @@ class CCPCanCan(CChannel):
 
             with open(result_trace, "w") as trc:
                 merged_data_lines = merged_data.splitlines(True)
+
+                # Parsing to keep the message numbers consistent after the merge
                 for line_number in range(trc_start, len(merged_data_lines)):
                     message_number = str((line_number + 1) - trc_start)
                     merged_data_lines[line_number] = (
