@@ -60,7 +60,6 @@ class CCPCanCan(CChannel):
         channel: str = "PCAN_USBBUS1",
         state: str = "ACTIVE",
         trace_path: str = "",
-        trace_name: str = None,
         trace_size: int = 10,
         bitrate: int = 500000,
         is_fd: bool = True,
@@ -87,7 +86,6 @@ class CCPCanCan(CChannel):
         :param channel: the can interface name
         :param state: BusState of the channel
         :param trace_path: path to write the trace
-        :param trace_name: name of the trace, must be of the .trc format
         :param trace_size: maximum size of the trace (in MB)
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
@@ -146,11 +144,7 @@ class CCPCanCan(CChannel):
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
         self.trc_count = 0
-        self.trace_name = trace_name
-        if self.trace_name is not None and self.trace_name.find(".trc") == -1:
-            raise ValueError(
-                f"Trace name {self.trace_name} is incorrect, it should be a trc file"
-            )
+
         """
         Extract the base logging directory from the logging module, so we can
         create our logging folder in the correct place.
@@ -162,11 +156,15 @@ class CCPCanCan(CChannel):
         generic logfile in the current working directory, which will be
         overwritten every time, a log is initiated.
         """
-        if self.trace_path.is_file():
-            self.trace_path = self.trace_path.parent
-            log.internal_warning(
-                f"File names are not supported for trace file creation. Trace will be written to {self.trace_path}"
+        if self.trace_path.suffix == "":
+            self.trace_name = None
+        elif self.trace_path.suffix != ".trc":
+            raise ValueError(
+                f"Trace name {self.trace_path.name} is incorrect, it should be a trc file"
             )
+        else:
+            self.trace_name = self.trace_path.name
+            self.trace_path = self.trace_path.parent
 
         if not 0 < self.trace_size <= 100:
             self.trace_size = 10

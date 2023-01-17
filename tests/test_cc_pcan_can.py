@@ -206,7 +206,6 @@ def mock_PCANBasic(mocker):
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "",
-                "trace_name": None,
                 "trace_size": 10,
                 "bitrate": 500000,
                 "is_fd": True,
@@ -233,7 +232,6 @@ def mock_PCANBasic(mocker):
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "",
-                "trace_name": None,
                 "trace_size": 1000,
                 "bitrate": 500000,
                 "is_fd": False,
@@ -260,7 +258,6 @@ def mock_PCANBasic(mocker):
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "",
-                "trace_name": None,
                 "trace_size": 10,
                 "bitrate": 500000,
                 "is_fd": False,
@@ -287,7 +284,7 @@ def mock_PCANBasic(mocker):
 )
 def test_constructor(constructor_params, expected_config, caplog, mocker):
 
-    mocker.patch.object(pathlib.Path, "is_file", return_value=True)
+    mocker.patch.object(pathlib.Path, "is_file", return_value=False)
 
     param = constructor_params.values()
     log = logging.getLogger("can.pcan")
@@ -317,7 +314,6 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
     assert can_inst.can_filters == expected_config["can_filters"]
     assert can_inst.logging_activated == expected_config["logging_activated"]
     assert can_inst.timeout == 1e-6
-    assert can_inst.trace_name == expected_config["trace_name"]
 
     if not can_inst.is_fd and can_inst.enable_brs:
         assert "Bitrate switch will have no effect" in caplog.text
@@ -330,7 +326,7 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
 
 def test_constructor_invalid_trace_name():
     with pytest.raises(ValueError):
-        can_inst = CCPCanCan(trace_name="result_file.txt")
+        can_inst = CCPCanCan(trace_path=Path("result_file.txt"))
 
 
 @pytest.mark.parametrize(
