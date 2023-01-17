@@ -229,10 +229,9 @@ class ModuleCache:
         log.internal_debug(f"instantiated {name}")
         return inst
 
-    def delete_all_instances(self):
+    def __del__(self):
         for instance in self.instances.values():
-            if hasattr(instance, "__del__") and callable(getattr(instance, "__del__")):
-                instance.__del__()
+            del instance
 
 
 class AuxiliaryCache(ModuleCache):
@@ -358,7 +357,6 @@ class DynamicImportLinker:
         """Deregister the import hooks, close all running threads, delete all instances."""
         log.internal_debug("closing and uninstalling all dynamic modules and loaders")
         self._stop_auxiliaries()
-        self._con_cache.delete_all_instances()
         del self._con_cache
         del self._aux_cache
         del self._aux_loader

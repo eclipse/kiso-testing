@@ -38,11 +38,6 @@ def linker(example_module):
             "connectors": {"com": "chan1"},
             "type": str(example_module) + ":TestAux",
         },
-        "aux_connector_deletion": {
-            "config": {"aux_param": 3},
-            "connectors": {"com": "chan2"},
-            "type": str(example_module) + ":TestAux",
-        },
         "aux_no_class": {
             "connectors": {"com": "chan1"},
             "type": str(example_module),
@@ -64,10 +59,6 @@ def linker(example_module):
         "chan1": {
             "config": {"con_param": 1},
             "type": str(example_module) + ":TestConnector",
-        },
-        "chan2": {
-            "config": {"con_param": 1},
-            "type": str(example_module) + ":TestConnectorDeletion",
         },
     }
     for connector, con_details in con_cfg.items():
@@ -156,11 +147,10 @@ def test_meta_path_order(linker):
 
 
 def test_import_aux_instanciated(linker):
-    from pykiso.auxiliaries import aux_connector_deletion
+    from pykiso.auxiliaries import aux11
 
-    assert aux_connector_deletion.is_instance == True
+    assert aux11.is_instance == True
     linker.uninstall()
-    assert aux_connector_deletion.is_instance == False
-    assert aux_connector_deletion.channel.was_deleted is True
+    assert aux11.is_instance == False
     with pytest.raises(ImportError):
         from pykiso.auxiliaries import aux13

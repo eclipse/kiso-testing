@@ -63,13 +63,6 @@ class TestConnector:
         self.args = args
         self.kwargs = kwargs
 
-class TestConnectorDeletion:
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-    def __del__(self):
-            self.was_deleted = True
-
 class TestAux:
     def __init__(self, com = None, *args, **kwargs):
         self.channel = com
