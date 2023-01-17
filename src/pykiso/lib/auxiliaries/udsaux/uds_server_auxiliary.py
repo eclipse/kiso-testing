@@ -27,6 +27,8 @@ from typing import Callable, Dict, List, Optional, Union
 
 from uds import IsoServices
 
+from pykiso.lib.auxiliaries.udsaux.common.odx_parser import ODXParser
+
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
 from .common.uds_callback import UdsCallback
 
@@ -58,6 +60,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             log.internal_warning(
                 "Callback configuration through ODX files is not supported yet"
             )
+            self.odx_parser = ODXParser(self.odx_file_path)
 
         self._callbacks: Dict[str, UdsCallback] = {}
         self._callback_lock = threading.Lock()
@@ -214,6 +217,22 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             to have a fixed length (zero-padded).
         :param callback: custom callback to register
         """
+        # handle odx based callbacks
+        if isinstance(request, dict):
+            log.internal_debug("----------> CREATE ODX Callback from dict")
+            request = self._create_callback_from_odx(
+                request, response, response_data, data_length, callback
+            )
+        elif isinstance(request, UdsCallback) and isinstance(request.request, dict):
+            log.internal_debug("----------> CREATE ODX Callback from callback")
+            request = self._create_callback_from_odx(
+                request.request,
+                request.response,
+                request.response_data,
+                request.data_length,
+                request.callback,
+            )
+
         callback = (
             request
             if isinstance(request, UdsCallback)
@@ -293,6 +312,60 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         callback_to_execute(received_uds_data, self)
         return
+
+    def _create_uds_data(self, coded_values: List[int]) -> List[int]:
+        """Format a list of coded values into a list of bytes, needed for odx configured callbacks
+
+        :param coded_values: coded values of a odx request
+        :return: correctly formatted list of bytes for uds request
+        """
+        uds_data = []
+        for value in coded_values:
+            int_bytes = list(UdsCallback.int_to_bytes(value))
+            uds_data.extend(int_bytes)
+        log.debug(f"Created a uds request bytes list from coded values: {uds_data}")
+        return uds_data
+
+    def _create_callback_from_odx(
+        self,
+        request: Dict,
+        response: Optional[Union[int, List[int], Dict]] = None,
+        response_data: Optional[Union[int, bytes]] = None,
+        data_length: Optional[int] = None,
+        callback: Optional[Callable] = None,
+    ) -> UdsCallback:
+        """Register a UdsCallback from a dictionary containing ODX keywords
+
+        :param request: contains the ODX data necessary to create a Uds request
+        :param response: full UDS response to send. If not set, respond with a basic
+            positive response with the specified response_data. Accepts ODX based dictionary
+        :param response_data: UDS data to send. If not set, respond with a basic
+            positive response containing no data.
+        :param data_length: optional length of the data to send if it is supposed
+            to have a fixed length (zero-padded).
+        :param callback: custom callback to register
+        :return: UdsCallback with request and response parsed from odx
+        """
+        log.internal_debug(
+            f"creating odx based callback for request {request}, response {response}"
+        )
+        coded_values = self.odx_parser.get_coded_values_by_sd(
+            request["data"]["parameter"]
+        )
+        uds_request = self._create_uds_data(coded_values)
+        if uds_request[0] != request["service"]:
+            log.internal_debug(
+                f"Expected SID {request['service']} does not match parsed SID {uds_request[0]}"
+            )
+            raise ValueError(
+                f"Given IsoService {request['service']} does not match parsed SID {uds_request[0]}"
+            )
+        # create the response based on the request if its a dict, else it will get autoformatted:
+        # take content of response and give as bytes to response_data -> gets correctly saved by callback
+        if isinstance(response, dict):
+            # create response from dict
+            pass
+        return UdsCallback(uds_request, response, response_data, data_length, callback)
 
     def _abort_command(self) -> None:
         """Not used, satisfy interface."""

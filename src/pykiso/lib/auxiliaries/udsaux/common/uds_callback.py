@@ -29,7 +29,7 @@ import time
 import typing
 from dataclasses import dataclass
 from itertools import cycle
-from typing import Callable, ClassVar, List, Optional, Tuple, Union
+from typing import Callable, ClassVar, Dict, List, Optional, Tuple, Union
 
 from uds import IsoServices
 
@@ -60,9 +60,9 @@ class UdsCallback:
     POSITIVE_RESPONSE_OFFSET: ClassVar[int] = 0x40
 
     # e.g. 0x1003 or [0x10, 0x03]
-    request: Union[int, List[int]]
+    request: Union[int, List[int], Dict[str, str]]
     # e.g. 0x5003 or [0x50, 0x03]
-    response: Optional[Union[int, List[int]]] = None
+    response: Optional[Union[int, List[int], Dict[str, str]]] = None
     # e.g. 0x1011 or b'DATA'
     response_data: Optional[Union[int, bytes]] = None
     # specify zero-padding
@@ -79,13 +79,13 @@ class UdsCallback:
 
         if isinstance(self.response, int):
             self.response = list(self.int_to_bytes(self.response))
-        elif self.response is None:
+        elif self.response is None and not isinstance(self.request, dict):
             # create positive response based on request
             self.response = [
                 self.request[0] + self.POSITIVE_RESPONSE_OFFSET
             ] + self.request[1:]
 
-        if self.response_data is not None:
+        if self.response_data is not None and not isinstance(self.response, dict):
             # convert response_data and append it to the response
             self.response_data = (
                 list(self.int_to_bytes(self.response_data))
