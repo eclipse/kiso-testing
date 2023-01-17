@@ -115,7 +115,7 @@ class CCPCanCan(CChannel):
         :param bus_error_warning_filter : if True filter the logging message
         ('Bus error: an error counter')
 
-        :raises ValueError: if a trace name is provided but is not a trc file
+        :raises ValueError: if a trace name is provided without the .trc extension
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -384,50 +384,55 @@ class CCPCanCan(CChannel):
             log.exception(f"encountered error while receiving message via {self}")
             return {"msg": None}
 
-    def _merge_trc(self):
+    def _merge_trc(self) -> None:
         """Merge multiple trc files in one."""
         list_of_traces = []
         list_of_all_traces = glob.glob(str(self.trace_path) + "/*.trc")
         log.internal_debug(f"merging following trace files: {list_of_all_traces}")
         for _ in range(self.trc_count):
-            latest_trace = max(list_of_all_traces, key=os.path.getctime)
-            list_of_all_traces.pop(list_of_all_traces.index(latest_trace))
-            list_of_traces.append(latest_trace)
+            try:
+                latest_trace = max(list_of_all_traces, key=os.path.getctime)
+                list_of_all_traces.pop(list_of_all_traces.index(latest_trace))
+                list_of_traces.append(latest_trace)
+            except ValueError:
+                break
 
         list_of_traces.reverse()
+        try:
+            if self.trace_name is None:
+                result_trace = list_of_traces[0]
+            else:
+                result_trace = str(self.trace_path / self.trace_name)
 
-        if self.trace_name is None:
-            result_trace = list_of_traces[0]
-        else:
-            result_trace = str(self.trace_path / self.trace_name)
+            with open(list_of_traces[0], "r") as trc:
+                merged_data = trc.read()
+            if self.trace_name is not None:
+                os.remove(list_of_traces[0])
 
-        with open(list_of_traces[0], "r") as trc:
-            merged_data = trc.read()
-        if self.trace_name is not None:
-            os.remove(list_of_traces[0])
+            list_of_traces.pop(0)
+            trc_start = 33
 
-        list_of_traces.pop(0)
-        trc_start = 33
+            for file in list_of_traces:
+                with open(file, "r") as trc:
+                    data = trc.read().splitlines(True)
+                with open(file, "w") as trc:
+                    trc.writelines(data[trc_start:])
+                with open(file, "r") as trc:
+                    data = trc.read()
 
-        for file in list_of_traces:
-            with open(file, "r") as trc:
-                data = trc.read().splitlines(True)
-            with open(file, "w") as trc:
-                trc.writelines(data[trc_start:])
-            with open(file, "r") as trc:
-                data = trc.read()
+                merged_data += data
+                os.remove(file)
 
-            merged_data += data
-            os.remove(file)
-
-        with open(result_trace, "w") as trc:
-            merged_data_lines = merged_data.splitlines(True)
-            for line_number in range(trc_start, len(merged_data_lines)):
-                message_number = str((line_number + 1) - trc_start)
-                merged_data_lines[line_number] = (
-                    message_number.rjust(7) + merged_data_lines[line_number][7:]
-                )
-            trc.writelines(merged_data_lines)
+            with open(result_trace, "w") as trc:
+                merged_data_lines = merged_data.splitlines(True)
+                for line_number in range(trc_start, len(merged_data_lines)):
+                    message_number = str((line_number + 1) - trc_start)
+                    merged_data_lines[line_number] = (
+                        message_number.rjust(7) + merged_data_lines[line_number][7:]
+                    )
+                trc.writelines(merged_data_lines)
+        except IndexError:
+            log.internal_warning("no trace to merge")
 
     def __del__(self) -> None:
         self._merge_trc()

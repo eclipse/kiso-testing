@@ -63,8 +63,12 @@ class TestConnector:
         self.args = args
         self.kwargs = kwargs
 
+class TestConnectorDeletion:
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
     def __del__(self):
-        self.was_deleted = True
+            self.was_deleted = True
 
 class TestAux:
     def __init__(self, com = None, *args, **kwargs):
@@ -252,6 +256,9 @@ def ccpcan_inst(mocker):
         def __init__(self, *args, **kwargs):
             super(TCChan, self).__init__(*args, **kwargs)
             self.remote_id = None
+
+        def __del__(self):
+            pass
 
         _cc_open = mocker.stub(name="_cc_open")
         _cc_close = mocker.stub(name="_cc_close")
