@@ -445,4 +445,5 @@ class CCPCanCan(CChannel):
             log.internal_warning("no trace to merge")
 
     def __del__(self) -> None:
-        self._merge_trc()
+        if self.logging_activated:
+            self._merge_trc()
