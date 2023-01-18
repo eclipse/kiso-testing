@@ -61,33 +61,22 @@ Find below an example of such a CLI invocation:
 .. table:: Execution table for test case tags and cli tag arguments
    :widths: auto
 
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | CLI tags                                      | Test case tags                            | Executed |
-    +===============================================+===========================================+==========+
-    | none                                          | any                                       | 🗸        |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--branch-level nightly``                    | ``"branch_level": ["daily", "nightly"]``  | 🗸        |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--branch-level nightly,daily``              | ``"branch_level": ["daily", "nightly"]``  | 🗸        |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--branch-level other``                      | ``"branch_level": ["daily", "nightly"]``  | ✗        |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--branch-level nightly``                    | ``"variant": ["var1"]``                   | ✗        |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--variant var1``                            | ``"branch_level": ["daily", "nightly"]``  | 🗸        |
-    |                                               | ``"variant": ["var1"]``                   |          |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--branch-level daily --variant var1``       | ``"branch_level": ["daily", "nightly"]``  | ✗        |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--branch-level daily --variant var1``       | ``"branch_level": ["daily", "nightly"]``  | 🗸        |
-    |                                               | ``"variant": ["var1"]``                   |          |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--branch-level daily --variant var1,var42`` | ``"branch_level": ["daily", "nightly"]``  | 🗸        |
-    |                                               | ``"variant": ["var1"]``                   |          |
-    +-----------------------------------------------+-------------------------------------------+----------+
-    | ``--branch-level daily --variant var42``      | ``"branch_level": ["daily", "nightly"]``  | ✗        |
-    |                                               | ``"variant": ["var1"]``                   |          |
-    +-----------------------------------------------+-------------------------------------------+----------+
+   ========================================  =============================================================  ========
+   CLI Tags                                  Test case Tags                                                 Executed
+   ========================================  =============================================================  ========
+   none                                      any                                                            🗸
+   ``--branch-level nightly``                ``"branch-level": ["daily", "nightly"]``                       🗸
+   ``--branch-level nightly,daily``          ``"branch_level": ["daily", "nightly"]``                       🗸
+   ``--branch-level other``                  ``"branch_level": ["daily", "nightly"]``                       ✗
+   ``--branch-level daily --variant var1``   ``"branch_level": ["daily", "nightly"]``                       ✗
+   ``--branch-level daily``                  ``"variant": ["var1"]``                                        ✗
+   ``--variant var1``                        ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  🗸
+   ``--variant var2``                        ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  ✗
+   ``--branch-level nightly``                ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  🗸
+   ``--branch-level daily --variant var1``   ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  🗸
+   ``--branch-level daily --variant var42``  ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  ✗
+   ========================================  =============================================================  ========
+
 
 Find below a full example for a test suite/case declaration :
 

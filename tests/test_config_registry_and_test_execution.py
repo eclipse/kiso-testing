@@ -164,7 +164,7 @@ def test_config_registry_and_test_execution_collect_error_log(mocker, caplog, tm
     with caplog.at_level(logging.ERROR):
         test_execution.execute(config=cfg)
 
-    assert "Error occurred during test collections." in caplog.text
+    assert "Error occurred during test collection." in caplog.text
 
 
 @pytest.mark.parametrize(
