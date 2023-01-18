@@ -85,7 +85,9 @@ class UdsCallback:
                 self.request[0] + self.POSITIVE_RESPONSE_OFFSET
             ] + self.request[1:]
 
-        if self.response_data is not None and not isinstance(self.response, dict):
+        if self.response_data is not None and not (
+            isinstance(self.response, dict) or self.response is None
+        ):
             # convert response_data and append it to the response
             self.response_data = (
                 list(self.int_to_bytes(self.response_data))

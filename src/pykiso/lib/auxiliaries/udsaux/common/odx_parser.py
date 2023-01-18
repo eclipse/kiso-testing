@@ -26,12 +26,11 @@ from xml.etree.ElementTree import Element
 log = logging.getLogger(__name__)
 
 
-class ODXParser:
+class OdxParser:
     def __init__(self, odx_file: Path) -> None:
         with open(odx_file) as odx:
             # create a xml tree from root <ODX>
             self.odx_tree = ElementTree.parse(odx)
-        log.internal_debug("Instantiated ODX Parser")
 
     def _find_element_by_odx_id(self, odx_id: str) -> Element:
         """Find an odx element by the given id
@@ -54,11 +53,11 @@ class ODXParser:
         """
         # xpath to diag service for given sd instance name
         diag_service = self.odx_tree.find(f".//SD[@SI][.='{sd_instance_name}']../../..")
+        if diag_service is None:
+            raise ValueError(f"No DIAG-SERVICE has a SD containing {sd_instance_name}")
         log.internal_debug(
             f"Found {diag_service}, short-name={diag_service.find('SHORT-NAME').text}"
         )
-        if diag_service is None:
-            raise ValueError(f"No DIAG-SERVICE has a SD containing {sd_instance_name}")
         return diag_service
 
     def get_coded_values_by_sd(self, sd: str) -> List[int]:

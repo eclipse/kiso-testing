@@ -11,15 +11,26 @@ from pykiso.auxiliaries import uds_server_aux
 
 # helper objects to build callbacks can be imported from the pykiso lib
 from pykiso.lib.auxiliaries.udsaux import UdsCallback, UdsServerAuxiliary
+from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
+    NegativeResponseCode,
+)
 
 UDS_CALLBACKS = [
     UdsCallback(request=0x1003, response=0x5003),
+    # UdsCallback(
+    #     request={
+    #         "service": IsoServices.ReadDataByIdentifier,
+    #         "data": {"parameter": "SoftwareVersion"},
+    #     },
+    #     # also works without response
+    #     response={"SoftwareVersion": "0.17.0"},
+    # ),
     UdsCallback(
         request={
             "service": IsoServices.ReadDataByIdentifier,
             "data": {"parameter": "SoftwareVersion"},
         },
-        # response={"SoftwareVersion": "0.17.0"},
+        response={"NEGATIVE": NegativeResponseCode.SERVICE_NOT_SUPPORTED},
     ),
 ]
 
@@ -41,7 +52,7 @@ class ExampleUdsServerTest(pykiso.BasicTest):
         logging.info(
             f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
         )
-        time.sleep(10)
+        time.sleep(5)
         # access the previously registered callback
         extended_diag_session_callback = uds_server_aux.callbacks["0x1003"]
         self.assertGreater(

@@ -25,7 +25,10 @@ class ExampleUdsServerTest(pykiso.BasicTest):
         response = uds_client_aux.send_uds_raw([0x10, 0x03])
         assert response == [0x50, 0x03]
         response_2 = uds_client_aux.send_uds_raw([0x22, 0xA4, 0x55])
-        assert response_2 == [0x62, 0xA4, 0x55]
+        # negative:
+        assert response_2 == [0x7F, 0x22, 0x11]
+        # positive:
+        # assert response_2 == [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30]
 
     def tearDown(self):
         pass

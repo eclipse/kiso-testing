@@ -27,10 +27,11 @@ from typing import Callable, Dict, List, Optional, Union
 
 from uds import IsoServices
 
-from pykiso.lib.auxiliaries.udsaux.common.odx_parser import ODXParser
+from pykiso.lib.auxiliaries.udsaux.common.odx_parser import OdxParser
 
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
 from .common.uds_callback import UdsCallback
+from .common.uds_response import UdsResponse
 
 log = logging.getLogger(__name__)
 
@@ -57,10 +58,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         self._ecu_config = None
         if self.odx_file_path is not None:
-            log.internal_warning(
-                "Callback configuration through ODX files is not supported yet"
-            )
-            self.odx_parser = ODXParser(self.odx_file_path)
+            self.odx_parser = OdxParser(self.odx_file_path)
 
         self._callbacks: Dict[str, UdsCallback] = {}
         self._callback_lock = threading.Lock()
@@ -347,7 +345,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :return: UdsCallback with request and response parsed from odx
         """
         log.internal_debug(
-            f"creating odx based callback for request {request}, response {response}"
+            f"creating odx based callback for request={request}, response={response}"
         )
         coded_values = self.odx_parser.get_coded_values_by_sd(
             request["data"]["parameter"]
@@ -360,12 +358,26 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             raise ValueError(
                 f"Given IsoService {request['service']} does not match parsed SID {uds_request[0]}"
             )
-        # create the response based on the request if its a dict, else it will get autoformatted:
-        # take content of response and give as bytes to response_data -> gets correctly saved by callback
+
         if isinstance(response, dict):
-            # create response from dict
-            pass
-        return UdsCallback(uds_request, response, response_data, data_length, callback)
+            # create response from dict -> implementation fro single values TODO: clarify
+            key, data = response.popitem()
+            if key.lower() == "negative" or key == UdsResponse.NEGATIVE_RESPONSE_SID:
+                # create negative response: Negative response SID, request SID, NRC
+                log.internal_debug(
+                    f"Creating a negative response for callback: {UdsResponse.NEGATIVE_RESPONSE_SID},{uds_request[0]}, {data}"
+                )
+                response = [UdsResponse.NEGATIVE_RESPONSE_SID, uds_request[0], data]
+            else:
+                # create the response based on the request if its a dict, else it will get autoformatted:
+                # take content of response and give as bytes to response_data -> gets correctly saved by callback
+                response_data = data.encode()
+                response = None
+        callback = UdsCallback(
+            uds_request, response, response_data, data_length, callback
+        )
+        log.internal_debug(f"Created a callback from odx: {callback}")
+        return callback
 
     def _abort_command(self) -> None:
         """Not used, satisfy interface."""
