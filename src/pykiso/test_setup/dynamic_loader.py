@@ -230,8 +230,10 @@ class ModuleCache:
         return inst
 
     def delete_all_instances(self) -> None:
+        """Call custom del method if it exists"""
         for instance in self.instances.values():
-            instance.__del__()
+            if callable(getattr(instance, "__del__", None)):
+                instance.__del__()
 
 
 class AuxiliaryCache(ModuleCache):
