@@ -49,6 +49,7 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
     assert "END OF TEST: " in output.err
     assert "->  PASSED" in output.err
     assert "->  FAILED" not in output.err
+    assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -68,6 +69,25 @@ def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "Ran 0 tests" in output.err
+    assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
+
+
+@pytest.mark.parametrize("tmp_test", [("aux_1", "aux_2", False)], indirect=True)
+def test_config_registry_and_test_execution_with_user_tags(tmp_test, capsys):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    with an undefined user tag.
+
+    Validation criteria:
+        -  'SKIPPED' is present in test output
+    """
+    user_tags = {"unknown-variant": ["will raise"]}
+    cfg = parse_config(tmp_test)
+    ConfigRegistry.register_aux_con(cfg)
+    exit_code = test_execution.execute(cfg, user_tags=user_tags)
+    ConfigRegistry.delete_aux_con()
+
+    assert exit_code == test_execution.ExitCode.BAD_CLI_USAGE
 
 
 @pytest.mark.parametrize("tmp_test", [("aux_1", "aux_2", False)], indirect=True)
@@ -88,6 +108,7 @@ def test_config_registry_and_test_execution_with_user_tags(tmp_test, capsys):
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "SKIPPED TEST" in output.err
+    assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
 
 
 def test_parse_test_selection_pattern():
@@ -162,9 +183,13 @@ def test_config_registry_and_test_execution_collect_error_log(mocker, caplog, tm
     cfg = parse_config(tmp_test)
 
     with caplog.at_level(logging.ERROR):
-        test_execution.execute(config=cfg)
+        exit_code = test_execution.execute(config=cfg)
 
     assert "Error occurred during test collection." in caplog.text
+    assert (
+        exit_code
+        == test_execution.ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
+    )
 
 
 @pytest.mark.parametrize(
@@ -184,13 +209,13 @@ def test_config_registry_and_test_execution_test_auxiliary_creation_error(
         "pykiso.test_coordinator.test_execution.collect_test_suites",
         side_effect=pykiso.AuxiliaryCreationError("test"),
     )
-
     cfg = parse_config(tmp_test)
 
     with caplog.at_level(logging.ERROR):
-        test_execution.execute(config=cfg)
+        exit_code = test_execution.execute(config=cfg)
 
     assert "Error occurred during auxiliary creation." in caplog.text
+    assert exit_code == test_execution.ExitCode.AUXILIARY_CREATION_FAILED
 
 
 @pytest.mark.parametrize("tmp_test", [("text_aux1", "text_aux2", False)], indirect=True)
@@ -439,6 +464,30 @@ def test_apply_variant_filter(tc_tags, cli_tags, expect_skip, expected_error, mo
         else:
             assert mock_test_case.__unittest_skip__ == True
             assert mock_test_case.__unittest_skip_why__ == mock_test_case._skip_msg
+
+
+def test_apply_variant_filter_multiple_testcases(mocker):
+    cli_tags = {"k1": ["v1"]}
+
+    mock_test_case_to_run = mocker.Mock()
+    mock_test_case_to_run.tag = {"k1": ["v1"], "k2": ["v2"]}
+
+    mock_test_case_to_skip = mocker.Mock()
+    mock_test_case_to_skip.tag = {"k3": ["v1", "v3"]}
+    mock_flatten = mocker.patch(
+        "pykiso.test_coordinator.test_execution.test_suite.flatten",
+        return_value=[mock_test_case_to_run, mock_test_case_to_skip],
+    )
+
+    test_execution.apply_tag_filter({}, cli_tags)
+
+    assert mock_flatten.call_count == 2
+    assert not hasattr(mock_test_case_to_run, "__unittest_skip__")
+    assert not hasattr(mock_test_case_to_run, "__unittest_skip_why__")
+    assert mock_test_case_to_skip.__unittest_skip__ == True
+    assert (
+        "'k1' not present in test tags" in mock_test_case_to_skip.__unittest_skip_why__
+    )
 
 
 def test_test_execution_apply_tc_name_filter(mocker):
