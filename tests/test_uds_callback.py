@@ -1,11 +1,10 @@
 ##########################################################################
-# Copyright (c) 2010-2022 Robert Bosch GmbH
+# Copyright (c) 2010-2023 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
 #
-# This source code is copyright protected and proprietary
-# to Robert Bosch GmbH. Only those rights that have been
-# explicitly granted to you by Robert Bosch GmbH in written
-# form may be exercised. All other rights remain with
-# Robert Bosch GmbH.
+# SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
 import logging
@@ -31,6 +30,9 @@ def aux_mock(mocker):
     return MockAux()
 
 
+ODX_REQUEST = {"service": 0x10, "data": {"parameter": "SoftwareVersion"}}
+
+
 class TestUdsCallback:
     @pytest.mark.parametrize(
         "req, resp, data, data_len, expected_resp",
@@ -51,6 +53,38 @@ class TestUdsCallback:
         callback = UdsCallback(req, resp, data, data_len)
 
         assert callback.request == [0x01, 0x02]
+        assert callback.response == expected_resp
+        assert callback.call_count == 0
+        assert callback.callback is None
+
+    @pytest.mark.parametrize(
+        "req, resp, data, data_length, expected_resp",
+        [
+            # odx based callbacks behave differently
+            (
+                ODX_REQUEST,
+                {"SoftwareVersion": "0.17.0"},
+                None,
+                None,
+                {"SoftwareVersion": "0.17.0"},
+            ),
+            (ODX_REQUEST, [0x40, 0x03], None, 6, [0x40, 0x03]),
+            (ODX_REQUEST, [0x40, 0x03], 0x01, None, [0x40, 0x03, 0x01]),
+            (
+                ODX_REQUEST,
+                [0x40, 0x03],
+                b"\x01",
+                6,
+                [0x40, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00],
+            ),
+            (ODX_REQUEST, None, b"\x01", 6, None),
+            (ODX_REQUEST, None, None, 6, None),
+        ],
+    )
+    def test_post_init_dict(self, req, resp, data, data_length, expected_resp):
+        callback = UdsCallback(req, resp, data, data_length)
+
+        assert callback.request == ODX_REQUEST
         assert callback.response == expected_resp
         assert callback.call_count == 0
         assert callback.callback is None
