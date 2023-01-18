@@ -33,7 +33,6 @@ if TYPE_CHECKING:
 import enum
 import logging
 import re
-import sys
 import time
 import unittest
 from collections import OrderedDict, namedtuple
@@ -97,52 +96,71 @@ def apply_tag_filter(
     :param usr_tags: encapsulate user's variant choices
     """
 
-    def is_skip_test(test_case: BasicTest) -> bool:
+    def format_tag_names(tags: Dict[str, List[str]]) -> Dict[str, List[str]]:
+        """Remove any comma or underscore from the provided dict's keys."""
+        for char in ["_", "-"]:
+            tags = {name.replace(char, ""): value for name, value in tags.items()}
+        return tags
+
+    def should_skip(test_case: BasicTest) -> bool:
         """Check if test shall be skipped by evaluating the test case tag
         attribute.
 
         :param test_case: test_case to check
         :return: True if test shall be skipped else False
         """
-        should_skip = False
         if test_case.tag is None:
-            return should_skip
-
-        # Tags shall match when "_" are used instead of "-" or vice versa
-        parsed_usr_tags = usr_tags
-        for character in ["-", "_"]:
-            parsed_usr_tags = {
-                key.replace(character, ""): value
-                for key, value in parsed_usr_tags.items()
-            }
-            test_case.tag = {
-                key.replace(character, ""): value
-                for key, value in test_case.tag.items()
-            }
+            return False
 
         # Skip only the test cases that have a matching tag name but no matching tag value
-        for tag_id, tag_value in parsed_usr_tags.items():
-            if tag_id not in test_case.tag.keys():
-                continue
-            user_tag_values = tag_value if isinstance(tag_value, list) else [tag_value]
-            if not any(usr_val in test_case.tag[tag_id] for usr_val in user_tag_values):
-                should_skip = True
-                test_case._non_matching_tag = tag_id
-                break
+        for cli_tag_id, cli_tag_value in usr_tags.items():
+            # skip any test case that doesn't define a CLI-provided tag name
+            if cli_tag_id not in test_case.tag.keys():
+                test_case._skip_msg = (
+                    f"provided tag {cli_tag_id!r} not present in test tags"
+                )
+                return True
+            # skip any test case that which tag value don't match the provided tag's value
+            cli_tag_values = (
+                cli_tag_value if isinstance(cli_tag_value, list) else [cli_tag_value]
+            )
+            if not any(
+                cli_val in test_case.tag[cli_tag_id] for cli_val in cli_tag_values
+            ):
+                test_case._skip_msg = f"non-matching value for tag {cli_tag_id!r}"
+                return True
 
-        return should_skip
+        return False
 
-    def set_skipped(test_case: BasicTest) -> None:
-        """Set testcase to skipped
+    def set_skipped(test_case: BasicTest) -> BasicTest:
+        """Set testcase to skipped.
 
         :param test_case: testcase to be skipped
+        :return: the skipped testcase as a new instance of the provided
+            TestCase subclass.
         """
-        msg = f"non-matching value for tag {test_case._non_matching_tag!r}"
-        skipped_test_cls = unittest.skip(msg)(test_case.__class__)
+        skipped_test_cls = unittest.skip(test_case._skip_msg)(test_case.__class__)
         return skipped_test_cls()
 
-    base_suite: List[BasicTest] = test_suite.flatten(all_tests_to_run)
-    list(map(set_skipped, filter(is_skip_test, base_suite)))
+    # collect and reformat all CLI and test case tag names
+    usr_tags = format_tag_names(usr_tags)
+    all_test_tags = []
+    for tc in test_suite.flatten(all_tests_to_run):
+        if getattr(tc, "tag", None) is None:
+            continue
+        tc.tag = format_tag_names(tc.tag)
+        all_test_tags.extend(tc.tag.keys())
+
+    # verify that each provided tag name is defined in at least one test case
+    all_test_tags = set(all_test_tags)
+    for tag_name in usr_tags:
+        if tag_name not in all_test_tags:
+            raise NameError(
+                f"Provided tag {tag_name!r} is not defined in any testcase."
+            )
+
+    # skip the tests according to the provided CLI tags and the defined test tags
+    list(map(set_skipped, filter(should_skip, test_suite.flatten(all_tests_to_run))))
 
 
 def apply_test_case_filter(
@@ -157,8 +175,6 @@ def apply_test_case_filter(
     :param test_case_pattern: pattern to select test case as unix filename pattern
     :return: new test suite with filtered test cases
     """
-
-    base_suite = test_suite.flatten(all_tests_to_run)
 
     def is_active_test(test_case: BasicTest) -> bool:
         """Check if testcase shall be active by given selection patterns
@@ -176,6 +192,7 @@ def apply_test_case_filter(
         else:
             return False
 
+    base_suite = test_suite.flatten(all_tests_to_run)
     filtered_suite = filter(is_active_test, base_suite)
     return unittest.TestSuite(filtered_suite)
 
@@ -303,7 +320,6 @@ def execute(
         (tests failed, unexpected exception, ...)
     """
     try:
-
         test_file_pattern = parse_test_selection_pattern(pattern_inject)
 
         test_suites = collect_test_suites(
@@ -360,8 +376,11 @@ def execute(
             generate_step_report(result, step_report)
 
         exit_code = failure_and_error_handling(result)
+    except NameError:
+        log.exception("Error occurred during tag evaluation.")
+        exit_code = ExitCode.BAD_CLI_USAGE
     except TestCollectionError:
-        log.exception("Error occurred during test collections.")
+        log.exception("Error occurred during test collection.")
         exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
     except AuxiliaryCreationError:
         log.exception("Error occurred during auxiliary creation.")
