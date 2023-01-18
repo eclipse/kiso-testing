@@ -19,7 +19,6 @@ Can Communication Channel using PCAN hardware
 
 """
 
-import glob
 import logging
 import os
 import sys
@@ -85,7 +84,7 @@ class CCPCanCan(CChannel):
         :param interface: python-can interface modules used
         :param channel: the can interface name
         :param state: BusState of the channel
-        :param trace_path: path to write the trace
+        :param trace_path: path to write the trace (can be a folder or a .trc file)
         :param trace_size: maximum size of the trace (in MB)
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
@@ -139,24 +138,27 @@ class CCPCanCan(CChannel):
         self.bus = None
         self.logging_activated = logging_activated
         self.raw_pcan_interface = None
-        self.logging_path = None
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
         self.trc_count = 0
 
         """
-        Extract the base logging directory from the logging module, so we can
-        create our logging folder in the correct place.
-        logging_path will be set to the parent directory of the logfile which
-        is set in the logging module + /raw/PCAN
-        If an AttributeError occurs, the logging module is not set to log into
-        a file.
-        In this case we set the logging_path to None and will just log into a
-        generic logfile in the current working directory, which will be
-        overwritten every time, a log is initiated.
+        Logging in the trace will fall under those cases:
+        1 - trace_path is a .trc file, CAN messages will be logged in it. If it already
+            exists If it already exists, it will be overwritten.
+        2 - trace_path has another file extension, a ValueError will be raised.
+        3 - trace_path is an existing folder, a default name will be generated
+            for the trace file containing the timestamp.
+        4 - trace_path is a non-existent folder, in this case the folder will be
+            created and the default name will be used for the trace file.
+        5 - trace_path is not defined by the user, in this case the trace_path is set to
+        None and log will be saved in the default file in the current working directory.
         """
-        if self.trace_path.suffix == "":
+        if self.trace_path == "":
+            self.trace_path = Path.cwd()
+            self.trace_name = None
+        elif self.trace_path.suffix == "":
             self.trace_name = None
         elif self.trace_path.suffix != ".trc":
             raise ValueError(
@@ -208,7 +210,7 @@ class CCPCanCan(CChannel):
     def _pcan_configure_trace(self) -> None:
         """Configure PCAN dongle to create a trace file.
 
-        If self.logging_path is set, this path will be created, if it does not
+        If self.trace_path is set, this path will be created, if it does not
         exist and the logfile will be placed there.
         Otherwise it will be logged to the current working directory if a
         default filename, which will be overwritten in successive calls.
@@ -386,9 +388,7 @@ class CCPCanCan(CChannel):
         """Merge multiple trc files in one."""
         list_of_traces = []
 
-        if self.trace_path is None:
-            self.trace_path = Path(".")
-        elif isinstance(self.trace_path, str):
+        if isinstance(self.trace_path, str):
             self.trace_path = Path(self.trace_path)
 
         # Get all trc files in trace path
