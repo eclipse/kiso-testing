@@ -26,6 +26,7 @@ Test Execution
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.loader import VALID_MODULE_NAME
 
 if TYPE_CHECKING:
     from .test_case import BasicTest
@@ -249,8 +250,19 @@ def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
             parsed_patterns.append(pattern)
     for _ in range(3 - (len(parsed_patterns))):
         parsed_patterns.append(None)
-
     return TestFilterPattern(*parsed_patterns)
+
+
+def check_filter_pattern(pattern: str) -> None:
+    """only accept valid python module names as pattern, else tests will not be
+    run because unittest discards it.
+
+    :param pattern: the file pattern to check
+    :raises InvalidPattern: if given pattern is not a valid python module name
+    """
+    if not VALID_MODULE_NAME.match(pattern):
+        log.error(f"Invalid pattern detected: '{pattern}'")
+        raise pykiso.exceptions.InvalidPattern(pattern)
 
 
 def collect_test_suites(
@@ -274,6 +286,8 @@ def collect_test_suites(
         try:
             if test_filter_pattern is not None:
                 test_suite_configuration["test_filter_pattern"] = test_filter_pattern
+            # can check cli patterns and yaml patterns here
+            check_filter_pattern(test_suite_configuration["test_filter_pattern"])
             current_test_suite = create_test_suite(test_suite_configuration)
             list_of_test_suites.append(current_test_suite)
         except BaseException as e:
@@ -307,13 +321,14 @@ def execute(
     try:
 
         test_file_pattern = parse_test_selection_pattern(pattern_inject)
+        logging.debug(f"==> parsed test_file_pattern: {test_file_pattern}")
 
         test_suites = collect_test_suites(
             config["test_suite_list"], test_file_pattern.test_file
         )
         # Group all the collected test suites in one global test suite
         all_tests_to_run = unittest.TestSuite(test_suites)
-
+        logging.debug(f"--> all tests to run: {all_tests_to_run}")
         # filter test cases based on variant and branch-level options
         if user_tags:
             apply_tag_filter(all_tests_to_run, user_tags)

@@ -136,6 +136,66 @@ def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mock
     assert "Ran 0 tests" not in output.err
 
 
+def test_check_filter_pattern():
+    pattern = "valid_python_name.py"
+    actual = test_execution.check_filter_pattern(pattern)
+    assert actual is None
+
+
+def test_check_filter_pattern_invalid(capsys):
+    pattern = "invalid_python-name.py"
+
+    with pytest.raises(pykiso.InvalidPattern) as exec_info:
+        test_execution.check_filter_pattern(pattern)
+
+    assert (
+        f"Test file patterns need to be valid python module names but '{pattern}' is invalid"
+        in exec_info.value.message
+    )
+
+
+@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+def test_config_registry_and_test_execution_collect_suites_with_invalid_cli_pattern(
+    tmp_test, capsys
+):
+    """Call collect_test_suites function from test_execution using
+    configuration data coming from parse_config method and specifying a invalid
+    pattern from cli
+
+    Validation criteria:
+        - run is executed with TestCollectionError
+    """
+    cfg = parse_config(tmp_test)
+    ConfigRegistry.register_aux_con(cfg)
+
+    with pytest.raises(pykiso.TestCollectionError):
+        test_execution.collect_test_suites(
+            cfg["test_suite_list"],
+            test_filter_pattern="invalid_module-name.py::my_test",
+        )
+    ConfigRegistry.delete_aux_con()
+
+
+@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+def test_config_registry_and_test_execution_collect_suites_with_invalid_cfg_pattern(
+    tmp_test, capsys
+):
+    """Call collect_test_suites function from test_execution using
+    configuration data coming from parse_config method and specifying a invalid
+    pattern in the cfg
+
+    Validation criteria:
+        - run is executed with TestCollectionError
+    """
+    cfg = parse_config(tmp_test)
+    cfg["test_filter_pattern"] = "invalid_module-name.py"
+    ConfigRegistry.register_aux_con(cfg)
+
+    with pytest.raises(pykiso.TestCollectionError):
+        test_execution.collect_test_suites(cfg["test_suite_list"])
+    ConfigRegistry.delete_aux_con()
+
+
 @pytest.mark.parametrize(
     "tmp_test",
     [("collector_error_2_aux1", "collector_error_2_aux", False)],
