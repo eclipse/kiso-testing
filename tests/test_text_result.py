@@ -98,18 +98,20 @@ class TestResultStream:
 
 class TestBannerTestResult:
     @pytest.fixture()
-    def test_result_instance(self, mock_open):
-        return BannerTestResult(None, None, 1)
+    def banner_test_result_instance(self):
+        return BannerTestResult(sys.stderr, True, 1)
 
     @pytest.mark.parametrize(
         "error,result_expected", [((Exception), True), (None, False)]
     )
-    def test_addSubTest(self, mocker, test_result_instance, error, result_expected):
+    def test_addSubTest(
+        self, mocker, banner_test_result_instance, error, result_expected
+    ):
         add_subTest_mock = mocker.patch("unittest.result.TestResult.addSubTest")
         test_mock = mocker.patch("pykiso.test_coordinator.test_case.BasicTest")
         subtest_mock = mocker.patch("unittest.case._SubTest")
 
-        test_result_instance.addSubTest(test_mock, subtest_mock, error)
+        banner_test_result_instance.addSubTest(test_mock, subtest_mock, error)
 
         add_subTest_mock.assert_called_once_with(test_mock, subtest_mock, error)
-        assert test_result_instance.error_occurred == result_expected
+        assert banner_test_result_instance.error_occurred == result_expected
