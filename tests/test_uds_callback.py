@@ -79,6 +79,8 @@ class TestUdsCallback:
             ),
             (ODX_REQUEST, None, b"\x01", 6, None),
             (ODX_REQUEST, None, None, 6, None),
+            (ODX_REQUEST, [0x40, 0x03, 0x01], None, None, [0x40, 0x03, 0x01]),
+            (ODX_REQUEST, [0x40, 0x03, 0x01], 0x02, None, [0x40, 0x03, 0x01, 0x02]),
         ],
     )
     def test_post_init_dict(self, req, resp, data, data_length, expected_resp):
