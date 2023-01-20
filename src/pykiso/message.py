@@ -117,14 +117,20 @@ class Message:
     TYPE: msg_type | message_token | sub_type | errorCode |
     """
 
+    crc_byte_size = 2
+    header_size = 8
+    max_payload_size = 0xFF
+    max_message_size = header_size + max_payload_size + crc_byte_size
+    reserved = 0
+
     def __init__(
         self,
         msg_type: Union[int, MessageType] = 0,
-        sub_type=0,
+        sub_type: int = 0,
         error_code: int = 0,
         test_suite: int = 0,
         test_case: int = 0,
-        tlv_dict: Optional[Dict] = None,
+        tlv_dict: Optional[Dict[str, Union[int, bytes]]] = None,
     ):
         """Create a generic message.
 
@@ -148,12 +154,9 @@ class Message:
         """
         self.msg_type = msg_type
         global msg_cnt
-        self.crc_byte_size = 2
-        self.header_size = 8
         self.msg_token = next(msg_cnt)
         self.sub_type = sub_type
         self.error_code = error_code
-        self.reserved = 0
         self.test_suite = test_suite
         self.test_case = test_case
         self.tlv_dict = tlv_dict
@@ -247,7 +250,6 @@ class Message:
         :return: itself
         """
         msg = cls()
-
         if (not isinstance(raw_packet, bytes)) and (
             len(raw_packet) < (msg.header_size + msg.crc_byte_size)
         ):

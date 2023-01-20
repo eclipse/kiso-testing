@@ -35,11 +35,9 @@ This interface enforces the implementation of the following methods:
 - :py:meth:`~pykiso.connector.CChannel._cc_close`: close the communication.
   Does not take any argument.
 - :py:meth:`~pykiso.connector.CChannel._cc_send`: send data if the communication is open.
-  Requires one positional argument ``msg`` and one keyword argument ``raw``, used to serialize the data
-  before sending it.
+  Requires one positional argument ``msg`` .
 - :py:meth:`~pykiso.connector.CChannel._cc_receive`: receive data if the communication is open.
-  Requires one positional argument ``timeout`` and one keyword argument ``raw``, used to deserialize
-  the data when receiving it.
+  Requires one positional argument ``timeout`` .
 
 
 Class definition and instanciation
@@ -113,19 +111,13 @@ The connector then becomes:
         def _cc_close(self):
             self.my_connection.close()
 
-        def _cc_send(self, data: Union[Data, bytes], raw = False):
-            if raw:
-                data_bytes = data
-            else:
-                data_bytes = data.serialize()
+        def _cc_send(self, data: bytes):
             self.my_connection.send(data_bytes)
 
-        def _cc_receive(self, timeout, raw = False):
+        def _cc_receive(self, timeout) -> Optional[bytes]:
             received_data = self.my_connection.receive(timeout=timeout)
             if received_data:
-                if not raw:
-                    data = Data.deserialize(received_data)
-                return data
+                return received_data
 
 .. note::
     The API used in this example for the fictive *my_connection* module
@@ -146,15 +138,11 @@ see the example below with the cc_pcan_can connector and the return of the remot
 .. code:: python
 
     def _cc_receive(
-        self, timeout: float = 0.0001, raw: bool = False
+        self, timeout: float = 0.0001
     ) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
-        If raw parameter is set to True return received message as it is (bytes)
-        otherwise test entity protocol format is used and Message class type is returned.
-
         :param timeout: timeout applied on reception
-        :param raw: boolean use to select test entity protocol format
 
         :return: the received data and the source can id
         """
@@ -165,8 +153,6 @@ see the example below with the cc_pcan_can connector and the return of the remot
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data
                 timestamp = received_msg.timestamp
-                if not raw:
-                    payload = Message.parse_packet(payload)
                 log.internal_debug(f"received CAN Message: {frame_id}, {payload}, {timestamp}")
                 return {"msg": payload, "remote_id": frame_id}
             else:
@@ -186,15 +172,12 @@ see example below with the cc_pcan_can connector and the additional remote_id pa
 
 .. code:: python
 
-    def _cc_send(self, msg: MessageType, raw: bool = False, **kwargs) -> None:
+    def _cc_send(self, msg: MessageType, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
-        If remote_id parameter is not given take configured ones, in addition if
-        raw is set to True take the msg parameter as it is otherwise parse it using
-        test entity protocol format.
+        If remote_id parameter is not given take configured ones
 
         :param msg: data to send
-        :param raw: boolean use to select test entity protocol format
         :param kwargs: named arguments
 
         """

@@ -20,7 +20,7 @@ CAN Communication Channel using Vector hardware
 """
 
 import logging
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import can
 import can.bus
@@ -122,30 +122,21 @@ class CCVectorCan(CChannel):
         self.bus.shutdown()
         self.bus = None
 
-    def _cc_send(self, msg, raw: bool = False, **kwargs) -> None:
+    def _cc_send(self, msg, remote_id: Optional[int] = None, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
-        If remote_id parameter is not given take configured ones, in addition if
-        raw is set to True take the msg parameter as it is otherwise parse it using
-        test entity protocol format.
+        If remote_id parameter is not given take configured ones.
 
         :param msg: data to send
-        :param raw: boolean use to select test entity protocol format
-        :param kwargs: destination can id used
+        :param remote_id: destination can id used
+        :param kwargs: named arguments
 
         """
-        _data = msg
-        remote_id = kwargs.get("remote_id")
-
-        if remote_id is None:
-            remote_id = self.remote_id
-
-        if not raw:
-            _data = msg.serialize()
+        remote_id = remote_id or self.remote_id
 
         can_msg = can.Message(
             arbitration_id=remote_id,
-            data=_data,
+            data=msg,
             is_extended_id=self.is_extended_id,
             is_fd=self.fd,
             bitrate_switch=self.enable_brs,
@@ -154,16 +145,10 @@ class CCVectorCan(CChannel):
 
         log.internal_debug(f"sent CAN Message: {can_msg}")
 
-    def _cc_receive(
-        self, timeout=0.0001, raw: bool = False
-    ) -> Dict[str, Union[MessageType, int]]:
+    def _cc_receive(self, timeout=0.0001) -> Dict[str, Union[MessageType, int]]:
         """Receive a can message using configured filters.
 
-        If raw parameter is set to True return received message as it is (bytes)
-        otherwise test entity protocol format is used and Message class type is returned.
-
         :param timeout: timeout applied on reception
-        :param raw: boolean use to select test entity protocol format
 
         :return: the received data and the source can id
         """
@@ -173,10 +158,6 @@ class CCVectorCan(CChannel):
             if received_msg is not None:
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data
-
-                if not raw:
-                    payload = Message.parse_packet(payload)
-
                 log.internal_debug(f"received CAN Message: {frame_id}, {payload}")
 
                 return {"msg": payload, "remote_id": frame_id}

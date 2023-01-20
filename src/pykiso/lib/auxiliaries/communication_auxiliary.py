@@ -202,7 +202,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         state = False
         if cmd_message == "send":
             try:
-                self.channel.cc_send(msg=cmd_data, raw=True)
+                self.channel.cc_send(msg=cmd_data)
                 state = True
             except Exception:
                 log.exception(
@@ -223,7 +223,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
             for a message
         """
         try:
-            rcv_data = self.channel.cc_receive(timeout=timeout_in_s, raw=True)
+            rcv_data = self.channel.cc_receive(timeout=timeout_in_s)
             log.internal_debug(f"received message '{rcv_data}' from {self.channel}")
             msg = rcv_data.get("msg")
             if msg is not None and self.queueing_event.is_set():

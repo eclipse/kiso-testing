@@ -189,7 +189,7 @@ class RecordAuxiliary(DTAuxiliaryInterface):
             if sys.getsizeof(self.get_data()) > self.max_file_size:
                 log.error("Data size too large")
 
-            recv_response = self.channel.cc_receive(timeout=self.timeout, raw=True)
+            recv_response = self.channel.cc_receive(timeout=self.timeout)
 
             stream = recv_response.get("msg")
             source = recv_response.get("remote_id")
