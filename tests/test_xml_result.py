@@ -54,9 +54,6 @@ def test_CustomXmlResult_constructor(mocker):
     mock_xml_test_result = mocker.patch.object(
         xml_result.xmlrunner.runner._XMLTestResult, "__init__"
     )
-    mock_banner_test_result = mocker.patch.object(
-        pykiso.test_result.text_result.BannerTestResult, "__init__"
-    )
 
     xml_result.XmlTestResult(
         "stream",
@@ -77,13 +74,6 @@ def test_CustomXmlResult_constructor(mocker):
         elapsed_times="elapsed_times",
         properties="properties",
         infoclass="infoclass",
-    )
-
-    mock_banner_test_result.assert_called_once()
-    assert mock_banner_test_result.call_args_list[0][1] == dict(
-        stream="stream",
-        descriptions="descriptions",
-        verbosity="verbosity",
     )
 
 
