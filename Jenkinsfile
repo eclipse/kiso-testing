@@ -17,6 +17,7 @@ pipeline
             }
         }
     }
+
     options
     {
         timeout(time: 2, unit: 'HOURS')
@@ -71,6 +72,22 @@ pipeline
             {
                 // Run dummy yaml file
                 sh 'poetry run pykiso -c examples/dummy.yaml --junit'
+            }
+        }
+        stage('Run Zephyr test')
+        {
+            steps
+            {
+                sh '''mkdir zephyr-project
+                    cd zephyr-project
+                    west init .
+                    west update
+                    west zephyr-export
+                    export PATH=$PATH:`pwd`/zephyr/scripts/
+                    cd ..
+                    poetry run pip3 install colorama ply pyelftools west
+                    poetry run pykiso -c examples/zephyr.yaml --log-level DEBUG
+                '''
             }
         }
         stage('Generate documentation')

@@ -17,3 +17,4 @@ Included Auxiliaries
     record_auxiliary
     simulated_auxiliary
     uds_auxiliary
+    zephyr_auxiliary

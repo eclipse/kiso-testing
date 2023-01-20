@@ -12,3 +12,4 @@ All modules that need a more extensive documentation can be found here.
     record
     uds_auxiliary
     uds_server_auxiliary
+    zephyr_auxiliary
