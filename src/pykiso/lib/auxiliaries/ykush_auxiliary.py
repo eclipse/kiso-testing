@@ -124,34 +124,31 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         log.internal_info("Auxiliary instance deleted")
         return True
 
-    def connect_device(self, serial: int = None, path: str = None):
+    def connect_device(self, serial: int = None):
         """Find an Ykush device, will automatically connect to the first one
         it find, if you have multiple connected you have to precise the serial
-        number or the path to the device.
+        number of the device.
 
         :param serial: serial number of the device, defaults to None
-        :param path: path of the device, defaults to None
         :raises YkushDeviceNotFound: if no ykush device is found
         """
         list_ykush_device = []
-        if path:
-            # open the provided path
-            # blocking by default
+        self._path = None
+        # try to locate a device
+        for device in hid.enumerate(0, 0):
+            if (
+                device["vendor_id"] == YKUSH_USB_VID
+                and device["product_id"] in YKUSH_USB_PID_LIST
+            ):
+                list_ykush_device.append(device["serial_number"])
+                if serial is None or serial == device["serial_number"]:
+                    self._product_id = device["product_id"]
+                    self._path = device["path"]
+
+        if self._path is not None:
             self._ykush_device = hid.device()
-            self._ykush_device.open_path(path)
-            self._path = path
+            self._ykush_device.open_path(self._path)
         else:
-            # otherwise try to locate a device
-            for device in hid.enumerate(0, 0):
-                if (
-                    device["vendor_id"] == YKUSH_USB_VID
-                    and device["product_id"] in YKUSH_USB_PID_LIST
-                ):
-                    list_ykush_device.append(device["serial_number"])
-                    if serial is None or serial == device["serial_number"]:
-                        self._product_id = device["product_id"]
-                        return self.connect_device(path=device["path"])
-        if self._ykush_device is None:
             if list_ykush_device == []:
                 raise YkushDeviceNotFound(
                     "Could not connect to a ykush hub, no device was found."

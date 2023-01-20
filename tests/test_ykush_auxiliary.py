@@ -83,14 +83,6 @@ def test_ykush_instance(mocker, ykush_aux_instance):
     assert power_on_mocker.call_count == 2
 
 
-def test_connect_device_path(hid_device_mock, ykush_aux_instance):
-    path = "test"
-
-    ykush_aux_instance.connect_device(path=path)
-
-    hid_device_mock.assert_called_once()
-
-
 def test_connect_device_serial(ykush_aux_instance, hid_enumerate_mock):
     serial = "YK28389"
     device = {
