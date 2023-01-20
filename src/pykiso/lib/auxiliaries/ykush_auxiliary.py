@@ -105,7 +105,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         self._ykush_device = None
         self._product_id = None
         self._path = None
-        self.find_device(serial_number)
+        self.connect_device(serial_number)
         self.number_of_port = self.get_number_of_port()
 
     def _create_auxiliary_instance(self) -> bool:
@@ -124,7 +124,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
         log.internal_info("Auxiliary instance deleted")
         return True
 
-    def find_device(self, serial: int = None, path: str = None):
+    def connect_device(self, serial: int = None, path: str = None):
         """Find an Ykush device, will automatically connect to the first one
         it find, if you have multiple connected you have to precise the serial
         number or the path to the device.
@@ -150,7 +150,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
                     list_ykush_device.append(device["serial_number"])
                     if serial is None or serial == device["serial_number"]:
                         self._product_id = device["product_id"]
-                        return self.find_device(path=device["path"])
+                        return self.connect_device(path=device["path"])
         if self._ykush_device is None:
             if list_ykush_device == []:
                 raise YkushDeviceNotFound(

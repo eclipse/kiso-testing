@@ -83,15 +83,15 @@ def test_ykush_instance(mocker, ykush_aux_instance):
     assert power_on_mocker.call_count == 2
 
 
-def test_find_device_path(hid_device_mock, ykush_aux_instance):
+def test_connect_device_path(hid_device_mock, ykush_aux_instance):
     path = "test"
 
-    ykush_aux_instance.find_device(path=path)
+    ykush_aux_instance.connect_device(path=path)
 
     hid_device_mock.assert_called_once()
 
 
-def test_find_device_serial(ykush_aux_instance, hid_enumerate_mock):
+def test_connect_device_serial(ykush_aux_instance, hid_enumerate_mock):
     serial = "YK28389"
     device = {
         "vendor_id": 0x04D8,
@@ -101,7 +101,7 @@ def test_find_device_serial(ykush_aux_instance, hid_enumerate_mock):
     }
     hid_enumerate_mock.return_value = [device]
 
-    ykush_aux_instance.find_device(serial=serial)
+    ykush_aux_instance.connect_device(serial=serial)
 
     hid_enumerate_mock.assert_called_once_with(0, 0)
     assert ykush_aux_instance._product_id == device["product_id"]
@@ -124,13 +124,13 @@ def test_find_device_serial(ykush_aux_instance, hid_enumerate_mock):
         ),
     ],
 )
-def test_find_device_no_device_found(
+def test_connect_device_no_device_found(
     ykush_aux_instance, hid_enumerate_mock, list_device_returned
 ):
     hid_enumerate_mock.return_value = list_device_returned
     ykush_aux_instance._ykush_device = None
     with pytest.raises(YkushDeviceNotFound):
-        ykush_aux_instance.find_device(serial=12)
+        ykush_aux_instance.connect_device(serial=12)
 
     hid_enumerate_mock.assert_called_once_with(0, 0)
 
