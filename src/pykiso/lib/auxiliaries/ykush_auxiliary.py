@@ -149,7 +149,6 @@ class YkushAuxiliary(DTAuxiliaryInterface):
                 ):
                     list_ykush_device.append(device["serial_number"])
                     if serial is None or serial == device["serial_number"]:
-                        # Alber3.1 3.2 object attribute for YKUSHXS
                         self._product_id = device["product_id"]
                         return self.find_device(path=device["path"])
         if self._ykush_device is None:
@@ -168,7 +167,7 @@ class YkushAuxiliary(DTAuxiliaryInterface):
     @contextmanager
     def _open_and_close_device(self):
         """Context manager to open and close device every time we send a message
-        else we will get an empty message every time in response.
+        otherwise  we will get an empty message every time in response.
         """
         self._ykush_device = hid.device()
         self._ykush_device.open_path(self._path)

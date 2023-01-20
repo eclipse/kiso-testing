@@ -1,11 +1,13 @@
 .. _ykush_aux:
 
 Controlling an Yepkit USB hub
-===============================
+=============================
 
 The ykush auxiliary offers commands to control an Yepkit USB hub,
 allowing to switch the USB ports on and off individually.
 
+More information on the device can be found on the following link :
+`YKUSH (Yepkit USB Switchable Hub) <https://www.yepkit.com/products/ykush>`_.
 
 Usage Examples
 ~~~~~~~~~~~~~~
