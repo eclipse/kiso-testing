@@ -24,9 +24,15 @@ import sys
 from pathlib import Path
 from typing import Dict, Optional, Union
 
-import can
-import can.bus
-import can.interfaces.pcan.basic as PCANBasic
+try:
+    import can
+    import can.bus
+    import can.interfaces.pcan.basic as PCANBasic
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
+    )
+
 
 from pykiso import CChannel, Message
 

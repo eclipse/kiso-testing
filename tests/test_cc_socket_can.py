@@ -7,13 +7,16 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import importlib
 import logging
+import sys
 from unittest import mock
 
 import can as python_can
 import pytest
 
 from pykiso import Message
+from pykiso.lib.connectors.cc_socket_can import cc_socket_can
 from pykiso.lib.connectors.cc_socket_can.cc_socket_can import CCSocketCan, can
 from pykiso.message import MessageCommandType, MessageType, TlvKnownTags
 
@@ -62,6 +65,14 @@ def mock_can_bus(mocker):
     )
     mocker.patch.object(can.interface, "Bus", new=MockCan)
     return can.interface
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["can"] = None
+        importlib.reload(cc_socket_can)
+    sys.modules["can"] = can
+    importlib.reload(cc_socket_can)
 
 
 @pytest.mark.parametrize(

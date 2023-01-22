@@ -8,9 +8,14 @@
 ##########################################################################
 
 
+import importlib
+import sys
+
 import pytest
+import serial
 
 from pykiso import message
+from pykiso.lib.connectors import cc_uart
 from pykiso.lib.connectors.cc_uart import CCUart, IncompleteCCMsgError
 
 
@@ -22,6 +27,14 @@ def CCuart_instance():
 @pytest.fixture
 def serial_read_mock(mocker):
     return mocker.patch("serial.Serial.read")
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["serial"] = None
+        importlib.reload(cc_uart)
+    sys.modules["serial"] = serial
+    importlib.reload(cc_uart)
 
 
 def test_incomplete_ccmsg_error():
