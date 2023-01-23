@@ -39,6 +39,12 @@ The functions cc_receive and cc_send for every connector no longer take raw
 as an argument.
 
 
+Results can be exported on TestRail
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+see :ref:`testrail`
+
+
 Step report
 ^^^^^^^^^^^
 
