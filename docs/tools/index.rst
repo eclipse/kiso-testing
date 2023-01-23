@@ -7,3 +7,4 @@ Additional Tools
 
     pykiso_to_pytest
     show_tag
+    testrail
