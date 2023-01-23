@@ -25,7 +25,6 @@ Test Execution
 """
 from __future__ import annotations
 
-import glob
 from typing import TYPE_CHECKING
 from unittest.loader import VALID_MODULE_NAME
 
@@ -267,10 +266,11 @@ def _check_module_names(start_dir: str, pattern: str) -> None:
     :raises InvalidTestModuleName: if a test file name contains a character other
         than letters, numbers, and _ or starts with a number
     """
-    file_names = glob.glob(pathname=pattern, root_dir=start_dir)
-    for file_name in file_names:
-        if not VALID_MODULE_NAME.match(file_name):
-            raise InvalidTestModuleName(file_name)
+    path = Path(start_dir)
+    file_paths = list(path.glob(pattern))
+    for file in file_paths:
+        if not VALID_MODULE_NAME.match(file.name):
+            raise InvalidTestModuleName(file.name)
 
 
 def collect_test_suites(

@@ -139,34 +139,41 @@ def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mock
 @pytest.mark.parametrize(
     "paths, pattern, expected",
     [
-        (["test_module.py"], "test_*", None),
-        (["test_module.py", "test_module_1.py"], "test_module*", None),
+        ([pathlib.Path("test_module.py")], "test_*", None),
+        (
+            [pathlib.Path("test_module.py"), pathlib.Path("test_module_1.py")],
+            "test_module*",
+            None,
+        ),
     ],
 )
 def test__check_module_names(paths, pattern, expected, mocker):
-    mock_glob = mocker.patch("glob.glob", return_value=paths)
+    mock_glob = mocker.patch("pathlib.Path.glob", return_value=paths)
     test_dir = "test_dir"
 
     actual = test_execution._check_module_names(test_dir, pattern)
     assert actual == expected
-    mock_glob.assert_called_with(pathname=pattern, root_dir=test_dir)
+    mock_glob.assert_called_with(pattern)
 
 
 @pytest.mark.parametrize(
     "paths, pattern",
     [
-        (["test_module-1.py"], "test_*"),
-        (["test_module.py", "test_module-1.py"], "test_module*"),
+        ([pathlib.Path("test_module-1.py")], "test_*"),
+        (
+            [pathlib.Path("test_module.py"), pathlib.Path("test_module-1.py")],
+            "test_module*",
+        ),
     ],
 )
 def test__check_module_names_invalid(paths, pattern, mocker):
-    mock_glob = mocker.patch("glob.glob", return_value=paths)
+    mock_glob = mocker.patch("pathlib.Path.glob", return_value=paths)
     test_dir = "test_dir"
 
     with pytest.raises(pykiso.InvalidTestModuleName) as exec_info:
         test_execution._check_module_names(test_dir, pattern)
 
-    mock_glob.assert_called_with(pathname=pattern, root_dir=test_dir)
+    mock_glob.assert_called_with(pattern)
 
     assert (
         f"Test files need to be valid python module names but 'test_module-1.py' is invalid"
@@ -185,8 +192,9 @@ def test_config_registry_and_test_execution_collect_suites_with_invalid_cli_patt
     Validation criteria:
         - run is executed with TestCollectionError
     """
-    mock_glob = mocker.patch(
-        "glob.glob", return_value=["test_module_0.py", "test_module-1.py"]
+    mock_check = mocker.patch(
+        "pykiso.test_coordinator.test_execution._check_module_names",
+        side_effect=pykiso.InvalidTestModuleName("test_module-1.py"),
     )
     pattern = "test_module*"
 
@@ -200,9 +208,9 @@ def test_config_registry_and_test_execution_collect_suites_with_invalid_cli_patt
             test_filter_pattern=pattern,
         )
 
-    mock_glob.assert_called_with(
-        pathname=pattern,
-        root_dir=cfg["test_suite_list"][0]["suite_dir"],
+    mock_check.assert_called_with(
+        start_dir=cfg["test_suite_list"][0]["suite_dir"],
+        pattern=pattern,
     )
 
     ConfigRegistry.delete_aux_con()
@@ -219,8 +227,9 @@ def test_config_registry_and_test_execution_collect_suites_with_invalid_cfg_patt
     Validation criteria:
         - run is executed with TestCollectionError
     """
-    mock_glob = mocker.patch(
-        "glob.glob", return_value=["test_module_0.py", "test_module-1.py"]
+    mock_check = mocker.patch(
+        "pykiso.test_coordinator.test_execution._check_module_names",
+        side_effect=pykiso.InvalidTestModuleName("test_module-1.py"),
     )
 
     pattern = "test_module*"
@@ -233,9 +242,9 @@ def test_config_registry_and_test_execution_collect_suites_with_invalid_cfg_patt
     with pytest.raises(pykiso.TestCollectionError):
         test_execution.collect_test_suites(cfg["test_suite_list"])
 
-    mock_glob.assert_called_with(
-        pathname=pattern,
-        root_dir=cfg["test_suite_list"][0]["suite_dir"],
+    mock_check.assert_called_with(
+        start_dir=cfg["test_suite_list"][0]["suite_dir"],
+        pattern=pattern,
     )
 
     ConfigRegistry.delete_aux_con()
