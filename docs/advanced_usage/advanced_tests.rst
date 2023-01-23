@@ -66,6 +66,7 @@ Find below an example of such a CLI invocation:
    ========================================  =============================================================  ========
    none                                      any                                                            🗸
    ``--branch-level nightly``                ``"branch-level": ["daily", "nightly"]``                       🗸
+   ``--branch-level nightly,daily``          ``"branch_level": ["daily"]``                                  🗸
    ``--branch-level nightly,daily``          ``"branch_level": ["daily", "nightly"]``                       🗸
    ``--branch-level other``                  ``"branch_level": ["daily", "nightly"]``                       ✗
    ``--branch-level daily --variant var1``   ``"branch_level": ["daily", "nightly"]``                       ✗

@@ -14,9 +14,11 @@ will be enough for the loggers to stay enabled.
 Internal creation of proxy auxiliaries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is no longer necessary to manually defined a ``ProxyAuxiliary`` with
+It is no longer necessary to manually define a ``ProxyAuxiliary`` with
 ``CCProxy`` instances yourself. If you simply pass the communication channel to
 each auxiliary that has to share it, ``pykiso`` will do the rest for you.
+
+For more information see :ref:`sharing_a_cchan`
 
 
 Better skipping of test cases based on tags

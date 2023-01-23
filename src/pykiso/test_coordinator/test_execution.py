@@ -90,7 +90,7 @@ def create_test_suite(
 def apply_tag_filter(
     all_tests_to_run: unittest.TestSuite, usr_tags: Dict[str, List[str]]
 ) -> None:
-    """Filter the test cases based on user tags procided via CLI.
+    """Filter the test cases based on user tags provided via CLI.
 
     :param all_tests_to_run: a dict containing all testsuites and testcases
     :param usr_tags: encapsulate user's variant choices
@@ -144,6 +144,7 @@ def apply_tag_filter(
 
     # collect and reformat all CLI and test case tag names
     usr_tags = format_tag_names(usr_tags)
+
     all_test_tags = []
     for tc in test_suite.flatten(all_tests_to_run):
         if getattr(tc, "tag", None) is None:

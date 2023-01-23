@@ -119,6 +119,9 @@ Relative paths in the sub-YAML file are then resolved **relative to the sub-YAML
     :lines: 28-37
 
 
+
+.. _sharing_a_cchan:
+
 Sharing a communication channel between multiple auxiliaries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
