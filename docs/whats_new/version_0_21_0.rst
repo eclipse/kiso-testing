@@ -19,6 +19,13 @@ It is no longer necessary to manually defined a ``ProxyAuxiliary`` with
 each auxiliary that has to share it, ``pykiso`` will do the rest for you.
 
 
+Ykush Auxiliary
+^^^^^^^^^^^^^^^
+Auxiliary that can be used to power on and off the ports of an Ykush USB Hub.
+
+See :ref:`ykush_auxiliary`
+
+
 Multiple auxiliaries can share a communication channel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
