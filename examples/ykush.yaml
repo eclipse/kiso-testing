@@ -1,0 +1,10 @@
+auxiliaries:
+  ykush_aux:
+    config:
+      # Serial number to connect to. Example: "YK00006"
+      serial_number : null # null = auto detection.
+    type: pykiso.lib.auxiliaries.ykush_auxiliary:YkushAuxiliary
+test_suite_list:
+- suite_dir: test_suite_ykush
+  test_filter_pattern: '*.py'
+  test_suite_id: 1

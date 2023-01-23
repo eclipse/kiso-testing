@@ -94,21 +94,21 @@ def test_udp_close(mock_udp_socket):
 
 
 @pytest.mark.parametrize(
-    "msg_to_send, raw_state",
+    "msg_to_send",
     [
-        (message_with_tlv, False),
-        (message_with_no_tlv, False),
-        (b"\x40\x01\x03\x00\x01\x02\x03\x00", True),
+        (message_with_tlv),
+        (message_with_no_tlv),
+        (b"\x40\x01\x03\x00\x01\x02\x03\x00"),
     ],
 )
-def test_udp_send_valid(mock_udp_socket, msg_to_send, raw_state):
+def test_udp_send_valid(mock_udp_socket, msg_to_send):
     """Test message _cc_send method using context manager from Connector class.
 
     Validation criteria:
      - sendto is call once
     """
     with CCUdp("120.0.0.7", 5005) as udp_inst:
-        udp_inst._cc_send(msg_to_send, raw=raw_state)
+        udp_inst._cc_send(msg_to_send)
 
     mock_udp_socket.socket.sendto.assert_called_once()
 
@@ -145,18 +145,9 @@ def test_udp_recv_invalid(mocker, mock_udp_socket, expected_exception, caplog):
 @pytest.mark.parametrize(
     "raw_data, cc_receive_param, expected_type",
     [
-        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 1002), (10, False), Message),
-        (
-            (
-                b"\x40\x01\x03\x00\x01\x02\x03\x09\x6e\x02\x4f\x4b\x70\x03\x12\x34\x56",
-                4000,
-            ),
-            (None, None),
-            Message,
-        ),
-        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (10, True), bytes),
-        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (0, True), bytes),
-        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (None, True), bytes),
+        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (10), bytes),
+        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (0), bytes),
+        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 36), (None), bytes),
     ],
 )
 def test_udp_recv_valid(
@@ -172,12 +163,10 @@ def test_udp_recv_valid(
     mocker.patch("socket.socket.recvfrom", return_value=raw_data)
 
     with CCUdp("120.0.0.7", 5005) as udp_inst:
-        msg_received = udp_inst._cc_receive(*cc_receive_param)
+        msg_received = udp_inst._cc_receive(cc_receive_param)
 
     assert isinstance(msg_received, dict)
     assert isinstance(msg_received["msg"], expected_type)
     assert udp_inst.source_addr == raw_data[1]
-    mock_udp_socket.socket.settimeout.assert_called_once_with(
-        cc_receive_param[0] or 1e-6
-    )
+    mock_udp_socket.socket.settimeout.assert_called_once_with(cc_receive_param or 1e-6)
     mock_udp_socket.socket.recvfrom.assert_called_once()

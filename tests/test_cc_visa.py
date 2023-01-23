@@ -12,6 +12,7 @@ import pytest
 import pyvisa
 
 from pykiso.lib.connectors import cc_visa
+from pykiso.message import Message
 
 constructor_params_serial = {"serial_port": 4, "baud_rate": 9600}
 constructor_params_tcpip = {
@@ -109,17 +110,14 @@ def test_cc_close(constructor_params_serial):
     assert visa_inst._cc_close() is None
 
 
-@pytest.mark.parametrize(
-    "constructor_params_serial, raw_value, expected_return",
-    [
-        (constructor_params_serial, True, {"msg": b"read response"}),
-        (constructor_params_serial, False, {"msg": "read response"}),
-    ],
-)
-def test__cc_receive(mocker, constructor_params_serial, raw_value, expected_return):
+def test_cc_receive(
+    mocker,
+):
     visa_inst = cc_visa.VISASerial(constructor_params_serial)
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
-    assert visa_inst._cc_receive(raw=raw_value) == expected_return
+    message_received = visa_inst._cc_receive()
+
+    assert message_received == {"msg": b"read response"}
 
 
 @pytest.mark.parametrize(
@@ -175,10 +173,10 @@ def test__cc_send(mocker, constructor_params_serial, scpi_cmds):
     mocker.patch.object(visa_inst, "resource", new=MockSerialInstrument(serial_port=3))
 
     # Test with string input
-    assert visa_inst._cc_send(scpi_cmds["example"]) is None
+    assert visa_inst._cc_send(scpi_cmds["example"].encode()) is None
 
     # Test with bytes input
-    assert visa_inst._cc_send(b"example", raw=True) is None
+    assert visa_inst._cc_send(b"example") is None
 
 
 @pytest.mark.parametrize(
