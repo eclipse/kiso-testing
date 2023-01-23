@@ -255,6 +255,7 @@ def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
             parsed_patterns.append(pattern)
     for _ in range(3 - (len(parsed_patterns))):
         parsed_patterns.append(None)
+
     return TestFilterPattern(*parsed_patterns)
 
 
@@ -330,13 +331,13 @@ def execute(
     try:
 
         test_file_pattern = parse_test_selection_pattern(pattern_inject)
-        logging.debug(f"==> parsed test_file_pattern: {test_file_pattern}")
 
         test_suites = collect_test_suites(
             config["test_suite_list"], test_file_pattern.test_file
         )
         # Group all the collected test suites in one global test suite
         all_tests_to_run = unittest.TestSuite(test_suites)
+
         # filter test cases based on variant and branch-level options
         if user_tags:
             apply_tag_filter(all_tests_to_run, user_tags)
