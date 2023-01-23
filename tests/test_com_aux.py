@@ -81,7 +81,7 @@ def test_com_aux_send_message_without_contextmanager(mocker, caplog, com_aux_ins
 
     com_aux_inst.send_message(msg)
 
-    assert channel_cc_send_mock.call_args[1] == {"msg": b"test", "raw": True}
+    assert channel_cc_send_mock.call_args[1] == {"msg": b"test"}
     com_aux_inst.delete_instance()
 
 

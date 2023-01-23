@@ -8,11 +8,41 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Test result shown as failed when a subtest fails ([#228](https://github.com/orhun/git-cliff/issues/228))
+
+### Miscellaneous Tasks
+
+- Bump setuptools from 65.3.0 to 65.5.1
+
+### New Features
+
+- Store activated loggers globally ([#223](https://github.com/orhun/git-cliff/issues/223))
+- Add step report folding ([#221](https://github.com/orhun/git-cliff/issues/221))
+- Implement ykush auxiliary ([#225](https://github.com/orhun/git-cliff/issues/225))
+
+### Refactorings
+
+- Cluster dut aux ([#191](https://github.com/orhun/git-cliff/issues/191))
+
+## Version 0.20.2 (2022-12-16)
+
+### Bug Fixes
+
 - Make it more explicit
+- Handle representation of test cases within nested test modules ([#201](https://github.com/orhun/git-cliff/issues/201))
+- Change logger name if a serial number is specified ([#209](https://github.com/orhun/git-cliff/issues/209))
+- Fix skip test cases of a test suite if a test suite setup fails ([#208](https://github.com/orhun/git-cliff/issues/208))
+- Tag selection
 
 ### Documentation
 
 - Extend classifiers with macos
+
+### Miscellaneous Tasks
+
+- Bump certifi from 2022.6.15 to 2022.12.7
+- Bump importlib-metadata from 5.0.0 to 5.1.0
+- Upgrade kiso-testing-python-uds to 3.0.2 ([#206](https://github.com/orhun/git-cliff/issues/206))
 
 ## Version 0.20.1 (2022-11-23)
 

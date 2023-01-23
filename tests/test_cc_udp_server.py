@@ -102,30 +102,31 @@ def test_udp_server_send(mock_udp_socket, msg_to_send):
      - sendto is call once
     """
     with CCUdpServer("120.0.0.7", 5005) as udp_server:
-        udp_server._cc_send(msg_to_send)
+        udp_server._cc_send(msg_to_send.serialize())
 
     mock_udp_socket.socket.sendto.assert_called_once()
 
 
 @pytest.mark.parametrize(
-    "raw_data, cc_receive_param, expected_type",
+    "raw_data, timeout, raw, expected_type",
     [
-        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 5050), (10, False), Message),
+        ((b"\x40\x01\x03\x00\x01\x02\x03\x00", 5050), (10), (False), Message),
         (
             (
                 b"\x40\x01\x03\x00\x01\x02\x03\x09\x6e\x02\x4f\x4b\x70\x03\x12\x34\x56",
                 2002,
             ),
-            (None, None),
+            (None),
+            (None),
             Message,
         ),
-        ((b"\x40\x01\x03\x00\x02\x03\x00", 5050), (10, True), bytes),
-        ((b"\x40\x01\x03\x00\x02\x03\x00", 5050), (0, True), bytes),
-        ((b"\x40\x01\x03\x00\x02\x03\x00", 5050), (None, True), bytes),
+        ((b"\x40\x01\x03\x00\x02\x03\x00", 5050), (10), (True), bytes),
+        ((b"\x40\x01\x03\x00\x02\x03\x00", 5050), (0), (True), bytes),
+        ((b"\x40\x01\x03\x00\x02\x03\x00", 5050), (None), (True), bytes),
     ],
 )
 def test_udp_server_recv_valid(
-    mocker, mock_udp_socket, raw_data, cc_receive_param, expected_type
+    mocker, mock_udp_socket, raw_data, timeout, raw, expected_type
 ):
     """Test message _cc_receive method using context manager from Connector class.
 
@@ -137,13 +138,14 @@ def test_udp_server_recv_valid(
     mocker.patch("socket.socket.recvfrom", return_value=(raw_data[0], raw_data[1]))
 
     with CCUdpServer("120.0.0.7", 5005) as udp_server:
-        msg_received = udp_server._cc_receive(*cc_receive_param)
+        msg_received = udp_server._cc_receive(timeout)
 
     assert isinstance(msg_received, dict)
-    assert isinstance(msg_received["msg"], expected_type)
-    mock_udp_socket.socket.settimeout.assert_called_once_with(
-        cc_receive_param[0] or 1e-6
-    )
+    msg_received = msg_received.get("msg")
+    if not raw:
+        msg_received = Message.parse_packet(msg_received)
+    assert isinstance(msg_received, expected_type)
+    mock_udp_socket.socket.settimeout.assert_called_once_with(timeout or 1e-6)
     mock_udp_socket.socket.recvfrom.assert_called_once()
 
 
