@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import importlib
 import logging
 import queue
 import sys
@@ -78,9 +79,7 @@ def mock_aux_interface(mocker, mock_auxiliaries):
             self.param_1 = param_1
             self.param_2 = param_2
             self.channel = mock_auxiliaries
-            super().__init__(
-                name="mp_aux",
-            )
+            super().__init__(name="mp_aux")
 
         _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
         _create_auxiliary_instance.return_value = True
@@ -128,11 +127,17 @@ def test_init_trace_not_activate(mocker):
 
 
 def test_get_proxy_con_valid(mocker, cchannel_inst, mock_aux_interface):
-    mocker.patch.object(ProxyAuxiliary, "_check_aux_compatibility")
-    mocker.patch.object(ProxyAuxiliary, "_check_channels_compatibility")
+    mock_check_aux = mocker.patch.object(ProxyAuxiliary, "_check_aux_compatibility")
+    mock_check_channels = mocker.patch.object(
+        ProxyAuxiliary, "_check_channels_compatibility"
+    )
+    mock_bind_channel = mocker.patch.object(CCProxy, "_bind_channel_info")
 
     proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES, mock_aux_interface])
 
+    mock_check_channels.assert_called_once()
+    assert mock_check_aux.call_count == len([*AUX_LIST_NAMES, mock_aux_interface])
+    assert mock_bind_channel.call_count == len([*AUX_LIST_NAMES, mock_aux_interface])
     assert len(proxy_inst.proxy_channels) == 3
     assert all(isinstance(items, CCProxy) for items in proxy_inst.proxy_channels)
 
@@ -149,17 +154,66 @@ def test_get_proxy_con_invalid(mocker, caplog, cchannel_inst):
     assert len(proxy_inst.proxy_channels) == 0
 
 
+def test_getattr_physical_cchannel(
+    mocker, cchannel_inst, mock_aux_interface, mock_auxiliaries
+):
+    mocker.patch.object(ProxyAuxiliary, "_check_aux_compatibility")
+    mocker.patch.object(ProxyAuxiliary, "_check_channels_compatibility")
+
+    cchannel_inst.some_attribute = object()
+
+    proxy_inst = ProxyAuxiliary(cchannel_inst, [*AUX_LIST_NAMES, mock_aux_interface])
+    proxy_inst.lock = mocker.MagicMock()
+
+    mock_aux1 = importlib.import_module("pykiso.auxiliaries.MockAux1")
+
+    assert isinstance(mock_aux1.channel, CCProxy)
+    assert isinstance(proxy_inst.channel, type(cchannel_inst))
+
+    assert mock_aux1.channel._physical_channel is cchannel_inst
+
+    # attribute exists in the physical channel instance
+    assert mock_aux1.channel.some_attribute is cchannel_inst.some_attribute
+    proxy_inst.lock.__enter__.assert_called_once()
+    proxy_inst.lock.__exit__.assert_called_once()
+    proxy_inst.lock.reset_mock()
+
+    # attribute exists in the proxy channel instance
+    assert mock_aux1.channel.cc_send is not cchannel_inst.cc_send
+    proxy_inst.lock.__enter__.assert_not_called()
+    proxy_inst.lock.__exit__.assert_not_called()
+
+    # attribute does not exist in physical channel
+    with pytest.raises(AttributeError, match="has no attribute 'does_not_exist'"):
+        mock_aux1.channel.does_not_exist
+    proxy_inst.lock.__enter__.assert_called_once()
+    proxy_inst.lock.__exit__.assert_called_once()
+
+    # attribute does not exist in proxy channel (no physical channel attached)
+    proxy_inst.lock.reset_mock()
+    mock_aux1.channel._physical_channel = None
+    with pytest.raises(AttributeError, match="has no attribute 'does_not_exist'"):
+        mock_aux1.channel.does_not_exist
+    proxy_inst.lock.__enter__.assert_not_called()
+    proxy_inst.lock.__exit__.assert_not_called()
+
+
 def test_get_proxy_con_pre_load(mocker, cchannel_inst):
     mocker.patch.object(ConfigRegistry, "get_auxes_alias", return_value="later_aux")
     mocker.patch.object(ProxyAuxiliary, "_check_channels_compatibility")
+    mocker.patch.object(CCProxy, "_bind_channel_info")
 
     class Linker:
         def __init__(self):
             self._aux_cache = AuxCache()
 
+    class FakeCCProxy:
+        def _bind_channel_info(self, *args, **kwargs):
+            pass
+
     class FakeAux:
         def __init__(self):
-            self.channel = True
+            self.channel = FakeCCProxy()
             self.is_proxy_capable = True
 
     class AuxCache:
@@ -171,7 +225,7 @@ def test_get_proxy_con_pre_load(mocker, cchannel_inst):
     proxy_inst = ProxyAuxiliary(cchannel_inst, ["later_aux"])
 
     assert len(proxy_inst.proxy_channels) == 1
-    assert isinstance(proxy_inst.proxy_channels[0], bool)
+    assert isinstance(proxy_inst.proxy_channels[0], FakeCCProxy)
 
 
 def test_check_aux_compatibility_exception(mocker, cchannel_inst):

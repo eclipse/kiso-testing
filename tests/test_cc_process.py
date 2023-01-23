@@ -38,7 +38,7 @@ def test_process(mocker):
             # sleep 1s
             # print "hello" on stdout
             # print "pykiso" on stdout
-            'import sys;import time;print(sys.stdin.readline().strip());sys.stdout.flush();time.sleep(1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(1);print("hello");print("pykiso")',
+            'import sys;import time;print(sys.stdin.readline().strip());sys.stdout.flush();time.sleep(0.1);print(\'error\', file=sys.stderr);sys.stderr.flush();time.sleep(0.1);print("hello");print("pykiso")',
         ],
     )
     # Start the process
@@ -48,15 +48,15 @@ def test_process(mocker):
         cc_process.start()
 
     # Receive nothing as process waits for input
-    assert cc_process.cc_receive(3) == {"msg": None}
+    assert cc_process.cc_receive(0.1) == {"msg": None}
     cc_process._cc_send("hi\r\n")
-    assert cc_process.cc_receive(3) == {"msg": {"stdout": "hi\n"}}
-    assert cc_process.cc_receive(3) == {"msg": {"stderr": "error\n"}}
-    assert cc_process.cc_receive(3) == {"msg": {"stdout": "hello\n"}}
-    assert cc_process.cc_receive(3) == {"msg": {"stdout": "pykiso\n"}}
-    assert cc_process.cc_receive(3) == {"msg": {"exit": 0}}
+    assert cc_process.cc_receive(1) == {"msg": {"stdout": "hi\n"}}
+    assert cc_process.cc_receive(1) == {"msg": {"stderr": "error\n"}}
+    assert cc_process.cc_receive(1) == {"msg": {"stdout": "hello\n"}}
+    assert cc_process.cc_receive(1) == {"msg": {"stdout": "pykiso\n"}}
+    assert cc_process.cc_receive(1) == {"msg": {"exit": 0}}
     cc_process._cc_close()
-    assert cc_process.cc_receive(3) == {"msg": None}
+    assert cc_process.cc_receive(0.1) == {"msg": None}
 
 
 def test_process_binary(mocker):
@@ -82,7 +82,7 @@ def test_process_binary(mocker):
             # print "hello" on stdout
             # sleep 1s
             # print "pykiso" on stdout
-            'import sys;import time;sys.stdout.write(sys.stdin.readline().strip());sys.stdout.flush();time.sleep(1);sys.stderr.write("error");sys.stderr.flush();time.sleep(1);sys.stdout.write("hello");sys.stdout.flush();time.sleep(1);sys.stdout.write("pykiso")',
+            'import sys;import time;sys.stdout.write(sys.stdin.readline().strip());sys.stdout.flush();time.sleep(0.1);sys.stderr.write("error");sys.stderr.flush();time.sleep(0.1);sys.stdout.write("hello");sys.stdout.flush();time.sleep(0.1);sys.stdout.write("pykiso")',
         ],
     )
     # Start the process
@@ -92,13 +92,13 @@ def test_process_binary(mocker):
         cc_process._cc_send({"command": "start", "executable": "", "args": ""})
 
     cc_process._cc_send(b"hi\n")
-    assert cc_process.cc_receive(3) == {"msg": {"stdout": b"hi"}}
-    assert cc_process.cc_receive(3) == {"msg": {"stderr": b"error"}}
-    assert cc_process.cc_receive(3) == {"msg": {"stdout": b"hello"}}
-    assert cc_process.cc_receive(3) == {"msg": {"stdout": b"pykiso"}}
-    assert cc_process.cc_receive(3) == {"msg": {"exit": 0}}
+    assert cc_process.cc_receive(1) == {"msg": {"stdout": b"hi"}}
+    assert cc_process.cc_receive(1) == {"msg": {"stderr": b"error"}}
+    assert cc_process.cc_receive(1) == {"msg": {"stdout": b"hello"}}
+    assert cc_process.cc_receive(1) == {"msg": {"stdout": b"pykiso"}}
+    assert cc_process.cc_receive(1) == {"msg": {"exit": 0}}
     cc_process._cc_close()
-    assert cc_process.cc_receive(3) == {"msg": None}
+    assert cc_process.cc_receive(0.1) == {"msg": None}
 
 
 def test_send_without_pipe_exception(mocker):

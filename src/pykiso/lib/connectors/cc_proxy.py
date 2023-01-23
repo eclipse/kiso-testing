@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Any, Callable
 from pykiso.connector import CChannel
 
 if TYPE_CHECKING:
+    from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
     from pykiso.types import ProxyReturn
 
 
@@ -48,6 +49,39 @@ class CCProxy(CChannel):
         self.timeout = 1
         self._lock = threading.Lock()
         self._tx_callback = None
+        self._proxy = None
+        self._physical_channel = None
+
+    def _bind_channel_info(self, proxy_aux: ProxyAuxiliary):
+        """Bind a :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
+        instance that is instanciated in order to handle the connection of
+        multiple auxiliaries to a single communication channel.
+
+        This allows to access the real communication channel's attributes
+        and hides the underlying proxy setup.
+
+        :param proxy_aux: the proxy auxiliary instance that is holding the
+            real communication channel.
+        """
+        self._proxy = proxy_aux
+        self._physical_channel = proxy_aux.channel
+
+    def __getattr__(self, name: str) -> Any:
+        """Implement getattr to retrieve attributes from the real channel attached
+        to the underlying :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`.
+
+        :param name: name of the attribute to get.
+        :raises AttributeError: if the attribute is not part of the real
+            channel instance or if the real channel hasn't been bound to
+            this proxy channel yet.
+        :return: the found attribute value.
+        """
+        if self._physical_channel is not None:
+            with self._proxy.lock:
+                return getattr(self._physical_channel, name)
+        raise AttributeError(
+            f"{self.__class__.__name__} object has no attribute '{name}'"
+        )
 
     def detach_tx_callback(self) -> None:
         """Detach the current callback."""
@@ -90,13 +124,12 @@ class CCProxy(CChannel):
             # call the attached ProxyAuxiliary's run_command method
             self._tx_callback(self, *args, **kwargs)
 
-    def _cc_receive(self, timeout: float = 0.1, raw: bool = False) -> ProxyReturn:
+    def _cc_receive(self, timeout: float = 0.1) -> ProxyReturn:
         """Depopulate the queue out of the proxy connector.
 
         :param timeout: not used
-        :param raw: not used
 
-        :return: raw bytes and source when it exist. if queue timeout
+        :return: bytes and source when it exist. if queue timeout
             is reached return None
         """
         try:

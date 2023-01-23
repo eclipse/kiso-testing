@@ -52,19 +52,16 @@ class CCExample(connector.CChannel):
         """Close the channel."""
         log.internal_info("close channel")
 
-    def _cc_send(self, msg: message.Message, raw: bool = False) -> None:
+    def _cc_send(self, msg: bytes) -> None:
         """Sends the message on the channel.
 
-        :param msg: message to send, should be Message type like.
-        :param raw: if raw is false serialize it using Message serialize.
+        :param msg: message to send.
 
-        :raise NotImplementedError: sending raw bytes is not supported.
         """
         with self.lock:
-            if raw:
-                raise NotImplementedError()
             log.internal_debug("Send: {}".format(msg))
             # Exit if ack sent
+            msg = message.Message.parse_packet(msg)
             if msg.get_message_type() == message.MessageType.ACK:
                 return
 
@@ -80,42 +77,38 @@ class CCExample(connector.CChannel):
 
                 self.report_requested_message = msg.serialize()
 
-    def _cc_receive(
-        self, timeout: float = 0.1, raw: bool = False
-    ) -> Dict[str, Optional[message.Message]]:
-        """Reads from the channel - decorator usage for test.
+    def _cc_receive(self, timeout: float = 0.1) -> Dict[str, Optional[bytes]]:
+        """Craft a Message that would be received from the device under test.
 
         :param timeout: not use
-        :param raw: if raw is false serialize it using Message serialize.
 
-        :raise NotImplementedError: receiving raw bytes is not supported.
-
-        :return: Message if successful, otherwise None
+        :return: dictionary containing the received bytes if successful, otherwise None
         """
         with self.lock:
-            if raw:
-                raise NotImplementedError()
+            received_message = None
             # Simulate a real wait for message
             time.sleep(1e-3)
             if self.last_received_message is not None:
                 # Transform into ack
-                r_message = message.Message.parse_packet(self.last_received_message)
-                r_message.msg_type = message.MessageType.ACK
-                r_message.sub_type = message.MessageAckType.ACK
+                received_message = message.Message.parse_packet(
+                    self.last_received_message
+                )
+                received_message.msg_type = message.MessageType.ACK
+                received_message.sub_type = message.MessageAckType.ACK
                 # Delete the stored raw message
+                received_message = received_message.serialize()
                 self.last_received_message = None
-                # Return the ACK
-                log.internal_debug("Receive: {}".format(r_message))
-                return {"msg": r_message}
+                log.internal_debug("Receive: {}".format(received_message))
             elif self.report_requested_message is not None:
                 # Transform message to ACK
-                r_message = message.Message.parse_packet(self.report_requested_message)
-                r_message.msg_type = message.MessageType.REPORT
-                r_message.sub_type = message.MessageReportType.TEST_PASS
+                received_message = message.Message.parse_packet(
+                    self.report_requested_message
+                )
+                received_message.msg_type = message.MessageType.REPORT
+                received_message.sub_type = message.MessageReportType.TEST_PASS
                 # Delete the stored raw message
+                received_message = received_message.serialize()
                 self.report_requested_message = None
-                # Return REPORT
-                log.internal_debug("Receive: {}".format(r_message))
-                return {"msg": r_message}
-            else:
-                return {"msg": None}
+                log.internal_debug("Receive: {}".format(received_message))
+
+            return {"msg": received_message}

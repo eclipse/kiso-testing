@@ -449,7 +449,7 @@ def test_send_raw_bytes():
     mock_t32_api.t32_Fdx_SendPoll = len(msg)
     lauterbach_inst.t32_api = mock_t32_api
 
-    poll_len = lauterbach_inst._cc_send(msg, raw=True)
+    poll_len = lauterbach_inst._cc_send(msg)
     assert poll_len == len(msg)
 
 
@@ -476,7 +476,7 @@ def test_send_message():
     mock_t32_api.t32_Fdx_SendPoll = expected_len
     lauterbach_inst.t32_api = mock_t32_api
 
-    poll_len = lauterbach_inst._cc_send(msg)
+    poll_len = lauterbach_inst._cc_send(msg.serialize())
     assert poll_len == expected_len
 
 
@@ -505,7 +505,7 @@ def test_send_message_exception(caplog, mock_msg):
     with caplog.at_level(
         logging.ERROR,
     ):
-        poll_len = lauterbach_inst._cc_send(msg, True)
+        poll_len = lauterbach_inst._cc_send(msg)
     assert poll_len == -3
     assert (
         f"ERROR occurred while sending {expected_len} bytes on {lauterbach_inst.fdxout}"

@@ -108,9 +108,7 @@ class TestUdsServerAuxiliary:
         uds_server_aux_inst.transmit(data, req_id)
 
         mock_pad.assert_called_with(data)
-        mock_channel._cc_send.assert_called_with(
-            msg=data, remote_id=expected_req_id, raw=True
-        )
+        mock_channel._cc_send.assert_called_with(msg=data, remote_id=expected_req_id)
 
     @pytest.mark.parametrize(
         "cc_receive_return, expected_received_data",
@@ -130,7 +128,7 @@ class TestUdsServerAuxiliary:
 
         received_data = uds_server_aux_inst.receive()
 
-        uds_server_aux_inst.channel._cc_receive.assert_called_with(timeout=0, raw=True)
+        uds_server_aux_inst.channel._cc_receive.assert_called_with(timeout=0)
         assert received_data == expected_received_data
 
     def test_send_response(self, mocker, uds_server_aux_inst):
@@ -262,7 +260,7 @@ class TestUdsServerAuxiliary:
 
         uds_server_aux_inst._receive_message(10)
 
-        mock_channel.cc_receive.assert_called_once_with(10, raw=True)
+        mock_channel.cc_receive.assert_called_once_with(10)
         mock_uds_config.tp.decode_isotp.assert_called_once_with(
             received_data=b"DATA", use_external_snd_rcv_functions=True
         )
@@ -283,7 +281,7 @@ class TestUdsServerAuxiliary:
         with caplog.at_level(logging.ERROR):
             uds_server_aux_inst._receive_message(10)
 
-        mock_channel.cc_receive.assert_called_once_with(10, raw=True)
+        mock_channel.cc_receive.assert_called_once_with(10)
         mock_uds_config.tp.decode_isotp.assert_called_once_with(
             received_data=b"DATA", use_external_snd_rcv_functions=True
         )

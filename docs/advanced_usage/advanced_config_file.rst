@@ -131,6 +131,12 @@ that will have exclusive access to the communication channel. A
 the created :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`. This allows to
 keep a minimalistic :py:class:`~pykiso.connector.CChannel` implementation.
 
+Access to attributes and methods of the defined communication channel that has been
+attached to the created :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
+is still possible, but keep in mind that if one auxiliary modifies one the communication
+channel's attributes, every other auxiliary sharing this communication channel will be
+affected by this change.
+
 An illustration of the resulting internal setup can be found at :ref:`proxy_aux`.
 
 In other words, if you define the following YAML configuration file:

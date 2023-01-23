@@ -16,3 +16,13 @@ Ykush Auxiliary
 Auxiliary that can be used to power on and off the ports of an Ykush USB Hub.
 
 See :ref:`ykush_auxiliary`
+
+
+Internal creation of proxy auxiliaries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is no longer necessary to manually defined a ``ProxyAuxiliary`` with
+``CCProxy``s yourself. If you simply pass the communication channel to
+each auxiliary that has to share it, ``pykiso`` will do the rest for you.
+
+

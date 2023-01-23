@@ -9,6 +9,7 @@
 
 import pytest
 
+from pykiso import message
 from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy, multiprocessing, queue
 
 
@@ -17,6 +18,12 @@ def test_constructor():
 
     assert isinstance(con_inst.queue_in, type(multiprocessing.Queue()))
     assert isinstance(con_inst.queue_out, type(multiprocessing.Queue()))
+
+    # pickling quick test
+    assert con_inst.__getstate__() == con_inst.__dict__
+    new_dict = {**con_inst.__dict__, **{"some_attr": 12}}
+    con_inst.__setstate__(new_dict)
+    assert con_inst.__getstate__() == new_dict
 
 
 def test_queue_reference():
@@ -34,11 +41,10 @@ def test_queue_reference():
 
 def test_cc_send():
     with CCMpProxy() as proxy_inst:
-        proxy_inst._cc_send(b"\x12\x34\x56", raw=True, remote_id=0x500)
+        proxy_inst._cc_send(b"\x12\x34\x56", remote_id=0x500)
         arg, kwargs = proxy_inst.queue_in.get()
 
         assert arg[0] == b"\x12\x34\x56"
-        assert kwargs["raw"] == True
         assert kwargs["remote_id"] == 0x500
 
 
@@ -53,8 +59,9 @@ def test_cc_send():
 def test_cc_receive(timeout, raw, raw_response):
     with CCMpProxy() as proxy_inst:
         proxy_inst.queue_out.put(raw_response)
-        resp = proxy_inst._cc_receive(timeout, raw)
-
+        resp = proxy_inst._cc_receive(timeout)
+        if not raw and isinstance(resp["msg"], message.Message):
+            resp["msg"] = resp["msg"].parse_packet()
         assert resp["msg"] == raw_response["msg"]
         assert resp["remote_id"] == raw_response["remote_id"]
 
