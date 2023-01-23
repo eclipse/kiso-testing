@@ -136,27 +136,47 @@ def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mock
     assert "Ran 0 tests" not in output.err
 
 
-def test_check_filter_pattern():
-    pattern = "valid_python_name.py"
-    actual = test_execution.check_filter_pattern(pattern)
-    assert actual is None
+@pytest.mark.parametrize(
+    "paths, pattern, expected",
+    [
+        (["test_module.py"], "test_*", None),
+        (["test_module.py", "test_module_1.py"], "test_module*", None),
+    ],
+)
+def test__check_module_names(paths, pattern, expected, mocker):
+    mock_glob = mocker.patch("glob.glob", return_value=paths)
+    test_dir = "test_dir"
+
+    actual = test_execution._check_module_names(test_dir, pattern)
+    assert actual == expected
+    mock_glob.assert_called_with(pathname=pattern, root_dir=test_dir)
 
 
-def test_check_filter_pattern_invalid(capsys):
-    pattern = "invalid_python-name.py"
+@pytest.mark.parametrize(
+    "paths, pattern",
+    [
+        (["test_module-1.py"], "test_*"),
+        (["test_module.py", "test_module-1.py"], "test_module*"),
+    ],
+)
+def test__check_module_names_invalid(paths, pattern, mocker):
+    mock_glob = mocker.patch("glob.glob", return_value=paths)
+    test_dir = "test_dir"
 
-    with pytest.raises(pykiso.InvalidPattern) as exec_info:
-        test_execution.check_filter_pattern(pattern)
+    with pytest.raises(pykiso.InvalidTestModuleName) as exec_info:
+        test_execution._check_module_names(test_dir, pattern)
+
+    mock_glob.assert_called_with(pathname=pattern, root_dir=test_dir)
 
     assert (
-        f"Test file patterns need to be valid python module names but '{pattern}' is invalid"
+        f"Test files need to be valid python module names but 'test_module-1.py' is invalid"
         in exec_info.value.message
     )
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
 def test_config_registry_and_test_execution_collect_suites_with_invalid_cli_pattern(
-    tmp_test, capsys
+    tmp_test, mocker
 ):
     """Call collect_test_suites function from test_execution using
     configuration data coming from parse_config method and specifying a invalid
@@ -165,20 +185,32 @@ def test_config_registry_and_test_execution_collect_suites_with_invalid_cli_patt
     Validation criteria:
         - run is executed with TestCollectionError
     """
+    mock_glob = mocker.patch(
+        "glob.glob", return_value=["test_module_0.py", "test_module-1.py"]
+    )
+    pattern = "test_module*"
+
     cfg = parse_config(tmp_test)
+
     ConfigRegistry.register_aux_con(cfg)
 
     with pytest.raises(pykiso.TestCollectionError):
         test_execution.collect_test_suites(
             cfg["test_suite_list"],
-            test_filter_pattern="invalid_module-name.py::my_test",
+            test_filter_pattern=pattern,
         )
+
+    mock_glob.assert_called_with(
+        pathname=pattern,
+        root_dir=cfg["test_suite_list"][0]["suite_dir"],
+    )
+
     ConfigRegistry.delete_aux_con()
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
 def test_config_registry_and_test_execution_collect_suites_with_invalid_cfg_pattern(
-    tmp_test, capsys
+    tmp_test, mocker
 ):
     """Call collect_test_suites function from test_execution using
     configuration data coming from parse_config method and specifying a invalid
@@ -187,12 +219,25 @@ def test_config_registry_and_test_execution_collect_suites_with_invalid_cfg_patt
     Validation criteria:
         - run is executed with TestCollectionError
     """
+    mock_glob = mocker.patch(
+        "glob.glob", return_value=["test_module_0.py", "test_module-1.py"]
+    )
+
+    pattern = "test_module*"
+
     cfg = parse_config(tmp_test)
-    cfg["test_filter_pattern"] = "invalid_module-name.py"
+    cfg["test_suite_list"][0]["test_filter_pattern"] = pattern
+
     ConfigRegistry.register_aux_con(cfg)
 
     with pytest.raises(pykiso.TestCollectionError):
         test_execution.collect_test_suites(cfg["test_suite_list"])
+
+    mock_glob.assert_called_with(
+        pathname=pattern,
+        root_dir=cfg["test_suite_list"][0]["suite_dir"],
+    )
+
     ConfigRegistry.delete_aux_con()
 
 

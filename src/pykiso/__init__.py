@@ -40,7 +40,7 @@ from .auxiliary import AuxiliaryCommon
 from .connector import CChannel, Flasher
 from .exceptions import (
     AuxiliaryCreationError,
-    InvalidPattern,
+    InvalidTestModuleName,
     PykisoError,
     TestCollectionError,
 )

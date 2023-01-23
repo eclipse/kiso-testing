@@ -62,11 +62,13 @@ class ConnectorRequiredError(PykisoError):
         super().__init__(self.message)
 
 
-class InvalidPattern(PykisoError):
-    """Raised when a invalid python module name is used as test file pattern by
-    the cli or when parsing the yaml config
+class InvalidTestModuleName(PykisoError):
+    """Raised when a invalid python module name is covered by test file pattern
+    of either the cli or the yaml config
     """
 
-    def __init__(self, pattern: str) -> None:
-        self.message = f"Test file patterns need to be valid python module names but '{pattern}' is invalid"
+    def __init__(self, name: str) -> None:
+        self.message = (
+            f"Test files need to be valid python module names but '{name}' is invalid"
+        )
         super().__init__(self.message)

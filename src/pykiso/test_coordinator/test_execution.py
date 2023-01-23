@@ -25,6 +25,7 @@ Test Execution
 """
 from __future__ import annotations
 
+import glob
 from typing import TYPE_CHECKING
 from unittest.loader import VALID_MODULE_NAME
 
@@ -46,7 +47,11 @@ import xmlrunner
 
 import pykiso
 
-from ..exceptions import AuxiliaryCreationError, TestCollectionError
+from ..exceptions import (
+    AuxiliaryCreationError,
+    InvalidTestModuleName,
+    TestCollectionError,
+)
 from ..logging_initializer import get_logging_options
 from ..test_result.assert_step_report import (
     StepReportData,
@@ -253,16 +258,18 @@ def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
     return TestFilterPattern(*parsed_patterns)
 
 
-def check_filter_pattern(pattern: str) -> None:
-    """only accept valid python module names as pattern, else tests will not be
-    run because unittest discards it.
+def _check_module_names(start_dir: str, pattern: str) -> None:
+    """Checks if a given pattern matches invalid python modules in the given directory
 
-    :param pattern: the file pattern to check
-    :raises InvalidPattern: if given pattern is not a valid python module name
+    :param start_dir: the directory to search
+    :param pattern: pattern that matches the file names
+    :raises InvalidTestModuleName: if a test file name contains a character other
+        than letters, numbers, and _ or starts with a number
     """
-    if not VALID_MODULE_NAME.match(pattern):
-        log.error(f"Invalid pattern detected: '{pattern}'")
-        raise pykiso.exceptions.InvalidPattern(pattern)
+    file_names = glob.glob(pathname=pattern, root_dir=start_dir)
+    for file_name in file_names:
+        if not VALID_MODULE_NAME.match(file_name):
+            raise InvalidTestModuleName(file_name)
 
 
 def collect_test_suites(
@@ -286,8 +293,10 @@ def collect_test_suites(
         try:
             if test_filter_pattern is not None:
                 test_suite_configuration["test_filter_pattern"] = test_filter_pattern
-            # can check cli patterns and yaml patterns here
-            check_filter_pattern(test_suite_configuration["test_filter_pattern"])
+            _check_module_names(
+                start_dir=test_suite_configuration["suite_dir"],
+                pattern=test_suite_configuration["test_filter_pattern"],
+            )
             current_test_suite = create_test_suite(test_suite_configuration)
             list_of_test_suites.append(current_test_suite)
         except BaseException as e:
@@ -328,7 +337,6 @@ def execute(
         )
         # Group all the collected test suites in one global test suite
         all_tests_to_run = unittest.TestSuite(test_suites)
-        logging.debug(f"--> all tests to run: {all_tests_to_run}")
         # filter test cases based on variant and branch-level options
         if user_tags:
             apply_tag_filter(all_tests_to_run, user_tags)
