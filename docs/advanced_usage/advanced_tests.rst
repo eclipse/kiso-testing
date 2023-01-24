@@ -6,6 +6,11 @@ How to make the most of the tests
 Define the test information (in addition)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _test_requirements:
+
+Assign test requirements to test cases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 In order to link the architecture requirement to the test,
 an additional reference can be added into the test_run decorator:
 
@@ -15,44 +20,64 @@ an additional reference can be added into the test_run decorator:
 
     {"Component1": ["Req1", "Req2"], "Component2": ["Req3"]}
 
+These test IDs will then be added to the generated XML or HTML report in order to be linked
+to general test requirements.
+
+.. _test_tags:
+
+Filter the test cases to run with tags
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 In order to run only a subset of tests, an additional reference can be added to the test_run decorator:
 
-- tag : [optional] the variant can be defined like:
+- ``tag``: optional dictionary of tag name-value pairs defined as:
 
 .. code:: python
 
-    {"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]}
+    {"variant": ["variant2", "variant1"], "branch_level": ["daily"]}
 
-Both parameters (variant/branch_level), will play the role of filter to fine
-tune the test collection and at the end ensure the execution of very specific tests subset.
+Note that these tag names are only examples. ``Pykiso`` accepts any tag name, as long as their name does not
+collide with default command line option names.
 
-.. note:: Cli tags must be given in pairs. If one key has multiple values separate them with a comma.
+Based on the tags you provide as CLI options, only the tests fulfilling the following conditions will be run:
+
+- tests that don't define any tag
+- tests that define all provided tag names with at least one matching tag value for each of the tag names.
+
+The only limitation is to always specify you tags as options in the CLI, i.e. as pairs of tag name
+and tag value. Multiple tag values for a single tag name simply need to be comma-separated (without whitespace).
 
 .. note:: The cli will only allow you to use the character ``-`` instead of ``_`` for tags. If you call for example
     ``--branch-level`` in the cli, you can use following corresponding tags in your test case: ``branch-level``,
     ``branch_level`` or ``branchlevel``.
 
+Find below an example of such a CLI invocation:
+
 .. code:: bash
 
     pykiso -c configuration_file --variant var1,var2 --branch-level daily,nightly
 
-.. table:: Exectuion table for test case tags and cli tag arguments
+
+.. table:: Execution table for test case tags and cli tag arguments
    :widths: auto
 
-   =======================================================  ===============================  ========
-   test case tags                                           cli tags                         executed
-   =======================================================  ===============================  ========
-   "branch_level": ["daily","nightly"]                      branch-level nightly             🗸
-   "branch-level": ["daily","nightly"]                      branch-level nightly             🗸
-   "branch_level": ["daily","nightly"]                      branch-level nightly,daily       🗸
-   "branch_level": ["daily","nightly"]                      branch-level master              ✗
-   "branch_level": ["daily","nightly"],"variant":["var1"]   branch-level daily variant var9  🗸
-   "branch_level": ["daily","nightly"],"variant":["var1"]   branch-level nightly             🗸
-   "branch_level": ["daily","nightly"],"variant":["var1"]   variant var1                     🗸
-   "branch_level": ["daily","nightly"],"variant":["var1"]   variant var2                     ✗
-   "branch_level": ["daily","nightly"],"variant":["var1"]   branch-level daily variant var1  ✗
-   "variant":["var1"]                                       branch-level daily               ✗
-   =======================================================  ===============================  ========
+   ========================================  =============================================================  ========
+   CLI Tags                                  Test case Tags                                                 Executed
+   ========================================  =============================================================  ========
+   none                                      any                                                            🗸
+   ``--branch-level nightly``                ``"branch-level": ["daily", "nightly"]``                       🗸
+   ``--branch-level nightly,daily``          ``"branch_level": ["daily"]``                                  🗸
+   ``--branch-level nightly,daily``          ``"branch_level": ["daily", "nightly"]``                       🗸
+   ``--branch-level other``                  ``"branch_level": ["daily", "nightly"]``                       ✗
+   ``--branch-level daily --variant var1``   ``"branch_level": ["daily", "nightly"]``                       ✗
+   ``--branch-level daily``                  ``"variant": ["var1"]``                                        ✗
+   ``--variant var1``                        ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  🗸
+   ``--variant var2``                        ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  ✗
+   ``--branch-level nightly``                ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  🗸
+   ``--branch-level daily --variant var1``   ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  🗸
+   ``--branch-level daily --variant var42``  ``"branch_level": ["daily", "nightly"], "variant": ["var1"]``  ✗
+   ========================================  =============================================================  ========
+
 
 Find below a full example for a test suite/case declaration :
 

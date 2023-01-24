@@ -119,6 +119,9 @@ Relative paths in the sub-YAML file are then resolved **relative to the sub-YAML
     :lines: 28-37
 
 
+
+.. _sharing_a_cchan:
+
 Sharing a communication channel between multiple auxiliaries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -142,6 +145,7 @@ An illustration of the resulting internal setup can be found at :ref:`proxy_aux`
 In other words, if you define the following YAML configuration file:
 
 .. code:: yaml
+
   auxiliaries:
     aux1:
       connectors:
@@ -163,6 +167,7 @@ Then, ``pykiso`` will internally modify this configuration to become:
 
 
 .. code:: yaml
+
   auxiliaries:
     proxy_aux:
       connectors:

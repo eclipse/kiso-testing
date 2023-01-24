@@ -71,12 +71,15 @@ Find below a complete configuration example :
 
 Send UDS Raw Request
 --------------------
-| Send UDS request as list of raw bytes.
-| The method send_uds_raw(:py:meth:`pykiso.lib.auxiliaries.udsaux.UdsAuxiliary.send_uds_raw`) takes one mandatory parameter msg_to_send and one optional : timeout_in_s
-| The parameter msg_to_send is simply the UDS request payload which is a list of bytes.
-| The optional parameter timeout_in_s (by default fixed to 5 seconds) simply represent the maximum
-  amount of time in second to wait for a response from the device under test. If this timeout is reached, the
-  uds-auxiliary stop to acquire and log an error.
+
+Send UDS request as list of raw bytes.
+
+The method send_uds_raw(:py:meth:`pykiso.lib.auxiliaries.udsaux.UdsAuxiliary.send_uds_raw`) takes one mandatory parameter msg_to_send and one optional : timeout_in_s
+The parameter msg_to_send is simply the UDS request payload which is a list of bytes.
+
+The optional parameter timeout_in_s (by default fixed to 5 seconds) simply represent the maximum
+amount of time in second to wait for a response from the device under test. If this timeout is reached, the
+uds-auxiliary stop to acquire and log an error.
 
 The method send_uds_raw method returns a :py:class:`~ebplugins.udsaux.uds_response.UdsResponse` object, which is a subclass of `UserList
 <https://docs.python.org/3/library/collections.html#collections.UserList>`_.
@@ -126,9 +129,10 @@ Here is an example:
 
 Send UDS Config Request
 -----------------------
-| Send UDS request as a configurable data dictionary. This method can be more practical for UDS requests with long payloads and a multitude of parameters.
-| The method send_uds_config(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.send_uds_config`) takes one mandatory parameter msg_to_send and an optional one timeout_in_s.
-| The parameter msg_to_send is the UDS request defined as a configurable dictionary that always respects the below defined template:
+
+Send UDS request as a configurable data dictionary. This method can be more practical for UDS requests with long payloads and a multitude of parameters.
+The method send_uds_config(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.send_uds_config`) takes one mandatory parameter msg_to_send and an optional one timeout_in_s.
+The parameter msg_to_send is the UDS request defined as a configurable dictionary that always respects the below defined template:
 
 .. note:: this feature is only available if a valid ODX file is given at auxiliary configuration level
 
@@ -137,7 +141,7 @@ Send UDS Config Request
     req = {
         'service': %SERVICE_ID%,
         'data': %DATA%
-        }
+    }
 
 SERVICE_ID -> SID (Service Identifier) of the UDS request either defined as a byte or the corresponding enum label:
 
@@ -170,9 +174,10 @@ SERVICE_ID -> SID (Service Identifier) of the UDS request either defined as a by
         TransferData = 0x36
         RequestTransferExit = 0x37
 
-| DATA -> dictionary that contains the following keys:
-|     - 'parameter': DID (Data Identifier) of the UDS request. (In most UDS services with DID)
-|     - %param_n%: one or many keys that represent the parameters related to the service, those depend on ODX definition that is tested.
+
+DATA -> dictionary that contains the following keys:
+    - 'parameter': DID (Data Identifier) of the UDS request. (In most UDS services with DID)
+    - %param_n%: one or many keys that represent the parameters related to the service, those depend on ODX definition that is tested.
 
 See some examples of UDS requests below:
 
@@ -206,31 +211,42 @@ The optional parameter timeout_in_s (by default fixed to 6 seconds) simply repre
 amount of time in second to wait for a response from the device under test. If this timeout is reached, the
 uds-auxiliary stops to acquire and log an error.
 
-| If the corresponding response is received from entity under test, send_uds_config method returns it also as a preconfigured dictionary.
-| In case of a UDS positive response and no data to be returned, None is returned by the send_uds_config method.
-| In case of a UDS negative response, a dictionary with the key 'NRC' is returned and the NRC value.
-| Optionally, 'NRC_Label' may be returned if it is defined in ODX for the called service, containing the uds negative response description.
+If the corresponding response is received from entity under test, send_uds_config method returns it also as a preconfigured dictionary.
+In case of a UDS positive response and no data to be returned, None is returned by the send_uds_config method.
+In case of a UDS negative response, a dictionary with the key 'NRC' is returned and the NRC value.
+Optionally, 'NRC_Label' may be returned if it is defined in ODX for the called service, containing the uds negative response description.
 
 UDS Reset functions
 --------------------
-|Reset might be integrated in different tests.
-|The methods :  - soft_rest(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.soft_reset`)
-|               - hard_reset(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.hard_reset`)
-|               - force_ecu_reset(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.force_ecu_reset`)
-|do not take any argument, and regarding the config (with our without odx file) will send either raw message, or
-|uds config (except for the key_off_on methods, but can remain acceptable for odx uds config)
+
+Reset might be integrated in different tests.
+
+The methods:
+
+- soft_rest(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.soft_reset`)
+- hard_reset(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.hard_reset`)
+- force_ecu_reset(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.force_ecu_reset`)
+
+do not take any argument, and regarding the config (with our without odx file) will send either raw message, or
+uds config (except for the key_off_on methods, but can remain acceptable for odx uds config)
 
 .. code:: python
-    #Soft reset
+
+    Soft reset
     uds_aux.soft_reset()
 
 UDS check functions
 --------------------
-|Check functions might be integrated in different tests.
-|The methods :  - check_raw_response_negative(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.check_raw_response_negative`)
-|               - check_raw_response_positive(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.check_raw_response_positive`)
-|The methods take one mandatory argument resp.
-|The parameter rest is the response as a userlist object
+
+Check functions might be integrated in different tests.
+
+The methods:
+
+- check_raw_response_negative(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.check_raw_response_negative`)
+- check_raw_response_positive(:py:meth:`pykiso.lib.auxiliaries.udsaux.uds_auxiliary.UdsAuxiliary.check_raw_response_positive`)
+
+The methods take as only mandatory argument the received response.
+The parameter rest is the response as a userlist object.
 
 .. code:: python
     #Check raw response is positive
@@ -241,8 +257,9 @@ UDS check functions
 
 UDS read & write data
 ---------------------
-|Read data(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.read_data`) and write(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.write_data`)
-|are two helper API that use send_uds_config with specific ISO services (:py:meth:`udsaux.uds_utils.UdsAuxiliary.read_data`)
+
+Read data(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.read_data`) and write(:py:meth:`udsaux.uds_auxiliary.UdsAuxiliary.write_data`)
+are two helper API that use send_uds_config with specific ISO services (:py:meth:`udsaux.uds_utils.UdsAuxiliary.read_data`)
 
 .. code:: python
 
@@ -250,12 +267,12 @@ UDS read & write data
 
     WriteDataByIdentifier = 0x2E
 
-|Using write_data takes two arguments : parameter, and value.
-|Parameter is simply a string that refer to the name of the data you want to modify, and value
-|is simply the value you want to assign to the chosen parameters
-|API must return None in case of positive response, and dictionary with NRC in it (for further information,
-|check in send_uds_config documentation).
-|Using this API is similar to do this :
+Using write_data takes two arguments : parameter, and value.
+Parameter is simply a string that refer to the name of the data you want to modify, and value
+is simply the value you want to assign to the chosen parameters
+API must return None in case of positive response, and dictionary with NRC in it (for further information,
+check in send_uds_config documentation).
+Using this API is similar to do this :
 
 .. code:: python
 
@@ -267,18 +284,19 @@ UDS read & write data
     resp = uds_aux.send_uds_config(writeProductCode_req)
     return resp
 
-|In the same way, read_data takes one argument : parameter.
-|Parameter is a string that contain the name of the data that is to be read. API must return dictionary with either
-|data associated to the read parameter, or NRC.
+In the same way, read_data takes one argument : parameter.
+
+Parameter is a string that contain the name of the data that is to be read. API must return dictionary with either
+data associated to the read parameter, or NRC.
 
 .. _start_stop_tester_present_sender:
 
 UDS tester present sender
 -------------------------
 
-|In order for any diagnostic session to be kept open, a tester presence frame has to be sent every 5 seconds.
-|For this purpose, the tester present sender context manager can be used, it will send the tester
-|present frame at the period given, allowing you to keep the session open for more than 5 seconds.
+In order for any diagnostic session to be kept open, a tester presence frame has to be sent every 5 seconds.
+For this purpose, the tester present sender context manager can be used, it will send the tester
+present frame at the period given, allowing you to keep the session open for more than 5 seconds.
 
 .. code:: python
 
@@ -286,8 +304,8 @@ UDS tester present sender
     with uds_aux.tester_present_sender(period=3):
         # Perform uds commands here
 
-|It is also possible to start and stop the tester present sender manually with the methods
-|start_tester_present_sender and stop_tester_present_sender.
+It is also possible to start and stop the tester present sender manually with the methods
+start_tester_present_sender and stop_tester_present_sender.
 
 .. code:: python
 
@@ -296,7 +314,7 @@ UDS tester present sender
     # Perform uds commands here
     uds_aux.stop_tester_present_sender()
 
-|It is then possible to check if the tester present is active with the attribute is_tester_present
+It is then possible to check if the tester present is active with the attribute is_tester_present
 
 .. code:: python
 
