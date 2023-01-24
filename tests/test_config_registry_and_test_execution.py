@@ -10,6 +10,7 @@
 import copy
 import logging
 import pathlib
+from contextlib import nullcontext as does_not_raise
 from unittest import TestCase, TestResult
 
 import pytest
@@ -48,6 +49,7 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
     assert "END OF TEST: " in output.err
     assert "->  PASSED" in output.err
     assert "->  FAILED" not in output.err
+    assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -67,22 +69,46 @@ def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "Ran 0 tests" in output.err
+    assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
 
 
 @pytest.mark.parametrize("tmp_test", [("aux_1", "aux_2", False)], indirect=True)
-def test_config_registry_and_test_execution_with_user_tags(tmp_test, mocker):
+def test_config_registry_and_test_execution_with_user_tags(tmp_test, capsys):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+    with an undefined user tag.
+
+    Validation criteria:
+        -  'SKIPPED' is present in test output
+    """
+    user_tags = {"unknown-variant": ["will raise"]}
+    cfg = parse_config(tmp_test)
+    ConfigRegistry.register_aux_con(cfg)
+    exit_code = test_execution.execute(cfg, user_tags=user_tags)
+    ConfigRegistry.delete_aux_con()
+
+    assert exit_code == test_execution.ExitCode.BAD_CLI_USAGE
+
+
+@pytest.mark.parametrize("tmp_test", [("aux_1", "aux_2", False)], indirect=True)
+def test_config_registry_and_test_execution_with_user_tags(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     with additional user tags.
 
     Validation criteria:
-        -  apply_filter called once
+        -  'SKIPPED' is present in test output
     """
-    user_tags = {"variant": ["delta"]}
+    user_tags = {"variant": ["to be skipped"]}
     cfg = parse_config(tmp_test)
     ConfigRegistry.register_aux_con(cfg)
     exit_code = test_execution.execute(cfg, user_tags=user_tags)
     ConfigRegistry.delete_aux_con()
+
+    output = capsys.readouterr()
+    assert "FAIL" not in output.err
+    assert "SKIPPED TEST" in output.err
+    assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
 
 
 def test_parse_test_selection_pattern():
@@ -157,9 +183,13 @@ def test_config_registry_and_test_execution_collect_error_log(mocker, caplog, tm
     cfg = parse_config(tmp_test)
 
     with caplog.at_level(logging.ERROR):
-        test_execution.execute(config=cfg)
+        exit_code = test_execution.execute(config=cfg)
 
-    assert "Error occurred during test collections." in caplog.text
+    assert "Error occurred during test collection." in caplog.text
+    assert (
+        exit_code
+        == test_execution.ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
+    )
 
 
 @pytest.mark.parametrize(
@@ -179,13 +209,13 @@ def test_config_registry_and_test_execution_test_auxiliary_creation_error(
         "pykiso.test_coordinator.test_execution.collect_test_suites",
         side_effect=pykiso.AuxiliaryCreationError("test"),
     )
-
     cfg = parse_config(tmp_test)
 
     with caplog.at_level(logging.ERROR):
-        test_execution.execute(config=cfg)
+        exit_code = test_execution.execute(config=cfg)
 
     assert "Error occurred during auxiliary creation." in caplog.text
+    assert exit_code == test_execution.ExitCode.AUXILIARY_CREATION_FAILED
 
 
 @pytest.mark.parametrize("tmp_test", [("text_aux1", "text_aux2", False)], indirect=True)
@@ -310,104 +340,50 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
 
 
 @pytest.mark.parametrize(
-    "tc_tags ,cli_tags, is_test_running",
+    "tc_tags, cli_tags, expected_error, expect_skip",
     [
-        (None, {}, True),
-        (
-            {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "some_branch",
-                ],
-            },  # tc_tags
-            {
-                "branch-level": "some_branch",
-            },  # cli_tags
-            True,  # is_test_running
+        pytest.param(
+            {"-some_tag_": ["value"]},  # tc_tags
+            {"_some-tag": ["other_value"]},  # cli_tags
+            does_not_raise(),
+            True,  # expect_skip
+            id="insensitivity to dashes and underscores",
         ),
-        (
-            {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "daily,nightly",
-                ],
-            },  # tc_tags
-            {
-                "branch-level": "daily,nightly",
-            },  # cli_tags
-            True,  # is_test_running
-        ),
-        (
-            {},  # tc_tags
-            {
-                "branch-level": "nightly",
-            },  # cli_tags
-            False,  # is_test_running
-        ),
-        (
-            {},  # tc_tags
+        pytest.param(
+            None,  # tc_tags
             {},  # cli_tags
-            True,  # is_test_running
+            does_not_raise(),
+            False,
+            id="no tags in tc nor in cli",
         ),
-        (
+        pytest.param(
+            None,  # tc_tags
+            {"k1": "v1"},  # cli_tags
+            pytest.raises(NameError),
+            True,
+            id="no tags in tc but in cli",
+        ),
+        pytest.param(
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch-level": [
-                    "some_branch",
-                ],
+                "k1": ["v1", "v3"],
+                "k2": ["v2", "v5", "v6"],
             },  # tc_tags
-            {
-                "branch_level": "some_branch",
-            },  # cli_tags
-            True,  # is_test_running
+            {"k1": "v2"},  # cli_tags
+            does_not_raise(),
+            True,  # expect_skip
+            id="one tag name matches but no value",
         ),
-        (
+        pytest.param(
             {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [],
+                "k1": ["v1", "v3"],
+                "k2": ["v2", "v5", "v6"],
             },  # tc_tags
-            {
-                "variant": "omicron",
-            },  # cli_tags
-            True,  # is_test_running
+            {"k1": "v1", "k2": ["v12", "v13"]},  # cli_tags
+            does_not_raise(),
+            True,  # expect_skip
+            id="multple tag names match but no value",
         ),
-        (
-            {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "leaf",
-                ],
-            },  # tc_tags
-            {
-                "branch_level": "leaf",
-            },  # cli_tags
-            True,  # is_test_running
-        ),
-        (
-            {
-                "variant": [
-                    "omicron",
-                ],
-                "branch_level": [
-                    "leaf",
-                ],
-            },  # tc_tags
-            {
-                "branch_level": "bud",
-            },  # cli_tags
-            False,  # is_test_running
-        ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v3"],
                 "k2": ["v2", "v5", "v6"],
@@ -416,104 +392,102 @@ def test_config_registry_and_test_execution_failure_and_error_handling():
                 "k1": "v1",
                 "k2": "v2",
             },  # cli_tags
-            True,  # is_test_running
+            does_not_raise(),
+            False,  # expect_skip
+            id="multiple tag names match and multiple values",
         ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v7"],
                 "k2": ["v2", "v5", "v6"],
             },  # tc_tags
-            {
-                "k1": "v1",
-                "k2": "v2",
-            },  # cli_tags
-            True,  # is_test_running
+            {"k3": "v10"},  # cli_tags
+            pytest.raises(NameError),
+            True,  # expect_skip
+            id="no name matches, multiple tc tags",
         ),
-        (
-            {
-                "k1": ["v1", "v7"],
-                "k2": ["v2", "v5", "v6"],
-            },  # tc_tags
-            {
-                "k1": "v1",
-                "k2": "v10",
-            },  # cli_tags
-            True,  # is_test_running
+        pytest.param(
+            {"k1": ["v1", "v3"]},  # tc_tags
+            {"k2": ["v2", "v5"]},  # cli_tags
+            pytest.raises(NameError),
+            True,  # expect_skip
+            id="no name matches, single tc tags",
         ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v3"],
                 "k2": ["v2", "v5", "v6"],
             },  # tc_tags
-            {
-                "k1": "v1",
-            },  # cli_tags
-            True,  # is_test_running
+            {"k1": "v1"},  # cli_tags
+            does_not_raise(),
+            False,  # expect_skip
+            id="one name matches and one value",
         ),
-        (
-            {
-                "k1": ["v1", "v7"],
-                "k2": ["v2", "v5", "v6"],
-            },  # tc_tags
-            {
-                "k1": "v1",
-            },  # cli_tags
-            True,  # is_test_running
-        ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v3"],
                 "k2": ["v2", "v5", "v6"],
             },  # tc_tags
             {"k1": ["v1", "v3"]},  # cli_tags
-            True,  # is_test_running
+            does_not_raise(),
+            False,  # expect_skip
+            id="one name matches and multiple values",
         ),
-        (
+        pytest.param(
             {
                 "k1": ["v1", "v3"],
                 "k2": ["v2", "v5", "v6"],
             },  # tc_tags
             {"k1": ["v1", "v3"], "k2": ["v2", "v5"]},  # cli_tags
-            True,  # is_test_running
-        ),
-        (
-            {
-                "k1": ["v1", "v3"],
-            },  # tc_tags
-            {"k2": ["v2", "v5"]},  # cli_tags
-            False,  # is_test_running
+            does_not_raise(),
+            False,  # expect_skip
+            id="multiple names match and multiple values",
         ),
     ],
 )
-def test_config_registry_and_test_execution_apply_variant_filter(
-    tc_tags, cli_tags, is_test_running, mocker
-):
+def test_apply_variant_filter(tc_tags, cli_tags, expect_skip, expected_error, mocker):
     mock_test_case = mocker.Mock()
-    mock_test_case.setUp = None
-    mock_test_case.tearDown = None
-    mock_test_case.testMethodName = None
-    mock_test_case.skipTest = lambda x: x  # return input
     mock_test_case.tag = tc_tags
-    mock_test_case._testMethodName = "testMethodName"
-    mock = mocker.patch(
+    mock_flatten = mocker.patch(
         "pykiso.test_coordinator.test_execution.test_suite.flatten",
         return_value=[mock_test_case],
     )
 
+    with expected_error:
+        test_execution.apply_tag_filter({}, cli_tags)
+
+        # case where nothing was raised
+        assert mock_flatten.call_count == 2
+        if not expect_skip:
+            assert not hasattr(mock_test_case, "__unittest_skip__")
+            assert not hasattr(mock_test_case, "__unittest_skip_why__")
+        else:
+            assert mock_test_case.__unittest_skip__ == True
+            assert mock_test_case.__unittest_skip_why__ == mock_test_case._skip_msg
+
+
+def test_apply_variant_filter_multiple_testcases(mocker):
+    cli_tags = {"k1": ["v1"]}
+
+    mock_test_case_to_run = mocker.Mock()
+    mock_test_case_to_run.tag = {"k1": ["v1"], "k2": ["v2"]}
+
+    mock_test_case_to_skip = mocker.Mock()
+    mock_test_case_to_skip.tag = {"k3": ["v1", "v3"]}
+    mock_flatten = mocker.patch(
+        "pykiso.test_coordinator.test_execution.test_suite.flatten",
+        return_value=[mock_test_case_to_run, mock_test_case_to_skip],
+    )
+
     test_execution.apply_tag_filter({}, cli_tags)
 
-    mock.assert_called_once()
-    if is_test_running:
-        assert mock_test_case.setUp is None
-        assert mock_test_case.tearDown is None
-        assert mock_test_case.testMethodName is None
-    else:
-        assert mock_test_case.setUp() == "setup_skipped"
-        assert (
-            mock_test_case.testMethodName()
-            == "skipped due to non-matching variant value"
-        )
-        assert mock_test_case.tearDown() == "tearDown_skipped"
+    assert mock_flatten.call_count == 2
+    assert not hasattr(mock_test_case_to_run, "__unittest_skip__")
+    assert not hasattr(mock_test_case_to_run, "__unittest_skip_why__")
+    assert mock_test_case_to_skip.__unittest_skip__ == True
+    assert (
+        "'k1' not present in test tags" in mock_test_case_to_skip.__unittest_skip_why__
+    )
 
 
 def test_test_execution_apply_tc_name_filter(mocker):

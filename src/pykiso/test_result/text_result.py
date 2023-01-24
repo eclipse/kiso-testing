@@ -102,7 +102,7 @@ class ResultStream:
 
 
 class BannerTestResult(TextTestResult):
-    """TextTestResult subclass showing results wrapped in banners."""
+    """TextTestResult subclass showing results wrapped in banners (frames)."""
 
     BANNER_CHAR_WIDTH = 4
 
@@ -134,7 +134,8 @@ class BannerTestResult(TextTestResult):
     def _banner(
         self, text: Union[List, str], width: Optional[int] = None, sym: str = "#"
     ) -> str:
-        """Format text as a banner.
+        """Format the provided text within a frame composed of the provided
+        symbol.
 
         Works with multiline strings (either as a string containing
         newlines or split into a list with one entry per line).
@@ -142,25 +143,23 @@ class BannerTestResult(TextTestResult):
         :param text: text to format
         :paran width: width of the banner
         :param sym: symbol used to compose the banner
-
         :return: the text enclosed in a banner
         """
         width = width or self.width
-        bar = sym * width
+        line = sym * width
         if isinstance(text, str):
             text = text.split("\n")
         if isinstance(text, list):
             text = "\n".join(
                 f"{sym} {line: <{width-self.BANNER_CHAR_WIDTH}} {sym}" for line in text
             )
-        banner = f"{bar}\n{text}\n{bar}\n"
+        banner = f"{line}\n{text}\n{line}\n"
         return banner
 
     def getDescription(self, test: Union[BasicTest, BaseTestSuite]) -> str:
         """Return the entire test method docstring.
 
         :param test: running testcase
-
         :return: the wrapped docstring
         """
         doc = ""
@@ -175,33 +174,49 @@ class BannerTestResult(TextTestResult):
         """Print a banner containing the test information and the test
         method docstring when starting a test case.
 
-        :param test: running testcase
+        :param test: testcase that is about to be run
         """
         super().startTest(test)
         self._error_occurred = False
-        top_str = "RUNNING TEST: "
+        # gather test module, test class, test method and test description
         module_name = test.__module__
         test_name = str(test)
         addendum = ""
-        doc = self.getDescription(test)
+        doc = self.getDescription(test).rstrip()
+        # verify if the test case is skipped
+        is_skipped = False
+        if getattr(test, "__unittest_skip__", False):
+            # in case of an entirely skipped test class only the top
+            # banner is printed
+            top_str = "SKIPPED TEST: "
+            addendum += f"\nReason: {test.__unittest_skip_why__}"
+            is_skipped = True
+        else:
+            top_str = "RUNNING TEST: "
         if len(module_name + test_name) < self.width - len(top_str):
             test_name = f"{module_name}.{test_name}"
         else:
             addendum += f"\nmodule: {module_name}"
+        # create and print test start banner
         top_str += f"{test_name}{addendum}{doc}"
         top_banner = self._banner(top_str)
+        if is_skipped:
+            top_banner += "\n"
         self.stream.write(top_banner)
         self.stream.flush()
+        # start monitoring test duration
         test.start_time = time.time()
 
     def stopTest(self, test: Union[BasicTest, BaseTestSuite]) -> None:
         """Print a banner containing the test information and its result.
 
-        :param test: running testcase
+        :param test: terminated testcase
         """
+        if getattr(test, "__unittest_skip__", False):
+            return super().stopTest(test)
         test.stop_time = time.time()
         test.elapsed_time = test.stop_time - test.start_time
-        result = "FAILED" if self._error_occurred else "PASSED"
+        result = "FAILED" if self.error_occurred else "PASSED"
         bot_str = f"END OF TEST: {test}"
         result_str = f"  ->  {result} in {test.elapsed_time:.3f}s"
         if len(bot_str + result_str) < self.width - self.BANNER_CHAR_WIDTH:
@@ -219,7 +234,7 @@ class BannerTestResult(TextTestResult):
         """Set the error flag when a failure occurs in order to get the
         individual test case result.
 
-        :param test: running testcase
+        :param test: testcase which failure will be reported
         :param err: tuple returned by sys.exc_info
         """
         super().addFailure(test, err)
@@ -228,7 +243,7 @@ class BannerTestResult(TextTestResult):
     def addSuccess(self, test: Union[BasicTest, BaseTestSuite]) -> None:
         """Add a testcase to the list of succeeded test cases.
 
-        :param test: running testcase
+        :param test: running testcase that succeeded
         """
         self.successes.append(test)
 
@@ -236,7 +251,7 @@ class BannerTestResult(TextTestResult):
         """Set the error flag when an error occurs in order to get the
         individual test case result.
 
-        :param test: running testcase
+        :param test: running testcase that errored out
         :param err: tuple returned by sys.exc_info
         """
         super().addError(test, err)
@@ -261,7 +276,7 @@ class BannerTestResult(TextTestResult):
     def printErrorList(self, flavour: str, errors: List[tuple]):
         """Print all errors at the end of the whole tests execution.
 
-        Overwrites the unit-test method to have a nicer output.
+        Overwrites the unittest method to have a nicer output.
 
         :param flavour: failure reason
         :param errors: list of failed tests with their error message

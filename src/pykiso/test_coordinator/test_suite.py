@@ -461,11 +461,10 @@ def tc_sort_key(tc):
     return (fix_ind, tc.test_suite_id, tc.test_case_id)
 
 
-def flatten(it):
+def flatten(it: unittest.TestSuite) -> Iterable[BasicTest]:
     """Flatten all level of nesting.
 
     :param it: nested iterable
-
     :return: first not nested items
     """
     for x in it:

@@ -65,8 +65,14 @@ Test-Message Handling
 .. automodule:: pykiso.test_coordinator.test_message_handler
     :members:
 
-test xml result
----------------------
+Test Results
+------------
 
-.. automodule:: pykiso.test_coordinator.test_xml_result
+.. automodule:: pykiso.test_result.xml_result
+    :members:
+
+.. automodule:: pykiso.test_result.text_result
+    :members:
+
+.. automodule:: pykiso.test_result.assert_step_report
     :members:
