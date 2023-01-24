@@ -29,16 +29,6 @@ def test_open_default():
     assert cc_serial.serial.is_open is False
 
 
-def test_receive_raw(mocker):
-
-    serial_mock = mocker.patch("serial.Serial")
-
-    cc_serial = CCSerial("com666")
-
-    with pytest.raises(NotImplementedError):
-        cc_serial.cc_receive(raw=False)
-
-
 def test_receive_one_char(mocker):
 
     serial_mock = mocker.patch("serial.Serial")
@@ -47,7 +37,7 @@ def test_receive_one_char(mocker):
     cc_serial.serial.read.return_value = b"s"
     cc_serial.serial.in_waiting = 0
 
-    recv = cc_serial.cc_receive(raw=True, timeout=0.5)
+    recv = cc_serial.cc_receive(timeout=0.5)
     assert recv.get("msg") == b"s"
     cc_serial.serial.read.assert_called_once()
     assert cc_serial.serial.timeout == 0
@@ -61,7 +51,7 @@ def test_receive_multiple_bytes(mocker):
     cc_serial.serial.read.side_effect = [b"1", b"234"]
     cc_serial.serial.in_waiting = 3
 
-    recv = cc_serial.cc_receive(raw=True, timeout=0.5)
+    recv = cc_serial.cc_receive(timeout=0.5)
     assert recv.get("msg") == b"1234"
     assert cc_serial.serial.read.call_count == 2
 

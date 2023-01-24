@@ -32,7 +32,7 @@ pipeline
                 checkout scm
                 // TODO remove once new docker image is available
                 sh 'python3 -m pip install poetry'
-                sh 'poetry install'
+                sh 'poetry install --all-extras'
             }
         }
         stage('Format check')

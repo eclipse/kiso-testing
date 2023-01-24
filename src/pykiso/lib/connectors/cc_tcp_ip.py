@@ -20,7 +20,7 @@ Communication Channel via socket
 """
 import logging
 import socket
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from pykiso import CChannel
 
@@ -62,26 +62,18 @@ class CCTcpip(CChannel):
         )
         self.socket.close()
 
-    def _cc_send(self, msg: bytes or str, raw: bool = False) -> None:
+    def _cc_send(self, msg: bytes or str) -> None:
         """Send a message via socket.
 
         :param msg: message to send
-        :param raw: is the message in a raw format (True) or is it a string (False)?
         """
-        if msg is not None and raw is False:
-            msg = msg.encode()
-
         log.internal_debug(f"Sending {msg} via socket to {self.dest_ip}")
         self.socket.send(msg)
 
-    def _cc_receive(
-        self, timeout=0.01, raw: bool = False
-    ) -> Dict[str, Union[bytes, str, None]]:
+    def _cc_receive(self, timeout=0.01) -> Dict[str, Optional[bytes]]:
         """Read message from socket.
 
         :param timeout: time in second to wait for reading a message
-        :param raw: should the message be returned raw or should it be interpreted as a
-            pykiso.Message?
 
         :return: Message if successful, otherwise none
         """
@@ -89,10 +81,6 @@ class CCTcpip(CChannel):
 
         try:
             msg_received = self.socket.recv(self.max_msg_size)
-
-            if not raw:
-                msg_received = msg_received.decode().strip()
-
             log.internal_debug(f"Socket at {self.dest_ip} received: {msg_received}")
         except socket.timeout:
             log.exception(

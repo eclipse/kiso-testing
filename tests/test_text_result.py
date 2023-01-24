@@ -13,7 +13,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from pykiso.test_result.text_result import ResultStream
+from pykiso.test_result.text_result import BannerTestResult, ResultStream
 
 DUMMY_FILE = "dummy.txt"
 
@@ -94,3 +94,24 @@ class TestResultStream:
 
         assert test_result_instance.stderr is None
         assert test_result_instance.file is None
+
+
+class TestBannerTestResult:
+    @pytest.fixture()
+    def banner_test_result_instance(self):
+        return BannerTestResult(sys.stderr, True, 1)
+
+    @pytest.mark.parametrize(
+        "error,result_expected", [((Exception), True), (None, False)]
+    )
+    def test_addSubTest(
+        self, mocker, banner_test_result_instance, error, result_expected
+    ):
+        add_subTest_mock = mocker.patch("unittest.result.TestResult.addSubTest")
+        test_mock = mocker.patch("pykiso.test_coordinator.test_case.BasicTest")
+        subtest_mock = mocker.patch("unittest.case._SubTest")
+
+        banner_test_result_instance.addSubTest(test_mock, subtest_mock, error)
+
+        add_subTest_mock.assert_called_once_with(test_mock, subtest_mock, error)
+        assert banner_test_result_instance.error_occurred == result_expected

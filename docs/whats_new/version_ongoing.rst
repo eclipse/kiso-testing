@@ -11,6 +11,13 @@ This is no longer the case and specifying them in only one auxiliary
 will be enough for the loggers to stay enabled.
 
 
+Ykush Auxiliary
+^^^^^^^^^^^^^^^
+Auxiliary that can be used to power on and off the ports of an Ykush USB Hub.
+
+See :ref:`ykush_auxiliary`
+
+
 Internal creation of proxy auxiliaries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

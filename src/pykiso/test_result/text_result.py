@@ -31,6 +31,7 @@ from contextlib import nullcontext
 from shutil import get_terminal_size
 from typing import List, Optional, TextIO, Union
 from unittest import TextTestResult
+from unittest.case import _SubTest
 
 from ..test_coordinator.test_case import BasicTest
 from ..test_coordinator.test_suite import BaseTestSuite
@@ -255,6 +256,22 @@ class BannerTestResult(TextTestResult):
         """
         super().addError(test, err)
         self._error_occurred = True
+
+    def addSubTest(
+        self,
+        test: Union[BasicTest, BaseTestSuite],
+        subtest: _SubTest,
+        err: ExcInfoType,
+    ) -> None:
+        """Set the error flag when an error occurs in a subtest.
+
+        :param test: running testcase
+        :param subtest: subtest runned
+        :param err: tuple returned by sys.exc_info
+        """
+        super().addSubTest(test, subtest, err)
+        if err is not None:
+            self._error_occurred = True
 
     def printErrorList(self, flavour: str, errors: List[tuple]):
         """Print all errors at the end of the whole tests execution.
