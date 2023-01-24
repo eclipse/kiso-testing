@@ -19,6 +19,8 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Store activated loggers globally ([#223](https://github.com/orhun/git-cliff/issues/223))
 - Add step report folding ([#221](https://github.com/orhun/git-cliff/issues/221))
 - Implement ykush auxiliary ([#225](https://github.com/orhun/git-cliff/issues/225))
+- Rework test filtering strategy and improve output ([#226](https://github.com/orhun/git-cliff/issues/226))
+- Make release 0.21.0 ([#230](https://github.com/orhun/git-cliff/issues/230))
 
 ### Refactorings
 
