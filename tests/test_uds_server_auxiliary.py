@@ -52,7 +52,7 @@ class TestUdsServerAuxiliary:
         parser = mocker.patch(
             "pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.OdxParser"
         )
-        parser().get_coded_values_by_sd = MagicMock(return_value=[34, 42069])
+        parser().get_coded_values = MagicMock(return_value=[34, 42069])
         # logging.debug(f"---PARSER: {parser}: {parser.get_coded_values_by_sd()}")
 
         TestUdsServerAuxiliary.uds_aux_instance_odx = UdsServerAuxiliary(
@@ -242,6 +242,11 @@ class TestUdsServerAuxiliary:
                 {"0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55])},
                 id="Passed odx keyword dict directly no response given",
             ),
+            pytest.param(
+                (ODX_REQUEST, {"Negative": 17}),
+                {"0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11])},
+                id="Negative response given",
+            ),
         ],
     )
     def test_register_callback(
@@ -251,7 +256,6 @@ class TestUdsServerAuxiliary:
             uds_server_aux_inst.register_callback(*callback_params)
         else:
             uds_server_aux_inst.register_callback(callback_params)
-        logging.info(f"CBs: {uds_server_aux_inst._callbacks}")
         assert uds_server_aux_inst._callbacks == expected_callback_dict
 
     @pytest.mark.parametrize(
@@ -354,9 +358,7 @@ class TestUdsServerAuxiliary:
 
         assert "Unregistered request received" in caplog.text
 
-    # TODO: PARAMETERIZE
     def test__create_callback_from_odx(self, uds_server_aux_inst):
-        logging.info(f"VALS: {uds_server_aux_inst.odx_parser.get_coded_values_by_sd()}")
         callback = uds_server_aux_inst._create_callback_from_odx(ODX_REQUEST)
         assert callback == UdsCallback([0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55])
 

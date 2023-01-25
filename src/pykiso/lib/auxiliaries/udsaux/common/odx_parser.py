@@ -27,6 +27,8 @@ log = logging.getLogger(__name__)
 
 
 class OdxParser:
+    """Used to parse ODX files to configure a Uds server"""
+
     def __init__(self, odx_file: Path) -> None:
         with open(odx_file) as odx:
             # create a xml tree from root <ODX>
@@ -57,13 +59,14 @@ class OdxParser:
         )
         if not diag_services:
             raise ValueError(f"No DIAG-SERVICE has a SD containing {sd_instance_name}")
-        log.internal_debug(f"Found {len(diag_services)} potential diag services")
         return diag_services
 
     def get_coded_values(self, sd: str, sid: int) -> List[int]:
         """Get the list of coded values for a ODX request element to construct a UDS request from
 
         :sd: sd instance name
+        :sid: service id to differentiate between diag services with the same sd name
+        :raise ValueError: if no request could be created for the given sd name and SID
         :return: a list of the coded values to be converted into a uds request
         """
         diag_services = self._find_diag_services_by_sd(sd)

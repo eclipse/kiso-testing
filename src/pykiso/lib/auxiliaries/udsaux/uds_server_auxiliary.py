@@ -217,12 +217,10 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         """
         # handle odx based callbacks
         if isinstance(request, dict):
-            log.internal_debug("----------> CREATE ODX Callback from dict")
             request = self._create_callback_from_odx(
                 request, response, response_data, data_length, callback
             )
         elif isinstance(request, UdsCallback) and isinstance(request.request, dict):
-            log.internal_debug("----------> CREATE ODX Callback from callback")
             request = self._create_callback_from_odx(
                 request.request,
                 request.response,
@@ -321,7 +319,6 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         for value in coded_values:
             int_bytes = list(UdsCallback.int_to_bytes(value))
             uds_data.extend(int_bytes)
-        log.internal_debug(f"Uds request bytes list from coded values: {uds_data}")
         return uds_data
 
     def _create_callback_from_odx(
@@ -344,9 +341,6 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :param callback: custom callback to register
         :return: UdsCallback with request and response parsed from odx
         """
-        log.internal_debug(
-            f"Creating odx based callback for request={request}, response={response}"
-        )
         coded_values = self.odx_parser.get_coded_values(
             request["data"]["parameter"], request["service"]
         )
@@ -362,7 +356,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         if isinstance(response, dict):
             # create response from dict -> implementation for single values
             key, data = response.popitem()
-            if key.lower() == "negative" or key == UdsResponse.NEGATIVE_RESPONSE_SID:
+            if key.lower() == "negative":
                 # create negative response: Negative response SID, request SID, NRC
                 response = [UdsResponse.NEGATIVE_RESPONSE_SID, uds_request[0], data]
             else:
@@ -373,7 +367,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         callback = UdsCallback(
             uds_request, response, response_data, data_length, callback
         )
-        log.internal_debug(f"Created a callback from odx: {callback}")
+        log.internal_debug(f"Callback configured from odx: {callback}")
         return callback
 
     def _abort_command(self) -> None:

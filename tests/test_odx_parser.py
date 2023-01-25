@@ -7,9 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
-import logging
-from pathlib import Path
-from unittest.mock import MagicMock, call
+
 from xml.etree.ElementTree import Element, ElementTree
 
 import pytest

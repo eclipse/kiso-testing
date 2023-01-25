@@ -141,6 +141,11 @@ The available parameters for defining a callback are the following:
 
         odx_response = {"sd_name": "your_data"}
 
+        # for a negative response, the following format is expected:
+        # the key needs to be the string "negative" (case insensitive)
+        # nrc is a uds negative response code as int
+        odx_response = {"Negative": nrc}
+
 - ``response_data`` (optional): the UDS data to send with the response. If the response is specified
     the data is simply appended to the response. This parameter can be passed as an integer or as
     bytes (e.g. ``b"DATA"``).
@@ -300,7 +305,7 @@ Find below an example showing its usage, along with a custom callback function d
                 uds_aux.unregister_callback(callback)
 
 If the :py:class:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary` was configured with a
-valid ODX file, you can use ODX based configuration of callbacks like this:
+valid ODX file, you can use ODX based configuration of callbacks like this (same format as above):
 
 .. code:: python
 
