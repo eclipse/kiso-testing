@@ -33,6 +33,8 @@ from typing import Callable, ClassVar, Dict, List, Optional, Tuple, Union
 
 from uds import IsoServices
 
+from pykiso.types import OdxRequestConfigDict
+
 if typing.TYPE_CHECKING:
     from pykiso.lib.auxiliaries.udsaux import UdsServerAuxiliary
 
@@ -60,7 +62,7 @@ class UdsCallback:
     POSITIVE_RESPONSE_OFFSET: ClassVar[int] = 0x40
 
     # e.g. 0x1003 or [0x10, 0x03]
-    request: Union[int, List[int], Dict[str, str]]
+    request: Union[int, List[int], OdxRequestConfigDict]
     # e.g. 0x5003 or [0x50, 0x03]
     response: Optional[Union[int, List[int], Dict[str, str]]] = None
     # e.g. 0x1011 or b'DATA'

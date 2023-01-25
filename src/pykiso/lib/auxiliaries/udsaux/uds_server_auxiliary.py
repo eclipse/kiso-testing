@@ -321,7 +321,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         for value in coded_values:
             int_bytes = list(UdsCallback.int_to_bytes(value))
             uds_data.extend(int_bytes)
-        log.debug(f"Created a uds request bytes list from coded values: {uds_data}")
+        log.internal_debug(f"Uds request bytes list from coded values: {uds_data}")
         return uds_data
 
     def _create_callback_from_odx(
@@ -345,28 +345,25 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :return: UdsCallback with request and response parsed from odx
         """
         log.internal_debug(
-            f"creating odx based callback for request={request}, response={response}"
+            f"Creating odx based callback for request={request}, response={response}"
         )
-        coded_values = self.odx_parser.get_coded_values_by_sd(
-            request["data"]["parameter"]
+        coded_values = self.odx_parser.get_coded_values(
+            request["data"]["parameter"], request["service"]
         )
         uds_request = self._create_uds_data(coded_values)
         if uds_request[0] != request["service"]:
-            log.internal_debug(
-                f"Expected SID {request['service']} does not match parsed SID {uds_request[0]}"
+            log.error(
+                f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
             )
             raise ValueError(
-                f"Given IsoService {request['service']} does not match parsed SID {uds_request[0]}"
+                f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
             )
 
         if isinstance(response, dict):
-            # create response from dict -> implementation fro single values TODO: clarify
+            # create response from dict -> implementation for single values
             key, data = response.popitem()
             if key.lower() == "negative" or key == UdsResponse.NEGATIVE_RESPONSE_SID:
                 # create negative response: Negative response SID, request SID, NRC
-                log.internal_debug(
-                    f"Creating a negative response for callback: {UdsResponse.NEGATIVE_RESPONSE_SID},{uds_request[0]}, {data}"
-                )
                 response = [UdsResponse.NEGATIVE_RESPONSE_SID, uds_request[0], data]
             else:
                 # create the response based on the request if its a dict, else it will get autoformatted:

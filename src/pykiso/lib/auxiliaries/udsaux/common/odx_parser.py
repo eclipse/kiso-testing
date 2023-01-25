@@ -45,36 +45,42 @@ class OdxParser:
             raise ValueError(f"No element with id={odx_id} found")
         return element
 
-    def _find_diag_service_by_sd(self, sd_instance_name: str) -> Element:
+    def _find_diag_services_by_sd(self, sd_instance_name: str) -> Element:
         """Find the <DIAG-SERVICE> with the given sd_instance_name
 
         :sd_instance_name: content of the <SD SI="DiagInstanceName">
         :return: the parent diag service odx element of the sd element with given name
         """
         # xpath to diag service for given sd instance name
-        diag_service = self.odx_tree.find(f".//SD[@SI][.='{sd_instance_name}']../../..")
-        if diag_service is None:
-            raise ValueError(f"No DIAG-SERVICE has a SD containing {sd_instance_name}")
-        log.internal_debug(
-            f"Found {diag_service}, short-name={diag_service.find('SHORT-NAME').text}"
+        diag_services = self.odx_tree.findall(
+            f".//SD[@SI][.='{sd_instance_name}']../../.."
         )
-        return diag_service
+        if not diag_services:
+            raise ValueError(f"No DIAG-SERVICE has a SD containing {sd_instance_name}")
+        log.internal_debug(f"Found {len(diag_services)} potential diag services")
+        return diag_services
 
-    def get_coded_values_by_sd(self, sd: str) -> List[int]:
+    def get_coded_values(self, sd: str, sid: int) -> List[int]:
         """Get the list of coded values for a ODX request element to construct a UDS request from
 
         :sd: sd instance name
         :return: a list of the coded values to be converted into a uds request
         """
-        log.internal_debug("Parsing coded values for request sd")
-        diag_service = self._find_diag_service_by_sd(sd)
-        request_id = diag_service.find(".//REQUEST-REF").attrib["ID-REF"]
-        request_element = self._find_element_by_odx_id(request_id)
-        coded_value_elements = request_element.findall(".//CODED-VALUE")
-        coded_values = [int(coded_value.text) for coded_value in coded_value_elements]
-        return coded_values
-
-    def create_negative_response(sid, nrc):
-        # sid from request
-        # nrc from dict
-        pass
+        diag_services = self._find_diag_services_by_sd(sd)
+        for diag_service in diag_services:
+            request_id = diag_service.find(".//REQUEST-REF").attrib["ID-REF"]
+            request_element = self._find_element_by_odx_id(request_id)
+            # compare SIDs to differentiate between e.g. read and write request with same sd name
+            request_sid = int(
+                request_element.find(
+                    ".//PARAM[@SEMANTIC='SERVICE-ID']/CODED-VALUE"
+                ).text
+            )
+            if request_sid == sid:
+                coded_value_elements = request_element.findall(".//CODED-VALUE")
+                coded_values = [
+                    int(coded_value.text) for coded_value in coded_value_elements
+                ]
+                return coded_values
+        log.error(f"Could not create request for service={sid} and sd={sd}")
+        raise ValueError(f"Could not create request for service={sid} and sd={sd}")
