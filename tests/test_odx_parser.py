@@ -229,10 +229,10 @@ def test__find_element_by_odx_id_not_found(tmp_odx_file):
 def test__find_diag_service_by_sd(tmp_odx_file):
     odx_parser = OdxParser(tmp_odx_file)
     sd_name = "SoftwareVersion"
-    element = odx_parser._find_diag_service_by_sd(sd_name)
-
-    assert isinstance(element, Element)
-    assert element.tag == "DIAG-SERVICE"
+    elements = odx_parser._find_diag_services_by_sd(sd_name)
+    for element in elements:
+        assert isinstance(element, Element)
+        assert element.tag == "DIAG-SERVICE"
 
 
 def test__find_diag_service_by_sd_not_found(tmp_odx_file):
@@ -241,11 +241,22 @@ def test__find_diag_service_by_sd_not_found(tmp_odx_file):
     with pytest.raises(
         ValueError, match=f"No DIAG-SERVICE has a SD containing {sd_name}"
     ):
-        element = odx_parser._find_diag_service_by_sd(sd_name)
+        element = odx_parser._find_diag_services_by_sd(sd_name)
 
 
-def test_get_coded_values_by_sd(tmp_odx_file):
+def test_get_coded_values(tmp_odx_file):
     odx_parser = OdxParser(tmp_odx_file)
     expected_values = [34, 42069]
-    coded_values = odx_parser.get_coded_values_by_sd("SoftwareVersion")
+    coded_values = odx_parser.get_coded_values("SoftwareVersion", 34)
     assert coded_values == expected_values
+
+
+def test_get_coded_values_failure(tmp_odx_file):
+    odx_parser = OdxParser(tmp_odx_file)
+    sw_version = "SoftwareVersion"
+    sid = 46
+    with pytest.raises(
+        ValueError,
+        match=f"Could not create request for service={sid} and sd={sw_version}",
+    ):
+        coded_values = odx_parser.get_coded_values(sw_version, sid)
