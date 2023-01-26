@@ -85,6 +85,12 @@ class CCPCanCan(CChannel):
         :param channel: the can interface name
         :param state: BusState of the channel
         :param trace_path: path to write the trace (can be a folder or a .trc file)
+            If the .trc file already exists, it will be overwritten. If the trace_path
+            is an existing folder, a default name will be generated for the trace file
+            containing the timestamp. If the trace_path is a non-existent folder, the
+            folder will be created and the default name will be used for the trace
+            file. If the trace_path is not defined by the user, the default file will be
+            saved in the current working directory.
         :param trace_size: maximum size of the trace (in MB)
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
@@ -112,7 +118,7 @@ class CCPCanCan(CChannel):
         :param bus_error_warning_filter : if True filter the logging message
         ('Bus error: an error counter')
 
-        :raises ValueError: if a trace name is provided without the .trc extension
+        :raises ValueError: if the trace_path is a file but not a trc file
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -143,30 +149,19 @@ class CCPCanCan(CChannel):
         self.timeout = 1e-6
         self.trc_count = 0
 
-        """
-        Logging in the trace will fall under those cases:
-        1 - trace_path is a .trc file, CAN messages will be logged in it. If it already
-            exists If it already exists, it will be overwritten.
-        2 - trace_path has another file extension, a ValueError will be raised.
-        3 - trace_path is an existing folder, a default name will be generated
-            for the trace file containing the timestamp.
-        4 - trace_path is a non-existent folder, in this case the folder will be
-            created and the default name will be used for the trace file.
-        5 - trace_path is not defined by the user, in this case the trace_path is set to
-        None and log will be saved in the default file in the current working directory.
-        """
-        if self.trace_path == "":
+        # Handle trace path and name
+        if self.trace_path.suffix == ".trc":
+            self.trace_name = self.trace_path.name
+            self.trace_path = self.trace_path.parent
+        elif self.trace_path and self.trace_path.suffix == "":
+            self.trace_name = None
+        elif not self.trace_path:
             self.trace_path = Path.cwd()
             self.trace_name = None
-        elif self.trace_path.suffix == "":
-            self.trace_name = None
-        elif self.trace_path.suffix != ".trc":
+        elif self.trace_path.suffix not in [".trc", ""]:
             raise ValueError(
                 f"Trace name {self.trace_path.name} is incorrect, it should be a trc file"
             )
-        else:
-            self.trace_name = self.trace_path.name
-            self.trace_path = self.trace_path.parent
 
         if not 0 < self.trace_size <= 100:
             self.trace_size = 10
@@ -418,17 +413,14 @@ class CCPCanCan(CChannel):
                 os.remove(list_of_traces[0])
 
             list_of_traces.pop(0)
+            # End of the trace header
             trc_start = 33
 
             for file in list_of_traces:
                 with open(file, "r") as trc:
                     data = trc.read().splitlines(True)
-                with open(file, "w") as trc:
-                    trc.writelines(data[trc_start:])
-                with open(file, "r") as trc:
-                    data = trc.read()
-
-                merged_data += data
+                with open(result_trace, "a") as merged_trc:
+                    merged_trc.writelines(data[trc_start:])
                 os.remove(file)
 
             with open(result_trace, "w") as trc:

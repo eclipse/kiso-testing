@@ -257,7 +257,7 @@ def mock_PCANBasic(mocker):
                 "interface": "pcan",
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
-                "trace_path": "",
+                "trace_path": "result.trc",
                 "trace_size": 10,
                 "bitrate": 500000,
                 "is_fd": False,
@@ -314,6 +314,10 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
     assert can_inst.can_filters == expected_config["can_filters"]
     assert can_inst.logging_activated == expected_config["logging_activated"]
     assert can_inst.timeout == 1e-6
+
+    if expected_config["trace_path"] == "result.trc":
+        assert can_inst.trace_path == Path.cwd()
+        assert can_inst.trace_name is None
 
     if not can_inst.is_fd and can_inst.enable_brs:
         assert "Bitrate switch will have no effect" in caplog.text
