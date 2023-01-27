@@ -27,8 +27,9 @@ from typing import Callable, Dict, List, Optional, Union
 
 from uds import IsoServices
 
-from pykiso.lib.auxiliaries.udsaux.common.odx_parser import OdxParser
+from pykiso.types import OdxRequestConfigDict
 
+from .common.odx_parser import OdxParser
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
 from .common.uds_callback import UdsCallback
 from .common.uds_response import UdsResponse
@@ -193,8 +194,8 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
     def register_callback(
         self,
-        request: Union[int, List[int], UdsCallback],
-        response: Optional[Union[int, List[int]]] = None,
+        request: Union[int, List[int], UdsCallback, OdxRequestConfigDict],
+        response: Optional[Union[int, List[int], Dict[str, str]]] = None,
         response_data: Optional[Union[int, bytes]] = None,
         data_length: Optional[int] = None,
         callback: Optional[Callable] = None,
@@ -216,11 +217,13 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :param callback: custom callback to register
         """
         # handle odx based callbacks
-        if isinstance(request, dict):
+        if isinstance(request, dict) or isinstance(response, dict):
             request = self._create_callback_from_odx(
                 request, response, response_data, data_length, callback
             )
-        elif isinstance(request, UdsCallback) and isinstance(request.request, dict):
+        elif isinstance(request, UdsCallback) and (
+            isinstance(request.request, dict) or isinstance(request.response, dict)
+        ):
             request = self._create_callback_from_odx(
                 request.request,
                 request.response,
@@ -324,7 +327,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
     def _create_callback_from_odx(
         self,
         request: Dict,
-        response: Optional[Union[int, List[int], Dict]] = None,
+        response: Optional[Union[int, List[int], Dict[str, str]]] = None,
         response_data: Optional[Union[int, bytes]] = None,
         data_length: Optional[int] = None,
         callback: Optional[Callable] = None,
@@ -341,31 +344,46 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         :param callback: custom callback to register
         :return: UdsCallback with request and response parsed from odx
         """
-        coded_values = self.odx_parser.get_coded_values(
-            request["data"]["parameter"], request["service"]
-        )
-        uds_request = self._create_uds_data(coded_values)
-        if uds_request[0] != request["service"]:
-            log.error(
-                f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
+        if isinstance(request, dict):
+            coded_values = self.odx_parser.get_coded_values(
+                request["data"]["parameter"],
+                request["service"],
+                self.odx_parser.RefType.REQUEST,
             )
-            raise ValueError(
-                f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
-            )
+            uds_request = self._create_uds_data(coded_values)
+            if uds_request[0] != request["service"]:
+                log.error(
+                    f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
+                )
+                raise ValueError(
+                    f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
+                )
+        else:
+            uds_request = request
 
         if isinstance(response, dict):
-            # create response from dict -> implementation for single values
+            # implementation for single values
             key, data = response.popitem()
             if key.lower() == "negative":
                 # create negative response: Negative response SID, request SID, NRC
-                response = [UdsResponse.NEGATIVE_RESPONSE_SID, uds_request[0], data]
+                full_uds_response = [
+                    UdsResponse.NEGATIVE_RESPONSE_SID,
+                    uds_request[0],
+                    data,
+                ]
             else:
-                # create the response based on the request if its a dict, else it will get autoformatted:
-                # take content of response and give as bytes to response_data -> gets correctly saved by callback
-                response_data = data.encode()
-                response = None
+                # create positive response by parsing odx and adding data from dict
+                coded_response_values = self.odx_parser.get_coded_values(
+                    key, uds_request[0] + 0x40, self.odx_parser.RefType.POS_RESPONSE
+                )
+                uds_response = self._create_uds_data(coded_response_values)
+                payload = list(data.encode())
+                full_uds_response = uds_response + payload
+        else:
+            full_uds_response = response
+
         callback = UdsCallback(
-            uds_request, response, response_data, data_length, callback
+            uds_request, full_uds_response, response_data, data_length, callback
         )
         log.internal_debug(f"Callback configured from odx: {callback}")
         return callback

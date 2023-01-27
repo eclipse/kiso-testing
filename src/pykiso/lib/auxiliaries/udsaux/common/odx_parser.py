@@ -18,6 +18,7 @@ ODX Parser for UDS Server Auxiliary
 from __future__ import annotations
 
 import logging
+from enum import Enum
 from pathlib import Path
 from typing import List
 from xml.etree import ElementTree
@@ -28,6 +29,10 @@ log = logging.getLogger(__name__)
 
 class OdxParser:
     """Used to parse ODX files to configure a Uds server"""
+
+    class RefType(Enum):
+        REQUEST = "REQUEST-REF"
+        POS_RESPONSE = "POS-RESPONSE-REF"
 
     def __init__(self, odx_file: Path) -> None:
         with open(odx_file) as odx:
@@ -61,7 +66,9 @@ class OdxParser:
             raise ValueError(f"No DIAG-SERVICE has a SD containing {sd_instance_name}")
         return diag_services
 
-    def get_coded_values(self, sd: str, sid: int) -> List[int]:
+    def get_coded_values(
+        self, sd: str, sid: int, ref_type: RefType = RefType.REQUEST
+    ) -> List[int]:
         """Get the list of coded values for a ODX request element to construct a UDS request from
 
         :sd: sd instance name
@@ -71,7 +78,7 @@ class OdxParser:
         """
         diag_services = self._find_diag_services_by_sd(sd)
         for diag_service in diag_services:
-            request_id = diag_service.find(".//REQUEST-REF").attrib["ID-REF"]
+            request_id = diag_service.find(f".//{ref_type.value}").attrib["ID-REF"]
             request_element = self._find_element_by_odx_id(request_id)
             # compare SIDs to differentiate between e.g. read and write request with same sd name
             request_sid = int(

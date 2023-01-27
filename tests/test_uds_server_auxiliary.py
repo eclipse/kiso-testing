@@ -52,8 +52,10 @@ class TestUdsServerAuxiliary:
         parser = mocker.patch(
             "pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.OdxParser"
         )
-        parser().get_coded_values = MagicMock(return_value=[34, 42069])
-        # logging.debug(f"---PARSER: {parser}: {parser.get_coded_values_by_sd()}")
+        # gets called for request and reponse
+        mock_request = [34, 42069]
+        mock_response = [98, 42069]
+        parser().get_coded_values = MagicMock(side_effect=[mock_request, mock_response])
 
         TestUdsServerAuxiliary.uds_aux_instance_odx = UdsServerAuxiliary(
             com=ccpcan_inst,
@@ -216,8 +218,7 @@ class TestUdsServerAuxiliary:
                 {
                     "0x22A455": UdsCallback(
                         [0x22, 0xA4, 0x55],
-                        [0x62, 0xA4, 0x55],
-                        [0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                        [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
                     )
                 },
                 id="ODX based UdsCallback instance passed",
@@ -227,12 +228,7 @@ class TestUdsServerAuxiliary:
                 {
                     "0x22A455": UdsCallback(
                         [0x22, 0xA4, 0x55],
-                        [
-                            0x62,
-                            0xA4,
-                            0x55,
-                        ],
-                        [0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                        [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
                     )
                 },
                 id="Passed odx keyword dict directly",

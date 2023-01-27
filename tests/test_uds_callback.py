@@ -47,6 +47,7 @@ class TestUdsCallback:
                 6,
                 [0x41, 0x02, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00],
             ),
+            (0x0102, {"SoftwareVersion": "1"}, None, None, {"SoftwareVersion": "1"}),
         ],
     )
     def test_post_init(self, req, resp, data, data_len, expected_resp):
