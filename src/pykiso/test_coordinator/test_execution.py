@@ -26,6 +26,7 @@ Test Execution
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.loader import VALID_MODULE_NAME
 
 if TYPE_CHECKING:
     from .test_case import BasicTest
@@ -44,7 +45,11 @@ import xmlrunner
 
 import pykiso
 
-from ..exceptions import AuxiliaryCreationError, TestCollectionError
+from ..exceptions import (
+    AuxiliaryCreationError,
+    InvalidTestModuleName,
+    TestCollectionError,
+)
 from ..logging_initializer import get_logging_options
 from ..test_result.assert_step_report import (
     StepReportData,
@@ -269,6 +274,21 @@ def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
     return TestFilterPattern(*parsed_patterns)
 
 
+def _check_module_names(start_dir: str, pattern: str) -> None:
+    """Checks if a given pattern matches invalid python modules in the given directory
+
+    :param start_dir: the directory to search
+    :param pattern: pattern that matches the file names
+    :raises InvalidTestModuleName: if a test file name contains a character other
+        than letters, numbers, and _ or starts with a number
+    """
+    path = Path(start_dir)
+    file_paths = list(path.glob(pattern))
+    for file in file_paths:
+        if not VALID_MODULE_NAME.match(file.name):
+            raise InvalidTestModuleName(file.name)
+
+
 def collect_test_suites(
     config_test_suite_list: List[Dict[str, Union[str, int]]],
     test_filter_pattern: Optional[str] = None,
@@ -290,6 +310,10 @@ def collect_test_suites(
         try:
             if test_filter_pattern is not None:
                 test_suite_configuration["test_filter_pattern"] = test_filter_pattern
+            _check_module_names(
+                start_dir=test_suite_configuration["suite_dir"],
+                pattern=test_suite_configuration["test_filter_pattern"],
+            )
             current_test_suite = create_test_suite(test_suite_configuration)
             list_of_test_suites.append(current_test_suite)
         except BaseException as e:

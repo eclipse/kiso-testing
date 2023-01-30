@@ -163,6 +163,120 @@ def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mock
 
 
 @pytest.mark.parametrize(
+    "paths, pattern, expected",
+    [
+        ([pathlib.Path("test_module.py")], "test_*", None),
+        (
+            [pathlib.Path("test_module.py"), pathlib.Path("test_module_1.py")],
+            "test_module*",
+            None,
+        ),
+    ],
+)
+def test__check_module_names(paths, pattern, expected, mocker):
+    mock_glob = mocker.patch("pathlib.Path.glob", return_value=paths)
+    test_dir = "test_dir"
+
+    actual = test_execution._check_module_names(test_dir, pattern)
+    assert actual == expected
+    mock_glob.assert_called_with(pattern)
+
+
+@pytest.mark.parametrize(
+    "paths, pattern",
+    [
+        ([pathlib.Path("test_module-1.py")], "test_*"),
+        (
+            [pathlib.Path("test_module.py"), pathlib.Path("test_module-1.py")],
+            "test_module*",
+        ),
+    ],
+)
+def test__check_module_names_invalid(paths, pattern, mocker):
+    mock_glob = mocker.patch("pathlib.Path.glob", return_value=paths)
+    test_dir = "test_dir"
+
+    with pytest.raises(pykiso.InvalidTestModuleName) as exec_info:
+        test_execution._check_module_names(test_dir, pattern)
+
+    mock_glob.assert_called_with(pattern)
+
+    assert (
+        f"Test files need to be valid python module names but 'test_module-1.py' is invalid"
+        in exec_info.value.message
+    )
+
+
+@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+def test_config_registry_and_test_execution_collect_suites_with_invalid_cli_pattern(
+    tmp_test, mocker
+):
+    """Call collect_test_suites function from test_execution using
+    configuration data coming from parse_config method and specifying a invalid
+    pattern from cli
+
+    Validation criteria:
+        - run is executed with TestCollectionError
+    """
+    mock_check = mocker.patch(
+        "pykiso.test_coordinator.test_execution._check_module_names",
+        side_effect=pykiso.InvalidTestModuleName("test_module-1.py"),
+    )
+    pattern = "test_module*"
+
+    cfg = parse_config(tmp_test)
+
+    ConfigRegistry.register_aux_con(cfg)
+
+    with pytest.raises(pykiso.TestCollectionError):
+        test_execution.collect_test_suites(
+            cfg["test_suite_list"],
+            test_filter_pattern=pattern,
+        )
+
+    mock_check.assert_called_with(
+        start_dir=cfg["test_suite_list"][0]["suite_dir"],
+        pattern=pattern,
+    )
+
+    ConfigRegistry.delete_aux_con()
+
+
+@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
+def test_config_registry_and_test_execution_collect_suites_with_invalid_cfg_pattern(
+    tmp_test, mocker
+):
+    """Call collect_test_suites function from test_execution using
+    configuration data coming from parse_config method and specifying a invalid
+    pattern in the cfg
+
+    Validation criteria:
+        - run is executed with TestCollectionError
+    """
+    mock_check = mocker.patch(
+        "pykiso.test_coordinator.test_execution._check_module_names",
+        side_effect=pykiso.InvalidTestModuleName("test_module-1.py"),
+    )
+
+    pattern = "test_module*"
+
+    cfg = parse_config(tmp_test)
+    cfg["test_suite_list"][0]["test_filter_pattern"] = pattern
+
+    ConfigRegistry.register_aux_con(cfg)
+
+    with pytest.raises(pykiso.TestCollectionError):
+        test_execution.collect_test_suites(cfg["test_suite_list"])
+
+    mock_check.assert_called_with(
+        start_dir=cfg["test_suite_list"][0]["suite_dir"],
+        pattern=pattern,
+    )
+
+    ConfigRegistry.delete_aux_con()
+
+
+@pytest.mark.parametrize(
     "tmp_test",
     [("collector_error_2_aux1", "collector_error_2_aux", False)],
     indirect=True,
