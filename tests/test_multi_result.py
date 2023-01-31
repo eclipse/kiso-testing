@@ -11,7 +11,6 @@ import sys
 
 import pytest
 
-from pykiso.test_coordinator.test_case import BasicTest
 from pykiso.test_result.multi_result import MultiTestResult
 from pykiso.test_result.text_result import BannerTestResult
 from pykiso.test_result.xml_result import XmlTestResult

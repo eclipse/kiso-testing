@@ -25,8 +25,6 @@ from typing import Any, List, Optional, TextIO, Union
 from unittest import TestResult
 from unittest.case import _SubTest
 
-from xmlrunner import XMLTestRunner
-
 from pykiso.test_result.text_result import BannerTestResult
 from pykiso.types import ExcInfoType
 
