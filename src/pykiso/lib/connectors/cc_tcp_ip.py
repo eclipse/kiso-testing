@@ -67,6 +67,8 @@ class CCTcpip(CChannel):
 
         :param msg: message to send
         """
+        if isinstance(msg, str):
+            msg = msg.encode()
         log.internal_debug(f"Sending {msg} via socket to {self.dest_ip}")
         self.socket.send(msg)
 

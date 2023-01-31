@@ -40,7 +40,7 @@ pip install pykiso
 
 ```bash
 cd kiso-testing
-poetry install
+poetry install --all-extras
 poetry shell
 ```
 

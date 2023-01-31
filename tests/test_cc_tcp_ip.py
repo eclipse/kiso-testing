@@ -103,20 +103,21 @@ def test__cc_close(mock_socket, constructor_params):
 
 
 @pytest.mark.parametrize(
-    "constructor_params, msg_to_send, expected_sent_message, is_raw",
+    "constructor_params, msg_to_send, expected_sent_message",
     [
-        (constructor_params, "example", b"example", False),
-        (constructor_params, b"example", b"example", True),
+        (constructor_params, "example", b"example"),
+        (constructor_params, b"example", b"example"),
     ],
 )
 def test__cc_send(
-    mock_socket, constructor_params, msg_to_send, expected_sent_message, is_raw
+    mock_socket,
+    constructor_params,
+    msg_to_send,
+    expected_sent_message,
 ):
     """Test _cc_send"""
     param = constructor_params.values()
     socket_connector = cc_tcp_ip.CCTcpip(*param)
-    if not is_raw:
-        msg_to_send = msg_to_send.encode()
     socket_connector._cc_send(msg_to_send)
     mock_socket.socket.socket.send.assert_called_once_with(expected_sent_message)
 
