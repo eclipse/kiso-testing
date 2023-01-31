@@ -18,7 +18,7 @@ from pykiso.test_result.xml_result import XmlTestResult
 
 @pytest.fixture
 def multi_result_instance_multiple_classes():
-    return MultiTestResult([BannerTestResult, XmlTestResult])(sys.stderr, True, 1)
+    return MultiTestResult(BannerTestResult, XmlTestResult)(sys.stderr, True, 1)
 
 
 @pytest.fixture
@@ -92,7 +92,7 @@ def test_function_with_one_call_bannertestresult(
 def test_function_with_one_call_xmltestresult(mocker, name_function, argument):
     mock_xmltestresult = mocker.patch.object(XmlTestResult, name_function)
 
-    getattr(MultiTestResult([XmlTestResult, XmlTestResult]), name_function)(*argument)
+    getattr(MultiTestResult(XmlTestResult, XmlTestResult), name_function)(*argument)
 
     mock_xmltestresult.assert_called_once_with(*argument)
 

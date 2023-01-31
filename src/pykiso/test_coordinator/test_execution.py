@@ -343,7 +343,7 @@ def execute(
             ) as stream:
                 test_runner = xmlrunner.XMLTestRunner(
                     output=junit_output,
-                    resultclass=MultiTestResult([XmlTestResult, BannerTestResult]),
+                    resultclass=MultiTestResult(XmlTestResult, BannerTestResult),
                     failfast=failfast,
                     verbosity=0,
                     stream=stream,
@@ -353,7 +353,7 @@ def execute(
             with ResultStream(log_file_path) as stream:
                 test_runner = unittest.TextTestRunner(
                     stream=stream,
-                    resultclass=MultiTestResult([BannerTestResult]),
+                    resultclass=MultiTestResult(BannerTestResult),
                     failfast=failfast,
                     verbosity=0,
                 )

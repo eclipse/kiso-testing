@@ -13,15 +13,16 @@ Multi test result
 
 :module: multi_result
 
-:synopsis: implements a multi test result class that run test for multiple
-    result classes.
+:synopsis: a test result proxy that allows to use a ``TestRunner`` with multiple
+    `` TestResult`` subclasses
 
 .. currentmodule:: multi_result
 """
 from __future__ import annotations
 
-from types import TracebackType
-from typing import Any, List, Optional, TextIO, Tuple, Type, Union
+from inspect import signature
+from typing import Any, List, Optional, TextIO, Union
+from unittest import TestResult
 from unittest.case import _SubTest
 
 from pykiso.test_result.text_result import BannerTestResult
@@ -37,14 +38,7 @@ class MultiTestResult:
     test for all the classes.
     """
 
-    separator1 = "=" * 70
-    separator2 = "-" * 70
-    shouldStop = False
-
-    def __init__(
-        self,
-        result_classes: List[Union[BannerTestResult, XmlTestResult]],
-    ):
+    def __init__(self, *result_classes: TestResult):
         """Initialize parameter
 
         :param result_classes: test result classes
@@ -55,7 +49,7 @@ class MultiTestResult:
         """Initialize the result classes with the parameters passed in arguments."""
         self.result_classes = [
             result(*args, **kwargs)
-            if isinstance(self.result_classes, XmlTestResult)
+            if isinstance(result, XmlTestResult)
             else result(*self._get_arguments_bannertestresult(*args, **kwargs))
             for result in self.result_classes
         ]
@@ -69,7 +63,7 @@ class MultiTestResult:
         """
         list_arguments = []
         args = list(args)
-        for name in ["stream", "descriptions", "verbosity"]:
+        for name in signature(BannerTestResult).parameters.keys():
             arg = kwargs.get(name)
             list_arguments.append(arg if arg is not None else args.pop(0))
         return list_arguments
@@ -86,7 +80,7 @@ class MultiTestResult:
     def error_occurred(self) -> Optional[bool]:
         """Return if an error occured for a BannerTestResult"""
         for result in self.result_classes:
-            if isinstance(result, BannerTestResult):
+            if hasattr(result, "error_occurred"):
                 return result.error_occurred
 
     def startTest(self, test: Union[BasicTest, BaseTestSuite]) -> None:
@@ -237,7 +231,9 @@ class MultiTestResult:
         return self.result_classes[0].getDescription(test)
 
     def generate_reports(self, test_runner) -> None:
-        """Call the function generate_report for the XmlTestResult class"""
+        """Call the generate_report function for all classes in which the
+        function is defined.
+        """
         for result in self.result_classes:
-            if isinstance(result, XmlTestResult):
+            if hasattr(result, "generate_reports"):
                 result.generate_reports(test_runner)
