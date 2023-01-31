@@ -25,6 +25,8 @@ from typing import Any, List, Optional, TextIO, Union
 from unittest import TestResult
 from unittest.case import _SubTest
 
+from xmlrunner import XMLTestRunner
+
 from pykiso.test_result.text_result import BannerTestResult
 from pykiso.types import ExcInfoType
 
@@ -60,6 +62,8 @@ class MultiTestResult:
     ) -> List[TextIO, bool, int]:
         """Function to get the argument for the BannerTestResult initialisation
         since it only takes 3 arguments and more can be passed.
+
+        :return: List with arguments to initialise BannerTestResult
         """
         list_arguments = []
         args = list(args)
@@ -126,6 +130,7 @@ class MultiTestResult:
         """Call the addSkip function for all result classes.
 
         :param test: running testcase
+        :param reason: reason to skip the test
         """
         for result in self.result_classes:
             result.addSkip(test, reason)
@@ -215,10 +220,7 @@ class MultiTestResult:
                 return result.printErrors()
         return self.result_classes[0].printErrors()
 
-    def getDescription(
-        self,
-        test: Union[BasicTest, BaseTestSuite],
-    ) -> str:
+    def getDescription(self, test: Union[BasicTest, BaseTestSuite]) -> str:
         """Call getDescription function once, it will first try to call the
         function for a BannerTestResult first but if none are defined it will
         call the function of the first result class available.
@@ -233,6 +235,8 @@ class MultiTestResult:
     def generate_reports(self, test_runner) -> None:
         """Call the generate_report function for all classes in which the
         function is defined.
+
+        :param test_runner: runner class of the test
         """
         for result in self.result_classes:
             if hasattr(result, "generate_reports"):

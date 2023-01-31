@@ -11,6 +11,7 @@ import sys
 
 import pytest
 
+from pykiso.test_coordinator.test_case import BasicTest
 from pykiso.test_result.multi_result import MultiTestResult
 from pykiso.test_result.text_result import BannerTestResult
 from pykiso.test_result.xml_result import XmlTestResult
@@ -55,12 +56,14 @@ def test_call_function(
     mock_bannertestresult.assert_called_once_with(*argument)
 
 
-@pytest.mark.parametrize("attribute_name", ["errors", "failures"])
-def test___getattr__(multi_result_instance_multiple_classes, attribute_name):
+def test___getattr__(multi_result_instance_multiple_classes, test_mock, mocker):
+    mocker.patch("pykiso.test_result.xml_result.XmlTestResult.getDescription")
+    mocker.patch("json.dumps")
+    reason = "test"
 
-    attr = getattr(multi_result_instance_multiple_classes, attribute_name)
+    multi_result_instance_multiple_classes.addSkip(test_mock, reason)
 
-    assert attr == []
+    assert multi_result_instance_multiple_classes.skipped == [(test_mock, reason)]
 
 
 @pytest.mark.parametrize(
