@@ -407,9 +407,11 @@ class CCPCanCan(CChannel):
             else:
                 result_trace = str(self.trace_path / self.trace_name)
 
-            with open(list_of_traces[0], "r") as trc:
-                merged_data = trc.read()
             if self.trace_name is not None:
+                with open(list_of_traces[0], "r") as trc:
+                    merged_data = trc.read()
+                with open(result_trace, "w") as merged_trc:
+                    merged_trc.write(merged_data)
                 os.remove(list_of_traces[0])
 
             list_of_traces.pop(0)
@@ -423,8 +425,8 @@ class CCPCanCan(CChannel):
                     merged_trc.writelines(data[trc_start:])
                 os.remove(file)
 
-            with open(result_trace, "w") as trc:
-                merged_data_lines = merged_data.splitlines(True)
+            with open(result_trace, "r+") as trc:
+                merged_data_lines = trc.read().splitlines(True)
 
                 # Parsing to keep the message numbers consistent after the merge
                 for line_number in range(trc_start, len(merged_data_lines)):
@@ -432,10 +434,13 @@ class CCPCanCan(CChannel):
                     merged_data_lines[line_number] = (
                         message_number.rjust(7) + merged_data_lines[line_number][7:]
                     )
+                trc.truncate(0)
                 trc.writelines(merged_data_lines)
+
         except IndexError:
             log.internal_warning("no trace to merge")
 
     def __del__(self) -> None:
+        """Destructor method."""
         if self.logging_activated:
             self._merge_trc()
