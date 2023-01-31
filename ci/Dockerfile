@@ -36,6 +36,13 @@ RUN apt-get update && apt-get install -y \
     wget \
     xz-utils \
     file \
+    zlib1g-dev \
+    libffi-dev \
+    libssl-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    liblzma-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # kiso vsc plugin dependencies
@@ -71,9 +78,23 @@ RUN mkdir -p /opt/toolchains && \
 # Environment settings
 ENV HOME=/home/kiso
 
+# Install pyenv
+RUN curl https://pyenv.run | bash
+
+ENV PYENV_ROOT $HOME/.pyenv
+ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
+
+# Pre install python version for python TOX
+RUN pyenv install 3.7 \
+    && pyenv install 3.8 \
+    && pyenv install 3.9 \
+    && pyenv install 3.10
+
 RUN /opt/toolchains/zephyr-sdk-${ZSDK_VERSION}/setup.sh -c
 
+# Install python packages
 RUN python3 -m pip install poetry \
+    && python3 -m pip install tox \
     && python3 -m pip install west \
     && chmod -R 777 ${HOME}
 ENV PATH="/home/kiso/.local/bin:${PATH}"
