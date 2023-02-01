@@ -62,7 +62,7 @@ requests = {version = "^2.28.2", optional = true}
 
 
 [tool.poetry.dev-dependencies]
-black = "22.10.0"
+black = "23.1.0"
 bump2version = "*"
 coverage = { version = "^6.5", extras = ["toml"] }
 invoke = "*"
