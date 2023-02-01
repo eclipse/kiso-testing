@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2022 Robert Bosch GmbH
+# Copyright (c) 2010-2023 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -25,7 +25,7 @@ from typing import Any, List, Optional, TextIO, Union
 from unittest import TestResult
 from unittest.case import _SubTest
 
-from pykiso.test_result.text_result import BannerTestResult
+from .text_result import BannerTestResult
 from pykiso.types import ExcInfoType
 
 from ..test_coordinator.test_case import BasicTest
