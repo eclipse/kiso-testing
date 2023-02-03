@@ -1,7 +1,26 @@
+##########################################################################
+# Copyright (c) 2010-2023 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
+
+"""
+UDS server auxiliary simple example
+***********************************
+
+:module: test_server_odx
+
+:synopsis: Example test that shows how to use the UDS server auxiliary with dict
+    based callbacks. Showcases a negative and a positive response configuration
+
+.. currentmodule:: test_server_odx
+"""
+
 import logging
 import time
-import typing
-import unittest
 from copy import copy
 
 from uds import IsoServices
@@ -10,27 +29,25 @@ import pykiso
 from pykiso.auxiliaries import uds_server_aux
 
 # helper objects to build callbacks can be imported from the pykiso lib
-from pykiso.lib.auxiliaries.udsaux import UdsCallback, UdsServerAuxiliary
+from pykiso.lib.auxiliaries.udsaux import UdsCallback
 from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
     NegativeResponseCode,
 )
 
 UDS_CALLBACKS = [
-    UdsCallback(request=0x1003, response=0x5003),
-    # UdsCallback(
-    #     request={
-    #         "service": IsoServices.ReadDataByIdentifier,
-    #         "data": {"parameter": "SoftwareVersion"},
-    #     },
-    #     # also works without response
-    #     response={"SoftwareVersion": "0.17.0"},
-    # ),
     UdsCallback(
         request={
             "service": IsoServices.ReadDataByIdentifier,
             "data": {"parameter": "SoftwareVersion"},
         },
         response={"NEGATIVE": NegativeResponseCode.SERVICE_NOT_SUPPORTED},
+    ),
+    UdsCallback(
+        request={
+            "service": IsoServices.ReadDataByIdentifier,
+            "data": {"parameter": "HardwareVersion"},
+        },
+        response={"HardwareVersion": "123"},
     ),
 ]
 
@@ -42,11 +59,10 @@ class ExampleUdsServerTest(pykiso.BasicTest):
         # register all callbacks defined above
         for callback in UDS_CALLBACKS:
             uds_server_aux.register_callback(callback)
-        logging.info("-----> Waiting for requests")
 
     def test_run(self):
         """
-        Simply wait a bit and expect the registered request to be received
+        Simply wait a bit and expect the registered requests to be received
         (and the corresponding response to be sent to the client).
         """
         logging.info(
@@ -54,15 +70,15 @@ class ExampleUdsServerTest(pykiso.BasicTest):
         )
         time.sleep(5)
         # access the previously registered callback
-        extended_diag_session_callback = uds_server_aux.callbacks["0x1003"]
+        read_software_version = uds_server_aux.callbacks["0x22A455"]
         self.assertGreater(
-            extended_diag_session_callback.call_count,
+            read_software_version.call_count,
             0,
-            "Expected UDS request was not sent by the client after 10s",
+            "Expected ODX UDS request was not sent by the client after 10s",
         )
-        read_by_id_callback = uds_server_aux.callbacks["0x22A455"]
+        read_hardware_version = uds_server_aux.callbacks["0x22A456"]
         self.assertGreater(
-            read_by_id_callback.call_count,
+            read_hardware_version.call_count,
             0,
             "Expected ODX UDS request was not sent by the client after 10s",
         )

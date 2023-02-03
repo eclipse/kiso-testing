@@ -312,7 +312,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         callback_to_execute(received_uds_data, self)
         return
 
-    def _create_uds_data(self, coded_values: List[int]) -> List[int]:
+    def _format_uds_data(self, coded_values: List[int]) -> List[int]:
         """Format a list of coded values into a list of bytes, needed for odx configured callbacks
 
         :param coded_values: coded values of a odx request
@@ -350,7 +350,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 request["service"],
                 self.odx_parser.RefType.REQUEST,
             )
-            uds_request = self._create_uds_data(coded_values)
+            uds_request = self._format_uds_data(coded_values)
             if uds_request[0] != request["service"]:
                 log.error(
                     f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
@@ -376,7 +376,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 coded_response_values = self.odx_parser.get_coded_values(
                     key, uds_request[0] + 0x40, self.odx_parser.RefType.POS_RESPONSE
                 )
-                uds_response = self._create_uds_data(coded_response_values)
+                uds_response = self._format_uds_data(coded_response_values)
                 payload = list(data.encode())
                 full_uds_response = uds_response + payload
         else:

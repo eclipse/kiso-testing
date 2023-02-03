@@ -12,6 +12,9 @@ ODX Parser for UDS Server Auxiliary
 
 :module: odx_parser
 
+:synopsis: odx parser used by a uds server to dynamically configure its
+    uds callbacks from an odx file
+
 .. currentmodule:: odx_parser
 
 """
@@ -42,7 +45,7 @@ class OdxParser:
     def _find_element_by_odx_id(self, odx_id: str) -> Element:
         """Find an odx element by the given id
 
-        :id: odx id of the element to search for
+        :param id: odx id of the element to search for
         :raises ValueError: if no element with given odx id found
         :return: the element with the given odx id
         """
@@ -55,7 +58,7 @@ class OdxParser:
     def _find_diag_services_by_sd(self, sd_instance_name: str) -> Element:
         """Find the <DIAG-SERVICE> with the given sd_instance_name
 
-        :sd_instance_name: content of the <SD SI="DiagInstanceName">
+        :param sd_instance_name: content of the <SD SI="DiagInstanceName">
         :return: the parent diag service odx element of the sd element with given name
         """
         # xpath to diag service for given sd instance name
@@ -71,9 +74,9 @@ class OdxParser:
     ) -> List[int]:
         """Get the list of coded values for a ODX request element to construct a UDS request from
 
-        :sd: sd instance name
-        :sid: service id to differentiate between diag services with the same sd name
-        :raise ValueError: if no request could be created for the given sd name and SID
+        :param sd: sd instance name
+        :param sid: service id to differentiate between diag services with the same sd name
+        :raises ValueError: if no request could be created for the given sd name and SID
         :return: a list of the coded values to be converted into a uds request
         """
         diag_services = self._find_diag_services_by_sd(sd)
