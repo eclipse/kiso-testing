@@ -365,6 +365,6 @@ class TestUdsServerAuxiliary:
             ([16, 3], [0x10, 0x03]),
         ],
     )
-    def test__create_uds_data(self, uds_server_aux_inst, coded_values, uds_data):
-        actual = uds_server_aux_inst._create_uds_data(coded_values)
+    def test__format_uds_data(self, uds_server_aux_inst, coded_values, uds_data):
+        actual = uds_server_aux_inst._format_uds_data(coded_values)
         assert uds_data == actual
