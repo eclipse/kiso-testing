@@ -25,11 +25,11 @@ from typing import Any, List, Optional, TextIO, Union
 from unittest import TestResult
 from unittest.case import _SubTest
 
-from .text_result import BannerTestResult
 from pykiso.types import ExcInfoType
 
 from ..test_coordinator.test_case import BasicTest
 from ..test_coordinator.test_suite import BaseTestSuite
+from .text_result import BannerTestResult
 from .xml_result import XmlTestResult
 
 
@@ -48,26 +48,26 @@ class MultiTestResult:
     def __call__(self, *args, **kwargs) -> MultiTestResult:
         """Initialize the result classes with the parameters passed in arguments."""
         self.result_classes = [
-            result(*args, **kwargs)
-            if isinstance(result, XmlTestResult)
-            else result(*self._get_arguments_bannertestresult(*args, **kwargs))
+            result(*self._get_arguments_result_class(result, *args, **kwargs))
             for result in self.result_classes
         ]
         return self
 
-    def _get_arguments_bannertestresult(
-        self, *args, **kwargs
-    ) -> List[TextIO, bool, int]:
-        """Function to get the argument for the BannerTestResult initialisation
-        since it only takes 3 arguments and more can be passed.
+    def _get_arguments_result_class(self, result_class, *args, **kwargs) -> List[Any]:
+        """Function to get the argument for the result class initialisation.
 
-        :return: List with arguments to initialise BannerTestResult
+        :param result_class: test result class
+        :return: list of arguments to initialise the class
         """
         list_arguments = []
         args = list(args)
-        for name in signature(BannerTestResult).parameters.keys():
-            arg = kwargs.get(name)
-            list_arguments.append(arg if arg is not None else args.pop(0))
+        sign_class = signature(result_class)
+        for name in sign_class.parameters.keys():
+            arg = kwargs.get(name) or (
+                args.pop(0) if args else sign_class.parameters[name].default
+            )
+            list_arguments.append(arg)
+
         return list_arguments
 
     def __getattr__(self, name: str) -> Any:
