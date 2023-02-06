@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2022 Robert Bosch GmbH
+# Copyright (c) 2010-2023 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -363,7 +363,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         if isinstance(response, dict):
             # implementation for single values
-            key, data = response.popitem()
+            key, data = list(response.items())[0]
             if key.lower() == "negative":
                 # create negative response: Negative response SID, request SID, NRC
                 full_uds_response = [
