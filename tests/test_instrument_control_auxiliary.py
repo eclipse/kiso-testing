@@ -191,21 +191,27 @@ def test_handle_write_missmatch_value(mocker, aux_inst, cchannel_inst):
 
 
 def test_handle_read(aux_inst, cchannel_inst):
+    cchannel_inst._cc_receive.return_value = b"data"
 
-    aux_inst.handle_read()
+    read_data = aux_inst.handle_read()
 
     cchannel_inst._cc_receive.assert_called_with(timeout=0.1)
+    assert read_data == b"data"
 
 
 def test_handle_query(mocker, aux_inst, cchannel_inst):
+    expected_return = b"data"
+    cchannel_inst._cc_receive.return_value = expected_return
     mocker.patch("time.sleep", return_value=None)
     query = "SYST:LOCK:OWN?"
-    aux_inst.handle_query(query)
+
+    query_result = aux_inst.handle_query(query)
 
     cchannel_inst._cc_send.assert_called_with(
         msg=f"{query}{aux_inst.write_termination}",
     )
     cchannel_inst._cc_receive.assert_called_with(timeout=0.1)
+    assert query_result == expected_return.decode().strip()
 
 
 def test_handle_query_with_visa_cc(mocker, aux_inst, cc_visa_inst):
