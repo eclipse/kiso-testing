@@ -40,7 +40,11 @@ def linker(example_module):
         },
         "aux_no_class": {
             "connectors": {"com": "chan1"},
-            "type": str(example_module),
+            "type": "some.module.without.aux_class",
+        },
+        "aux_type_not_found": {
+            "connectors": {"com": "chan1"},
+            "type": "some.unknown.module:SomeClass",
         },
         "aux_no_file": {
             "connectors": {"com": "chan1"},
@@ -128,9 +132,16 @@ def test_import_aux_without_connector_error(linker):
         from pykiso.auxiliaries import aux_no_connector_error
 
 
-def test_bad_type_spec(linker):
-    with pytest.raises(Exception):
+def test_bad_type_format(linker):
+    with pytest.raises(ValueError, match="must be 'path:Class' or 'module:Class'"):
         from pykiso.auxiliaries import aux_no_class
+
+
+def test_type_not_found(linker: DynamicImportLinker):
+    linker._aux_cache.locations.pop("aux_type_not_found")
+
+    with pytest.raises(ValueError, match="Could not find"):
+        from pykiso.auxiliaries import aux_type_not_found
 
 
 def test_module_not_found(linker):
