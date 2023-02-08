@@ -117,8 +117,6 @@ class CCPCanCan(CChannel):
         :param logging_activated: boolean used to disable logfile creation
         :param bus_error_warning_filter : if True filter the logging message
         ('Bus error: an error counter')
-
-        :raises ValueError: if the trace_path is a file but not a trc file
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -148,6 +146,21 @@ class CCPCanCan(CChannel):
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
         self.trc_count = 0
+        self._initialize_trace()
+
+        if bus_error_warning_filter:
+            logging.getLogger("can.pcan").addFilter(PcanFilter())
+
+        if self.enable_brs and not self.is_fd:
+            log.internal_warning(
+                "Bitrate switch will have no effect because option is_fd is set to false."
+            )
+
+    def _initialize_trace(self) -> None:
+        """Initialize the trace path and check its size
+
+        :raises ValueError: if the trace_path is a file but not a trc file
+        """
 
         # Handle trace path and name
         if self.trace_path.suffix == ".trc":
@@ -163,19 +176,12 @@ class CCPCanCan(CChannel):
                 f"Trace name {self.trace_path.name} is incorrect, it should be a trc file"
             )
 
+        # Check trace size
         if not 0 < self.trace_size <= 100:
             self.trace_size = 10
             log.internal_warning(
                 f"Make sure trace size is between 1 and 100 Mb. Setting trace size to default value "
                 f"value : {self.trace_size}."
-            )
-
-        if bus_error_warning_filter:
-            logging.getLogger("can.pcan").addFilter(PcanFilter())
-
-        if self.enable_brs and not self.is_fd:
-            log.internal_warning(
-                "Bitrate switch will have no effect because option is_fd is set to false."
             )
 
     def _cc_open(self) -> None:
@@ -381,33 +387,22 @@ class CCPCanCan(CChannel):
 
     def _merge_trc(self) -> None:
         """Merge multiple trc files in one."""
-        list_of_traces = []
 
         if isinstance(self.trace_path, str):
             self.trace_path = Path(self.trace_path)
 
-        # Get all trc files in trace path
-        list_of_all_traces = list(self.trace_path.glob("*.trc"))
+        # Get the lastest trace files corresponding to the number of traces created
+        list_of_traces = sorted(self.trace_path.glob("*.trc"), key=os.path.getmtime)[
+            -self.trc_count :
+        ]
 
-        log.internal_debug(f"merging following trace files: {list_of_all_traces}")
-        # Select a number of the lastest trace files corresponding to the number of traces created.
-        for _ in range(self.trc_count):
-            try:
-                latest_trace = max(list_of_all_traces, key=os.path.getctime)
-                list_of_all_traces.pop(list_of_all_traces.index(latest_trace))
-                list_of_traces.append(latest_trace)
-            except ValueError:
-                break
-
-        list_of_traces.reverse()
         try:
-            # If name not provided, take the fist trace created as results file
             if self.trace_name is None:
+                # If a log file is not provided, take the fist trace created as result file
                 result_trace = list_of_traces[0]
             else:
+                # Else write the first trace content in the log file and then remove it
                 result_trace = str(self.trace_path / self.trace_name)
-
-            if self.trace_name is not None:
                 with open(list_of_traces[0], "r") as trc:
                     merged_data = trc.read()
                 with open(result_trace, "w") as merged_trc:
@@ -416,29 +411,43 @@ class CCPCanCan(CChannel):
 
             list_of_traces.pop(0)
             # End of the trace header
-            trc_start = 33
+            first_message_line = 33
 
+            # Append all trace files
             for file in list_of_traces:
                 with open(file, "r") as trc:
                     data = trc.read().splitlines(True)
                 with open(result_trace, "a") as merged_trc:
-                    merged_trc.writelines(data[trc_start:])
+                    merged_trc.writelines(data[first_message_line:])
                 os.remove(file)
 
-            with open(result_trace, "r+") as trc:
-                merged_data_lines = trc.read().splitlines(True)
-
-                # Parsing to keep the message numbers consistent after the merge
-                for line_number in range(trc_start, len(merged_data_lines)):
-                    message_number = str((line_number + 1) - trc_start)
-                    merged_data_lines[line_number] = (
-                        message_number.rjust(7) + merged_data_lines[line_number][7:]
-                    )
-                trc.truncate(0)
-                trc.writelines(merged_data_lines)
+            self._fix_message_numbers(result_trace, first_message_line)
 
         except IndexError:
-            log.internal_warning("no trace to merge")
+            log.internal_warning("No trace to merge")
+
+    def _fix_message_numbers(
+        self, merged_trace: Union[Path, str], first_message_line: int
+    ) -> None:
+        """Parse message numbers in the merged file and fix inconsistencies caused by the
+        merging process.
+
+        :param merged_trace: merged trace file to fix
+        :param first_message_line: line number of the first logged can message
+        """
+        message_nb_index = 7
+        with open(merged_trace, "r+") as trc:
+            merged_data_lines = trc.read().splitlines(True)
+
+            # Parsing to keep the message numbers consistent after the merge
+            for line_number in range(first_message_line, len(merged_data_lines)):
+                message_number = str((line_number + 1) - first_message_line)
+                merged_data_lines[line_number] = (
+                    message_number.rjust(message_nb_index)
+                    + merged_data_lines[line_number][message_nb_index:]
+                )
+            trc.truncate(0)
+            trc.writelines(merged_data_lines)
 
     def __del__(self) -> None:
         """Destructor method."""
