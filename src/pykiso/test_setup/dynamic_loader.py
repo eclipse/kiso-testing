@@ -190,11 +190,13 @@ class ModuleCache:
     def _import(self, name: str) -> Type[Union[AuxiliaryCommon, Connector]]:
         """Import the class registered under the alias <name>."""
         try:
-            import_path = self.locations.get(name, "")
+            import_path = self.locations[name]
             location, _class = import_path.rsplit(":", 1)
+        except KeyError:
+            raise ValueError(f"Could not find {name!r} in provided configuration")
         except ValueError:
             raise ValueError(
-                f"specified type must be 'path:Class' or 'module:Class', got '{import_path}'"
+                f"Specified type for {name!r} must be 'path:Class' or 'module:Class', got {import_path!r}"
             )
         if ".py" in location:
             path_loc = pathlib.Path(location)
@@ -205,7 +207,7 @@ class ModuleCache:
                 log.internal_debug(f"loading {_class} as {name} from {path_loc}")
             else:
                 raise ImportError(
-                    f"no python module found at '{path_loc}'", name=_class
+                    f"no python module found at {path_loc!r}", name=_class
                 )
         else:
             module = importlib.import_module(location)
