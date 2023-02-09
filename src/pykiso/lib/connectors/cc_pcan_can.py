@@ -446,7 +446,7 @@ class CCPCanCan(CChannel):
                     message_number.rjust(message_nb_index)
                     + merged_data_lines[line_number][message_nb_index:]
                 )
-            trc.truncate(0)
+            trc.seek(0)
             trc.writelines(merged_data_lines)
 
     def __del__(self) -> None:

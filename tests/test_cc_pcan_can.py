@@ -205,7 +205,7 @@ def mock_PCANBasic(mocker):
                 "interface": "pcan",
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
-                "trace_path": "",
+                "trace_path": "result.trc",
                 "trace_size": 10,
                 "bitrate": 500000,
                 "is_fd": True,
@@ -231,7 +231,7 @@ def mock_PCANBasic(mocker):
                 "interface": "pcan",
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
-                "trace_path": "",
+                "trace_path": "result.trc",
                 "trace_size": 1000,
                 "bitrate": 500000,
                 "is_fd": False,
@@ -315,10 +315,6 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
     assert can_inst.logging_activated == expected_config["logging_activated"]
     assert can_inst.timeout == 1e-6
 
-    if expected_config["trace_path"] == "result.trc":
-        assert can_inst.trace_path == Path.cwd()
-        assert can_inst.trace_name is None
-
     if not can_inst.is_fd and can_inst.enable_brs:
         assert "Bitrate switch will have no effect" in caplog.text
 
@@ -328,9 +324,22 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
         assert "Bus error: an error counter" in caplog.text
 
 
-def test_constructor_invalid_trace_name():
+def test_initialize_trace(mock_can_bus, mock_PCANBasic):
+
+    can_inst = CCPCanCan(trace_path="result.trc")
+    assert can_inst.trace_path == Path(".")
+    assert can_inst.trace_name == "result.trc"
+
+    can_inst = CCPCanCan(trace_path="folder/")
+    assert can_inst.trace_path == Path("folder/")
+    assert can_inst.trace_name is None
+
+    can_inst = CCPCanCan()
+    assert can_inst.trace_path == Path(".")
+    assert can_inst.trace_name is None
+
     with pytest.raises(ValueError):
-        can_inst = CCPCanCan(trace_path=Path("result_file.txt"))
+        can_inst = CCPCanCan(trace_path="result_file.txt")
 
 
 @pytest.mark.parametrize(
