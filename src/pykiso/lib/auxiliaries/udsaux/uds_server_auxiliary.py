@@ -206,6 +206,8 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         The callback is stored inside the callbacks dictionary under the format
         `{"0x2EC4": UdsCallback()}`_, where the keys are case-sensitive and
         correspond to the registered requests.
+        If the callback is ODX based, a second key using Service.Parameter
+        ("ReadByDataIdentifier.SoftwareVersion") key is registered.
 
         :param request: UDS request to be responded to.
         :param response: full UDS response to send. If not set, respond with a basic
@@ -218,12 +220,16 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         """
         # handle odx based callbacks
         if isinstance(request, dict) or isinstance(response, dict):
+            odx_param = self._get_odx_callback_param(request, response)
             request = self._create_callback_from_odx(
                 request, response, response_data, data_length, callback
             )
+            odx_key = f"{IsoServices(request.request[0]).name}.{odx_param}"
+            self.callbacks[odx_key] = request
         elif isinstance(request, UdsCallback) and (
             isinstance(request.request, dict) or isinstance(request.response, dict)
         ):
+            odx_param = self._get_odx_callback_param(request.request, request.response)
             request = self._create_callback_from_odx(
                 request.request,
                 request.response,
@@ -231,6 +237,8 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 request.data_length,
                 request.callback,
             )
+            odx_key = f"{IsoServices(request.request[0]).name}.{odx_param}"
+            self.callbacks[odx_key] = request
 
         callback = (
             request
@@ -251,9 +259,12 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         The callback is stored inside the callbacks dictionary under the format
         `{"0x2E01": UdsCallback()}`_, where the keys are case-sensitive and
         correspond to the registered requests.
+        If more than one key references a callback, all are deleted.
 
         :param request: request for which the callback was registered as a
             string ("0x2E01"), an integer (0x2e01) or a list ([0x2e, 0x01]).
+            If the callback is ODX based you can also use the readable key as str
+            ("ReadByDataIdentifier.SoftwareVersion").
         """
         if isinstance(request, int):
             request = list(UdsCallback.int_to_bytes(request))
@@ -261,7 +272,10 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             request = self.format_data(request)
         with self._callback_lock:
             try:
-                self._callbacks.pop(request)
+                callback = self._callbacks.pop(request)
+                for key, value in list(self._callbacks.items()):
+                    if value == callback:
+                        self._callbacks.pop(key)
             except KeyError as e:
                 log.error(
                     f"Could not unregister callback {e}: no such callback registered."
@@ -387,6 +401,25 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         )
         log.internal_debug(f"Callback configured from odx: {callback}")
         return callback
+
+    def _get_odx_callback_param(
+        self,
+        request: Union[int, List[int], OdxRequestConfigDict],
+        response: Optional[Union[int, List[int], Dict[str, str]]],
+    ) -> str:
+        """Used to create a readable odx based callback key
+
+        :param request: contains the ODX data necessary to create a Uds request
+        :param response: full UDS response to send. If not set, respond with a basic
+            positive response with the specified response_data. Accepts ODX based dictionary
+        :return: name of the parameter
+        """
+        if isinstance(request, dict):
+            key = request["data"]["parameter"]
+            return key
+        else:
+            key, _ = list(response.keys())[0]
+            return key
 
     def _abort_command(self) -> None:
         """Not used, satisfy interface."""

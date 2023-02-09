@@ -346,7 +346,8 @@ valid ODX file, you can use ODX based configuration of callbacks like this (same
 
         def test_run(self):
             """Actual test."""
-            ...
+            # can access the odx based callbacks with readable strings as well:
+            read_software_version = uds_server_auxiliary.callbacks["ReadDataByIdentifier.SoftwareVersion"]
 
         def tearDown(self):
             """Unregister all callbacks registered by the auxiliary."""

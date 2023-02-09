@@ -208,7 +208,11 @@ class TestUdsServerAuxiliary:
                     "0x22A455": UdsCallback(
                         [0x22, 0xA4, 0x55],
                         [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
-                    )
+                    ),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
+                        [0x22, 0xA4, 0x55],
+                        [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                    ),
                 },
                 id="ODX based UdsCallback instance passed",
             ),
@@ -218,18 +222,32 @@ class TestUdsServerAuxiliary:
                     "0x22A455": UdsCallback(
                         [0x22, 0xA4, 0x55],
                         [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
-                    )
+                    ),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
+                        [0x22, 0xA4, 0x55],
+                        [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                    ),
                 },
                 id="Passed odx keyword dict directly",
             ),
             pytest.param(
                 (ODX_REQUEST),
-                {"0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55])},
+                {
+                    "0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55]),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
+                        [0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55]
+                    ),
+                },
                 id="Passed odx keyword dict directly no response given",
             ),
             pytest.param(
                 (ODX_REQUEST, {"Negative": 17}),
-                {"0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11])},
+                {
+                    "0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11]),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
+                        [0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11]
+                    ),
+                },
                 id="Negative response given",
             ),
         ],
@@ -279,6 +297,33 @@ class TestUdsServerAuxiliary:
 
         uds_server_aux_inst.unregister_callback(callback_to_unregister)
         assert uds_server_aux_inst._callbacks.get(expected_callback_key) is None
+
+    @pytest.mark.parametrize(
+        "hex_key, odx_key",
+        [
+            pytest.param(
+                "0x22A455",
+                "ReadDataByIdentifier.SoftwareVersion",
+            ),
+        ],
+    )
+    def test_unregister_odx_based_callback(self, uds_server_aux_inst, hex_key, odx_key):
+        mock_request = [34, 42069]
+        mock_response = [98, 42069]
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
+            side_effect=[mock_request, mock_response]
+        )
+
+        uds_server_aux_inst.register_callback(ODX_REQUEST)
+        assert isinstance(uds_server_aux_inst._callbacks.get(hex_key), UdsCallback)
+        assert isinstance(uds_server_aux_inst._callbacks.get(odx_key), UdsCallback)
+        assert uds_server_aux_inst._callbacks.get(
+            hex_key
+        ) == uds_server_aux_inst._callbacks.get(odx_key)
+
+        uds_server_aux_inst.unregister_callback(hex_key)
+        assert uds_server_aux_inst._callbacks.get(hex_key) is None
+        assert uds_server_aux_inst._callbacks.get(odx_key) is None
 
     def test_unregister_callback_not_found(self, uds_server_aux_inst, caplog):
         with caplog.at_level(logging.ERROR):
@@ -418,3 +463,17 @@ class TestUdsServerAuxiliary:
     def test__format_uds_data(self, uds_server_aux_inst, coded_values, uds_data):
         actual = uds_server_aux_inst._format_uds_data(coded_values)
         assert uds_data == actual
+
+    @pytest.mark.parametrize(
+        "request_dict, response_dict, expected_param,",
+        [
+            pytest.param(ODX_REQUEST, ODX_RESPONSE, "SoftwareVersion"),
+            pytest.param(ODX_REQUEST, None, "SoftwareVersion"),
+            pytest.param([0x22, 0xA4, 0x55], ODX_RESPONSE, "SoftwareVersion"),
+        ],
+    )
+    def test__get_odx_callback_param(
+        self, uds_server_aux_inst, request_dict, response_dict, expected_param
+    ):
+        param = uds_server_aux_inst._get_odx_callback_param(request_dict, response_dict)
+        assert param == expected_param

@@ -70,12 +70,15 @@ class ExampleUdsServerTest(pykiso.BasicTest):
         )
         time.sleep(5)
         # access the previously registered callback
-        read_software_version = uds_server_aux.callbacks["0x22A455"]
+        read_software_version = uds_server_aux.callbacks[
+            "ReadDataByIdentifier.SoftwareVersion"
+        ]
         self.assertGreater(
             read_software_version.call_count,
             0,
             "Expected ODX UDS request was not sent by the client after 10s",
         )
+
         read_hardware_version = uds_server_aux.callbacks["0x22A456"]
         self.assertGreater(
             read_hardware_version.call_count,
