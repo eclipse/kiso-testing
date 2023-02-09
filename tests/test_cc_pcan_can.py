@@ -131,7 +131,7 @@ trc_merge_data = """;$FILEVERSION=2.0
      12       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def trc_files(tmp_path):
     """
     create fake trc files at a temporary directory
