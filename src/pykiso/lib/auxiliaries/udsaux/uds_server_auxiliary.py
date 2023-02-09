@@ -414,11 +414,12 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             positive response with the specified response_data. Accepts ODX based dictionary
         :return: name of the parameter
         """
+        logging.debug(f"--> req {request}, res= {response}")
         if isinstance(request, dict):
             key = request["data"]["parameter"]
             return key
         else:
-            key, _ = list(response.keys())[0]
+            key = list(response.keys())[0]
             return key
 
     def _abort_command(self) -> None:
