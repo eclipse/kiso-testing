@@ -132,18 +132,19 @@ trc_merge_data = """;$FILEVERSION=2.0
 
 
 @pytest.fixture(scope="function")
-def trc_files(tmp_path_factory):
+def trc_files(tmp_path):
     """
-    create a "" at a temporary directory
+    create fake trc files at a temporary directory
     """
-    tmp_path = tmp_path_factory.getbasetemp()
+    trc_dir = Path(tmp_path / "traces")
+    trc_dir.mkdir(exist_ok=True)
     file_paths = [
-        tmp_path / "trc_1.trc",
-        tmp_path / "trc_2.trc",
-        tmp_path / "trc_3.trc",
+        trc_dir / "trc_1.trc",
+        trc_dir / "trc_2.trc",
+        trc_dir / "trc_3.trc",
     ]
     for file in file_paths:
-        with open(file, "w") as f:
+        with open(file, "w+") as f:
             f.write(trc_data)
     return file_paths
 
@@ -683,11 +684,12 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
 
 def test_merge_trc(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
 
+    trc_dir = tmp_path / "traces"
     with CCPCanCan() as can:
         can.trc_count = 3
-        can.trace_path = tmp_path.parents[0]
+        can.trace_path = trc_dir
 
-        result_path = tmp_path.parents[0] / str(trc_files[0])
+        result_path = trc_dir / str(trc_files[0])
         can._merge_trc()
 
         with open(result_path, "r") as trc:
@@ -698,12 +700,13 @@ def test_merge_trc(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
 
 def test_merge_trc_with_file_name(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
 
+    trc_dir = tmp_path / "traces"
     with CCPCanCan() as can:
         can.trc_count = 3
-        can.trace_path = tmp_path.parents[0]
+        can.trace_path = trc_dir
         can.trace_name = "result_file.trc"
 
-        result_path = tmp_path.parents[0] / can.trace_name
+        result_path = trc_dir / can.trace_name
         can._merge_trc()
 
         with open(result_path, "r") as trc:
