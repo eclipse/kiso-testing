@@ -132,16 +132,17 @@ trc_merge_data = """;$FILEVERSION=2.0
 
 
 @pytest.fixture
-def trc_files(tmp_path):
+def trc_files(tmpdir):
     """
     create fake trc files at a temporary directory
     """
-    tmp_path.mkdir(exist_ok=True)
+    trc_folder = Path(tmpdir / "traces")
     file_paths = [
-        tmp_path / "trc_1.trc",
-        tmp_path / "trc_2.trc",
-        tmp_path / "trc_3.trc",
+        Path(tmpdir / "traces" / "trc_1.trc"),
+        Path(tmpdir / "traces" / "trc_2.trc"),
+        Path(tmpdir / "traces" / "trc_3.trc"),
     ]
+    trc_folder.mkdir(parents=True, exist_ok=True)
     for file in file_paths:
         with open(file, "w+") as f:
             f.write(trc_data)
@@ -324,7 +325,9 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
         assert "Bus error: an error counter" in caplog.text
 
 
-def test_initialize_trace(mock_can_bus, mock_PCANBasic):
+def test_initialize_trace(mocker, mock_can_bus, mock_PCANBasic):
+
+    mocker.patch.object(CCPCanCan, "_merge_trc")
 
     can_inst = CCPCanCan(trace_path="result.trc")
     assert can_inst.trace_path == Path(".")
@@ -438,6 +441,7 @@ def test_macos_instantiation(mock_can_bus, mock_PCANBasic, mocker, caplog):
 @mock.patch("sys.platform", "linux")
 def test_pcan_configure_trace(
     caplog,
+    mocker,
     side_effects,
     os_makedirs_error,
     logging_info_count,
@@ -445,6 +449,7 @@ def test_pcan_configure_trace(
     logging_path,
     trace_option,
 ):
+    mocker.patch.object(CCPCanCan, "_merge_trc")
     logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
     can_inst = CCPCanCan()
     caplog.clear()
@@ -681,32 +686,31 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
     assert "encountered can error: Invalid Message" in caplog.text
 
 
-def test_merge_trc(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
+def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):
 
-    with CCPCanCan() as can:
-        can.trc_count = 3
-        can.trace_path = tmp_path
+    path = trc_files[0].parent
+    cc_pcan = CCPCanCan(trace_path=path)
+    cc_pcan.trc_count = 3
 
-        result_path = tmp_path / str(trc_files[0])
-        can._merge_trc()
+    result_path = path / trc_files[0]
+    cc_pcan._merge_trc()
 
-        with open(result_path, "r") as trc:
-            result = trc.read()
+    with open(result_path, "r") as trc:
+        result = trc.read()
 
     assert trc_merge_data == result
 
 
-def test_merge_trc_with_file_name(tmp_path, trc_files, mock_can_bus, mock_PCANBasic):
+def test_merge_trc_with_file_name(trc_files, mock_can_bus, mock_PCANBasic):
 
-    with CCPCanCan() as can:
-        can.trc_count = 3
-        can.trace_path = tmp_path
-        can.trace_name = "result_file.trc"
+    path = trc_files[0].parent / "result_file.trc"
+    cc_pcan = CCPCanCan(trace_path=path)
+    cc_pcan.trc_count = 3
 
-        result_path = tmp_path / can.trace_name
-        can._merge_trc()
+    result_path = path
+    cc_pcan._merge_trc()
 
-        with open(result_path, "r") as trc:
-            result = trc.read()
+    with open(result_path, "r") as trc:
+        result = trc.read()
 
     assert trc_merge_data == result

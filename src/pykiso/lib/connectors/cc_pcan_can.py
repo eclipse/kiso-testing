@@ -402,12 +402,8 @@ class CCPCanCan(CChannel):
                 result_trace = list_of_traces[0]
             else:
                 # Else write the first trace content in the log file and then remove it
-                result_trace = str(self.trace_path / self.trace_name)
-                with open(list_of_traces[0], "r") as trc:
-                    merged_data = trc.read()
-                with open(result_trace, "w") as merged_trc:
-                    merged_trc.write(merged_data)
-                os.remove(list_of_traces[0])
+                result_trace = Path(self.trace_path / self.trace_name)
+                list_of_traces[0].rename(result_trace)
 
             list_of_traces.pop(0)
             # End of the trace header
