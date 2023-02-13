@@ -24,7 +24,7 @@ def serial_read_mock(mocker):
     return mocker.patch("serial.Serial.read")
 
 
-def test_incomplete_ccmsg_error(caplog):
+def test_incomplete_ccmsg_error():
     value = 12
     msg_error = IncompleteCCMsgError(value)
 
