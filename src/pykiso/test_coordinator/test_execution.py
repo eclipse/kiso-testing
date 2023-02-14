@@ -28,6 +28,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.loader import VALID_MODULE_NAME
 
+from pykiso.test_result.multi_result import MultiTestResult
+
 if TYPE_CHECKING:
     from .test_case import BasicTest
 
@@ -380,7 +382,7 @@ def execute(
             ) as stream:
                 test_runner = xmlrunner.XMLTestRunner(
                     output=junit_output,
-                    resultclass=XmlTestResult,
+                    resultclass=MultiTestResult(XmlTestResult, BannerTestResult),
                     failfast=failfast,
                     verbosity=0,
                     stream=stream,
@@ -390,7 +392,7 @@ def execute(
             with ResultStream(log_file_path) as stream:
                 test_runner = unittest.TextTestRunner(
                     stream=stream,
-                    resultclass=BannerTestResult,
+                    resultclass=MultiTestResult(BannerTestResult),
                     failfast=failfast,
                     verbosity=0,
                 )
