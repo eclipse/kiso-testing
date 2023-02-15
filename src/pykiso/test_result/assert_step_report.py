@@ -271,6 +271,7 @@ def assert_decorator(assert_method: types.MethodType):
             # Context
             currentframe = inspect.currentframe()
             f_back = currentframe.f_back
+
             test_name = f_back.f_code.co_name
             test_case_inst: TestCase = assert_method.__self__
             test_class_name = type(test_case_inst).__name__
@@ -278,46 +279,43 @@ def assert_decorator(assert_method: types.MethodType):
 
             # filter parent call, only known function recorded
             parent_method = re.findall(_FUNCTION_TO_APPLY, test_name.lower())
-            if parent_method:
-                # get the decorated test fixture name (setUp, tearDown, ...)
-                if parent_method[0] == "handle_interaction":
-                    test_name = f_back.f_locals["func"].__name__
+            # get the decorated test fixture name (setUp, tearDown, ...)
+            if parent_method and parent_method[0] == "handle_interaction":
+                test_name = f_back.f_locals["func"].__name__
 
-                # Assign variables to signature
-                signature = inspect.signature(assert_method)
-                arguments = signature.bind(*args, **kwargs).arguments
-                test_name = test_case_inst.step_report.current_table or test_name
+            # Assign variables to signature
+            signature = inspect.signature(assert_method)
+            arguments = signature.bind(*args, **kwargs).arguments
+            test_name = test_case_inst.step_report.current_table or test_name
 
-                # 1. Gather message, var_name, expected, received
-                # 1.1 Get message. default value: ""
-                if test_case_inst.step_report.message:
-                    message = test_case_inst.step_report.message
-                    test_case_inst.step_report.message = ""
-                else:
-                    message = arguments.get("msg", "")
+            # 1. Gather message, var_name, expected, received
+            # 1.1 Get message. default value: ""
+            if test_case_inst.step_report.message:
+                message = test_case_inst.step_report.message
+                test_case_inst.step_report.message = ""
+            else:
+                message = arguments.get("msg", "")
 
-                # ensure message is always present in the arguments
-                # dictionary. (used in _get_expected)
-                if not message and "msg" in signature.parameters:
-                    arguments["msg"] = ""
+            # ensure message is always present in the arguments
+            # dictionary. (used in _get_expected)
+            if not message and "msg" in signature.parameters:
+                arguments["msg"] = ""
 
-                # 1.2. Get 'received" value (Always 1st argument)
-                received = list(arguments.values())[0]
+            # 1.2. Get 'received" value (Always 1st argument)
+            received = list(arguments.values())[0]
 
-                # 1.3. Get variable name
-                var_name = _get_variable_name(f_back, assert_name)
+            # 1.3. Get variable name
+            var_name = _get_variable_name(f_back, assert_name)
 
-                # 1.4. Get Expected value
-                expected = _get_expected(assert_name, arguments)
+            # 1.4. Get Expected value
+            expected = _get_expected(assert_name, arguments)
 
-                # 2. Update report data
-                # 2.1 Ensure report ready for update
-                _prepare_report(test_case_inst, test_name)
+            # 2. Update report data
+            # 2.1 Ensure report ready for update
+            _prepare_report(test_case_inst, test_name)
 
-                # 2.2. Add new step
-                _add_step(
-                    test_class_name, test_name, message, var_name, expected, received
-                )
+            # 2.2. Add new step
+            _add_step(test_class_name, test_name, message, var_name, expected, received)
 
         except Exception as e:
             log.error(f"Unable to update Step due to exception: {e}")
