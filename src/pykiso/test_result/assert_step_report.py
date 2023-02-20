@@ -55,6 +55,8 @@ ALL_STEP_REPORT = OrderedDict()
 REPORT_KEYS = ["message", "var_name", "expected_result", "actual_result", "succeed"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
 _FUNCTION_TO_APPLY = r"|".join(["test", "setup", "teardown", "handle_interaction"])
+#: content all assertion methods where the checked value is not shown
+MUTE_CONTENT_ASSERTION = ["assertIsInstance", "assertNotIsInstance"]
 
 # Jinja template location
 SCRIPT_PATH = str(Path(__file__).resolve().parent)
@@ -302,7 +304,10 @@ def assert_decorator(assert_method: types.MethodType):
                     arguments["msg"] = ""
 
                 # 1.2. Get 'received" value (Always 1st argument)
-                received = list(arguments.values())[0]
+                assert_value = list(arguments.values())[0]
+                received = (
+                    assert_value if assert_name not in MUTE_CONTENT_ASSERTION else ""
+                )
 
                 # 1.3. Get variable name
                 var_name = _get_variable_name(f_back, assert_name)
