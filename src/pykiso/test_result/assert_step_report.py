@@ -53,8 +53,9 @@ log = logging.getLogger(__name__)
 ALL_STEP_REPORT = OrderedDict()
 # Step result keys used by Jinja for columns name
 REPORT_KEYS = ["message", "var_name", "expected_result", "actual_result", "succeed"]
+DEFAULT_TEST_METHOD = ["setup", "teardown", "handle_interaction"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
-_FUNCTION_TO_APPLY = r"|".join(["test", "setup", "teardown", "handle_interaction"])
+_FUNCTION_TO_APPLY = r"|".join(["test", *DEFAULT_TEST_METHOD])
 
 # Jinja template location
 SCRIPT_PATH = str(Path(__file__).resolve().parent)
@@ -232,6 +233,35 @@ def _add_step(
     )
 
 
+def determine_parent_test_function(test_name: str) -> str:
+    """Determine the parent test function.
+
+    This function attached the nested assertion to the correct parent test
+    function.
+
+    :param test_name: current test function
+
+    :return: parent test function
+    """
+    # the function respect the default test method pattern or in defualt test
+    # function
+    if test_name.lower() in DEFAULT_TEST_METHOD or test_name.startswith("test_"):
+        return test_name
+
+    # collect all methods called from the stack to get the parent test function
+    methods = [frame.function for frame in inspect.stack()]
+
+    # determine if the parent test function is a fixture or a test function
+    fixture = [method for method in methods if method.lower() in DEFAULT_TEST_METHOD]
+    test_function = [method for method in methods if method.startswith("test_")]
+
+    if fixture:
+        return fixture.pop()
+
+    if test_function:
+        return test_function.pop()
+
+
 def assert_decorator(assert_method: types.MethodType):
     """Decorator to gather assertion information
 
@@ -272,7 +302,7 @@ def assert_decorator(assert_method: types.MethodType):
             currentframe = inspect.currentframe()
             f_back = currentframe.f_back
 
-            test_name = f_back.f_code.co_name
+            test_name = determine_parent_test_function(f_back.f_code.co_name)
             test_case_inst: TestCase = assert_method.__self__
             test_class_name = type(test_case_inst).__name__
             assert_name = assert_method.__name__
@@ -287,7 +317,6 @@ def assert_decorator(assert_method: types.MethodType):
             signature = inspect.signature(assert_method)
             arguments = signature.bind(*args, **kwargs).arguments
             test_name = test_case_inst.step_report.current_table or test_name
-
             # 1. Gather message, var_name, expected, received
             # 1.1 Get message. default value: ""
             if test_case_inst.step_report.message:
