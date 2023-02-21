@@ -217,9 +217,12 @@ def test_add_step():
 
     assert_step_report.ALL_STEP_REPORT["TestCase"] = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"] = OrderedDict()
+    assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
+        "test_assert_step_report_multi_input"
+    ] = {}
     steplist = assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
         "test_assert_step_report_multi_input"
-    ] = []
+    ]["steps"] = []
 
     assert_step_report._add_step(
         "TestCase",
