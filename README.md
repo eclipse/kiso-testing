@@ -25,6 +25,9 @@ The project will contain:
 * Framework plugins that are generic enough to be integrated as "native" (this repository)
 * Additional "testApps" for different targets platforms (e.g. stm32, ...) or languages (C, C++, ...) . It could be pure SW or also HW (other repositories)
 
+## Link to Eclipse Project
+https://projects.eclipse.org/projects/iot.kiso-testing
+
 ## Requirements ##
 
 * Python 3.7+
