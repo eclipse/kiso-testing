@@ -59,10 +59,11 @@ pyreadline3 = {version = "^3.4.1", python = "^3.5"}
 hidapi = "^0.12.0.post2"
 rich = {version = "^13.2.0", optional = true}
 requests = {version = "^2.28.2", optional = true}
-isort = ">=5.11.4"
-black = "22.10.0"
+isort = {version = ">=5.11.4",optional = true}
+black = {version = "22.10.0",optional = true}
 
 [tool.poetry.dev-dependencies]
+black = "22.10.0"
 bump2version = "*"
 coverage = { version = "^6.5", extras = ["toml"] }
 invoke = "*"
@@ -82,10 +83,15 @@ testrail = [
     "rich",
     "requests",
 ]
-
+pykitest = [
+    "isort",
+    "black"
+]
 all = [
     "rich",
     "requests",
+    "isort",
+    "black"
 ]
 
 [tool.poetry.scripts]
