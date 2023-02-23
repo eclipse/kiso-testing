@@ -149,7 +149,7 @@ def trc_files(tmp_path):
         with open(file, "w+") as f:
             f.write(trc_data)
             # Sleep to avoid failure on integration tests
-            time.sleep(0.1)
+            time.sleep(0.2)
     return file_paths
 
 
