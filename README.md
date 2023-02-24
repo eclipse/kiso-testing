@@ -5,7 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/kiso-testing/badge/?version=latest)](https://kiso-testing.readthedocs.io/en/latest/?badge=latest)
 [![Test results](https://img.shields.io/jenkins/tests?compact_message&failed_label=failed&jobUrl=https%3A%2F%2Fci.eclipse.org%2Fkiso-testing%2Fjob%2Fkiso-testing%2Fjob%2Fmaster%2F&passed_label=passed&skipped_label=skipped)](https://ci.eclipse.org/kiso-testing/job/kiso-testing/job/master/)
 [![codecov](https://codecov.io/gh/eclipse/kiso-testing/branch/master/graph/badge.svg?token=IBKQ700ABS)](https://codecov.io/gh/eclipse/kiso-testing)
-[![Code quality](https://img.shields.io/lgtm/grade/python/github/eclipse/kiso-testing)]()
+[![CodeFactor](https://www.codefactor.io/repository/github/eclipse/kiso-testing/badge)](https://www.codefactor.io/repository/github/eclipse/kiso-testing)
 [![Last commit](https://img.shields.io/github/last-commit/eclipse/kiso-testing)]()
 [![Commits since latest version](https://img.shields.io/github/commits-since/eclipse/kiso-testing/latest/master)]()
 
