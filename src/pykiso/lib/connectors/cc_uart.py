@@ -23,7 +23,12 @@ import struct
 import time
 from typing import Optional
 
-import serial
+try:
+    import serial
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'"
+    )
 
 from pykiso import connector, message
 

@@ -7,10 +7,13 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import importlib
+import sys
 from pathlib import Path
 
 import pytest
 
+from pykiso.lib.connectors import flash_jlink
 from pykiso.lib.connectors.flash_jlink import JLinkFlasher, pylink
 
 
@@ -40,6 +43,14 @@ def mock_jlink(mocker):
     mocker.patch.object(pylink, "JLink", new=MockJLink)
     mocker.patch.object(pylink, "Library", new=MockJLib)
     return pylink
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["pylink"] = None
+        importlib.reload(flash_jlink)
+    sys.modules["pylink"] = pylink
+    importlib.reload(flash_jlink)
 
 
 @pytest.mark.parametrize(

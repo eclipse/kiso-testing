@@ -25,8 +25,14 @@ import time
 from pathlib import Path
 from typing import Dict, Optional, Union
 
-import can
-import can.bus
+try:
+    import can
+    import can.bus
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
+    )
+
 
 from pykiso import CChannel, Message
 from pykiso.lib.connectors.cc_socket_can.socketcan_to_trc import (

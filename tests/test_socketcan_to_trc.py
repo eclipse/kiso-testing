@@ -7,11 +7,13 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import importlib
 import logging
 import sys
 
 import pytest
 
+from pykiso.lib.connectors.cc_socket_can import socketcan_to_trc
 from pykiso.lib.connectors.cc_socket_can.socketcan_to_trc import (
     SocketCan2Trc,
     can,
@@ -38,6 +40,14 @@ def mock_can_bus(mocker):
 
     mocker.patch.object(can.interface, "Bus", new=MockCan)
     return can.interface
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["can"] = None
+        importlib.reload(socketcan_to_trc)
+    sys.modules["can"] = can
+    importlib.reload(socketcan_to_trc)
 
 
 @pytest.mark.parametrize(

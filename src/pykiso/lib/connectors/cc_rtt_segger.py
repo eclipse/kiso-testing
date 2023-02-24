@@ -27,7 +27,13 @@ import time
 from pathlib import Path
 from typing import Dict, Optional, Union
 
-import pylink
+try:
+    import pylink
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[debugger]'"
+    )
+
 
 from pykiso import connector
 from pykiso.message import Message

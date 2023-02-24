@@ -1,6 +1,19 @@
-import pytest
+import importlib
+import sys
 
+import pytest
+import serial
+
+from pykiso.lib.connectors import cc_serial
 from pykiso.lib.connectors.cc_serial import CCSerial
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["serial"] = None
+        importlib.reload(cc_serial)
+    sys.modules["serial"] = serial
+    importlib.reload(cc_serial)
 
 
 def test_constructor(mocker):
