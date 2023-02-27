@@ -336,10 +336,10 @@ def assert_decorator(assert_method: types.MethodType):
                 arguments["msg"] = ""
 
             # 1.2. Get 'received" value (Always 1st argument)
-                assert_value = list(arguments.values())[0]
-                received = (
-                    assert_value if assert_name not in MUTE_CONTENT_ASSERTION else ""
-                )
+            assert_value = list(arguments.values())[0]
+            received = (
+                assert_value if assert_name not in MUTE_CONTENT_ASSERTION else ""
+            )
 
             # 1.3. Get variable name
             var_name = _get_variable_name(f_back, assert_name)
@@ -353,10 +353,6 @@ def assert_decorator(assert_method: types.MethodType):
 
             # 2.2. Add new step
             _add_step(test_class_name, test_name, message, var_name, expected, received)
-                # 2.2. Add new step
-                _add_step(
-                    test_class_name, test_name, message, var_name, expected, received
-                )
 
         except Exception as e:
             log.error(f"Unable to update Step due to exception: {e}")
