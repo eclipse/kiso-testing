@@ -56,6 +56,8 @@ REPORT_KEYS = ["message", "var_name", "expected_result", "actual_result", "succe
 DEFAULT_TEST_METHOD = ["setup", "teardown", "handle_interaction"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
 _FUNCTION_TO_APPLY = r"|".join(["test", *DEFAULT_TEST_METHOD])
+#: content all assertion methods where the checked value is not shown
+MUTE_CONTENT_ASSERTION = ["assertIsInstance", "assertNotIsInstance"]
 
 # Jinja template location
 SCRIPT_PATH = str(Path(__file__).resolve().parent)
@@ -202,9 +204,7 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
         # Add header (mutable object -> dictionary fed during test)
         ALL_STEP_REPORT[test_class_name]["header"] = test.step_report.header
         # Add description of the test -> Always test_run
-        ALL_STEP_REPORT[test_class_name]["description"] = (
-            test._testMethodDoc or "Not provided"
-        )
+        ALL_STEP_REPORT[test_class_name]["description"] = test.__doc__ or "Not provided"
         # Add test file path
         ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(type(test))
         # Store the result (start, stop, elapsed time)
@@ -215,7 +215,12 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
 
     # Create the current test step storage
     if not ALL_STEP_REPORT[test_class_name]["test_list"].get(test_name):
-        ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = []
+        test_method = getattr(test, test_name, None)
+        test_description = test_method.__doc__ or ""
+        ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = {
+            "description": test_description,
+            "steps": [],
+        }
 
 
 def _add_step(
@@ -228,7 +233,7 @@ def _add_step(
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
 
-    ALL_STEP_REPORT[test_class_name]["test_list"][test_name].append(
+    ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"].append(
         dict(zip(REPORT_KEYS, [message, var_name, expected, received, True]))
     )
 
@@ -331,7 +336,10 @@ def assert_decorator(assert_method: types.MethodType):
                 arguments["msg"] = ""
 
             # 1.2. Get 'received" value (Always 1st argument)
-            received = list(arguments.values())[0]
+                assert_value = list(arguments.values())[0]
+                received = (
+                    assert_value if assert_name not in MUTE_CONTENT_ASSERTION else ""
+                )
 
             # 1.3. Get variable name
             var_name = _get_variable_name(f_back, assert_name)
@@ -345,6 +353,10 @@ def assert_decorator(assert_method: types.MethodType):
 
             # 2.2. Add new step
             _add_step(test_class_name, test_name, message, var_name, expected, received)
+                # 2.2. Add new step
+                _add_step(
+                    test_class_name, test_name, message, var_name, expected, received
+                )
 
         except Exception as e:
             log.error(f"Unable to update Step due to exception: {e}")

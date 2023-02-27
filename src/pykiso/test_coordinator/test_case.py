@@ -245,17 +245,7 @@ def define_test_parameters(
                     **kwargs,
                 )
 
-        NewClass.__doc__ = NewClass.__doc__.format(
-            DecoratedClass=DecoratedClass,
-            suite_id=suite_id,
-            case_id=case_id,
-            auxes=[aux.__class__.__name__ for aux in aux_list or []],
-            setup_timeout=setup_timeout,
-            run_timeout=run_timeout,
-            teardown_timeout=teardown_timeout,
-            test_ids=test_ids,
-            tag=tag,
-        )
+        NewClass.__doc__ = DecoratedClass.__doc__
 
         # Used to display the current test module in the test result
         NewClass.__module__ = DecoratedClass.__module__
