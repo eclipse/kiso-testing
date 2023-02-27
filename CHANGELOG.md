@@ -13,6 +13,7 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### New Features
 
 - Implement multi test result class ([#234](https://github.com/orhun/git-cliff/issues/234))
+- Step report shows each test method description ([#252](https://github.com/orhun/git-cliff/issues/252))
 
 ### Refactorings
 
@@ -21,6 +22,11 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Testing
 
 - Reworking cc_uart test ([#248](https://github.com/orhun/git-cliff/issues/248))
+- Adding test for show_tag and pykiso to pytest ([#244](https://github.com/orhun/git-cliff/issues/244))
+
+### Bugfix
+
+- Don't show the value for self.IsInstance and self.IsNotInstance in step report ([#251](https://github.com/orhun/git-cliff/issues/251))
 
 ## Version 0.21.2 (2023-02-08)
 
