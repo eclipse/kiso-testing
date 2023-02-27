@@ -7,13 +7,16 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import importlib
 import logging
+import sys
 from itertools import cycle
 from pathlib import Path
 
 import pylink
 import pytest
 
+from pykiso.lib.connectors import cc_rtt_segger
 from pykiso.lib.connectors.cc_rtt_segger import CCRttSegger
 from pykiso.message import (
     Message,
@@ -92,6 +95,14 @@ def mock_pylink_square_socket(mocker):
 
     mocker.patch.object(pylink, "JLink", new=MockPylinkSquare)
     return pylink
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["pylink"] = None
+        importlib.reload(cc_rtt_segger)
+    sys.modules["pylink"] = pylink
+    importlib.reload(cc_rtt_segger)
 
 
 def test_rtt_segger_already_open(mocker, mock_pylink_square_socket):

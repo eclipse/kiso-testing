@@ -8,6 +8,41 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Fixing record auxiliary unittest ([#246](https://github.com/orhun/git-cliff/issues/246))
+
+### New Features
+
+- Implement multi test result class ([#234](https://github.com/orhun/git-cliff/issues/234))
+
+### Refactorings
+
+- Granularity in the installation ([#213](https://github.com/orhun/git-cliff/issues/213))
+
+### Testing
+
+- Reworking cc_uart test ([#248](https://github.com/orhun/git-cliff/issues/248))
+
+## Version 0.21.2 (2023-02-08)
+
+### Bug Fixes
+
+- Decode received bytes in instrument_control_auxiliary ([#245](https://github.com/orhun/git-cliff/issues/245))
+
+## Version 0.21.1 (2023-01-31)
+
+### Bug Fixes
+
+- Tcp ip connector ([#236](https://github.com/orhun/git-cliff/issues/236))
+
+### New Features
+
+- Add tox ([#229](https://github.com/orhun/git-cliff/issues/229))
+- Make Release 0.21.1 ([#238](https://github.com/orhun/git-cliff/issues/238))
+
+## Version 0.21.0 (2023-01-24)
+
+### Bug Fixes
+
 - Test result shown as failed when a subtest fails ([#228](https://github.com/orhun/git-cliff/issues/228))
 
 ### Miscellaneous Tasks

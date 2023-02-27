@@ -89,7 +89,7 @@ class TestInfo(xmlrunner.result._TestInfo):
         return f"{test_method} ({'.'.join(modules)}.{test_case})"
 
 
-class XmlTestResult(BannerTestResult, xmlrunner.runner._XMLTestResult):
+class XmlTestResult(xmlrunner.runner._XMLTestResult):
     """
     Test result class that can express test results in a XML report.
     Used by XMLTestRunner.
@@ -113,12 +113,7 @@ class XmlTestResult(BannerTestResult, xmlrunner.runner._XMLTestResult):
         :param properties: junit testsuite properties
         :param infoclass: class containing the test information
         """
-        BannerTestResult.__init__(
-            self,
-            stream=stream,
-            descriptions=descriptions,
-            verbosity=verbosity,
-        )
+
         xmlrunner.runner._XMLTestResult.__init__(
             self,
             stream=stream,

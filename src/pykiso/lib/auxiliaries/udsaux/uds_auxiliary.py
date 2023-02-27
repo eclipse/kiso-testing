@@ -25,8 +25,13 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, List, Optional, Union
 
-import can
-from uds import IsoServices
+try:
+    import can
+    from uds import IsoServices
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
+    )
 
 from pykiso.connector import CChannel
 

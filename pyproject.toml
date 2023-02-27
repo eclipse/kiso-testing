@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.21.0"
+version = "0.21.2"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -42,15 +42,9 @@ classifiers = [
 python = "^3.7"
 brainstem = "*"
 PyYAML = "^6.0"
-pylink-square = ">=0.12,<0.15"
-pyserial = "^3.0"
-python-can = {version = "~4.1.0", extras = ["pcan"]}
-PyVISA = "^1.12.0"
-PyVISA-py = "~0.5.3"
 robotframework = "3.2.2"
 unittest-xml-reporting = "^3.2.0"
 click = ">=7.0.0,<9.0.0"
-pykiso-python-uds = "~3.0.2"
 tabulate = ">=0.8.9,<0.10.0"
 Jinja2 = ">=2.11.0,<4.0.0"
 MarkupSafe = "~2.0.1" # Allow support for Jinja2 between 2.11 < x < 3
@@ -61,8 +55,58 @@ rich = {version = "^13.2.0", optional = true}
 requests = {version = "^2.28.2", optional = true}
 isort = {version = ">=5.11.4",optional = true}
 black = {version = "22.10.0",optional = true}
+pylink-square = {version = ">=0.12,<0.15", optional = true}
+pykiso-python-uds = {version = "~3.0.2", optional = true}
+pyserial = {version = "^3.0", optional = true}
+PyVISA = {version = "^1.12.0", optional = true}
+PyVISA-py = {version = "~0.5.3", optional = true}
+python-can = {version = "^4.0.0", optional = true, extras = ["pcan,vector"]}
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.extras]
+plugins = [
+    "pylink-square",
+    "pykiso-python-uds",
+    "python-can",
+    "pyserial",
+    "PyVISA",
+    "PyVISA-py",
+]
+can = [
+    "pykiso-python-uds",
+    "python-can",
+]
+debugger = [
+    "pylink-square",
+]
+instrument = [
+    "PyVISA",
+    "PyVISA-py",
+]
+serial = [
+    "pyserial",
+]
+testrail = [
+    "rich",
+    "requests",
+]
+pykitest = [
+    "black",
+    "isort",
+]
+all = [
+    "pylink-square",
+    "pykiso-python-uds",
+    "python-can",
+    "pyserial",
+    "PyVISA",
+    "PyVISA-py",
+    "rich",
+    "requests",
+    "isort",
+    "black",
+]
+
+[tool.poetry.group.dev.dependencies]
 black = "22.10.0"
 bump2version = "*"
 coverage = { version = "^6.5", extras = ["toml"] }
@@ -77,22 +121,6 @@ Sphinx = "*"
 sphinx-rtd-theme = "*"
 sphinxcontrib-programoutput = "*"
 sphinx-autodoc-typehints = "*"
-
-[tool.poetry.extras]
-testrail = [
-    "rich",
-    "requests",
-]
-pykitest = [
-    "isort",
-    "black"
-]
-all = [
-    "rich",
-    "requests",
-    "isort",
-    "black"
-]
 
 [tool.poetry.scripts]
 pykiso = 'pykiso.cli:main'

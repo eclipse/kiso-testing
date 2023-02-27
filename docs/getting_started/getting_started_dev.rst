@@ -15,7 +15,7 @@ Install
 
    git clone https://github.com/eclipse/kiso-testing.git
    cd kiso-testing
-   poetry install
+   poetry install --all-extras
    poetry shell
 
 Pre-Commit

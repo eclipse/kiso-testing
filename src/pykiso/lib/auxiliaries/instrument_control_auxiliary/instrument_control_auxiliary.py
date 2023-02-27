@@ -161,7 +161,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
         log.internal_debug(f"Sending a read request in {self}")
         return self.handle_read()
 
-    def handle_read(self) -> str:
+    def handle_read(self) -> Optional[str]:
         """Handle read command by calling associated connector
         cc_receive.
 
@@ -169,7 +169,10 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
             string
         """
         response = self.channel.cc_receive()
-        return response.get("msg")
+        response_data = response.get("msg")
+        if isinstance(response_data, bytes):
+            response_data = response_data.decode().strip()
+        return response_data
 
     def query(self, query_command: str) -> Union[bytes, str]:
         """Send a query request to the instrument. Uses the 'query' method of the
@@ -183,7 +186,7 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
         log.internal_debug(f"Sending a query request in {self}) for {query_command}")
         return self.handle_query(query_command)
 
-    def handle_query(self, query_command: str) -> str:
+    def handle_query(self, query_command: str) -> Optional[str]:
         """Send a query request to the instrument. Uses the 'query' method of the
             channel if available, uses 'cc_send' and 'cc_receive' otherwise.
 
@@ -199,7 +202,10 @@ class InstrumentControlAuxiliary(DTAuxiliaryInterface):
             self.channel.cc_send(msg=query_command + self.write_termination)
             time.sleep(0.05)
             response = self.channel.cc_receive()
-            return response.get("msg")
+            response_data = response.get("msg")
+            if isinstance(response_data, bytes):
+                response_data = response_data.decode().strip()
+            return response_data
 
     def _create_auxiliary_instance(self) -> bool:
         """Open the connector.

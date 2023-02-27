@@ -7,7 +7,7 @@ pipeline
             containerTemplate
             {
                 name 'kiso-build-env'
-                image 'eclipse/kiso-build-env:v0.2.0'
+                image 'eclipse/kiso-build-env:v0.2.1'
                 alwaysPullImage 'true'
                 ttyEnabled true
                 resourceRequestCpu '2'
@@ -54,15 +54,15 @@ pipeline
                 }
             }
         }
-        stage('Run unittests')
+        stage('Run unittests with tox')
         {
             options
             {
-                timeout(time: 10, unit: 'MINUTES')
+                timeout(time: 20, unit: 'MINUTES')
             }
             steps
             {
-                sh 'poetry run pytest --junitxml=reports/testReport.xml'
+                sh 'tox run'
             }
         }
         stage('Run virtual-test')

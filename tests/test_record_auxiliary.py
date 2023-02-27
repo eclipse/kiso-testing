@@ -246,13 +246,17 @@ def test_display_new_log(mocker, caplog, mock_channel):
     mocker.patch.object(
         mock_channel, "cc_receive", return_value={"msg": b"\x12\x34\x56"}
     )
-    record_aux = RecordAuxiliary(mock_channel, is_active=True)
-    mocker.patch.object(
-        record_aux.stop_receive_event, "is_set", side_effect=[False, True]
+    is_set_mock = mocker.patch("threading.Event.is_set", side_effect=[False, True])
+    get_data_mock = mocker.patch.object(
+        RecordAuxiliary, "get_data", return_value="test"
     )
-    mocker.patch.object(record_aux, "get_data", return_value="test")
 
-    assert record_aux.new_log() == "test"
+    record_aux = RecordAuxiliary(mock_channel, is_active=True)
+    log = record_aux.new_log()
+
+    assert log == "test"
+    assert is_set_mock.call_count == 2
+    get_data_mock.assert_called_once()
 
 
 def test_is_message_in_log(mocker, caplog, mock_channel):

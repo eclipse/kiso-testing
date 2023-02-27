@@ -6,7 +6,9 @@
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
+import importlib
 import logging
+import sys
 
 import pytest
 import pyvisa
@@ -90,6 +92,14 @@ class MockResourceManager:
 
     def list_opened_resources(self):
         return self.opened_resources
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["pyvisa"] = None
+        importlib.reload(cc_visa)
+    sys.modules["pyvisa"] = pyvisa
+    importlib.reload(cc_visa)
 
 
 # Test of VisaChannel (sometimes using VisaSerial mock)

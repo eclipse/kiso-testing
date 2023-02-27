@@ -60,3 +60,17 @@ class ConnectorRequiredError(PykisoError):
         """
         self.message = f"A connector is required for {aux_name} and none is provided"
         super().__init__(self.message)
+
+
+class InvalidTestModuleName(PykisoError):
+    """Raised when a invalid python module name is covered by test file pattern
+    of either the cli or the yaml config
+    """
+
+    def __init__(self, name: str) -> None:
+        self.message = (
+            f"Test files need to be valid python module names but '{name}' is invalid"
+            "\nModule name can only contain letters, numbers, _ (underscore), "
+            "needs to start with a letter or underscore"
+        )
+        super().__init__(self.message)

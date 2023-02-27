@@ -1,4 +1,4 @@
-Version 0.21.0
+Version 0.21.2
 --------------
 
 Remove redundancy of activate_log configuration parameter

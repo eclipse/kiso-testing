@@ -378,7 +378,7 @@ class BasicTestSuite(unittest.TestSuite):
     ) -> None:
         """Check if the suite setup has failed and store failed suite id.
         Search in the global unittest result object, which save all the results
-        of the tests performed up to that point, if the suite setup that runned
+        of the tests performed up to that point, if the suite setup that ran
         has failed then store the suite id.
 
         :param test: test to check

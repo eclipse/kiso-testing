@@ -33,14 +33,16 @@ The project will contain:
 ## Install ##
 
 ```bash
-pip install pykiso
+pip install pykiso # Core framework
+pip install pykiso[plugins] # For installing all plugins
+pip install pykiso[all] # For installing all what we have to offer
 ```
 
 [Poetry](https://python-poetry.org/) is more appropriate for developers as it automatically creates virtual environments.
 
 ```bash
 cd kiso-testing
-poetry install
+poetry install --all-extras
 poetry shell
 ```
 

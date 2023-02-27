@@ -23,7 +23,13 @@ import abc
 import logging
 from typing import Dict, Optional
 
-import pyvisa
+try:
+    import pyvisa
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[instrument]'"
+    )
+
 
 from pykiso import CChannel
 from pykiso.types import MsgType

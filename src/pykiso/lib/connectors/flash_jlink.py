@@ -24,7 +24,13 @@ import logging
 import pathlib
 import typing
 
-import pylink
+try:
+    import pylink
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[debugger]'"
+    )
+
 
 from pykiso import Flasher
 
