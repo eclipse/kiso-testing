@@ -63,7 +63,7 @@ def linker(example_module):
         "chan1": {
             "config": {"con_param": 1},
             "type": str(example_module) + ":TestConnector",
-        }
+        },
     }
     for connector, con_details in con_cfg.items():
         cfg = con_details.get("config") or dict()
