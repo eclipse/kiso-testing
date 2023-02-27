@@ -53,6 +53,8 @@ pyreadline3 = {version = "^3.4.1", python = "^3.5"}
 hidapi = "^0.12.0.post2"
 rich = {version = "^13.2.0", optional = true}
 requests = {version = "^2.28.2", optional = true}
+isort = {version = ">=5.11.4",optional = true}
+black = {version = "22.10.0",optional = true}
 pylink-square = {version = ">=0.12,<0.15", optional = true}
 pykiso-python-uds = {version = "~3.0.2", optional = true}
 pyserial = {version = "^3.0", optional = true}
@@ -87,6 +89,10 @@ testrail = [
     "rich",
     "requests",
 ]
+pykitest = [
+    "black",
+    "isort",
+]
 all = [
     "pylink-square",
     "pykiso-python-uds",
@@ -96,6 +102,8 @@ all = [
     "PyVISA-py",
     "rich",
     "requests",
+    "isort",
+    "black",
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -141,7 +149,7 @@ omit = [
     "*/examples/*",
     "*/setup.py",
     "*/tasks.py",
-    "*/src/pykiso/tool/*",
+    "*/src/pykiso/tool/testrail/*",
     "*/src/pykiso/__main__.py",
     "*/src/pykiso/interfaces/thread_auxiliary.py",
     "*/src/pykiso/lib/auxiliaries/acroname_auxiliary.py",
