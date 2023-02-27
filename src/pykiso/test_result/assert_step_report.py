@@ -201,9 +201,7 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
         # Add header (mutable object -> dictionary fed during test)
         ALL_STEP_REPORT[test_class_name]["header"] = test.step_report.header
         # Add description of the test -> Always test_run
-        ALL_STEP_REPORT[test_class_name]["description"] = (
-            test._testMethodDoc or "Not provided"
-        )
+        ALL_STEP_REPORT[test_class_name]["description"] = test.__doc__ or "Not provided"
         # Add test file path
         ALL_STEP_REPORT[test_class_name]["file_path"] = inspect.getfile(type(test))
         # Store the result (start, stop, elapsed time)
@@ -214,7 +212,12 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
 
     # Create the current test step storage
     if not ALL_STEP_REPORT[test_class_name]["test_list"].get(test_name):
-        ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = []
+        test_method = getattr(test, test_name, None)
+        test_description = test_method.__doc__ or ""
+        ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = {
+            "description": test_description,
+            "steps": [],
+        }
 
 
 def _add_step(
@@ -227,7 +230,7 @@ def _add_step(
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
 
-    ALL_STEP_REPORT[test_class_name]["test_list"][test_name].append(
+    ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"].append(
         dict(zip(REPORT_KEYS, [message, var_name, expected, received, True]))
     )
 
