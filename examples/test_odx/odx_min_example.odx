@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ODX MODEL-VERSION="2.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="odx.xsd">
+    <DIAG-LAYER-CONTAINER>
+        <PROTOCOLS>
+            <PROTOCOL ID="1">
+                <SHORT-NAME>CAN_FD</SHORT-NAME>
+                <LONG-NAME>CAN FD</LONG-NAME>
+                <COMPARAM-SPEC-REF ID-REF="ISO_15765_3_on_ISO_15765_2" DOCREF="ISO_15765_3_on_ISO_15765_2" DOCTYPE="COMPARAM-SPEC"/>
+            </PROTOCOL>
+        </PROTOCOLS>
+        <BASE-VARIANTS>
+            <BASE-VARIANT ID="ECUXXX">
+                <SHORT-NAME>ECUxxx</SHORT-NAME>
+                <LONG-NAME>ECUxxx</LONG-NAME>
+                <DIAG-DATA-DICTIONARY-SPEC>
+                    <DATA-OBJECT-PROPS>
+                        <DATA-OBJECT-PROP ID="3">
+                            <SHORT-NAME>Software_Version</SHORT-NAME>
+                            <LONG-NAME>Software_Version</LONG-NAME>
+                            <COMPU-METHOD>
+                                <CATEGORY>IDENTICAL</CATEGORY>
+                            </COMPU-METHOD>
+                            <DIAG-CODED-TYPE BASE-TYPE-ENCODING="ISO-8859-1" BASE-DATA-TYPE="A_ASCIISTRING" xsi:type="STANDARD-LENGTH-TYPE">
+                                <BIT-LENGTH>128</BIT-LENGTH>
+                            </DIAG-CODED-TYPE>
+                            <PHYSICAL-TYPE BASE-DATA-TYPE="A_UNICODE2STRING"/>
+                        </DATA-OBJECT-PROP>
+                        <DATA-OBJECT-PROP ID="103">
+                            <SHORT-NAME>Hardware_Version</SHORT-NAME>
+                            <LONG-NAME>Hardware_Version</LONG-NAME>
+                            <COMPU-METHOD>
+                                <CATEGORY>IDENTICAL</CATEGORY>
+                            </COMPU-METHOD>
+                            <DIAG-CODED-TYPE BASE-TYPE-ENCODING="ISO-8859-1" BASE-DATA-TYPE="A_ASCIISTRING" xsi:type="STANDARD-LENGTH-TYPE">
+                                <BIT-LENGTH>24</BIT-LENGTH>
+                            </DIAG-CODED-TYPE>
+                            <PHYSICAL-TYPE BASE-DATA-TYPE="A_UNICODE2STRING"/>
+                        </DATA-OBJECT-PROP>
+                    </DATA-OBJECT-PROPS>
+                    <STRUCTURES>
+                        <STRUCTURE>
+                        </STRUCTURE>
+                    </STRUCTURES>
+                </DIAG-DATA-DICTIONARY-SPEC>
+                <DIAG-COMMS>
+                    <DIAG-SERVICE ID="6" SEMANTIC="IDENTIFICATION">
+                        <SHORT-NAME>SoftwareVersion_Read</SHORT-NAME>
+                        <LONG-NAME>SoftwareVersion Read</LONG-NAME>
+                        <SDGS>
+                            <SDG>
+                                <SDG-CAPTION ID="7">
+                                    <SHORT-NAME>CANdelaServiceInformation</SHORT-NAME>
+                                </SDG-CAPTION>
+                                <SD SI="DiagInstanceQualifier">SoftwareVersion</SD>
+                                <SD SI="DiagInstanceName">SoftwareVersion</SD>
+                                <SD SI="ServiceQualifier">Read</SD>
+                                <SD SI="ServiceName">Read</SD>
+                                <SD SI="PositiveResponseSuppressed">no</SD>
+                            </SDG>
+                        </SDGS>
+                        <AUDIENCE IS-SUPPLIER="false" IS-DEVELOPMENT="false" IS-MANUFACTURING="false" IS-AFTERSALES="false" IS-AFTERMARKET="false"/>
+                        <REQUEST-REF ID-REF="9"/>
+                        <POS-RESPONSE-REFS>
+                            <POS-RESPONSE-REF ID-REF="10"/>
+                        </POS-RESPONSE-REFS>
+                        <NEG-RESPONSE-REFS>
+                            <NEG-RESPONSE-REF ID-REF="11"/>
+                        </NEG-RESPONSE-REFS>
+                    </DIAG-SERVICE>
+                    <DIAG-SERVICE ID="106" SEMANTIC="IDENTIFICATION">
+                        <SHORT-NAME>HardwareVersion_Read</SHORT-NAME>
+                        <LONG-NAME>HardwareVersion Read</LONG-NAME>
+                        <SDGS>
+                            <SDG>
+                                <SDG-CAPTION ID="107">
+                                    <SHORT-NAME>CANdelaServiceInformation</SHORT-NAME>
+                                </SDG-CAPTION>
+                                <SD SI="DiagInstanceQualifier">HardwareVersion</SD>
+                                <SD SI="DiagInstanceName">HardwareVersion</SD>
+                                <SD SI="ServiceQualifier">Read</SD>
+                                <SD SI="ServiceName">Read</SD>
+                                <SD SI="PositiveResponseSuppressed">no</SD>
+                            </SDG>
+                        </SDGS>
+                        <AUDIENCE IS-SUPPLIER="false" IS-DEVELOPMENT="false" IS-MANUFACTURING="false" IS-AFTERSALES="false" IS-AFTERMARKET="false"/>
+                        <REQUEST-REF ID-REF="109"/>
+                        <POS-RESPONSE-REFS>
+                            <POS-RESPONSE-REF ID-REF="110"/>
+                        </POS-RESPONSE-REFS>
+                        <NEG-RESPONSE-REFS>
+                            <NEG-RESPONSE-REF ID-REF="111"/>
+                        </NEG-RESPONSE-REFS>
+                    </DIAG-SERVICE>
+                </DIAG-COMMS>
+                <REQUESTS>
+                    <REQUEST ID="9">
+                        <SHORT-NAME>RQ_SoftwareVersion_Read</SHORT-NAME>
+                        <LONG-NAME>RQ SoftwareVersion Read</LONG-NAME>
+                        <PARAMS>
+                            <PARAM SEMANTIC="SERVICE-ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>SID_RQ</SHORT-NAME>
+                                <LONG-NAME>SID-RQ</LONG-NAME>
+                                <BYTE-POSITION>0</BYTE-POSITION>
+                                <CODED-VALUE>34</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>RecordDataIdentifier</SHORT-NAME>
+                                <LONG-NAME>Identifier</LONG-NAME>
+                                <BYTE-POSITION>1</BYTE-POSITION>
+                                <CODED-VALUE>42069</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>16</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                        </PARAMS>
+                    </REQUEST>
+                    <REQUEST ID="109">
+                        <SHORT-NAME>RQ_HardwareVersion_Read</SHORT-NAME>
+                        <LONG-NAME>RQ HardwareVersion Read</LONG-NAME>
+                        <PARAMS>
+                            <PARAM SEMANTIC="SERVICE-ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>SID_RQ</SHORT-NAME>
+                                <LONG-NAME>SID-RQ</LONG-NAME>
+                                <BYTE-POSITION>0</BYTE-POSITION>
+                                <CODED-VALUE>34</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>RecordDataIdentifier</SHORT-NAME>
+                                <LONG-NAME>Identifier</LONG-NAME>
+                                <BYTE-POSITION>1</BYTE-POSITION>
+                                <CODED-VALUE>42070</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>16</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                        </PARAMS>
+                    </REQUEST>
+                </REQUESTS>
+                <POS-RESPONSES>
+                    <POS-RESPONSE ID="10">
+                        <SHORT-NAME>PR_SoftwareVersion_Read</SHORT-NAME>
+                        <LONG-NAME>PR SoftwareVersion Read</LONG-NAME>
+                        <PARAMS>
+                            <PARAM SEMANTIC="SERVICE-ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>SID_PR</SHORT-NAME>
+                                <LONG-NAME>SID-PR</LONG-NAME>
+                                <BYTE-POSITION>0</BYTE-POSITION>
+                                <CODED-VALUE>98</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>RecordDataIdentifier</SHORT-NAME>
+                                <LONG-NAME>Identifier</LONG-NAME>
+                                <BYTE-POSITION>1</BYTE-POSITION>
+                                <CODED-VALUE>42069</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>16</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="DATA" xsi:type="VALUE">
+                                <SHORT-NAME>SoftwareVersion</SHORT-NAME>
+                                <LONG-NAME>SoftwareVersion</LONG-NAME>
+                                <BYTE-POSITION>3</BYTE-POSITION>
+                                <DOP-REF ID-REF="3"/>
+                            </PARAM>
+                        </PARAMS>
+                    </POS-RESPONSE>
+                    <POS-RESPONSE ID="110">
+                        <SHORT-NAME>PR_HardwareVersion_Read</SHORT-NAME>
+                        <LONG-NAME>PR HardwareVersion Read</LONG-NAME>
+                        <PARAMS>
+                            <PARAM SEMANTIC="SERVICE-ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>SID_PR</SHORT-NAME>
+                                <LONG-NAME>SID-PR</LONG-NAME>
+                                <BYTE-POSITION>0</BYTE-POSITION>
+                                <CODED-VALUE>98</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>RecordDataIdentifier</SHORT-NAME>
+                                <LONG-NAME>Identifier</LONG-NAME>
+                                <BYTE-POSITION>1</BYTE-POSITION>
+                                <CODED-VALUE>42070</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>16</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="DATA" xsi:type="VALUE">
+                                <SHORT-NAME>HardwareVersion</SHORT-NAME>
+                                <LONG-NAME>HardwareVersion</LONG-NAME>
+                                <BYTE-POSITION>3</BYTE-POSITION>
+                                <DOP-REF ID-REF="103"/>
+                            </PARAM>
+                        </PARAMS>
+                    </POS-RESPONSE>
+                </POS-RESPONSES>
+                <NEG-RESPONSES>
+                    <NEG-RESPONSE ID="11">
+                        <SHORT-NAME>NR_SoftwareVersion_Read</SHORT-NAME>
+                        <LONG-NAME>NR SoftwareVersion Read</LONG-NAME>
+                        <PARAMS>
+                            <PARAM SEMANTIC="SERVICE-ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>SID_NR</SHORT-NAME>
+                                <LONG-NAME>SID-NR</LONG-NAME>
+                                <BYTE-POSITION>0</BYTE-POSITION>
+                                <CODED-VALUE>127</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="SERVICEIDRQ" xsi:type="CODED-CONST">
+                                <SHORT-NAME>SIDRQ_NR</SHORT-NAME>
+                                <LONG-NAME>SIDRQ-NR</LONG-NAME>
+                                <BYTE-POSITION>1</BYTE-POSITION>
+                                <CODED-VALUE>34</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="DATA" xsi:type="VALUE">
+                                <SHORT-NAME>Read</SHORT-NAME>
+                                <LONG-NAME>Read</LONG-NAME>
+                                <BYTE-POSITION>2</BYTE-POSITION>
+                                <DOP-REF ID-REF="13"/>
+                            </PARAM>
+                            <PARAM SEMANTIC="DATA" xsi:type="NRC-CONST">
+                                <SHORT-NAME>NRCConst_Read</SHORT-NAME>
+                                <LONG-NAME>Read</LONG-NAME>
+                                <BYTE-POSITION>2</BYTE-POSITION>
+                                <CODED-VALUES>
+                                    <CODED-VALUE>19</CODED-VALUE>
+                                    <CODED-VALUE>20</CODED-VALUE>
+                                    <CODED-VALUE>34</CODED-VALUE>
+                                    <CODED-VALUE>49</CODED-VALUE>
+                                    <CODED-VALUE>51</CODED-VALUE>
+                                </CODED-VALUES>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                        </PARAMS>
+                    </NEG-RESPONSE>
+                    <NEG-RESPONSE ID="111">
+                        <SHORT-NAME>NR_HardwareVersion_Read</SHORT-NAME>
+                        <LONG-NAME>NR HardwareVersion Read</LONG-NAME>
+                        <PARAMS>
+                            <PARAM SEMANTIC="SERVICE-ID" xsi:type="CODED-CONST">
+                                <SHORT-NAME>SID_NR</SHORT-NAME>
+                                <LONG-NAME>SID-NR</LONG-NAME>
+                                <BYTE-POSITION>0</BYTE-POSITION>
+                                <CODED-VALUE>127</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="SERVICEIDRQ" xsi:type="CODED-CONST">
+                                <SHORT-NAME>SIDRQ_NR</SHORT-NAME>
+                                <LONG-NAME>SIDRQ-NR</LONG-NAME>
+                                <BYTE-POSITION>1</BYTE-POSITION>
+                                <CODED-VALUE>34</CODED-VALUE>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                            <PARAM SEMANTIC="DATA" xsi:type="VALUE">
+                                <SHORT-NAME>Read</SHORT-NAME>
+                                <LONG-NAME>Read</LONG-NAME>
+                                <BYTE-POSITION>2</BYTE-POSITION>
+                                <DOP-REF ID-REF="13"/>
+                            </PARAM>
+                            <PARAM SEMANTIC="DATA" xsi:type="NRC-CONST">
+                                <SHORT-NAME>NRCConst_Read</SHORT-NAME>
+                                <LONG-NAME>Read</LONG-NAME>
+                                <BYTE-POSITION>2</BYTE-POSITION>
+                                <CODED-VALUES>
+                                    <CODED-VALUE>19</CODED-VALUE>
+                                    <CODED-VALUE>20</CODED-VALUE>
+                                    <CODED-VALUE>34</CODED-VALUE>
+                                    <CODED-VALUE>49</CODED-VALUE>
+                                    <CODED-VALUE>51</CODED-VALUE>
+                                </CODED-VALUES>
+                                <DIAG-CODED-TYPE BASE-DATA-TYPE="A_UINT32" xsi:type="STANDARD-LENGTH-TYPE">
+                                    <BIT-LENGTH>8</BIT-LENGTH>
+                                </DIAG-CODED-TYPE>
+                            </PARAM>
+                        </PARAMS>
+                    </NEG-RESPONSE>
+                </NEG-RESPONSES>
+                <GLOBAL-NEG-RESPONSES>
+                    <GLOBAL-NEG-RESPONSE ID="14">
+                    </GLOBAL-NEG-RESPONSE>
+                </GLOBAL-NEG-RESPONSES>
+            </BASE-VARIANT>
+        </BASE-VARIANTS>
+    </DIAG-LAYER-CONTAINER>
+</ODX>

@@ -61,3 +61,12 @@ class ConfigDict(TypedDict):
     auxiliaries: Dict[AuxiliaryAlias, AuxiliaryConfig]
     connectors: Dict[ConnectorAlias, ConnectorConfig]
     test_suite_list: List[SuiteConfig]
+
+
+class OdxParamDict(TypedDict):
+    parameter: str
+
+
+class OdxRequestConfigDict(TypedDict):
+    service: int
+    data: OdxParamDict

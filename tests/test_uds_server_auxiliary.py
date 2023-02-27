@@ -1,11 +1,10 @@
 ##########################################################################
-# Copyright (c) 2010-2022 Robert Bosch GmbH
+# Copyright (c) 2010-2023 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
 #
-# This source code is copyright protected and proprietary
-# to Robert Bosch GmbH. Only those rights that have been
-# explicitly granted to you by Robert Bosch GmbH in written
-# form may be exercised. All other rights remain with
-# Robert Bosch GmbH.
+# SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
 import logging
@@ -18,6 +17,13 @@ from pykiso.lib.auxiliaries.udsaux.common.uds_callback import UdsCallback
 from pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary import (
     UdsServerAuxiliary,
 )
+
+ODX_REQUEST = {
+    "service": 0x22,  # IsoServices.ReadDataByIdentifier
+    "data": {"parameter": "SoftwareVersion"},
+}
+
+ODX_RESPONSE = {"SoftwareVersion": "0.17.0"}
 
 
 class TestUdsServerAuxiliary:
@@ -38,6 +44,7 @@ class TestUdsServerAuxiliary:
             "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
+        mocker.patch("pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.OdxParser")
 
         TestUdsServerAuxiliary.uds_aux_instance_odx = UdsServerAuxiliary(
             com=ccpcan_inst,
@@ -63,21 +70,18 @@ class TestUdsServerAuxiliary:
         assert uds_server_inst.req_id == None
         assert uds_server_inst.res_id == None
 
-    def test_constructor_odx(self, uds_server_aux_inst, ccpcan_inst, caplog):
-        with caplog.at_level(logging.WARNING):
-            uds_server_inst = UdsServerAuxiliary(
-                com=ccpcan_inst,
-                request_id=0x123,
-                response_id=0x321,
-                odx_file_path="dummy.odx",
-            )
-
-        assert (
-            "Callback configuration through ODX files is not supported yet"
-            in caplog.text
+    # NEW odx constructor
+    def test_constructor_odx_new(self, uds_server_aux_inst, ccpcan_inst):
+        uds_server_inst = UdsServerAuxiliary(
+            com=ccpcan_inst,
+            request_id=0x123,
+            response_id=0x321,
+            odx_file_path="dummy.odx",
         )
+
         assert uds_server_inst._callbacks == {}
         assert uds_server_inst._callback_lock is not None
+        assert uds_server_inst.odx_parser is not None
         assert uds_server_inst.req_id == 0x123
         assert uds_server_inst.res_id == 0x321
 
@@ -197,16 +201,70 @@ class TestUdsServerAuxiliary:
                 {"0x101112": UdsCallback([0x10, 0x11, 0x12], [0x12, 0x11, 0x10])},
                 id="UdsCallback instance passed",
             ),
+            # odx based callback registration
+            pytest.param(
+                UdsCallback(ODX_REQUEST, ODX_RESPONSE),
+                {
+                    "0x22A455": UdsCallback(
+                        [0x22, 0xA4, 0x55],
+                        [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                    ),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
+                        [0x22, 0xA4, 0x55],
+                        [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                    ),
+                },
+                id="ODX based UdsCallback instance passed",
+            ),
+            pytest.param(
+                (ODX_REQUEST, ODX_RESPONSE),
+                {
+                    "0x22A455": UdsCallback(
+                        [0x22, 0xA4, 0x55],
+                        [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                    ),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
+                        [0x22, 0xA4, 0x55],
+                        [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                    ),
+                },
+                id="Passed odx keyword dict directly",
+            ),
+            pytest.param(
+                (ODX_REQUEST),
+                {
+                    "0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55]),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
+                        [0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55]
+                    ),
+                },
+                id="Passed odx keyword dict directly no response given",
+            ),
+            pytest.param(
+                (ODX_REQUEST, {"Negative": 17}),
+                {
+                    "0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11]),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
+                        [0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11]
+                    ),
+                },
+                id="Negative response given",
+            ),
         ],
     )
     def test_register_callback(
         self, uds_server_aux_inst, callback_params, expected_callback_dict
     ):
+        mock_request = [34, 42069]
+        mock_response = [98, 42069]
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
+            side_effect=[mock_request, mock_response]
+        )
+
         if isinstance(callback_params, tuple):
             uds_server_aux_inst.register_callback(*callback_params)
         else:
             uds_server_aux_inst.register_callback(callback_params)
-
         assert uds_server_aux_inst._callbacks == expected_callback_dict
 
     @pytest.mark.parametrize(
@@ -239,6 +297,33 @@ class TestUdsServerAuxiliary:
 
         uds_server_aux_inst.unregister_callback(callback_to_unregister)
         assert uds_server_aux_inst._callbacks.get(expected_callback_key) is None
+
+    @pytest.mark.parametrize(
+        "hex_key, odx_key",
+        [
+            pytest.param(
+                "0x22A455",
+                "ReadDataByIdentifier.SoftwareVersion",
+            ),
+        ],
+    )
+    def test_unregister_odx_based_callback(self, uds_server_aux_inst, hex_key, odx_key):
+        mock_request = [34, 42069]
+        mock_response = [98, 42069]
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
+            side_effect=[mock_request, mock_response]
+        )
+
+        uds_server_aux_inst.register_callback(ODX_REQUEST)
+        assert isinstance(uds_server_aux_inst._callbacks.get(hex_key), UdsCallback)
+        assert isinstance(uds_server_aux_inst._callbacks.get(odx_key), UdsCallback)
+        assert uds_server_aux_inst._callbacks.get(
+            hex_key
+        ) == uds_server_aux_inst._callbacks.get(odx_key)
+
+        uds_server_aux_inst.unregister_callback(hex_key)
+        assert uds_server_aux_inst._callbacks.get(hex_key) is None
+        assert uds_server_aux_inst._callbacks.get(odx_key) is None
 
     def test_unregister_callback_not_found(self, uds_server_aux_inst, caplog):
         with caplog.at_level(logging.ERROR):
@@ -308,3 +393,87 @@ class TestUdsServerAuxiliary:
             uds_server_aux_inst._dispatch_callback(received_request)
 
         assert "Unregistered request received" in caplog.text
+
+    @pytest.mark.parametrize(
+        "odx_request, odx_response, coded_values, expected_callback",
+        [
+            pytest.param(
+                ODX_REQUEST,
+                None,
+                [[34, 42069]],
+                UdsCallback([0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55]),
+            ),
+            pytest.param(
+                [0x22, 0xA4, 0x55],
+                ODX_RESPONSE,
+                [[98, 42069]],
+                UdsCallback(
+                    [0x22, 0xA4, 0x55],
+                    [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                ),
+            ),
+            pytest.param(
+                ODX_REQUEST,
+                ODX_RESPONSE,
+                [[34, 42069], [98, 42069]],
+                UdsCallback(
+                    [0x22, 0xA4, 0x55],
+                    [0x62, 0xA4, 0x55, 0x30, 0x2E, 0x31, 0x37, 0x2E, 0x30],
+                ),
+            ),
+        ],
+    )
+    def test__create_callback_from_odx(
+        self,
+        uds_server_aux_inst,
+        odx_request,
+        odx_response,
+        coded_values,
+        expected_callback,
+    ):
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
+            side_effect=coded_values
+        )
+
+        callback = uds_server_aux_inst._create_callback_from_odx(
+            odx_request, odx_response
+        )
+        assert callback == expected_callback
+
+    def test__create_callback_from_odx_parse_error(self, uds_server_aux_inst, caplog):
+        mock_request = [35, 42069]
+        mock_response = [98, 42069]
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
+            side_effect=[mock_request, mock_response]
+        )
+
+        with pytest.raises(ValueError):
+            with caplog.at_level(logging.ERROR):
+                callback = uds_server_aux_inst._create_callback_from_odx(ODX_REQUEST)
+
+        assert "Given SID 34 does not match parsed SID 35" in caplog.text
+
+    @pytest.mark.parametrize(
+        "coded_values, uds_data",
+        [
+            ([34, 42069], [0x22, 0xA4, 0x55]),
+            ([16, 3], [0x10, 0x03]),
+        ],
+    )
+    def test__format_uds_data(self, uds_server_aux_inst, coded_values, uds_data):
+        actual = uds_server_aux_inst._format_uds_data(coded_values)
+        assert uds_data == actual
+
+    @pytest.mark.parametrize(
+        "request_dict, response_dict, expected_param,",
+        [
+            pytest.param(ODX_REQUEST, ODX_RESPONSE, "SoftwareVersion"),
+            pytest.param(ODX_REQUEST, None, "SoftwareVersion"),
+            pytest.param([0x22, 0xA4, 0x55], ODX_RESPONSE, "SoftwareVersion"),
+        ],
+    )
+    def test__get_odx_callback_param(
+        self, uds_server_aux_inst, request_dict, response_dict, expected_param
+    ):
+        param = uds_server_aux_inst._get_odx_callback_param(request_dict, response_dict)
+        assert param == expected_param
