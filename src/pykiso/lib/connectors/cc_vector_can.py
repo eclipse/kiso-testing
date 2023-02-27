@@ -22,10 +22,16 @@ CAN Communication Channel using Vector hardware
 import logging
 from typing import Dict, Optional, Union
 
-import can
-import can.bus
-import can.interfaces.vector
-from can.interfaces.vector.canlib import get_channel_configs
+try:
+    import can
+    import can.bus
+    import can.interfaces.vector
+    from can.interfaces.vector.canlib import get_channel_configs
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
+    )
+
 
 from pykiso import CChannel, Message
 

@@ -23,7 +23,13 @@ Communication Channel Via Serial
 from enum import Enum, IntEnum
 from typing import ByteString, Dict, Optional, Union
 
-import serial
+try:
+    import serial
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'"
+    )
+
 
 from pykiso import Message, connector
 
@@ -68,7 +74,7 @@ class CCSerial(connector.CChannel):
         dsrdtr: bool = False,
         inter_byte_timeout: Optional[float] = None,
         exclusive: Optional[bool] = None,
-        **kwargs
+        **kwargs,
     ):
         """Init Serial settings
 

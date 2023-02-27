@@ -25,7 +25,13 @@ import sys
 import time
 from textwrap import dedent
 
-import can
+try:
+    import can
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
+    )
+
 
 log = logging.getLogger(__name__)
 

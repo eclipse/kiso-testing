@@ -21,7 +21,12 @@ Communication Channel Via Usb
 .. warning: Still under test
 """
 
-import serial
+try:
+    import serial
+except ImportError as e:
+    raise ImportError(
+        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'"
+    )
 
 from pykiso.lib.connectors import cc_uart
 

@@ -7,10 +7,13 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import importlib
 import logging
 import pathlib
+import sys
 from pathlib import Path
 from unittest import mock
+from unittest.mock import MagicMock, patch
 
 import can as python_can
 import pytest
@@ -92,6 +95,14 @@ def mock_PCANBasic(mocker):
     mocker.patch.object(MockPCANBasic, "SetValue", return_value=PCANBasic.PCAN_ERROR_OK)
     mocker.patch.object(PCANBasic, "PCANBasic", new=MockPCANBasic)
     return PCANBasic
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["can"] = None
+        importlib.reload(cc_pcan_can)
+    sys.modules["can"] = can
+    importlib.reload(cc_pcan_can)
 
 
 @pytest.mark.parametrize(

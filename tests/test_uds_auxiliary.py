@@ -7,19 +7,30 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import importlib
 import logging
+import sys
 from time import sleep
 from unittest import mock
 
 import can
 import pytest
 
+from pykiso.lib.auxiliaries.udsaux import uds_auxiliary
 from pykiso.lib.auxiliaries.udsaux.common import UDSCommands
 from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
     NegativeResponseCode,
     UdsResponse,
 )
 from pykiso.lib.auxiliaries.udsaux.uds_auxiliary import UdsAuxiliary
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["can"] = None
+        importlib.reload(uds_auxiliary)
+    sys.modules["can"] = can
+    importlib.reload(uds_auxiliary)
 
 
 class TestUdsAuxiliary:
