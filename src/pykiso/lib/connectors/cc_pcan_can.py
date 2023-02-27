@@ -20,6 +20,7 @@ Can Communication Channel using PCAN hardware
 """
 
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Optional, Union
@@ -89,7 +90,13 @@ class CCPCanCan(CChannel):
         :param interface: python-can interface modules used
         :param channel: the can interface name
         :param state: BusState of the channel
-        :param trace_path: path to write the trace
+        :param trace_path: path to write the trace (can be a folder or a .trc file)
+        .. note:: If the .trc file already exists, it will be overwritten. If the trace_path
+          is an existing folder, a default name will be generated for the trace file
+          containing the timestamp. If the trace_path is a non-existent folder, the
+          folder will be created and the default name will be used for the trace
+          file. If the trace_path is not defined by the user, the default file will be
+          saved in the current working directory.
         :param trace_size: maximum size of the trace (in MB)
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
@@ -141,33 +148,11 @@ class CCPCanCan(CChannel):
         self.bus = None
         self.logging_activated = logging_activated
         self.raw_pcan_interface = None
-        self.logging_path = None
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
-        """
-        Extract the base logging directory from the logging module, so we can
-        create our logging folder in the correct place.
-        logging_path will be set to the parent directory of the logfile which
-        is set in the logging module + /raw/PCAN
-        If an AttributeError occurs, the logging module is not set to log into
-        a file.
-        In this case we set the logging_path to None and will just log into a
-        generic logfile in the current working directory, which will be
-        overwritten every time, a log is initiated.
-        """
-        if self.trace_path.is_file():
-            self.trace_path = self.trace_path.parent
-            log.internal_warning(
-                f"File names are not supported for trace file creation. Trace will be written to {self.trace_path}"
-            )
-
-        if not 0 < self.trace_size <= 100:
-            self.trace_size = 10
-            log.internal_warning(
-                f"Make sure trace size is between 1 and 100 Mb. Setting trace size to default value "
-                f"value : {self.trace_size}."
-            )
+        self.trc_count = 0
+        self._initialize_trace()
 
         if bus_error_warning_filter:
             logging.getLogger("can.pcan").addFilter(PcanFilter())
@@ -175,6 +160,34 @@ class CCPCanCan(CChannel):
         if self.enable_brs and not self.is_fd:
             log.internal_warning(
                 "Bitrate switch will have no effect because option is_fd is set to false."
+            )
+
+    def _initialize_trace(self) -> None:
+        """Initialize the trace path and check its size
+
+        :raises ValueError: if the trace_path is a file but not a trc file
+        """
+
+        # Handle trace path and name
+        if self.trace_path.suffix == ".trc":
+            self.trace_name = self.trace_path.name
+            self.trace_path = self.trace_path.parent
+        elif self.trace_path and self.trace_path.suffix == "":
+            self.trace_name = None
+        elif not self.trace_path:
+            self.trace_path = Path.cwd()
+            self.trace_name = None
+        elif self.trace_path.suffix not in [".trc", ""]:
+            raise ValueError(
+                f"Trace name {self.trace_path.name} is incorrect, it should be a trc file"
+            )
+
+        # Check trace size
+        if not 0 < self.trace_size <= 100:
+            self.trace_size = 10
+            log.internal_warning(
+                f"Make sure trace size is between 1 and 100 Mb. Setting trace size to default value "
+                f"value : {self.trace_size}."
             )
 
     def _cc_open(self) -> None:
@@ -204,7 +217,7 @@ class CCPCanCan(CChannel):
     def _pcan_configure_trace(self) -> None:
         """Configure PCAN dongle to create a trace file.
 
-        If self.logging_path is set, this path will be created, if it does not
+        If self.trace_path is set, this path will be created, if it does not
         exist and the logfile will be placed there.
         Otherwise it will be logged to the current working directory if a
         default filename, which will be overwritten in successive calls.
@@ -219,6 +232,7 @@ class CCPCanCan(CChannel):
             pcan_path_argument = PCANBasic.TRACE_FILE_OVERWRITE
         else:
             pcan_path_argument = PCANBasic.TRACE_FILE_DATE | PCANBasic.TRACE_FILE_TIME
+
         try:
             if self.trace_path is not None:
                 if not Path(self.trace_path).exists():
@@ -260,6 +274,7 @@ class CCPCanCan(CChannel):
                 pcan_channel, PCANBasic.PCAN_TRACE_STATUS, PCANBasic.PCAN_PARAMETER_ON
             )
             log.internal_info("Trace activated")
+            self.trc_count += 1
         except RuntimeError:
             log.error(f"Logging for {self.channel} not activated")
         except OSError as e:
@@ -363,3 +378,68 @@ class CCPCanCan(CChannel):
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
             return {"msg": None}
+
+    def _merge_trc(self) -> None:
+        """Merge multiple trc files in one."""
+
+        if isinstance(self.trace_path, str):
+            self.trace_path = Path(self.trace_path)
+
+        # Get the lastest trace files corresponding to the number of traces created
+        list_of_traces = sorted(self.trace_path.glob("*.trc"), key=os.path.getmtime)[
+            -self.trc_count :
+        ]
+
+        try:
+            if self.trace_name is None:
+                # If a log file is not provided, take the fist trace created as result file
+                result_trace = list_of_traces[0]
+            else:
+                # Else write the first trace content in the log file and then remove it
+                result_trace = Path(self.trace_path / self.trace_name)
+                list_of_traces[0].rename(result_trace)
+
+            list_of_traces.pop(0)
+            # End of the trace header
+            first_message_line = 33
+
+            # Append all trace files
+            for file in list_of_traces:
+                with open(file, "r") as trc:
+                    data = trc.read().splitlines(True)
+                with open(result_trace, "a") as merged_trc:
+                    merged_trc.writelines(data[first_message_line:])
+                os.remove(file)
+
+            self._fix_message_numbers(result_trace, first_message_line)
+
+        except IndexError:
+            log.internal_warning("No trace to merge")
+
+    def _fix_message_numbers(
+        self, merged_trace: Union[Path, str], first_message_line: int
+    ) -> None:
+        """Parse message numbers in the merged file and fix inconsistencies caused by the
+        merging process.
+
+        :param merged_trace: merged trace file to fix
+        :param first_message_line: line number of the first logged can message
+        """
+        message_nb_index = 7
+        with open(merged_trace, "r+") as trc:
+            merged_data_lines = trc.read().splitlines(True)
+
+            # Parsing to keep the message numbers consistent after the merge
+            for line_number in range(first_message_line, len(merged_data_lines)):
+                message_number = str((line_number + 1) - first_message_line)
+                merged_data_lines[line_number] = (
+                    message_number.rjust(message_nb_index)
+                    + merged_data_lines[line_number][message_nb_index:]
+                )
+            trc.seek(0)
+            trc.writelines(merged_data_lines)
+
+    def __del__(self) -> None:
+        """Destructor method."""
+        if self.logging_activated:
+            self._merge_trc()

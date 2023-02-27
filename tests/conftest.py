@@ -244,6 +244,9 @@ def ccpcan_inst(mocker):
             super(TCChan, self).__init__(*args, **kwargs)
             self.remote_id = None
 
+        def __del__(self):
+            pass
+
         _cc_open = mocker.stub(name="_cc_open")
         _cc_close = mocker.stub(name="_cc_close")
         _cc_send = mocker.stub(name="_cc_send")

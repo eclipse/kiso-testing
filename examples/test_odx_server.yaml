@@ -1,0 +1,20 @@
+auxiliaries:
+  uds_server_aux:
+    connectors:
+      com: can_channel
+    config:
+      odx_file_path: "./test_odx/odx_min_example.odx"
+      request_id: 0xB1
+      response_id: 0xB0
+    type: pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary:UdsServerAuxiliary
+connectors:
+  can_channel:
+    config:
+      interface: "pcan"
+      channel: "PCAN_USBBUS2"
+      state: "ACTIVE"
+    type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
+test_suite_list:
+  - suite_dir: ./test_odx
+    test_filter_pattern: "test_server_odx.py"
+    test_suite_id: 1

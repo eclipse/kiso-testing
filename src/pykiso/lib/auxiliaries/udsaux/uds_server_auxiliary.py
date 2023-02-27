@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright (c) 2010-2022 Robert Bosch GmbH
+# Copyright (c) 2010-2023 Robert Bosch GmbH
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
 # http://www.eclipse.org/legal/epl-2.0.
@@ -27,8 +27,12 @@ from typing import Callable, Dict, List, Optional, Union
 
 from uds import IsoServices
 
+from pykiso.types import OdxRequestConfigDict
+
+from .common.odx_parser import OdxParser
 from .common.uds_base_auxiliary import UdsBaseAuxiliary
 from .common.uds_callback import UdsCallback
+from .common.uds_response import UdsResponse
 
 log = logging.getLogger(__name__)
 
@@ -55,9 +59,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         self._ecu_config = None
         if self.odx_file_path is not None:
-            log.internal_warning(
-                "Callback configuration through ODX files is not supported yet"
-            )
+            self.odx_parser = OdxParser(self.odx_file_path)
 
         self._callbacks: Dict[str, UdsCallback] = {}
         self._callback_lock = threading.Lock()
@@ -192,8 +194,8 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
     def register_callback(
         self,
-        request: Union[int, List[int], UdsCallback],
-        response: Optional[Union[int, List[int]]] = None,
+        request: Union[int, List[int], UdsCallback, OdxRequestConfigDict],
+        response: Optional[Union[int, List[int], Dict[str, str]]] = None,
         response_data: Optional[Union[int, bytes]] = None,
         data_length: Optional[int] = None,
         callback: Optional[Callable] = None,
@@ -204,6 +206,8 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         The callback is stored inside the callbacks dictionary under the format
         `{"0x2EC4": UdsCallback()}`_, where the keys are case-sensitive and
         correspond to the registered requests.
+        If the callback is ODX based, a second key using Service.Parameter
+        ("ReadByDataIdentifier.SoftwareVersion") key is registered.
 
         :param request: UDS request to be responded to.
         :param response: full UDS response to send. If not set, respond with a basic
@@ -214,6 +218,28 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             to have a fixed length (zero-padded).
         :param callback: custom callback to register
         """
+        # handle odx based callbacks
+        if isinstance(request, dict) or isinstance(response, dict):
+            odx_param = self._get_odx_callback_param(request, response)
+            request = self._create_callback_from_odx(
+                request, response, response_data, data_length, callback
+            )
+            odx_key = f"{IsoServices(request.request[0]).name}.{odx_param}"
+            self.callbacks[odx_key] = request
+        elif isinstance(request, UdsCallback) and (
+            isinstance(request.request, dict) or isinstance(request.response, dict)
+        ):
+            odx_param = self._get_odx_callback_param(request.request, request.response)
+            request = self._create_callback_from_odx(
+                request.request,
+                request.response,
+                request.response_data,
+                request.data_length,
+                request.callback,
+            )
+            odx_key = f"{IsoServices(request.request[0]).name}.{odx_param}"
+            self.callbacks[odx_key] = request
+
         callback = (
             request
             if isinstance(request, UdsCallback)
@@ -233,9 +259,12 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         The callback is stored inside the callbacks dictionary under the format
         `{"0x2E01": UdsCallback()}`_, where the keys are case-sensitive and
         correspond to the registered requests.
+        If more than one key references a callback, all are deleted.
 
         :param request: request for which the callback was registered as a
             string ("0x2E01"), an integer (0x2e01) or a list ([0x2e, 0x01]).
+            If the callback is ODX based you can also use the readable key as str
+            ("ReadByDataIdentifier.SoftwareVersion").
         """
         if isinstance(request, int):
             request = list(UdsCallback.int_to_bytes(request))
@@ -243,7 +272,10 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             request = self.format_data(request)
         with self._callback_lock:
             try:
-                self._callbacks.pop(request)
+                callback = self._callbacks.pop(request)
+                for key, value in list(self._callbacks.items()):
+                    if value == callback:
+                        self._callbacks.pop(key)
             except KeyError as e:
                 log.error(
                     f"Could not unregister callback {e}: no such callback registered."
@@ -293,6 +325,102 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         callback_to_execute(received_uds_data, self)
         return
+
+    def _format_uds_data(self, coded_values: List[int]) -> List[int]:
+        """Format a list of coded values into a list of bytes, needed for odx configured callbacks
+
+        :param coded_values: coded values of a odx request
+        :return: correctly formatted list of bytes for uds request
+        """
+        uds_data = []
+        for value in coded_values:
+            int_bytes = list(UdsCallback.int_to_bytes(value))
+            uds_data.extend(int_bytes)
+        return uds_data
+
+    def _create_callback_from_odx(
+        self,
+        request: Dict,
+        response: Optional[Union[int, List[int], Dict[str, str]]] = None,
+        response_data: Optional[Union[int, bytes]] = None,
+        data_length: Optional[int] = None,
+        callback: Optional[Callable] = None,
+    ) -> UdsCallback:
+        """Register a UdsCallback from a dictionary containing ODX keywords
+
+        :param request: contains the ODX data necessary to create a Uds request
+        :param response: full UDS response to send. If not set, respond with a basic
+            positive response with the specified response_data. Accepts ODX based dictionary
+        :param response_data: UDS data to send. If not set, respond with a basic
+            positive response containing no data.
+        :param data_length: optional length of the data to send if it is supposed
+            to have a fixed length (zero-padded).
+        :param callback: custom callback to register
+        :return: UdsCallback with request and response parsed from odx
+        """
+        if isinstance(request, dict):
+            coded_values = self.odx_parser.get_coded_values(
+                request["data"]["parameter"],
+                request["service"],
+                self.odx_parser.RefType.REQUEST,
+            )
+            uds_request = self._format_uds_data(coded_values)
+            if uds_request[0] != request["service"]:
+                log.error(
+                    f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
+                )
+                raise ValueError(
+                    f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
+                )
+        else:
+            uds_request = request
+
+        if isinstance(response, dict):
+            # implementation for single values
+            key, data = list(response.items())[0]
+            if key.lower() == "negative":
+                # create negative response: Negative response SID, request SID, NRC
+                full_uds_response = [
+                    UdsResponse.NEGATIVE_RESPONSE_SID,
+                    uds_request[0],
+                    data,
+                ]
+            else:
+                # create positive response by parsing odx and adding data from dict
+                coded_response_values = self.odx_parser.get_coded_values(
+                    key, uds_request[0] + 0x40, self.odx_parser.RefType.POS_RESPONSE
+                )
+                uds_response = self._format_uds_data(coded_response_values)
+                payload = list(data.encode())
+                full_uds_response = uds_response + payload
+        else:
+            full_uds_response = response
+
+        callback = UdsCallback(
+            uds_request, full_uds_response, response_data, data_length, callback
+        )
+        log.internal_debug(f"Callback configured from odx: {callback}")
+        return callback
+
+    def _get_odx_callback_param(
+        self,
+        request: Union[int, List[int], OdxRequestConfigDict],
+        response: Optional[Union[int, List[int], Dict[str, str]]],
+    ) -> str:
+        """Used to create a readable odx based callback key
+
+        :param request: contains the ODX data necessary to create a Uds request
+        :param response: full UDS response to send. If not set, respond with a basic
+            positive response with the specified response_data. Accepts ODX based dictionary
+        :return: name of the parameter
+        """
+        logging.debug(f"--> req {request}, res= {response}")
+        if isinstance(request, dict):
+            key = request["data"]["parameter"]
+            return key
+        else:
+            key = list(response.keys())[0]
+            return key
 
     def _abort_command(self) -> None:
         """Not used, satisfy interface."""

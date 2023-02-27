@@ -29,7 +29,7 @@ It also accepts three optional parameters:
     (overrides the one defined in the config.ini file)
 - ``odx_file_path``: path to the ECU diagnostic definition file in ODX format
 
-.. note:: the configuration through an ODX file is not supported yet.
+.. note:: To configure callbacks from a ODX file you need to use a different format for requests (see UdsCallback below).
 
 Find below a complete configuration example :
 
@@ -122,8 +122,30 @@ The available parameters for defining a callback are the following:
 
 - ``request`` (mandatory): the incoming UDS request on which the corresponding callback should be executed.
     The request can be passed as an integer (e.g. ``0x1003`` or as a list of integers ``[0x10, 0x03]``).
+    If the server has a ODX file specified it is possible to use ODX based callbacks with the following format:
+
+    .. code:: python
+
+        odx_request = {
+            "service": IsoServices.ReadDataByIdentifier,  # the SID
+            "data": {
+                "parameter": "sd_name"  # name of the data point in the <SD> element
+            }
+        }
+
 - ``response`` (optional): the UDS response to send if the registered request is received.
     Passed format is the same as for the request parameter.
+    If the server has a ODX file specified, you can also use a ODX based format as response:
+
+    .. code:: python
+
+        odx_response = {"sd_name": "your_data"}
+
+        # for a negative response, the following format is expected:
+        # the key needs to be the string "negative" (case insensitive)
+        # nrc is a uds negative response code as int
+        odx_response = {"Negative": nrc}
+
 - ``response_data`` (optional): the UDS data to send with the response. If the response is specified
     the data is simply appended to the response. This parameter can be passed as an integer or as
     bytes (e.g. ``b"DATA"``).
@@ -281,6 +303,58 @@ Find below an example showing its usage, along with a custom callback function d
 
             for callback in uds_aux.callbacks:
                 uds_aux.unregister_callback(callback)
+
+If the :py:class:`~pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.UdsServerAuxiliary` was configured with a
+valid ODX file, you can use ODX based configuration of callbacks like this (same format as above):
+
+.. code:: python
+
+    import typing
+
+    import pykiso
+    from pykiso.auxiliaries import uds_aux
+
+
+    @pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=[uds_aux])
+    class ExampleUdsServerTest(pykiso.BasicTest):
+
+        def setUp(self):
+            """Register various callbacks for the test."""
+            # handle extended diagnostics session request
+            # respond to an incoming request with default [0x50, 0x03]
+            uds_aux.register_callback(
+                request={
+                    "service": IsoServices.DiagnosticSessionControl,
+                    "data": {
+                        "parameter": "Extended_DiagnosticSession"
+                    }
+                }
+            )
+            odx_callback = UdsCallback(
+                request={
+                    "service": IsoServices.ReadDataByIdentifier,
+                    "data": {
+                        "parameter": "SoftwareVersion"
+                },
+                response={"SoftwareVersion": "1.33.7"}
+            )
+            # handle incoming read data by identifier request with identifier parsed from ODX,
+            # e.g. [0x22, 0xA4, 0x55]
+            # the response will be built by:
+            # - creating the positive response corresponding to the request: 0x62A455312E33332E37
+            uds_aux.register_callback(odx_callback)
+
+        def test_run(self):
+            """Actual test."""
+            # can access the odx based callbacks with readable strings as well:
+            read_software_version = uds_server_auxiliary.callbacks["ReadDataByIdentifier.SoftwareVersion"]
+
+        def tearDown(self):
+            """Unregister all callbacks registered by the auxiliary."""
+
+            for callback in uds_aux.callbacks:
+                uds_aux.unregister_callback(callback)
+
 
 Accessing UDS callbacks
 ~~~~~~~~~~~~~~~~~~~~~~~
