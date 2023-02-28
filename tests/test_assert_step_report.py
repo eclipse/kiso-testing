@@ -1,3 +1,4 @@
+import inspect
 import pathlib
 import sys
 from collections import OrderedDict
@@ -242,3 +243,44 @@ def test_is_test_success():
 
     assert assert_step_report.is_test_success(test_ok)
     assert assert_step_report.is_test_success(test_fail) is False
+
+
+@pytest.mark.parametrize(
+    "parent_method",
+    [
+        "setUp",
+        "tearDown",
+        "handle_interaction",
+        "test_run",
+        "test_whaou",
+    ],
+)
+def test_determine_parent_test_function(mocker, parent_method):
+    frame = inspect.FrameInfo(
+        "frame",
+        "filename",
+        "lineno",
+        parent_method,
+        "code_context",
+        "index",
+    )
+    mocker.patch.object(inspect, "stack", return_value=[frame])
+
+    function = assert_step_report.determine_parent_test_function("whaou_function")
+
+    assert function == parent_method
+
+
+@pytest.mark.parametrize(
+    "function_name",
+    [
+        "setUp",
+        "tearDown",
+        "handle_interaction",
+        "test_whaou",
+    ],
+)
+def test_determine_parent_test_function_with_test_function(function_name):
+    function = assert_step_report.determine_parent_test_function(function_name)
+
+    assert function == function_name
