@@ -337,9 +337,7 @@ def assert_decorator(assert_method: types.MethodType):
 
             # 1.2. Get 'received" value (Always 1st argument)
             assert_value = list(arguments.values())[0]
-            received = (
-                assert_value if assert_name not in MUTE_CONTENT_ASSERTION else ""
-            )
+            received = assert_value if assert_name not in MUTE_CONTENT_ASSERTION else ""
 
             # 1.3. Get variable name
             var_name = _get_variable_name(f_back, assert_name)
