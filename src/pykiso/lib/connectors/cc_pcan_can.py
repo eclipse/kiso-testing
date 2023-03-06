@@ -23,7 +23,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 try:
     import can
@@ -379,6 +379,7 @@ class CCPCanCan(CChannel):
             log.exception(f"encountered error while receiving message via {self}")
             return {"msg": None}
 
+    # TODO: refactor to use trc reader when new version of python can is release
     def _merge_trc(self) -> None:
         """Merge multiple trc files in one."""
 
@@ -399,45 +400,107 @@ class CCPCanCan(CChannel):
                 result_trace = Path(self.trace_path / self.trace_name)
                 list_of_traces[0].rename(result_trace)
 
-            list_of_traces.pop(0)
             # End of the trace header
             first_message_line = 33
+
+            # Get start time of the first trc file
+            with open(list_of_traces[0], "r") as trc:
+                data = trc.read().splitlines(True)
+
+                first_trc_start_time = CCPCanCan._get_trace_start_time(
+                    data, first_message_line
+                )
+                message_idx = len(data[first_message_line:])
+
+            list_of_traces.pop(0)
 
             # Append all trace files
             for file in list_of_traces:
                 with open(file, "r") as trc:
                     data = trc.read().splitlines(True)
-                with open(result_trace, "a") as merged_trc:
-                    merged_trc.writelines(data[first_message_line:])
-                os.remove(file)
 
-            self._fix_message_numbers(result_trace, first_message_line)
+                    # Get offset between current and first trc file
+                    trc_start_time = CCPCanCan._get_trace_start_time(
+                        data, first_message_line
+                    )
+                    offset = trc_start_time - first_trc_start_time
+
+                    # Fix message number and time offset inconstistancies
+                    corrected_data = CCPCanCan._fix_merge_inconstistancies(
+                        data[first_message_line:], offset, message_idx
+                    )
+                    message_idx += len(data[first_message_line:])
+
+                with open(result_trace, "a") as merged_trc:
+                    merged_trc.writelines(corrected_data)
+                os.remove(file)
 
         except IndexError:
             log.internal_warning("No trace to merge")
 
-    def _fix_message_numbers(
-        self, merged_trace: Union[Path, str], first_message_line: int
-    ) -> None:
-        """Parse message numbers in the merged file and fix inconsistencies caused by the
-        merging process.
+    @staticmethod
+    def _fix_merge_inconstistancies(
+        data: List[str], offset: float, message_idx: int
+    ) -> List[str]:
+        """Fix merge inconstistancies such as message number and time offset
 
-        :param merged_trace: merged trace file to fix
-        :param first_message_line: line number of the first logged can message
+        :param data: can messages to fix
+        :param offset: time offset beetween first trace and current trace in milliseconds
+        :param message_idx: message number from last trace file
+
+        :return: corrected can messages
         """
-        message_nb_index = 7
-        with open(merged_trace, "r+") as trc:
-            merged_data_lines = trc.read().splitlines(True)
+        message_number_idx = 7
+        time_stamp_idx = 22
 
-            # Parsing to keep the message numbers consistent after the merge
-            for line_number in range(first_message_line, len(merged_data_lines)):
-                message_number = str((line_number + 1) - first_message_line)
-                merged_data_lines[line_number] = (
-                    message_number.rjust(message_nb_index)
-                    + merged_data_lines[line_number][message_nb_index:]
-                )
-            trc.seek(0)
-            trc.writelines(merged_data_lines)
+        for line_number in range(len(data)):
+            message_number = str(line_number + 1 + message_idx)
+            line = data[line_number]
+
+            # Format time offset
+            time_stamp = round(
+                float(line[message_number_idx:time_stamp_idx]) + offset, 3
+            )
+            time_stamp = "{:10.3f}".format(time_stamp)
+
+            # Fix message number
+            data[line_number] = (
+                message_number.rjust(message_number_idx)
+                + time_stamp.rjust(time_stamp_idx - message_number_idx - 1)
+                + line[time_stamp_idx - 1 :]
+            )
+        return data
+
+    @staticmethod
+    def _get_trace_start_time(data: List[str], first_message_line: int) -> float:
+        """Get trace start time.
+
+        :param trace: path of the trc file
+        :param first_message_line: first line after the header
+
+        :raises ValueError: raised if no start time is found in the trace
+        :return: start time in milliseconds
+        """
+        # Search for the start time in the header of the tace
+        for line in data[:first_message_line]:
+            if line.find(";$STARTTIME=") != -1:
+                start_time = float(line[len(";$STARTTIME=") :])
+                return CCPCanCan._get_start_time_from_peak_format(start_time)
+        raise ValueError("No start time was found in the trace file")
+
+    @staticmethod
+    def _get_start_time_from_peak_format(start_time: float) -> float:
+        """Get the start time of a trc file in ms since the start of the day from the
+
+        :param start_time: float using the format bellow (from PEAK CAN)
+            Integral part = Number of days that have passed since 30. December 1899.
+            Fractional Part = Fraction of a 24-hour day that has elapsed, resolution is 1
+                millisecond.
+
+        :return: start time of the trc file in ms since the start of the day
+        """
+        ms_in_a_day = 86400000
+        return (start_time % 1) * ms_in_a_day
 
     def __del__(self) -> None:
         """Destructor method."""
