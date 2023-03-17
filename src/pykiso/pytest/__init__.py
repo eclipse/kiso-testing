@@ -1,21 +1,33 @@
-# session.config.hook.pytest_collectstart(collector=module_collector)
-# module_report = session.config.hook.pytest_make_collect_report(collector=module_collector)
-# session.config.hook.pytest_collectreport(report=module_report)
+##########################################################################
+# Copyright (c) 2010-2023 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0
+##########################################################################
 
-# for collected_test_case in module_collector.collect():
-#     session.config.hook.pytest_collectstart(collector=collected_test_case)
-#     class_report = session.config.hook.pytest_make_collect_report(collector=collected_test_case)
-#     session.config.hook.pytest_collectreport(report=class_report)
+"""
+pykiso plugin for pytest
+************************
 
-#     for collected_test_method in collected_test_case.collect():
-#         session.config.hook.pytest_collectstart(collector=collected_test_method)
-#         session.config.hook.pytest_itemcollected(item=collected_test_method)
-#         collected_test_items.append(collected_test_method)
+:module: pytest
 
+:synopsis: integrate pykiso features within pytest.
 
-# collected_test_suites.append(
-#     sorted(
-#         collected_test_items,
-#         key=lambda tc: tc_sort_key(tc.parent._obj(tc.name))
-#     )
-# )
+.. currentmodule:: pytest
+
+"""
+
+from . import collection, commandline, hooks, logging, markers, reporting
+from .collection import (
+    pytest_addhooks,
+    pytest_auxiliary_load,
+    pytest_auxiliary_start,
+    pytest_auxiliary_stop,
+    pytest_collection,
+    pytest_sessionfinish,
+)
+from .commandline import pytest_addoption, pytest_cmdline_main
+from .logging import pytest_sessionstart
+from .reporting import pytest_runtest_makereport
