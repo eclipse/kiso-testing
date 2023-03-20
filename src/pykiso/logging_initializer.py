@@ -67,6 +67,7 @@ def initialize_logging(
     log_level: str,
     verbose: bool,
     report_type: str = None,
+    yaml_name: str = None,
 ) -> logging.Logger:
     """Initialize the logging.
 
@@ -77,6 +78,7 @@ def initialize_logging(
     :param log_level: any of DEBUG, INFO, WARNING, ERROR
     :param verbose: activate internal kiso logging if True
     :param report_type: expected report type (junit, text,...)
+    :param yaml_name: name of current yaml config file
 
     :returns: configured Logger
     """
@@ -114,8 +116,10 @@ def initialize_logging(
     # if log_path is given create a file handler
     if log_path is not None:
         log_path = Path(log_path)
-        if log_path.is_dir():
-            fname = time.strftime("%Y-%m-%d_%H-%M-test.log")
+        if log_path.suffix == "":
+            if not log_path.is_dir():
+                log_path.mkdir()
+            fname = time.strftime(f"%Y-%m-%d_%H-%M-{yaml_name}.log")
             log_path = log_path / fname
         file_handler = logging.FileHandler(log_path, "a+")
         file_handler.setFormatter(log_format)

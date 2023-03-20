@@ -17,17 +17,21 @@ from pykiso import logging_initializer
 
 
 @pytest.mark.parametrize(
-    "path, level, expected_level, verbose, report_type",
+    "path, level, expected_level, verbose, report_type, yaml_name",
     [
-        (None, "INFO", logging.INFO, False, "junit"),
-        (os.getcwd(), "WARNING", logging.WARNING, True, "text"),
-        (None, "ERROR", logging.ERROR, False, None),
+        (None, "INFO", logging.INFO, False, "junit", None),
+        (os.getcwd(), "WARNING", logging.WARNING, True, "text", None),
+        (os.getcwd(), "WARNING", logging.WARNING, True, "text", "conf_file.yaml"),
+        (None, "ERROR", logging.ERROR, False, None, None),
     ],
 )
-def test_initialize_logging(mocker, path, level, expected_level, verbose, report_type):
+def test_initialize_logging(
+    mocker, path, level, expected_level, verbose, report_type, yaml_name
+):
 
     mocker.patch("logging.Logger.addHandler")
     mocker.patch("logging.FileHandler.__init__", return_value=None)
+    mkdir_mock = mocker.patch("pathlib.Path.mkdir")
     flush_mock = mocker.patch("logging.StreamHandler.flush", return_value=None)
 
     if path:
@@ -37,6 +41,11 @@ def test_initialize_logging(mocker, path, level, expected_level, verbose, report
 
     if report_type == "junit":
         flush_mock.assert_called()
+
+    if path == os.getcwd():
+        mkdir_mock.assert_called()
+    else:
+        mkdir_mock.assert_not_called()
     if verbose is True:
         assert hasattr(logging, "INTERNAL_INFO")
         assert hasattr(logging, "INTERNAL_WARNING")

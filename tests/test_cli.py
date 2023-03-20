@@ -7,6 +7,8 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+from pathlib import Path
+
 import click
 import pytest
 from click.testing import CliRunner
@@ -104,3 +106,13 @@ def test_check_file_extension(mocker):
     paths = ("./complete/success.yaml", "./success.yml")
     actual = cli.check_file_extension(click_context_mock, click_param_mock, paths)
     assert actual == paths
+
+
+def test_get_file_without_extension(mocker):
+    path = "dir/test_file.py"
+    result = cli.get_file_name_without_extension(path)
+    assert result == "test_file"
+
+    path = Path("dir/test_file.py")
+    result = cli.get_file_name_without_extension(path)
+    assert result == "test_file"

@@ -20,6 +20,7 @@ Integration Test Framework
 """
 import collections
 import logging
+import os
 import pprint
 import sys
 import time
@@ -94,6 +95,18 @@ def check_file_extension(
     return paths
 
 
+def get_file_name_without_extension(path: PathType) -> str:
+    """Get name of a file without its extension
+
+    :param path: path of the file
+
+    :return: file name without extension
+    """
+    full_name = os.path.basename(path)
+    file_name = os.path.splitext(full_name)
+    return file_name[0]
+
+
 @click.command(
     context_settings={
         "help_option_names": ["-h", "--help"],
@@ -112,10 +125,11 @@ def check_file_extension(
 )
 @click.option(
     "-l",
-    "--log-path",
+    "--log-paths",
     required=False,
     default=None,
     type=click.Path(writable=True),
+    multiple=True,
     help="path to log-file or folder. If not set will log to STDOUT",
 )
 @click.option(
@@ -175,7 +189,7 @@ def check_file_extension(
 def main(
     click_context: click.Context,
     test_configuration_file: Tuple[PathType],
-    log_path: PathType = None,
+    log_paths: Tuple[PathType] = None,
     log_level: str = "INFO",
     report_type: str = "text",
     step_report: Optional[PathType] = None,
@@ -193,7 +207,7 @@ def main(
     \f
     :param click_context: click context
     :param test_configuration_file: path to the YAML config file
-    :param log_path: path to an existing directory or file to write logs to
+    :param log_paths: path to existing directories or files to write logs to
     :param log_level: any of DEBUG, INFO, WARNING, ERROR
     :param report_type: if "test", the standard report, if "junit", a junit report is generated
     :param variant: allow the user to execute a subset of tests based on variants
@@ -204,9 +218,31 @@ def main(
     :param verbose: activate logging for the whole framework
     """
 
+    log_index = 0
     for config_file in test_configuration_file:
+
         # Set the logging
-        logger = initialize_logging(log_path, log_level, verbose, report_type)
+        if log_paths:
+            yaml_name = get_file_name_without_extension(config_file)
+            # Put all logs in one file
+            if len(log_paths) == 1:
+                logger = initialize_logging(
+                    log_paths[0], log_level, verbose, report_type, yaml_name
+                )
+            # Log in different files for each yaml
+            elif len(log_paths) == len(test_configuration_file):
+                logger = initialize_logging(
+                    log_paths[log_index], log_level, verbose, report_type, yaml_name
+                )
+                log_index += 1
+            else:
+                raise ValueError(
+                    f"Mismatch: {len(test_configuration_file)} yaml config files provided but {len(log_paths)} log files"
+                )
+        else:
+            log_paths = None
+            logger = initialize_logging(log_paths, log_level, verbose, report_type)
+
         # Get YAML configuration
         cfg_dict = parse_config(config_file)
         # Run tests
