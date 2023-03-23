@@ -21,7 +21,7 @@ from pykiso import logging_initializer
     [
         (None, "INFO", logging.INFO, False, "junit", None),
         (os.getcwd(), "WARNING", logging.WARNING, True, "text", None),
-        (os.getcwd(), "WARNING", logging.WARNING, True, "text", "conf_file.yaml"),
+        ("test/test", "WARNING", logging.WARNING, True, "text", "conf_file.yaml"),
         (None, "ERROR", logging.ERROR, False, None, None),
     ],
 )
@@ -34,15 +34,12 @@ def test_initialize_logging(
     mkdir_mock = mocker.patch("pathlib.Path.mkdir")
     flush_mock = mocker.patch("logging.StreamHandler.flush", return_value=None)
 
-    if path:
-        path = Path(path)
-
     logger = logging_initializer.initialize_logging(path, level, verbose, report_type)
 
     if report_type == "junit":
         flush_mock.assert_called()
 
-    if path == os.getcwd():
+    if path == "test/test":
         mkdir_mock.assert_called()
     else:
         mkdir_mock.assert_not_called()
