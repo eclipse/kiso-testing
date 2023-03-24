@@ -95,18 +95,6 @@ def check_file_extension(
     return paths
 
 
-def get_file_name_without_extension(path: PathType) -> str:
-    """Get name of a file without its extension
-
-    :param path: path of the file
-
-    :return: file name without extension
-    """
-    full_name = os.path.basename(path)
-    file_name = os.path.splitext(full_name)
-    return file_name[0]
-
-
 @click.command(
     context_settings={
         "help_option_names": ["-h", "--help"],
@@ -223,7 +211,7 @@ def main(
 
         # Set the logging
         if log_paths:
-            yaml_name = get_file_name_without_extension(config_file)
+            yaml_name = Path(config_file).stem
             # Put all logs in one file
             if len(log_paths) == 1:
                 logger = initialize_logging(
