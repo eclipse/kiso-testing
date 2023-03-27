@@ -206,8 +206,7 @@ def main(
     :param verbose: activate logging for the whole framework
     """
 
-    log_index = 0
-    for config_file in test_configuration_file:
+    for idx, config_file in enumerate(test_configuration_file):
 
         # Set the logging
         if log_path:
@@ -220,9 +219,8 @@ def main(
             # Log in different files for each yaml
             elif len(log_path) == len(test_configuration_file):
                 logger = initialize_logging(
-                    log_path[log_index], log_level, verbose, report_type, yaml_name
+                    log_path[idx], log_level, verbose, report_type, yaml_name
                 )
-                log_index += 1
             else:
                 raise click.UsageError(
                     f"Mismatch: {len(test_configuration_file)} yaml config files provided but {len(log_path)} log files"
