@@ -116,9 +116,8 @@ def initialize_logging(
     # if log_path is given create a file handler
     if log_path is not None:
         log_path = Path(log_path)
-        if log_path.suffix == "":
-            if not log_path.is_dir():
-                log_path.mkdir()
+        if not log_path.is_dir():
+            log_path.mkdir(exist_ok=True, parent=True)
             fname = time.strftime(f"%Y-%m-%d_%H-%M-{yaml_name}.log")
             log_path = log_path / fname
         file_handler = logging.FileHandler(log_path, "a+")
