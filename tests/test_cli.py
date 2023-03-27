@@ -7,6 +7,8 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+from pathlib import Path
+
 import click
 import pytest
 from click.testing import CliRunner
