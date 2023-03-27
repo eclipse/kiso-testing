@@ -113,7 +113,7 @@ def check_file_extension(
 )
 @click.option(
     "-l",
-    "--log-paths",
+    "--log-path",
     required=False,
     default=None,
     type=click.Path(writable=True),
@@ -177,7 +177,7 @@ def check_file_extension(
 def main(
     click_context: click.Context,
     test_configuration_file: Tuple[PathType],
-    log_paths: Tuple[PathType] = None,
+    log_path: Tuple[PathType] = None,
     log_level: str = "INFO",
     report_type: str = "text",
     step_report: Optional[PathType] = None,
@@ -195,7 +195,7 @@ def main(
     \f
     :param click_context: click context
     :param test_configuration_file: path to the YAML config file
-    :param log_paths: path to existing directories or files to write logs to
+    :param log_path: path to existing directories or files to write logs to
     :param log_level: any of DEBUG, INFO, WARNING, ERROR
     :param report_type: if "test", the standard report, if "junit", a junit report is generated
     :param variant: allow the user to execute a subset of tests based on variants
@@ -210,26 +210,26 @@ def main(
     for config_file in test_configuration_file:
 
         # Set the logging
-        if log_paths:
+        if log_path:
             yaml_name = Path(config_file).stem
             # Put all logs in one file
-            if len(log_paths) == 1:
+            if len(log_path) == 1:
                 logger = initialize_logging(
-                    log_paths[0], log_level, verbose, report_type, yaml_name
+                    log_path[0], log_level, verbose, report_type, yaml_name
                 )
             # Log in different files for each yaml
-            elif len(log_paths) == len(test_configuration_file):
+            elif len(log_path) == len(test_configuration_file):
                 logger = initialize_logging(
-                    log_paths[log_index], log_level, verbose, report_type, yaml_name
+                    log_path[log_index], log_level, verbose, report_type, yaml_name
                 )
                 log_index += 1
             else:
-                raise ValueError(
-                    f"Mismatch: {len(test_configuration_file)} yaml config files provided but {len(log_paths)} log files"
+                raise click.UsageError(
+                    f"Mismatch: {len(test_configuration_file)} yaml config files provided but {len(log_path)} log files"
                 )
         else:
-            log_paths = None
-            logger = initialize_logging(log_paths, log_level, verbose, report_type)
+            log_path = None
+            logger = initialize_logging(log_path, log_level, verbose, report_type)
 
         # Get YAML configuration
         cfg_dict = parse_config(config_file)
