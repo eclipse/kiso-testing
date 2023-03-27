@@ -39,7 +39,7 @@ def test_initialize_logging(
     if report_type == "junit":
         flush_mock.assert_called()
 
-    if path == "test/test":
+    if path is not None:
         mkdir_mock.assert_called()
     else:
         mkdir_mock.assert_not_called()
