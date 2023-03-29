@@ -18,18 +18,13 @@ Integration Test Framework
 .. currentmodule:: cli
 
 """
-import collections
 import logging
-import os
 import pprint
 import sys
-import time
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import click
-
-from pykiso.test_coordinator.test_execution import ExitCode
 
 from . import __version__
 from .config_parser import parse_config
@@ -208,9 +203,9 @@ def main(
 
     for idx, config_file in enumerate(test_configuration_file):
 
+        yaml_name = Path(config_file).stem
         # Set the logging
         if log_path:
-            yaml_name = Path(config_file).stem
             # Put all logs in one file
             if len(log_path) == 1:
                 logger = initialize_logging(
@@ -239,7 +234,7 @@ def main(
         user_tags = eval_user_tags(click_context)
 
         exit_code = test_execution.execute(
-            cfg_dict, report_type, user_tags, step_report, pattern, failfast
+            cfg_dict, report_type, yaml_name, user_tags, step_report, pattern, failfast
         )
         ConfigRegistry.delete_aux_con()
         for handler in logging.getLogger().handlers:
