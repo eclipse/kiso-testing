@@ -37,7 +37,7 @@ from pykiso.test_coordinator.test_execution import apply_tag_filter
 from pykiso.test_coordinator.test_suite import tc_sort_key
 from pykiso.test_setup.config_registry import ConfigRegistry
 
-from .utils import get_base_testcase, is_kiso_testcase
+from .utils import *
 
 if TYPE_CHECKING:
     from _pytest.config import Config
@@ -48,16 +48,19 @@ if TYPE_CHECKING:
     from pykiso.types import AuxiliaryAlias
 
 
+@export
 @pytest.hookimpl
 def pytest_auxiliary_start(aux: DTAuxiliaryInterface):
     return aux.create_instance()
 
 
+@export
 @pytest.hookimpl
 def pytest_auxiliary_stop(aux: DTAuxiliaryInterface):
     return aux.delete_instance()
 
 
+@export
 @pytest.hookimpl
 def pytest_auxiliary_load(aux: DTAuxiliaryInterface | str):
     if isinstance(aux, str):
@@ -65,6 +68,7 @@ def pytest_auxiliary_load(aux: DTAuxiliaryInterface | str):
     return aux
 
 
+@export
 def pytest_addhooks(pluginmanager: PytestPluginManager):
     from pykiso.pytest import hooks
 
@@ -131,7 +135,26 @@ def sort_and_filter_items(
     return collected_test_items
 
 
-def add_auxiliary_fixture(session: Session, aux_alias: str):
+def auxiliary_fixture(request: FixtureRequest, aux: AuxiliaryAlias):
+    """Dynamically added fixture for each test auxiliary.
+
+    With the appropriate hooks, a user can customize:
+    - how the auxiliaries should be loaded (by default through the
+        :py:class:`~pykiso.test_setup.dynamic_loader.DynamicImportLinker`)
+    - how the auxiliaries should be started (by default by calling ``create_instance``)
+    - how the auxiliaries should be stopped (by default by calling ``delete_instance``)
+
+    :param request: fixture request providing access to the defined hooks.
+    :param aux: alias of the auxiliary.
+    :yield: the corresponding auxiliary instance.
+    """
+    aux = request.config.hook.pytest_auxiliary_load(aux=aux)
+    request.config.hook.pytest_auxiliary_start(aux=aux)
+    yield aux
+    request.config.hook.pytest_auxiliary_stop(aux=aux)
+
+
+def create_auxiliary_fixture(session: Session, aux_alias: str):
     """Dynamically create fixtures for the configured auxiliaries available through
     the specified alias.
 
@@ -146,24 +169,6 @@ def add_auxiliary_fixture(session: Session, aux_alias: str):
         """Return the scope for all auxiliary fixtures."""
         scope = config.getini("auxiliary_scope")
         return scope
-
-    def auxiliary_fixture(request: FixtureRequest, aux: str):
-        """Dynamically added fixture for each test auxiliary.
-
-        With the appropriate hooks, a user can customize:
-        - how the auxiliaries should be loaded (by default through the
-          :py:class:`~pykiso.test_setup.dynamic_loader.DynamicImportLinker`)
-        - how the auxiliaries should be started (by default by calling ``create_instance``)
-        - how the auxiliaries should be stopped (by default by calling ``delete_instance``)
-
-        :param request: fixture request providing access to the defined hooks.
-        :param aux: alias of the auxiliary.
-        :yield: the corresponding auxiliary instance.
-        """
-        aux = request.config.hook.pytest_auxiliary_load(aux=aux)
-        request.config.hook.pytest_auxiliary_start(aux=aux)
-        yield aux
-        request.config.hook.pytest_auxiliary_stop(aux=aux)
 
     # register the fixture
     aux_func = partial(auxiliary_fixture, aux=aux_alias)
@@ -180,6 +185,7 @@ def add_auxiliary_fixture(session: Session, aux_alias: str):
     ]
 
 
+@export
 def pytest_collection(session: Session):
     """Modify pytest collection to behave like pykiso when a YAML file is provided.
 
@@ -194,57 +200,65 @@ def pytest_collection(session: Session):
     :param aux: alias of the auxiliary.
     :yield: the corresponding auxiliary instance.
     """
-    for arg in session.config.args:
-        if arg.endswith(".yaml"):
-            # parse the provided YAML file
-            cfg = parse_config(arg)
 
-            # register auxiliaries and associated connectors and make fixtures out of them
-            ConfigRegistry.register_aux_con(cfg)
-            for aux_alias in ConfigRegistry.get_auxes_alias():
-                add_auxiliary_fixture(session, aux_alias)
+    kiso_configs = [arg for arg in session.config.args if arg.endswith(".yaml")]
+    if not kiso_configs:
+        return
 
-            test_suites = cfg.get("test_suite_list")
-            if not test_suites:
-                return
+    arg = kiso_configs.pop(0)
+    session.config.args.remove(arg)
 
-            collected_test_suites = []
-            for test_suite in test_suites:
-                # get each test module within the defined suite directory that matched the pattern
-                test_modules = Path(test_suite["suite_dir"]).glob(
-                    f"**/{test_suite['test_filter_pattern']}"
-                )
-                # sort the test items separately for each defined test suite
-                collected_kiso_testcases, collected_pytest_testcases = list(), list()
-                for test_module in test_modules:
-                    module_collector: pytest.Module = pytest.Module.from_parent(
-                        session, path=test_module
-                    )
-                    for tc in session.genitems(module_collector):
-                        if is_kiso_testcase(tc):
-                            collected_kiso_testcases.append(tc)
-                        else:
-                            collected_pytest_testcases.append(tc)
+    # parse the provided YAML file
+    cfg = parse_config(arg)
 
-                collected_test_suites.append(
-                    [collected_kiso_testcases, collected_pytest_testcases]
-                )
+    # register auxiliaries and associated connectors and make fixtures out of them
+    ConfigRegistry.register_aux_con(cfg)
+    for aux_alias in ConfigRegistry.get_auxes_alias():
+        create_auxiliary_fixture(session, aux_alias)
 
-            collected_test_items = sort_and_filter_items(
-                collected_test_suites, session.config.option.tags
+    test_suites = cfg.get("test_suite_list")
+    if not test_suites:
+        return
+
+    collected_test_suites = []
+    for test_suite in test_suites:
+        # get each test module within the defined suite directory that matched the pattern
+        test_modules = Path(test_suite["suite_dir"]).glob(
+            f"**/{test_suite['test_filter_pattern']}"
+        )
+        # sort the test items separately for each defined test suite
+        collected_kiso_testcases, collected_pytest_testcases = list(), list()
+        for test_module in test_modules:
+            module_collector: pytest.Module = pytest.Module.from_parent(
+                session, path=test_module
             )
-            # run modifyitems hook on the collected items (allow filtering based on -k option)
-            session.config.hook.pytest_collection_modifyitems(
-                session=session, config=session.config, items=collected_test_items
-            )
-            # set required session attributes once everything has been collected and filtered out
-            session.items = collected_test_items
-            session.testscollected = len(session.items)
-            # run finish hook and return the collected items, which will disable any subsequent pytest_collection hook execution
-            session.config.hook.pytest_collection_finish(session=session)
-            return collected_test_items
+            for tc in session.genitems(module_collector):
+                if is_kiso_testcase(tc):
+                    collected_kiso_testcases.append(tc)
+                else:
+                    collected_pytest_testcases.append(tc)
+
+        collected_test_suites.append(
+            [collected_kiso_testcases, collected_pytest_testcases]
+        )
+
+    collected_test_items = sort_and_filter_items(
+        collected_test_suites, session.config.option.tags
+    )
+    # run modifyitems hook on the collected items (allow filtering based on -k option)
+    session.config.hook.pytest_collection_modifyitems(
+        session=session, config=session.config, items=collected_test_items
+    )
+
+    # set required session attributes once everything has been collected and filtered out
+    session.items = collected_test_items
+    session.testscollected = len(collected_test_items)
+    # run finish hook and return the collected items, which will disable any subsequent pytest_collection hook execution
+    session.config.hook.pytest_collection_finish(session=session)
+    return collected_test_items
 
 
+@export
 def pytest_sessionfinish(session: Session, exitstatus: pytest.ExitCode):
     if ConfigRegistry._linker is not None:
         ConfigRegistry.delete_aux_con()

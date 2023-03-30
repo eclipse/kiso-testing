@@ -23,12 +23,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .utils import export
+
 if TYPE_CHECKING:
     from _pytest.config import Config
     from _pytest.config.argparsing import Parser
     from _pytest.main import PytestPluginManager
 
 
+@export
 def pytest_cmdline_main(config: Config):
     """Extract and reformat the CLI-provided tags as a dictionary.
 
@@ -48,6 +51,7 @@ def pytest_cmdline_main(config: Config):
     config.option.tags = format_tags(user_tags) if user_tags is not None else None
 
 
+@export
 def pytest_addoption(parser: Parser, pluginmanager: PytestPluginManager) -> None:
     """Add the 'tags' option to pytest's command line interface.
 

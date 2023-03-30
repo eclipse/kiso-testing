@@ -28,7 +28,7 @@ repos:
           - "--max-line-length=79"
           - "--max-complexity=18"
           - "--select=B,C,E,F,W,T4,B9"
-          - "--ignore=E203,E266,E501,W503,F401,E402"
+          - "--ignore=E203,E266,E501,W503,F401,F403,F405,E402"
           - "--exclude=docs"
         files: ^src/pykiso
 -   repo: https://github.com/commitizen-tools/commitizen.git

@@ -29,11 +29,14 @@ import pytest
 
 from pykiso.logging_initializer import initialize_logging
 
+from .utils import *
+
 if TYPE_CHECKING:
     from _pytest.logging import LoggingPlugin
     from _pytest.main import Session
 
 
+@export
 @pytest.hookimpl(trylast=True)
 def pytest_sessionstart(session: Session):
     """Initialize pykiso logging and patch the resulting loggers onto
@@ -53,8 +56,8 @@ def pytest_sessionstart(session: Session):
         log_path=None,
         log_level=logging.getLevelName(pytest_logger.log_cli_level),
         report_type="text",
-        # display internal logs at least -v is provided
-        verbose=(session.config.getoption("verbose") > 0),
+        # display internal logs at least -vv is provided
+        verbose=(session.config.getoption("verbose") > 1),
     )
     root_logger = logging.getLogger()
 

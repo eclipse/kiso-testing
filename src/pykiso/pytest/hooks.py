@@ -28,7 +28,7 @@ from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface
 
 @pytest.hookspec(firstresult=True)
 def pytest_auxiliary_load(aux: str) -> DTAuxiliaryInterface | None:
-    """:meta: private"""
+    """:meta private:"""
 
 
 @pytest.hookspec(firstresult=True)

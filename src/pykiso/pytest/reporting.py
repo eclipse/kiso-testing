@@ -23,9 +23,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from _pytest.mark import Mark
-
-from .utils import get_base_testcase, is_kiso_testcase
+from .utils import *
 
 if TYPE_CHECKING:
     from _pytest.nodes import Item
@@ -34,6 +32,7 @@ if TYPE_CHECKING:
     from pykiso.test_coordinator.test_case import BasicTest
 
 
+@export
 def pytest_runtest_makereport(item: Item, call: CallInfo[None]) -> None:
     """Add the test IDs to the JUnit report to the user properties in order to add
     them to the generated reports.
@@ -41,7 +40,10 @@ def pytest_runtest_makereport(item: Item, call: CallInfo[None]) -> None:
     :param item: collected test item.
     :param call: the result of the test item's execution.
     """
-    if is_kiso_testcase(item) and call.when == "setup":
+    if call.when != "setup":
+        return
+
+    if is_kiso_testcase(item):
         kiso_tc: BasicTest = get_base_testcase(item)
         test_ids = kiso_tc.test_ids
     else:

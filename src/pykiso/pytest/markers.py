@@ -21,10 +21,13 @@ Markers
 
 from _pytest.config import Config
 
+from .utils import *
 
+
+@export
 def pytest_configure(config: Config):
     config.addinivalue_line(
         "markers",
-        "test_ids(DUT1=[ABC123, DEF456], DUT2=[123ABC]): "
+        "test_ids(DUT1=['ABC123', 'DEF456'], DUT2=['123ABC']): "
         "marker for test IDs or test-related requirements that will appear in the report",
     )

@@ -21,18 +21,37 @@ Common utilities
 
 from __future__ import annotations
 
+import sys
 import unittest
+from typing import Callable, TypeVar
 
 from _pytest.unittest import TestCaseFunction
 
 from pykiso.test_coordinator.test_case import BasicTest
 from pykiso.test_coordinator.test_suite import BaseTestSuite
 
+T = TypeVar("T", bound=Callable)
 
+
+def export(func: T) -> T:
+    """Decorator to add a function or a class to its module's ``__all__``."""
+    mod = sys.modules[func.__module__]
+    if hasattr(mod, "__all__"):
+        mod.__all__.append(func.__name__)
+    else:
+        mod.__all__ = [func.__name__]
+    return func
+
+
+export(export)
+
+
+@export
 def get_base_testcase(item: TestCaseFunction) -> unittest.TestCase:
     return item.parent._obj(item.name)
 
 
+@export
 def is_kiso_testcase(tc):
     return isinstance(tc, TestCaseFunction) and isinstance(
         get_base_testcase(tc), (BasicTest, BaseTestSuite)
