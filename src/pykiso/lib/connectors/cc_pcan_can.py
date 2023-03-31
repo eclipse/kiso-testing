@@ -398,7 +398,7 @@ class CCPCanCan(CChannel):
             else:
                 # Else write the first trace content in the log file and then remove it
                 result_trace = Path(self.trace_path / self.trace_name)
-                list_of_traces[0].rename(result_trace)
+                list_of_traces[0] = list_of_traces[0].rename(result_trace)
 
             # End of the trace header
             first_message_line = 33
