@@ -42,6 +42,12 @@ log = logging.getLogger(__name__)
 class CCProxy(CChannel):
     """Proxy CChannel to bind multiple auxiliaries to a single 'physical' CChannel."""
 
+    # keep an uninitialized proxy variable at class-level to fulfill the existence conditions.
+    # when a CCProxy instance will then set it, it will only be set at instance level but stay
+    # uninitialized at class-level
+    _proxy: ProxyAuxiliary = None
+    _physical_channel: CChannel = None
+
     def __init__(self, **kwargs):
         """Initialize attributes."""
         super().__init__(**kwargs)
@@ -49,8 +55,6 @@ class CCProxy(CChannel):
         self.timeout = 1
         self._lock = threading.Lock()
         self._tx_callback = None
-        self._proxy = None
-        self._physical_channel = None
 
     def _bind_channel_info(self, proxy_aux: ProxyAuxiliary):
         """Bind a :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
@@ -105,25 +109,19 @@ class CCProxy(CChannel):
     def open(self) -> None:
         super().open()
         if self._proxy is not None:
-            # this will start the proxy_auxiliary if this is the first CCProxy to be opened
+            # will start the proxy_auxiliary if this is the first CCProxy to be opened
             self._proxy._open_connections += 1
 
     def close(self) -> None:
         super().close()
         if self._proxy is not None:
-            # this will stop the proxy_auxiliary if this is the last CCProxy to be closed
+            # will stop the proxy_auxiliary if this is the last CCProxy to be closed
             self._proxy._open_connections -= 1
 
     def _cc_open(self) -> None:
         """Open proxy channel."""
         log.internal_info("Open proxy channel")
         self.queue_out = queue.Queue()
-        # will call conn.attach_tx_callback which will try to re-acquire the lock -> deadlock
-        # if self._proxy is not None:
-        #     self._proxy.open_connections += 1
-        # this will too
-        #     if not self._proxy.is_instance:
-        #         self._proxy.create_instance()
 
     def _cc_close(self) -> None:
         """Close proxy channel."""

@@ -100,6 +100,37 @@ class MpProxyAuxiliary(MpAuxiliaryInterface):
         self.aux_list = aux_list
         super().__init__(**kwargs)
 
+    @property
+    def _open_connections(self) -> int:
+        """A counter monitoring the number of attached running auxiliaries.
+
+        .. warning::
+            Do not set this manually as it can easily result in unexpected behaviours.
+
+
+        :getter: returns the number of currently attached and running auxiliaries.
+        :setter: set by ``CCProxy`` instances when being opened or closed.
+            When no open connection remains and the counter falls back to 0,
+            the ``ProxyAuxiliary`` will be stopped and the attached 'physical'
+            communication channel closed.
+            When the first connection is opened and the counter is increased
+            from 0 to 1, the ``ProxyAuxiliary`` will be started and the attached
+            'physical' communication channel opened.
+        """
+        with self.lock:
+            return self._open_count
+
+    @_open_connections.setter
+    def _open_connections(self, value: int):
+        with self.lock:
+            last_connection_closed = value == 0
+            first_connection_opened = value == 1 and self._open_count == 0
+            self._open_count = value
+            if last_connection_closed:
+                self.delete_instance()
+            elif first_connection_opened and not self.is_instance:
+                self.create_instance()
+
     def _init_trace(
         self,
         logger: logging.Logger,

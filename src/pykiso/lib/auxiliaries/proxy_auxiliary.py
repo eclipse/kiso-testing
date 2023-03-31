@@ -258,10 +258,20 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         channels.
 
         .. note:: This method use the thread safe method implemented by
-            each proxy channels(attached_tx_callback).
+            each proxy channel (attach_tx_callback).
         """
         for conn in self.proxy_channels:
             conn.attach_tx_callback(self.run_command)
+
+    def _remove_tx_method_from_channels(self) -> None:
+        """Detach public run_command method from all connected proxy
+        channels.
+
+        .. note:: This method use the thread safe method implemented by
+            each proxy channel (detach_tx_callback).
+        """
+        for conn in self.proxy_channels:
+            conn.detach_tx_callback()
 
     @open_connector
     def _create_auxiliary_instance(self) -> bool:
@@ -281,6 +291,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         :return: if channel deletion is successful return True otherwise
             False
         """
+        self._remove_tx_method_from_channels()
         log.internal_info("Auxiliary instance deleted")
         return True
 
