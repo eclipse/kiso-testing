@@ -47,10 +47,17 @@ message_with_no_tlv = Message(
     test_suite=2,
     test_case=3,
 )
+trc_data_start_1 = """;$FILEVERSION=2.0
+;$STARTTIME=55555.0000000000\n"""
 
-trc_data = """;$FILEVERSION=2.0
-;$STARTTIME=44909.6626384027
-;$COLUMNS=N,O,T,I,d,L,D
+trc_data_start_2 = """;$FILEVERSION=2.0
+;$STARTTIME=55555.0000001158\n"""
+
+trc_data_start_3 = """;$FILEVERSION=2.0
+;$STARTTIME=55555.0000011575\n"""
+
+
+trc_data_end = """;$COLUMNS=N,O,T,I,d,L,D
 ;
 ;   /usr/src/python-lbach/test/test_pcan_trc.trc
 ;   Start time: 14/12/2022 15:44:50.000.0
@@ -81,14 +88,13 @@ trc_data = """;$FILEVERSION=2.0
 ;   |         [ms]    |    |      |  |  Data [hex]
 ;   |         |       |    |      |  |  |
 ;---+-- ------+------ +- --+----- +- +- +- -- -- -- -- -- -- --
-      1       960.695 ST          Rx    00 00 00 00
-      2       960.878 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      3       961.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      4       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
-
+      1         1.000 ST          Rx    00 00 00 00
+      2         2.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      3         3.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      4         4.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
 
 trc_merge_data = """;$FILEVERSION=2.0
-;$STARTTIME=44909.6626384027
+;$STARTTIME=55555.0000000000
 ;$COLUMNS=N,O,T,I,d,L,D
 ;
 ;   /usr/src/python-lbach/test/test_pcan_trc.trc
@@ -120,18 +126,18 @@ trc_merge_data = """;$FILEVERSION=2.0
 ;   |         [ms]    |    |      |  |  Data [hex]
 ;   |         |       |    |      |  |  |
 ;---+-- ------+------ +- --+----- +- +- +- -- -- -- -- -- -- --
-      1       960.695 ST          Rx    00 00 00 00
-      2       960.878 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      3       961.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      4       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      5       960.695 ST          Rx    00 00 00 00
-      6       960.878 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      7       961.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      8       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      9       960.695 ST          Rx    00 00 00 00
-     10       960.878 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-     11       961.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-     12       963.095 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
+      1         1.000 ST          Rx    00 00 00 00
+      2         2.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      3         3.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      4         4.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      5        11.005 ST          Rx    00 00 00 00
+      6        12.005 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      7        13.005 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      8        14.005 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      9       101.008 ST          Rx    00 00 00 00
+     10       102.008 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+     11       103.008 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+     12       104.008 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
 
 import time
 
@@ -141,6 +147,11 @@ def trc_files(tmp_path):
     """
     create fake trc files at a temporary directory
     """
+    traces = [
+        trc_data_start_1 + trc_data_end,
+        trc_data_start_2 + trc_data_end,
+        trc_data_start_3 + trc_data_end,
+    ]
     trc_folder = Path(tmp_path / "traces")
     trc_folder.mkdir(parents=True, exist_ok=True)
     file_paths = [
@@ -148,9 +159,9 @@ def trc_files(tmp_path):
         trc_folder / "trc_2.trc",
         trc_folder / "trc_3.trc",
     ]
-    for file in file_paths:
+    for idx, file in enumerate(file_paths):
         with open(file, "w+") as f:
-            f.write(trc_data)
+            f.write(traces[idx])
             # Sleep to avoid failure on integration tests
             time.sleep(0.2)
     return file_paths
