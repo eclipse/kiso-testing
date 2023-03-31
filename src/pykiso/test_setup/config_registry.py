@@ -76,6 +76,7 @@ class ConfigRegistry:
         channel_name: ConnectorAlias,
         aux_list: List[AuxiliaryAlias],
         multiprocessing: bool,
+        auto_start: bool,
     ) -> Tuple[AuxiliaryAlias, AuxiliaryConfig]:
         """Craft the configuration dictionary for a proxy auxiliary to be
         attached to all auxiliaries sharing a communication channel.
@@ -94,7 +95,7 @@ class ConfigRegistry:
         name = f"proxy_aux_{channel_name}"
         config = {
             "connectors": {"com": channel_name},
-            "config": {"aux_list": aux_list},
+            "config": {"aux_list": aux_list, "auto_start": auto_start},
             "type": f"{aux_class.__module__}:{aux_class.__name__}",
         }
         return name, config
@@ -134,19 +135,24 @@ class ConfigRegistry:
         # 2. Overwrite auxiliary and connector config with required proxies
         for channel_name, auxiliaries in cchannel_to_auxiliaries.items():
             if len(auxiliaries) < 2:
-                # only one auxiliary holds the channel so there's nothing to patch
+                # only one auxiliary holds the channel so no proxy is required
                 continue
 
             # detect if communication channel is multiprocessing-based
             mp_enabled = False
-            if config["connectors"][channel_name].get("config") is not None:
-                mp_enabled = config["connectors"][channel_name]["config"].get(
-                    "processing", False
-                )
+            channel_cfg = config["connectors"][channel_name].get("config")
+            if channel_cfg is not None:
+                mp_enabled = channel_cfg.get("processing", False)
+
+            # automatically start proxy if at least one auxiliary has the auto_start flag set
+            auto_start = any(
+                config["auxiliaries"][auxiliary].get("config", {}).get("auto_start")
+                for auxiliary in auxiliaries
+            )
 
             # create a proxy auxiliary config for this shared channel
             proxy_aux_name, proxy_aux_cfg = cls._make_proxy_aux_config(
-                channel_name, auxiliaries, mp_enabled
+                channel_name, auxiliaries, mp_enabled, auto_start
             )
             config["auxiliaries"][proxy_aux_name] = proxy_aux_cfg
             proxies.append(proxy_aux_name)

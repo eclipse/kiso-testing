@@ -102,10 +102,28 @@ class CCProxy(CChannel):
                 )
             self._tx_callback = func
 
+    def open(self) -> None:
+        super().open()
+        if self._proxy is not None:
+            # this will start the proxy_auxiliary if this is the first CCProxy to be opened
+            self._proxy._open_connections += 1
+
+    def close(self) -> None:
+        super().close()
+        if self._proxy is not None:
+            # this will stop the proxy_auxiliary if this is the last CCProxy to be closed
+            self._proxy._open_connections -= 1
+
     def _cc_open(self) -> None:
         """Open proxy channel."""
         log.internal_info("Open proxy channel")
         self.queue_out = queue.Queue()
+        # will call conn.attach_tx_callback which will try to re-acquire the lock -> deadlock
+        # if self._proxy is not None:
+        #     self._proxy.open_connections += 1
+        # this will too
+        #     if not self._proxy.is_instance:
+        #         self._proxy.create_instance()
 
     def _cc_close(self) -> None:
         """Close proxy channel."""

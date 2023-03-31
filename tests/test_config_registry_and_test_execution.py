@@ -31,7 +31,7 @@ from pykiso.test_setup.config_registry import (
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
-def test_config_registry_and_test_execution(tmp_test, capsys):
+def test_test_execution(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
 
@@ -53,7 +53,7 @@ def test_config_registry_and_test_execution(tmp_test, capsys):
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
-def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
+def test_test_execution_with_pattern(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     by specifying a pattern
@@ -72,8 +72,10 @@ def test_config_registry_and_test_execution_with_pattern(tmp_test, capsys):
     assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
 
 
-@pytest.mark.parametrize("tmp_test", [("aux_1", "aux_2", False)], indirect=True)
-def test_config_registry_and_test_execution_with_user_tags(tmp_test, capsys):
+@pytest.mark.parametrize(
+    "tmp_test", [("aux1_badtag", "aux2_badtag", False)], indirect=True
+)
+def test_test_execution_with_bad_user_tags(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     with an undefined user tag.
@@ -90,8 +92,8 @@ def test_config_registry_and_test_execution_with_user_tags(tmp_test, capsys):
     assert exit_code == test_execution.ExitCode.BAD_CLI_USAGE
 
 
-@pytest.mark.parametrize("tmp_test", [("aux_1", "aux_2", False)], indirect=True)
-def test_config_registry_and_test_execution_with_user_tags(tmp_test, capsys):
+@pytest.mark.parametrize("tmp_test", [("aux1_tags", "aux2_tags", False)], indirect=True)
+def test_test_execution_with_user_tags(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     with additional user tags.
@@ -136,8 +138,10 @@ def test_parse_test_selection_pattern():
     assert test_file_pattern.test_case == "third"
 
 
-@pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
-def test_config_registry_and_test_execution_collect_error(tmp_test, capsys, mocker):
+@pytest.mark.parametrize(
+    "tmp_test", [("aux1_collect", "aux2_collect", False)], indirect=True
+)
+def test_test_execution_collect_error(tmp_test, capsys, mocker):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     by specifying a pattern
@@ -208,9 +212,7 @@ def test__check_module_names_invalid(paths, pattern, mocker):
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
-def test_config_registry_and_test_execution_collect_suites_with_invalid_cli_pattern(
-    tmp_test, mocker
-):
+def test_collect_suites_with_invalid_cli_pattern(tmp_test, mocker):
     """Call collect_test_suites function from test_execution using
     configuration data coming from parse_config method and specifying a invalid
     pattern from cli
@@ -243,9 +245,7 @@ def test_config_registry_and_test_execution_collect_suites_with_invalid_cli_patt
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
-def test_config_registry_and_test_execution_collect_suites_with_invalid_cfg_pattern(
-    tmp_test, mocker
-):
+def test_collect_suites_with_invalid_cfg_pattern(tmp_test, mocker):
     """Call collect_test_suites function from test_execution using
     configuration data coming from parse_config method and specifying a invalid
     pattern in the cfg
@@ -281,7 +281,7 @@ def test_config_registry_and_test_execution_collect_suites_with_invalid_cfg_patt
     [("collector_error_2_aux1", "collector_error_2_aux", False)],
     indirect=True,
 )
-def test_config_registry_and_test_execution_collect_error_log(mocker, caplog, tmp_test):
+def test_test_execution_collect_error_log(mocker, caplog, tmp_test):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     by specifying a pattern
@@ -309,9 +309,7 @@ def test_config_registry_and_test_execution_collect_error_log(mocker, caplog, tm
 @pytest.mark.parametrize(
     "tmp_test", [("creation_error_aux1", "creation_error_aux2", False)], indirect=True
 )
-def test_config_registry_and_test_execution_test_auxiliary_creation_error(
-    mocker, caplog, tmp_test
-):
+def test_test_execution_with_auxiliary_creation_error(mocker, caplog, tmp_test):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     by specifying a pattern
@@ -333,7 +331,7 @@ def test_config_registry_and_test_execution_test_auxiliary_creation_error(
 
 
 @pytest.mark.parametrize("tmp_test", [("text_aux1", "text_aux2", False)], indirect=True)
-def test_config_registry_and_test_execution_with_text_reporting(tmp_test, capsys):
+def test_test_execution_with_text_reporting(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
     --text option to show the test results only in console
@@ -361,7 +359,7 @@ def test_config_registry_and_test_execution_with_text_reporting(tmp_test, capsys
     ids=["test failed", "error occurred"],
     indirect=True,
 )
-def test_config_registry_and_test_execution_fail(tmp_test, capsys):
+def test_test_execution_test_failure(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
     --text option to show the test results only in console
@@ -385,7 +383,7 @@ def test_config_registry_and_test_execution_fail(tmp_test, capsys):
 @pytest.mark.parametrize(
     "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
 )
-def test_config_registry_and_test_execution_with_junit_reporting(tmp_test, capsys):
+def test_test_execution_with_junit_reporting(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
     --junit option to show the test results in console
@@ -408,7 +406,7 @@ def test_config_registry_and_test_execution_with_junit_reporting(tmp_test, capsy
 
 
 @pytest.mark.parametrize("tmp_test", [("step_aux1", "step_aux2", False)], indirect=True)
-def test_config_registry_and_test_execution_with_step_report(tmp_test, capsys):
+def test_test_execution_with_step_report(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
 
@@ -427,7 +425,7 @@ def test_config_registry_and_test_execution_with_step_report(tmp_test, capsys):
     assert pathlib.Path("step_report.html").is_file()
 
 
-def test_config_registry_and_test_execution_failure_and_error_handling():
+def test_failure_and_error_handling():
     TR_ALL_TESTS_SUCCEEDED = TestResult()
     TR_ONE_OR_MORE_TESTS_FAILED = TestResult()
     TR_ONE_OR_MORE_TESTS_FAILED.failures = [TestCase()]
@@ -604,7 +602,7 @@ def test_apply_variant_filter_multiple_testcases(mocker):
     )
 
 
-def test_test_execution_apply_tc_name_filter(mocker):
+def test_apply_test_case_filter(mocker):
     mock_test_case = mocker.Mock()
     mock_test_case.setUp = None
     mock_test_case.tearDown = None
@@ -648,12 +646,12 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
         "auxiliaries": {
             "aux1": {
                 "connectors": {"com": "channel1"},
-                "config": {"aux_param1": 1},
+                "config": {"aux_param1": 1, "auto_start": False},
                 "type": "some_module:Auxiliary",
             },
             "aux2": {
                 "connectors": {"com": "channel1"},
-                "config": {"aux_param2": 2},
+                "config": {"aux_param2": 2, "auto_start": False},
                 "type": "some_other_module:SomeOtherAuxiliary",
             },
         },
@@ -665,13 +663,22 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
         },
     }
 
-    if getattr(request, "param", None) is True:
+    mp_enable, aux1_auto_start, aux2_auto_start = getattr(
+        request, "param", (False, False, False)
+    )
+
+    if mp_enable:
         config["connectors"]["channel1"]["config"]["processing"] = True
         cc_class = CCMpProxy
         aux_class = MpProxyAuxiliary
     else:
         cc_class = CCProxy
         aux_class = ProxyAuxiliary
+
+    if aux1_auto_start:
+        config["auxiliaries"]["aux1"]["config"]["auto_start"] = True
+    if aux2_auto_start:
+        config["auxiliaries"]["aux2"]["config"]["auto_start"] = True
 
     expected_provide_connector_calls = [
         mocker.call(
@@ -689,18 +696,22 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
             "some_module:Auxiliary",
             aux_cons={"com": "proxy_channel_aux1"},
             aux_param1=1,
+            auto_start=aux1_auto_start,
         ),
         mocker.call(
             "aux2",
             "some_other_module:SomeOtherAuxiliary",
             aux_cons={"com": "proxy_channel_aux2"},
             aux_param2=2,
+            auto_start=aux2_auto_start,
         ),
         mocker.call(
             "proxy_aux_channel1",
             f"{aux_class.__module__}:{aux_class.__name__}",
             aux_cons={"com": "channel1"},
             aux_list=["aux1", "aux2"],
+            # auto_start is expected to be set if any of the attached auxiliaries has it set
+            auto_start=(aux1_auto_start or aux2_auto_start),
         ),
     ]
 
@@ -709,11 +720,21 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
 
 @pytest.mark.parametrize(
     "sample_config",
-    [(True), (False)],
+    [
+        (True, True, True),
+        (False, True, True),
+        (False, False, True),
+        (False, False, False),
+    ],
     indirect=True,
-    ids=["multiprocessing enabled", "multiprocessing_disabled"],
+    ids=[
+        "multiprocessing - auto start",
+        "threading - auto start",
+        "threading - no auto start aux1",
+        "threading - no auto start all auxes",
+    ],
 )
-def test_config_registry_config_patching(mocker: MockerFixture, sample_config):
+def test_config_registry_auto_proxy(mocker: MockerFixture, sample_config):
     mock_linker = mocker.MagicMock()
     mocker.patch(
         "pykiso.test_setup.config_registry.DynamicImportLinker",
@@ -734,7 +755,7 @@ def test_config_registry_config_patching(mocker: MockerFixture, sample_config):
     mock_linker._aux_cache.get_instance.assert_called_once_with("proxy_aux_channel1")
 
 
-def test_config_registry_config_no_patching(mocker: MockerFixture, sample_config):
+def test_config_registry_no_auto_proxy(mocker: MockerFixture, sample_config):
     mock_make_px_channel = mocker.patch.object(
         ConfigRegistry, "_make_proxy_channel_config"
     )

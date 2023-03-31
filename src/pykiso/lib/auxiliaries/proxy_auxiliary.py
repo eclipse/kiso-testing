@@ -92,8 +92,38 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs
         )
         self.channel = com
+        self._open_count = 0
         self.logger = self._init_trace(activate_trace, trace_dir, trace_name)
         self.proxy_channels = self.get_proxy_con(aux_list)
+
+    @property
+    def _open_connections(self) -> int:
+        """A counter monitoring the number of attached running auxiliaries.
+
+        .. warning::
+            Do not set this manually as it can easily result in unexpected behaviours.
+
+
+        :getter: returns the number of currently attached and running auxiliaries.
+        :setter: set by ``CCProxy`` instances when being opened or closed.
+            When no open connection remains and the counter falls back to 0,
+            the ``ProxyAuxiliary`` will be stopped and the attached 'physical'
+            communication channel closed.
+            When the first connection is opened and the counter is increased
+            from 0 to 1, the ``ProxyAuxiliary`` will be started and the attached
+            'physical' communication channel opened.
+        """
+        return self._open_count
+
+    @_open_connections.setter
+    def _open_connections(self, value: int):
+        last_connection_closed = value == 0
+        first_connection_opened = value == 1 and self._open_count == 0
+        self._open_count = value
+        if last_connection_closed:
+            self.delete_instance()
+        elif first_connection_opened and not self.is_instance:
+            self.create_instance()
 
     @staticmethod
     def _init_trace(
@@ -196,7 +226,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         return tuple(channel_inst)
 
     @staticmethod
-    def _check_aux_compatibility(aux) -> None:
+    def _check_aux_compatibility(aux: DTAuxiliaryInterface) -> None:
         """Check if the given auxiliary is proxy compatible.
 
         :param aux: auxiliary instance to check
@@ -290,15 +320,15 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         :param kwargs: named arguments
         """
         for conn in self.proxy_channels:
-            if conn != con_use:
+            if conn != con_use and conn.queue_out is not None:
                 conn.queue_out.put(kwargs)
 
     def _receive_message(self, timeout_in_s: float = 0) -> None:
         """Get a message from the associated channel and dispatch it to
-        the liked proxy channels.
+        the linked proxy channels.
 
         .. note:: this method is called by the rx thread task from the
-            inherit interface class
+            inherited interface class
 
 
         :param timeout_in_s: maximum amount of time (seconds) to wait
@@ -310,10 +340,13 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             # if data are received, populate connector's queue_out
             if received_data is not None:
                 self.logger.debug(
-                    f"received response : data {received_data.hex()} || channel : {self.channel.name}"
+                    "received response : data %s || channel : %s",
+                    received_data.hex(),
+                    self.channel.name,
                 )
                 for conn in self.proxy_channels:
-                    conn.queue_out.put(recv_response)
+                    if conn.queue_out is not None:
+                        conn.queue_out.put(recv_response)
         except Exception:
             log.exception(
                 f"encountered error while receiving message via {self.channel}"
