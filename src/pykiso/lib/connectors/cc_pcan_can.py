@@ -426,7 +426,7 @@ class CCPCanCan(CChannel):
                     offset = trc_start_time - first_trc_start_time
 
                     # Fix message number and time offset inconstistancies
-                    corrected_data = CCPCanCan._fix_merge_inconstistancies(
+                    corrected_data = CCPCanCan._fix_merge_inconsistencies(
                         data[first_message_line:], offset, message_idx
                     )
                     message_idx += len(data[first_message_line:])
@@ -439,10 +439,10 @@ class CCPCanCan(CChannel):
             log.internal_warning("No trace to merge")
 
     @staticmethod
-    def _fix_merge_inconstistancies(
+    def _fix_merge_inconsistencies(
         data: List[str], offset: float, message_idx: int
     ) -> List[str]:
-        """Fix merge inconstistancies such as message number and time offset
+        """Fix merge inconsistencies such as message number and time offset
 
         :param data: can messages to fix
         :param offset: time offset beetween first trace and current trace in milliseconds
@@ -490,7 +490,8 @@ class CCPCanCan(CChannel):
 
     @staticmethod
     def _get_start_time_from_peak_format(start_time: float) -> float:
-        """Get the start time of a trc file in ms since the start of the day from the
+        """Get the start time of a trc file in milliseconds since the start of the day
+        from the peak start time format
 
         :param start_time: float using the format bellow (from PEAK CAN)
             Integral part = Number of days that have passed since 30. December 1899.
