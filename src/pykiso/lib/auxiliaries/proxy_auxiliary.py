@@ -113,17 +113,20 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
             from 0 to 1, the ``ProxyAuxiliary`` will be started and the attached
             'physical' communication channel opened.
         """
-        return self._open_count
+        with self.lock:
+            return self._open_count
 
     @_open_connections.setter
     def _open_connections(self, value: int):
-        last_connection_closed = value == 0
-        first_connection_opened = value == 1 and self._open_count == 0
-        self._open_count = value
-        if last_connection_closed:
-            self.delete_instance()
-        elif first_connection_opened and not self.is_instance:
-            self.create_instance()
+        # locking shouldn't be necessary but we're never too paranoid
+        with self.lock:
+            last_connection_closed = value == 0 and self._open_count == 1
+            first_connection_opened = value == 1 and self._open_count == 0
+            self._open_count = value
+            if last_connection_closed and self.is_instance:
+                self.delete_instance()
+            elif first_connection_opened and not self.is_instance:
+                self.create_instance()
 
     @staticmethod
     def _init_trace(
@@ -180,10 +183,9 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         If auxiliary alias exists but auxiliary instance was not created
         yet, create it immediately using ConfigRegistry _aux_cache.
 
-        :param aux_list: list of auxiliary's alias
-
+        :param aux_list: list of auxiliary aliases or instances.
         :return: tuple containing all connectors associated to
-            all given auxiliaries
+            all given auxiliaries.
         """
         channel_inst: List[CCProxy] = []
 
