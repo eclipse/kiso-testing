@@ -334,8 +334,7 @@ def abort(reason: str = None) -> None:
     if reason:
         log.critical(reason)
 
-    if None not in sys.exc_info():
-        log.exception("Tests were aborted because of the following error :")
+    log.exception("Tests were aborted because of the following error :")
     log.error(
         "Non recoverable error occurred in communication, aborting entire test execution."
     )

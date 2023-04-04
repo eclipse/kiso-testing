@@ -10,6 +10,7 @@
 import copy
 import logging
 import pathlib
+import signal
 from contextlib import nullcontext as does_not_raise
 from unittest import TestCase, TestResult
 
@@ -757,3 +758,19 @@ def test_config_registry_config_no_patching(mocker: MockerFixture, sample_config
     assert mock_linker.provide_connector.call_count == 1
     assert mock_linker.provide_auxiliary.call_count == 2
     mock_linker._aux_cache.get_instance.assert_not_called()
+
+
+def test_abort(mocker: MockerFixture, caplog):
+    reason = "reason"
+    raise_signal_mock = mocker.patch("signal.raise_signal")
+    log_exception_mocker = mocker.patch("logging.exception")
+
+    test_execution.abort(reason)
+
+    assert reason in caplog.text
+    assert (
+        "Non recoverable error occurred in communication, aborting entire test execution."
+        in caplog.text
+    )
+    assert "Tests were aborted because of the following error :" in caplog.text
+    raise_signal_mock.assert_called_once_with(signal.SIGTERM)
