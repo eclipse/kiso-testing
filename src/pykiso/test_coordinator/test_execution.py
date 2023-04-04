@@ -25,6 +25,8 @@ Test Execution
 """
 from __future__ import annotations
 
+import signal
+import sys
 from typing import TYPE_CHECKING
 from unittest.loader import VALID_MODULE_NAME
 
@@ -321,6 +323,23 @@ def collect_test_suites(
         except BaseException as e:
             raise TestCollectionError(test_suite_configuration["suite_dir"]) from e
     return list_of_test_suites
+
+
+def abort(reason: str = None) -> None:
+    """Quit ITF test and log an error if a reason is indicated and
+    if any errors occurred it logs them.
+
+    :param reason: reason to abort, defaults to None
+    """
+    if reason:
+        log.critical(reason)
+
+    if None not in sys.exc_info():
+        log.exception("Tests were aborted because of the following error :")
+    log.error(
+        "Non recoverable error occurred in communication, aborting entire test execution."
+    )
+    signal.raise_signal(signal.SIGTERM)
 
 
 def execute(
