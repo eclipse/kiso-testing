@@ -762,8 +762,7 @@ def test_config_registry_config_no_patching(mocker: MockerFixture, sample_config
 
 def test_abort(mocker: MockerFixture, caplog):
     reason = "reason"
-    raise_signal_mock = mocker.patch("signal.raise_signal")
-    log_exception_mocker = mocker.patch("logging.exception")
+    os_kill_mock = mocker.patch("os.kill")
 
     test_execution.abort(reason)
 
@@ -773,4 +772,4 @@ def test_abort(mocker: MockerFixture, caplog):
         in caplog.text
     )
     assert "Tests were aborted because of the following error :" in caplog.text
-    raise_signal_mock.assert_called_once_with(signal.SIGTERM)
+    os_kill_mock.assert_called_once()
