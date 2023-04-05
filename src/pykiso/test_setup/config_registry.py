@@ -145,10 +145,15 @@ class ConfigRegistry:
                 mp_enabled = channel_cfg.get("processing", False)
 
             # automatically start proxy if at least one auxiliary has the auto_start flag set
-            auto_start = any(
-                config["auxiliaries"][auxiliary].get("config", {}).get("auto_start")
-                for auxiliary in auxiliaries
-            )
+            for auxiliary in auxiliaries:
+                try:
+                    auto_start = config["auxiliaries"][auxiliary]["config"][
+                        "auto_start"
+                    ]
+                except KeyError:
+                    # default value for auto_start is True
+                    auto_start = True
+                    break
 
             # create a proxy auxiliary config for this shared channel
             proxy_aux_name, proxy_aux_cfg = cls._make_proxy_aux_config(
