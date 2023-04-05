@@ -41,12 +41,6 @@ log = logging.getLogger(__name__)
 class CCMpProxy(CChannel):
     """Multiprocessing Proxy CChannel for multi auxiliary usage."""
 
-    # keep an uninitialized proxy variable at class-level to fulfill the existence conditions.
-    # when a CCProxy instance will then set it, it will only be set at instance level but stay
-    # uninitialized at class-level
-    _proxy: MpProxyAuxiliary = None
-    _physical_channel: CChannel = None
-
     def __init__(self, **kwargs):
         """Initialize attributes."""
         kwargs.update(processing=True)
@@ -93,18 +87,6 @@ class CCMpProxy(CChannel):
 
     def __setstate__(self, state):
         self.__dict__ = state
-
-    def open(self) -> None:
-        super().open()
-        if self._proxy is not None:
-            # will start the proxy_auxiliary if this is the first CCMpProxy to be opened
-            self._proxy._open_connections += 1
-
-    def close(self) -> None:
-        super().close()
-        if self._proxy is not None:
-            # will stop the proxy_auxiliary if this is the last CCMpProxy to be closed
-            self._proxy._open_connections -= 1
 
     def _cc_open(self) -> None:
         """Open proxy channel.

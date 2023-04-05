@@ -118,12 +118,65 @@ Relative paths in the sub-YAML file are then resolved **relative to the sub-YAML
     :language: yaml
     :lines: 28-37
 
+.. _delayed_startup:
+
+Delay an auxiliary start-up
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All threaded auxiliaries are capable to delay their start-up (not starting at import level).
+This means, from user point of view, it's possible to start it on demand and especially where
+it's really needed.
+
+.. warning:: in a proxy set-up be sure to always start the proxy auxiliary last
+    otherwise an error will occurred due to proxy auxiliary specific import rules
+
+In order to achieved that, a parameter was added at the auxiliary configuration level.
+
+.. code:: yaml
+
+  auxiliaries:
+    proxy_aux:
+      connectors:
+          com: can_channel
+      config:
+        aux_list : [aux1, aux2]
+        activate_trace : True
+        trace_dir: ./suite_proxy
+        trace_name: can_trace
+        # if False create the auxiliary instance but don't start it, an
+        # additional call of start method has to be performed.
+        # By default, auto_start flag is set to True and "normal" ITF aux
+        # creation mechanism is used.
+        auto_start: False
+      type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
+    aux1:
+      connectors:
+          com: proxy_com1
+      config:
+        auto_start: False
+      type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+    aux2:
+      connectors:
+          com: proxy_com2
+      config:
+        auto_start: False
+      type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+
+In user's script simply call the related auxiliary start method:
+
+.. literalinclude:: ../../examples/templates/suite_proxy/test_proxy.py
+    :language: python
+    :lines: 40-46
+
 
 
 .. _sharing_a_cchan:
 
 Sharing a communication channel between multiple auxiliaries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Internal patching of the configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In order to attach a single communication channel to multiple defined auxiliaries, it is sufficient
 to use the same channel name for all auxiliaries.
@@ -202,6 +255,93 @@ Then, ``pykiso`` will internally modify this configuration to become:
   will receive the other auxiliaries' messages.
 
 
+Delayed startup
+^^^^^^^^^^^^^^^
+
+If the shared communication channel needs to be opened at a later point of a test, it is also
+possible to apply the :ref:`delayed auxiliary startup <delayed_startup>` to each auxiliary that
+is connected to this communication channel.
+
+The communication channel will then be opened as soon as one of the auxiliaries holding this
+channel is started.
+
+Taking as reference the example configuration file above, the delayed startup can be achieved
+by simply setting the ``auto_start`` flag to ``False`` for each auxiliary:
+
+.. code:: yaml
+
+  auxiliaries:
+    aux1:
+      connectors:
+        com: chan1
+      config:
+        auto_start: False
+      type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+    aux2:
+      connectors:
+        com: chan1
+      config:
+        auto_start: False
+      type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
+
+  connectors:
+    chan1:
+      config: null
+      type: pykiso.lib.connectors.cc_example:CCExample
+
+
+Opening and closing a shared communication channel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Within the test case where a delayed startup is wished, the shared communication channel can
+then be opened and closed without any need to interact with the internally created
+:py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`.
+
+As a simple rule of thumb, a shared communication channel:
+
+* is opened when the first connected auxiliary is started
+* is closed when the last connected auxiliary is stopped.
+
+This can be illustrated in the following test example, based on the configuration shown above:
+
+.. code:: python
+
+    import pykiso
+    from pykiso.auxiliaries import aux1, aux2
+
+    @pykiso.define_test_parameters(suite_id=1, case_id=1)
+    class MyTest1(pykiso.BasicTest):
+        """This test case definition will override the setUp, test_run and tearDown method."""
+
+        def setUp(self):
+            """
+            Execute code before running the test case.
+            No auxiliary is currently running as their startup was delayed.
+            """
+            # do something without the imported auxiliaries
+
+        def test_run(self):
+            """Test case that stops and starts the auxiliaries."""
+
+            aux1.start()   # chan1 attached to aux1 and aux2 is opened
+
+            self.assertTrue(aux1.is_instance, "aux1 was not successfully started!")
+            self.assertFalse(aux2.is_instance, "aux2 is unexpectedly running!")
+
+            aux2.start()   # chan1 attached to aux1 and aux2 stays open
+
+            self.assertTrue(aux2.is_instance, "aux2 was not successfully started!")
+
+            aux1.stop()    # chan1 attached to aux1 and aux2 stays open as aux2 is still running
+
+            self.assertFalse(aux1.is_instance, "aux1 is unexpectedly running after having been stopped!")
+
+            aux2.stop()    # chan1 attached to aux1 and aux2 is now closed as aux1 and aux2 are both stopped
+
+            self.assertFalse(aux1.is_instance, "aux1 is unexpectedly running!")
+            self.assertFalse(aux1.is_instance, "aux2 is unexpectedly running!")
+
+
 Make a proxy auxiliary trace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -232,52 +372,3 @@ Everything is handled at configuration level and especially at yaml file :
       # otherwise user should specify his own name
       trace_name: can_trace
     type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
-
-
-Delay an auxiliary start-up
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-All threaded auxiliaries are capable to delay their start-up (not starting at import level).
-This means, from user point of view, it's possible to start it on demand and especially where
-it's really needed.
-
-.. warning:: in a proxy set-up be sure to always start the proxy auxiliary last
-    otherwise an error will occurred due to proxy auxiliary specific import rules
-
-In order to achieved that, a parameter was added at the auxiliary configuration level.
-
-.. code:: yaml
-
-  auxiliaries:
-    proxy_aux:
-      connectors:
-          com: can_channel
-      config:
-        aux_list : [aux1, aux2]
-        activate_trace : True
-        trace_dir: ./suite_proxy
-        trace_name: can_trace
-        # if False create the auxiliary instance but don't start it, an
-        # additional call of start method has to be performed.
-        # By default, auto_start flag is set to True and "normal" ITF aux
-        # creation mechanism is used.
-        auto_start: False
-      type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
-    aux1:
-      connectors:
-          com: proxy_com1
-      config:
-        auto_start: False
-      type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
-    aux2:
-      connectors:
-          com: proxy_com2
-      config:
-        auto_start: False
-      type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
-
-In user's script simply call the related auxilairy start method:
-
-.. literalinclude:: ../../examples/templates/suite_proxy/test_proxy.py
-    :language: python
-    :lines: 40-46
