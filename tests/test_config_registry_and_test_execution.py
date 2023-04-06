@@ -768,7 +768,7 @@ def test_abort(mocker: MockerFixture, caplog):
 
     assert reason in caplog.text
     assert (
-        "Non recoverable error occurred in communication, aborting entire test execution."
+        "Non recoverable error occurred during the test, aborting entire test execution."
         in caplog.text
     )
     assert "Tests were aborted because of the following error :" in caplog.text
