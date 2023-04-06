@@ -332,13 +332,10 @@ def abort(reason: str = None) -> None:
     """
     if reason:
         log.critical(reason)
-    log.exception("Tests were aborted because of the following error :")
-    log.error(
-        "Non recoverable error occurred during the test, aborting entire test execution."
+    log.critical(
+        "Non recoverable error occurred during test execution, aborting test session."
     )
-    os.kill(
-        os.getpid(), ExitCode.ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTION
-    )
+    os.kill(os.getpid(), ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION)
 
 
 def execute(
