@@ -25,6 +25,7 @@ Test Execution
 """
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 from unittest.loader import VALID_MODULE_NAME
 
@@ -323,9 +324,24 @@ def collect_test_suites(
     return list_of_test_suites
 
 
+def abort(reason: str = None) -> None:
+    """Quit ITF test and log an error if a reason is indicated and
+    if any errors occurred it logs them.
+
+    :param reason: reason to abort, defaults to None
+    """
+    if reason:
+        log.critical(reason)
+    log.critical(
+        "Non recoverable error occurred during test execution, aborting test session."
+    )
+    os.kill(os.getpid(), ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION)
+
+
 def execute(
     config: Dict[str, Any],
     report_type: str = "text",
+    report_name: str = "",
     user_tags: Optional[Dict[str, List[str]]] = None,
     step_report: Optional[Path] = None,
     pattern_inject: Optional[str] = None,
@@ -336,6 +352,7 @@ def execute(
     :param config: dict from converted YAML config file
     :param report_type: str to set the type of report wanted, i.e. test
         or junit
+    :param report_name: name of the junit report
     :param user_tags: test case tags to execute
     :param step_report: file path for the step report or None
     :param pattern_inject: optional pattern that will override
@@ -372,7 +389,7 @@ def execute(
         log_file_path = get_logging_options().log_path
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
         if report_type == "junit":
-            junit_report_name = time.strftime("TEST-pykiso-%Y-%m-%d_%H-%M-%S.xml")
+            junit_report_name = time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml")
             project_folder = Path.cwd()
             reports_path = project_folder / "reports"
             junit_report_path = reports_path / junit_report_name
