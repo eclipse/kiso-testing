@@ -646,12 +646,12 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
         "auxiliaries": {
             "aux1": {
                 "connectors": {"com": "channel1"},
-                "config": {"aux_param1": 1, "auto_start": False},
+                "config": {"aux_param1": 1},
                 "type": "some_module:Auxiliary",
             },
             "aux2": {
                 "connectors": {"com": "channel1"},
-                "config": {"aux_param2": 2, "auto_start": False},
+                "config": {"aux_param2": 2},
                 "type": "some_other_module:SomeOtherAuxiliary",
             },
         },
@@ -663,6 +663,7 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
         },
     }
 
+    # set additional config parameters based on provided fixture params
     mp_enable, aux1_auto_start, aux2_auto_start = getattr(
         request, "param", (False, False, False)
     )
@@ -675,10 +676,10 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
         cc_class = CCProxy
         aux_class = ProxyAuxiliary
 
-    if aux1_auto_start:
-        config["auxiliaries"]["aux1"]["config"]["auto_start"] = True
-    if aux2_auto_start:
-        config["auxiliaries"]["aux2"]["config"]["auto_start"] = True
+    if aux1_auto_start is not None:
+        config["auxiliaries"]["aux1"]["config"]["auto_start"] = aux1_auto_start
+    if aux2_auto_start is not None:
+        config["auxiliaries"]["aux2"]["config"]["auto_start"] = aux2_auto_start
 
     expected_provide_connector_calls = [
         mocker.call(
@@ -690,28 +691,40 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
         mocker.call("proxy_channel_aux2", f"{cc_class.__module__}:{cc_class.__name__}"),
     ]
 
+    # auto_start is expected to be set if any of the attached auxiliaries has it explicitely set
+    # or if it isn't specified (default is auto_start enabled)
+    expected_proxy_auto_start = aux1_auto_start in (True, None) or aux2_auto_start in (
+        True,
+        None,
+    )
+
+    # expected additional kwargs for the provide_auxiliary calls
+    expected_aux1_params = {"aux_param1": 1}
+    if aux1_auto_start is not None:
+        expected_aux1_params.update({"auto_start": aux1_auto_start})
+    expected_aux2_params = {"aux_param2": 2}
+    if aux2_auto_start is not None:
+        expected_aux2_params.update({"auto_start": aux2_auto_start})
+
     expected_provide_auxiliary_calls = [
         mocker.call(
             "aux1",
             "some_module:Auxiliary",
             aux_cons={"com": "proxy_channel_aux1"},
-            aux_param1=1,
-            auto_start=aux1_auto_start,
+            **expected_aux1_params,
         ),
         mocker.call(
             "aux2",
             "some_other_module:SomeOtherAuxiliary",
             aux_cons={"com": "proxy_channel_aux2"},
-            aux_param2=2,
-            auto_start=aux2_auto_start,
+            **expected_aux2_params,
         ),
         mocker.call(
             "proxy_aux_channel1",
             f"{aux_class.__module__}:{aux_class.__name__}",
             aux_cons={"com": "channel1"},
             aux_list=["aux1", "aux2"],
-            # auto_start is expected to be set if any of the attached auxiliaries has it set
-            auto_start=(aux1_auto_start or aux2_auto_start),
+            auto_start=expected_proxy_auto_start,
         ),
     ]
 
@@ -720,11 +733,15 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
 
 @pytest.mark.parametrize(
     "sample_config",
+    # execute sample_config fixture with the parameters
+    # multiprocessing_enabled, aux1_auto_start, aux2_auto_start
     [
         (True, True, True),
         (False, True, True),
         (False, False, True),
         (False, False, False),
+        (False, None, False),
+        (False, None, None),
     ],
     indirect=True,
     ids=[
@@ -732,6 +749,8 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
         "threading - auto start",
         "threading - no auto start aux1",
         "threading - no auto start all auxes",
+        "threading - default auto start aux1",
+        "threading - default auto start all auxes",
     ],
 )
 def test_config_registry_auto_proxy(mocker: MockerFixture, sample_config):
