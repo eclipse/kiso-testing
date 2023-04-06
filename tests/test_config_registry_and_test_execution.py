@@ -774,6 +774,36 @@ def test_config_registry_auto_proxy(mocker: MockerFixture, sample_config):
     mock_linker._aux_cache.get_instance.assert_called_once_with("proxy_aux_channel1")
 
 
+def test_config_registry_auto_proxy_creation_error(
+    mocker: MockerFixture, sample_config
+):
+    mock_linker = mocker.MagicMock()
+    mocker.patch(
+        "pykiso.test_setup.config_registry.DynamicImportLinker",
+        return_value=mock_linker,
+    )
+    mock_delete_aux_con = mocker.patch.object(ConfigRegistry, "delete_aux_con")
+    mocker.patch.object(
+        ConfigRegistry,
+        "get_aux_by_alias",
+        side_effect=pykiso.exceptions.AuxiliaryCreationError("proxy_aux_channel1"),
+    )
+
+    config, provide_connector_calls, provide_auxiliary_calls = sample_config
+
+    with pytest.raises(pykiso.exceptions.AuxiliaryCreationError):
+        ConfigRegistry.register_aux_con(config)
+
+    mock_linker.install.assert_called_once()
+    mock_linker.provide_connector.assert_has_calls(
+        provide_connector_calls, any_order=True
+    )
+    mock_linker.provide_auxiliary.assert_has_calls(
+        provide_auxiliary_calls, any_order=True
+    )
+    mock_delete_aux_con.assert_called_once()
+
+
 def test_config_registry_no_auto_proxy(mocker: MockerFixture, sample_config):
     mock_make_px_channel = mocker.patch.object(
         ConfigRegistry, "_make_proxy_channel_config"

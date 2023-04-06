@@ -23,6 +23,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
 
+from ..exceptions import PykisoError
 from .dynamic_loader import DynamicImportLinker
 
 if TYPE_CHECKING:
@@ -190,7 +191,12 @@ class ConfigRegistry:
 
         # 5. Finally, import required ProxyAuxiliary instances so that user doesn't have to
         for proxy_aux in proxies:
-            cls._linker._aux_cache.get_instance(proxy_aux)
+            try:
+                cls.get_aux_by_alias(proxy_aux)
+            except PykisoError:
+                # ensure that the created ProxyAuxiliary is stopped if its creation fails
+                cls.delete_aux_con()
+                raise
 
     @classmethod
     def delete_aux_con(cls) -> None:
