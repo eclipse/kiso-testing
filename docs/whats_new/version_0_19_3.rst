@@ -37,8 +37,7 @@ It is now possible to select test classes or even test cases with a unix filenam
 pattern.
 This pattern can be passed with the -p flag or inside the yaml file.
 
-For more info see
-:ref:`test_case_patterns`
+For more info see :ref:`test_case_patterns`
 
 
 Agnostic tag call
@@ -83,7 +82,7 @@ Communication Auxiliary
 To save on memory, the communication auxiliary does not collect received messages automatically anymore.
 The functionality is now available with the context manager ``collect_messages``.
 
-See :ref:`examples/templates/suite_com/test_com.py`
+See ``kiso-testing/examples/templates/suite_com/test_com.py``.
 
 The collected messages by the Communication auxiliary can still be cleared with the API method
 :py:meth`~pykiso.lib.auxiliaries.communication_auxiliary.CommunicationAuxiliary.clear_buffer`
@@ -105,7 +104,7 @@ Lightweight UDS auxiliary configuration
 The add of an .ini file to configured the UDS auxiliary and it variant (server)
 is no more mandatory, every parameter is now reachable in the .yaml file.
 
-See :ref:`examples/uds.yaml`
+See ``kiso-testing/examples/uds.yaml``.
 
 In addition, if the tp_layer and uds_layer parameters are not given at yaml level
 a default configuration is applied.

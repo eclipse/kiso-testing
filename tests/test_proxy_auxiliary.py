@@ -154,6 +154,57 @@ def test_get_proxy_con_invalid(mocker, caplog, cchannel_inst):
     assert len(proxy_inst.proxy_channels) == 0
 
 
+def test_auto_start_stop(cchannel_inst):
+    class SomeAuxiliary(DTAuxiliaryInterface):
+        def __init__(self, name="fake_aux"):
+            self.channel = CCProxy()
+            super().__init__(name, is_proxy_capable=True)
+
+        def _create_auxiliary_instance(self):
+            self.channel.open()
+            return True
+
+        def _delete_auxiliary_instance(self):
+            self.channel.close()
+            return True
+
+        def _receive_message(self, timeout_in_s):
+            pass
+
+        def _run_command(self, cmd_message, cmd_data):
+            pass
+
+    aux1 = SomeAuxiliary("aux1")
+    aux2 = SomeAuxiliary("aux2")
+    cchannel_inst._cc_receive.return_value = {"msg": None}
+
+    proxy_inst = ProxyAuxiliary(cchannel_inst, [aux1, aux2], name="proxy")
+    assert proxy_inst._open_connections == 0
+    assert proxy_inst.channel._cc_open.call_count == 0
+    assert proxy_inst.channel._cc_close.call_count == 0
+    assert proxy_inst.is_instance == False
+
+    aux1.start()
+    assert proxy_inst._open_connections == 1
+    assert proxy_inst.channel._cc_open.call_count == 1
+    assert proxy_inst.is_instance == True
+
+    aux2.start()
+    assert proxy_inst._open_connections == 2
+    assert proxy_inst.channel._cc_open.call_count == 1
+    assert proxy_inst.is_instance == True
+
+    aux1.stop()
+    assert proxy_inst._open_connections == 1
+    assert proxy_inst.channel._cc_close.call_count == 0
+    assert proxy_inst.is_instance == True
+
+    aux2.stop()
+    assert proxy_inst._open_connections == 0
+    assert proxy_inst.channel._cc_close.call_count == 1
+    assert proxy_inst.is_instance == False
+
+
 def test_getattr_physical_cchannel(
     mocker, cchannel_inst, mock_aux_interface, mock_auxiliaries
 ):
