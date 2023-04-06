@@ -11,6 +11,8 @@ import copy
 import logging
 import pathlib
 from contextlib import nullcontext as does_not_raise
+from pathlib import Path
+from typing import Any
 from unittest import TestCase, TestResult
 
 import pytest
@@ -385,7 +387,9 @@ def test_config_registry_and_test_execution_fail(tmp_test, capsys):
 @pytest.mark.parametrize(
     "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
 )
-def test_config_registry_and_test_execution_with_junit_reporting(tmp_test, capsys):
+def test_config_registry_and_test_execution_with_junit_reporting(
+    tmp_test, capsys, mocker
+):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
     --junit option to show the test results in console
@@ -394,11 +398,21 @@ def test_config_registry_and_test_execution_with_junit_reporting(tmp_test, capsy
     Validation criteria:
         -  run is executed without error
     """
+
+    class HasSubstring(str):
+        """Test if string is in passed argument"""
+
+        def __eq__(self, other: Any):
+            return self in str(other)
+
     cfg = parse_config(tmp_test)
     report_option = "junit"
+    mock_open = mocker.patch("builtins.open")
+    test_name = "banana"
     ConfigRegistry.register_aux_con(cfg)
-    exit_code = test_execution.execute(cfg, report_option)
+    test_execution.execute(cfg, report_option, report_name=test_name)
     ConfigRegistry.delete_aux_con()
+    mock_open.assert_called_with(HasSubstring(test_name), "wb")
 
     output = capsys.readouterr()
     assert "FAIL" not in output.err
