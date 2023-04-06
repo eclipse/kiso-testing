@@ -31,12 +31,12 @@ Real-World Configuration File
 Activation of specific loggers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, every logger that does not belong to the `pykiso` package or that is not an `auxiliary`
-logger will see its level set to WARNING even if you have in the command line `pykiso --log-level DEBUG`.
+By default, every logger that does not belong to the ``pykiso`` package or that is not an ``auxiliary``
+logger will see its level set to WARNING even if you have in the command line ``pykiso --log-level DEBUG``.
 
 This aims to reduce redundant logs from additional modules during the test execution.
-For keeping specific loggers to the set log-level, it is possible to set the `activate_log` parameter in the `auxiliary` config.
-The following example activates the `jlink` logger from the `pylink` package, imported in `cc_rtt_segger.py`:
+For keeping specific loggers to the set log-level, it is possible to set the ``activate_log`` parameter in the ``auxiliary`` config.
+The following example activates the ``jlink`` logger from the ``pylink`` package, imported in ``cc_rtt_segger.py``:
 
 .. code:: yaml
 
@@ -55,25 +55,25 @@ The following example activates the `jlink` logger from the `pylink` package, im
       config: null
       type: pykiso.lib.connectors.cc_rtt_segger:CCRttSegger
 
-Based on this example, by specifying `my_pkg`, all child loggers will also be set to the set log-level.
+Based on this example, by specifying ``my_pkg``, all child loggers will also be set to the set log-level.
 
-.. note:: If e.g. only the logger `my_pkg.module_1` should be set to the level, it should be entered as such.
+.. note:: If e.g. only the logger ``my_pkg.module_1`` should be set to the level, it should be entered as such.
 
 Ability to use environment variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to replace any value by an environment variable in the YAML files.
-When using environment variables, the following format should be respected: `ENV{my-env-var}`.
-In the following example, an environment variable called `TEST_SUITE_1` contains the path to the test suite 1 directory.
+When using environment variables, the following format should be respected: ``ENV{my-env-var}``.
+In the following example, an environment variable called ``TEST_SUITE_1`` contains the path to the test suite 1 directory.
 
 .. literalinclude:: ../../examples/dummy_env_var.yaml
     :language: yaml
     :lines: 22-25
 
 It is also possible to set a default value in case the environment variable is not found.
-The following format should be used: `ENV{my-env-var=my_default_value}`.
+The following format should be used: ``ENV{my-env-var=my_default_value}``.
 
-In the following example, an environment variable called `TEST_SUITE_2` would contain the path to
+In the following example, an environment variable called ``TEST_SUITE_2`` would contain the path to
 the test_suite_2 directory. If the variable is not set, the default value will be taken instead.
 
 .. literalinclude:: ../../examples/dummy_env_var.yaml
@@ -100,7 +100,7 @@ and **will not be parsed**.
         abs_script_path_unix: /home/usr/script_folder/my_awesome_script.py
 
 .. warning::
-  Relative path or file locations must always start with `./`.
+  Relative path or file locations must always start with ``./``.
   If not, it will still be resolved but unexpected behaviour can result from it.
 
 .. _config_sub_yaml:
@@ -127,8 +127,12 @@ All threaded auxiliaries are capable to delay their start-up (not starting at im
 This means, from user point of view, it's possible to start it on demand and especially where
 it's really needed.
 
-.. warning:: in a proxy set-up be sure to always start the proxy auxiliary last
-    otherwise an error will occurred due to proxy auxiliary specific import rules
+.. warning:: in an explicitely defined proxy setup (for shared communication channels) be sure to
+    always start the proxy auxiliary last. Otherwise, an error will occur due to the specific
+    :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary` import rules.
+
+    To avoid such corner cases, consider switching to an
+    :ref:`implicit definition of shared communication channels <sharing_a_cchan>`.
 
 In order to achieved that, a parameter was added at the auxiliary configuration level.
 
@@ -139,8 +143,8 @@ In order to achieved that, a parameter was added at the auxiliary configuration 
       connectors:
           com: can_channel
       config:
-        aux_list : [aux1, aux2]
-        activate_trace : True
+        aux_list: [aux1, aux2]
+        activate_trace: True
         trace_dir: ./suite_proxy
         trace_name: can_trace
         # if False create the auxiliary instance but don't start it, an
@@ -151,13 +155,13 @@ In order to achieved that, a parameter was added at the auxiliary configuration 
       type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
     aux1:
       connectors:
-          com: proxy_com1
+        com: proxy_com1
       config:
         auto_start: False
       type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
     aux2:
       connectors:
-          com: proxy_com2
+        com: proxy_com2
       config:
         auto_start: False
       type: pykiso.lib.auxiliaries.communication_auxiliary:CommunicationAuxiliary
@@ -346,10 +350,11 @@ Make a proxy auxiliary trace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Proxy auxiliary is capable of creating a trace file, where all received messages at connector
-level are written. This feature is useful when proxy auxiliary is associated with a connector
-who doesn't have any trace capability (in contrast to cc_pcan_can or cc_rtt_segger for example).
+level are written. This feature is useful when proxy auxiliary is associated with a communication channel
+that doesn't have any tracing capability (in contrast to :py:class:`~pykiso.lib.connectors.cc_pcan_can.CCPcanCan`
+or :py:class:`~pykiso.lib.connectors.cc_rtt_segger.CCRttSegger` for example).
 
-Everything is handled at configuration level and especially at yaml file :
+Everything is handled at configuration level within the YAML test configuration file:
 
 .. code:: yaml
 
@@ -372,3 +377,6 @@ Everything is handled at configuration level and especially at yaml file :
       # otherwise user should specify his own name
       trace_name: can_trace
     type: pykiso.lib.auxiliaries.proxy_auxiliary:ProxyAuxiliary
+
+
+.. note:: This feature is only available with an explicit proxy definition as shown :ref:`above <delayed_startup>`.

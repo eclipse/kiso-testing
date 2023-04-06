@@ -21,4 +21,4 @@ will remain closed.
 Afterwards, the shared communication channel can be opened and closed by respectively
 starting one of the auxiliaries and stopping all of the auxiliaries.
 
-For more information, please refer to :ref:`sharing_a_cchan`_.
+For more information, please refer to :ref:`sharing_a_cchan`.
