@@ -56,6 +56,7 @@ from .test_coordinator.test_case import (
     define_test_parameters,
     retry_test_case,
 )
+from .test_coordinator.test_execution import abort
 from .test_coordinator.test_suite import (
     BasicTestSuiteSetup,
     BasicTestSuiteTeardown,

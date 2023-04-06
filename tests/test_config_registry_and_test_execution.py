@@ -10,6 +10,7 @@
 import copy
 import logging
 import pathlib
+import signal
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
 from typing import Any
@@ -771,3 +772,17 @@ def test_config_registry_config_no_patching(mocker: MockerFixture, sample_config
     assert mock_linker.provide_connector.call_count == 1
     assert mock_linker.provide_auxiliary.call_count == 2
     mock_linker._aux_cache.get_instance.assert_not_called()
+
+
+def test_abort(mocker: MockerFixture, caplog):
+    reason = "reason"
+    os_kill_mock = mocker.patch("os.kill")
+
+    test_execution.abort(reason)
+
+    assert reason in caplog.text
+    assert (
+        "Non recoverable error occurred during test execution, aborting test session."
+        in caplog.text
+    )
+    os_kill_mock.assert_called_once()

@@ -25,6 +25,7 @@ Test Execution
 """
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 from unittest.loader import VALID_MODULE_NAME
 
@@ -321,6 +322,20 @@ def collect_test_suites(
         except BaseException as e:
             raise TestCollectionError(test_suite_configuration["suite_dir"]) from e
     return list_of_test_suites
+
+
+def abort(reason: str = None) -> None:
+    """Quit ITF test and log an error if a reason is indicated and
+    if any errors occurred it logs them.
+
+    :param reason: reason to abort, defaults to None
+    """
+    if reason:
+        log.critical(reason)
+    log.critical(
+        "Non recoverable error occurred during test execution, aborting test session."
+    )
+    os.kill(os.getpid(), ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION)
 
 
 def execute(
