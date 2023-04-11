@@ -386,9 +386,7 @@ def test_test_execution_test_failure(tmp_test, capsys):
 @pytest.mark.parametrize(
     "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
 )
-def test_test_execution_with_junit_reporting(
-    tmp_test, capsys, mocker
-):
+def test_test_execution_with_junit_reporting(tmp_test, capsys, mocker):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
     --junit option to show the test results in console
