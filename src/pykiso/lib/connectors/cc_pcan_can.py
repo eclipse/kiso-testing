@@ -485,11 +485,11 @@ class CCPCanCan(CChannel):
         for line in data[:first_message_line]:
             if line.find(";$STARTTIME=") != -1:
                 start_time = float(line[len(";$STARTTIME=") :])
-                return CCPCanCan._get_start_time_from_peak_format(start_time)
+                return CCPCanCan._convert_peak_format_to_start_time(start_time)
         raise ValueError("No start time was found in the trace file")
 
     @staticmethod
-    def _get_start_time_from_peak_format(start_time: float) -> float:
+    def _convert_peak_format_to_start_time(start_time: float) -> float:
         """Get the start time of a trc file in milliseconds since the start of the day
         from the peak start time format
 
