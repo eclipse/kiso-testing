@@ -10,6 +10,7 @@
 import io
 import logging
 import os
+import unittest.mock
 from collections import namedtuple
 from pathlib import Path
 from textwrap import dedent
@@ -354,17 +355,17 @@ def test_parse_config_os_error_on_path(mocker, tmp_path):
     mock_is_key = mocker.patch.object(
         YamlLoader, "is_key", side_effect=[True, True, True, True, False]
     )
-    mock_resolve = mocker.patch(
-        "pykiso.config_parser.Path.resolve", side_effect=[yaml_file, OSError]
-    )
 
     config_stream = io.StringIO(config_dict)
     config_stream.name = "my_config"
 
-    cfg = yaml.load(yaml_file, Loader=YamlLoader)
+    with unittest.mock.patch(
+        "pykiso.config_parser.Path.resolve", side_effect=[yaml_file, OSError]
+    ) as mock_resolve:
+        cfg = yaml.load(yaml_file, Loader=YamlLoader)
+        assert mock_resolve.call_count == 2
 
     assert mock_is_key.call_count == 5
-    assert mock_resolve.call_count == 2
     assert cfg["auxiliaries"]["aux1"]["config"]["some_path"] == "NOT/A/PATH"
 
 
