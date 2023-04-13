@@ -164,8 +164,7 @@ def trc_files(tmp_path):
         with open(file, "w+") as f:
             f.write(traces[idx])
             # Sleep to avoid failure on integration tests
-            time.sleep(0.2)
-        os.utime(file, (idx, idx))
+        os.utime(file, (1602179630 + idx * 2, 1602179630 + idx * 2))
     return file_paths
 
 

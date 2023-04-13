@@ -41,6 +41,12 @@ log = logging.getLogger(__name__)
 class CCMpProxy(CChannel):
     """Multiprocessing Proxy CChannel for multi auxiliary usage."""
 
+    # keep an uninitialized proxy variable at class-level to fulfill the existence conditions.
+    # when a CCProxy instance will then set it, it will only be set at instance level but stay
+    # uninitialized at class-level
+    _proxy: MpProxyAuxiliary = None
+    _physical_channel: CChannel = None
+
     def __init__(self, **kwargs):
         """Initialize attributes."""
         kwargs.update(processing=True)
@@ -49,9 +55,6 @@ class CCMpProxy(CChannel):
         self.queue_in = multiprocessing.Queue()
         self.queue_out = multiprocessing.Queue()
         self.timeout = 1
-        # used for physical channel attributes access from main auxiliary
-        self._proxy = None
-        self._physical_channel = None
 
     def _bind_channel_info(self, proxy_aux: MpProxyAuxiliary):
         """Bind a :py:class:`~pykiso.lib.auxiliaries.mp_proxy_auxiliary.MpProxyAuxiliary`

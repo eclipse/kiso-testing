@@ -101,7 +101,6 @@ refer to the positivity of the response, and its NRC if negative.
 
 Here is an example:
 
-
 .. code:: python
 
     import pykiso
@@ -249,6 +248,7 @@ The methods take as only mandatory argument the received response.
 The parameter rest is the response as a userlist object.
 
 .. code:: python
+
     #Check raw response is positive
     uds_aux.check_raw_response_positive(resp)
 

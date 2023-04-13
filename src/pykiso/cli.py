@@ -18,17 +18,13 @@ Integration Test Framework
 .. currentmodule:: cli
 
 """
-import collections
 import logging
 import pprint
 import sys
-import time
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import click
-
-from pykiso.test_coordinator.test_execution import ExitCode
 
 from . import __version__
 from .config_parser import parse_config
@@ -116,6 +112,7 @@ def check_file_extension(
     required=False,
     default=None,
     type=click.Path(writable=True),
+    multiple=True,
     help="path to log-file or folder. If not set will log to STDOUT",
 )
 @click.option(
@@ -175,7 +172,7 @@ def check_file_extension(
 def main(
     click_context: click.Context,
     test_configuration_file: Tuple[PathType],
-    log_path: PathType = None,
+    log_path: Tuple[PathType] = None,
     log_level: str = "INFO",
     report_type: str = "text",
     step_report: Optional[PathType] = None,
@@ -193,7 +190,7 @@ def main(
     \f
     :param click_context: click context
     :param test_configuration_file: path to the YAML config file
-    :param log_path: path to an existing directory or file to write logs to
+    :param log_path: path to existing directories or files to write logs to
     :param log_level: any of DEBUG, INFO, WARNING, ERROR
     :param report_type: if "test", the standard report, if "junit", a junit report is generated
     :param variant: allow the user to execute a subset of tests based on variants
@@ -204,9 +201,29 @@ def main(
     :param verbose: activate logging for the whole framework
     """
 
-    for config_file in test_configuration_file:
+    for idx, config_file in enumerate(test_configuration_file):
+
+        yaml_name = Path(config_file).stem
         # Set the logging
-        logger = initialize_logging(log_path, log_level, verbose, report_type)
+        if log_path:
+            # Put all logs in one file
+            if len(log_path) == 1:
+                logger = initialize_logging(
+                    log_path[0], log_level, verbose, report_type, yaml_name
+                )
+            # Log in different files for each yaml
+            elif len(log_path) == len(test_configuration_file):
+                logger = initialize_logging(
+                    log_path[idx], log_level, verbose, report_type, yaml_name
+                )
+            else:
+                raise click.UsageError(
+                    f"Mismatch: {len(test_configuration_file)} yaml config files provided but {len(log_path)} log files"
+                )
+        else:
+            log_path = None
+            logger = initialize_logging(log_path, log_level, verbose, report_type)
+
         # Get YAML configuration
         cfg_dict = parse_config(config_file)
         # Run tests
@@ -217,7 +234,7 @@ def main(
         user_tags = eval_user_tags(click_context)
 
         exit_code = test_execution.execute(
-            cfg_dict, report_type, user_tags, step_report, pattern, failfast
+            cfg_dict, report_type, yaml_name, user_tags, step_report, pattern, failfast
         )
         ConfigRegistry.delete_aux_con()
         for handler in logging.getLogger().handlers:

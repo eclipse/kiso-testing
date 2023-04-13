@@ -121,8 +121,8 @@ class CCPCanCan(CChannel):
         :param remote_id: id used for transmission
         :param can_filters: iterable used to filter can id on reception
         :param logging_activated: boolean used to disable logfile creation
-        :param bus_error_warning_filter : if True filter the logging message
-        ('Bus error: an error counter')
+        :param bus_error_warning_filter: if True filter the PCAN driver warnings
+            'Bus error: an error counter' from the logs.
         """
         super().__init__(**kwargs)
         self.interface = interface

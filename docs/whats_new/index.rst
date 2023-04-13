@@ -1,10 +1,10 @@
-What’s New In Pykiso?
+What's New In Pykiso?
 =====================
 
 .. toctree::
 
     version_ongoing
-    version_0_21_1
+    version_0_21_2
     version_0_20_0
     version_0_19_3
     version_0_18_0
