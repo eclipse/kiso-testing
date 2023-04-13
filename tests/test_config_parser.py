@@ -354,8 +354,8 @@ def test_parse_config_os_error_on_path(mocker, tmp_path):
     mock_is_key = mocker.patch.object(
         YamlLoader, "is_key", side_effect=[True, True, True, True, False]
     )
-    mock_resolve = mocker.patch.object(
-        Path, "resolve", side_effect=[yaml_file, OSError]
+    mock_resolve = mocker.patch(
+        "pykiso.config_parser.Path.resolve", side_effect=[yaml_file, OSError]
     )
 
     config_stream = io.StringIO(config_dict)
