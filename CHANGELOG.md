@@ -9,20 +9,36 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Bug Fixes
 
 - Fixing record auxiliary unittest ([#246](https://github.com/orhun/git-cliff/issues/246))
+- Step report now display nested assertions ([#249](https://github.com/orhun/git-cliff/issues/249))
+
+### Documentation
+
+- Provide eclipse foundation link
+
+### Miscellaneous Tasks
+
+- Bump sphinx-rtd-theme from 1.0.0 to 1.2.0 ([#258](https://github.com/orhun/git-cliff/issues/258))
+- Bump sphinxcontrib-applehelp from 1.0.2 to 1.0.4 ([#259](https://github.com/orhun/git-cliff/issues/259))
 
 ### New Features
 
 - Implement multi test result class ([#234](https://github.com/orhun/git-cliff/issues/234))
 - Step report shows each test method description ([#252](https://github.com/orhun/git-cliff/issues/252))
+- Handle logging for multiple yamls ([#263](https://github.com/orhun/git-cliff/issues/263))
+- Junit report named like config file ([#264](https://github.com/orhun/git-cliff/issues/264))
+- Add abort function ([#270](https://github.com/orhun/git-cliff/issues/270))
+- Allow proxy auto start and stop ([#265](https://github.com/orhun/git-cliff/issues/265))
 
 ### Refactorings
 
 - Granularity in the installation ([#213](https://github.com/orhun/git-cliff/issues/213))
+- Change quality checker
 
 ### Testing
 
 - Reworking cc_uart test ([#248](https://github.com/orhun/git-cliff/issues/248))
 - Adding test for show_tag and pykiso to pytest ([#244](https://github.com/orhun/git-cliff/issues/244))
+- Fix unittest issues ([#274](https://github.com/orhun/git-cliff/issues/274))
 
 ### Bugfix
 
