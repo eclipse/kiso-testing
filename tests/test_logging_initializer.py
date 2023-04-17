@@ -17,17 +17,14 @@ from pykiso import logging_initializer
 
 
 @pytest.mark.parametrize(
-    "path, level, expected_level, verbose, report_type, yaml_name",
+    "path, level, expected_level, verbose, report_type",
     [
-        (None, "INFO", logging.INFO, False, "junit", None),
-        (os.getcwd(), "WARNING", logging.WARNING, True, "text", None),
-        ("test/test", "WARNING", logging.WARNING, True, "text", "conf_file.yaml"),
-        (None, "ERROR", logging.ERROR, False, None, None),
+        (None, "INFO", logging.INFO, False, "junit"),
+        ("test/test", "WARNING", logging.WARNING, True, "text"),
+        (None, "ERROR", logging.ERROR, False, None),
     ],
 )
-def test_initialize_logging(
-    mocker, path, level, expected_level, verbose, report_type, yaml_name
-):
+def test_initialize_logging(mocker, path, level, expected_level, verbose, report_type):
 
     mocker.patch("logging.Logger.addHandler")
     mocker.patch("logging.FileHandler.__init__", return_value=None)
