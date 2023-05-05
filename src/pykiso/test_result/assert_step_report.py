@@ -220,6 +220,7 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
         ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = {
             "description": test_description,
             "steps": [],
+            "unexpected_errors": [],
         }
 
 
@@ -388,13 +389,16 @@ def _parse_timestamp(timestamp: float) -> str:
     return dt.strftime("%d/%m/%y %H:%M:%S")
 
 
-def is_test_success(test: List) -> bool:
+def is_test_success(test: dict) -> bool:
     """Check if test was successful.
 
     :param tests: test
-    :return: True if each step in a test was successful else False
+    :return: True if each step in a test was successful and no unexpected error
+        was raised else False
     """
-    return all([step["succeed"] for step in test])
+    return all([step["succeed"] for step in test["steps"]]) and not test.get(
+        "unexpected_errors"
+    )
 
 
 jinja_template_functions = {
@@ -418,7 +422,6 @@ def generate_step_report(
     failed_test = (
         test_result.failures + test_result.errors + test_result.unexpectedSuccesses
     )
-
     # Update info for each test
     for test_case in succeeded_tests + failed_test:
         if isinstance(test_case, (TestCase, TestInfo)):
@@ -435,18 +438,20 @@ def generate_step_report(
             start_time = _parse_timestamp(test_info.test_case.start_time)
             stop_time = _parse_timestamp(test_info.test_case.stop_time)
             elapsed_time = test_info.test_case.elapsed_time
+            test_method_name = test_info.test_case._testMethodName
         elif isinstance(test_info, TestCase):
             class_name = test_info.__class__.__name__
             start_time = _parse_timestamp(test_info.start_time)
             stop_time = _parse_timestamp(test_info.stop_time)
             elapsed_time = test_info.elapsed_time
+            test_method_name = test_info._testMethodName
         elif isinstance(test_info, TestInfo):
             # test_info is TestInfo
             class_name = test_info.test_name.split(".")[-1]
             start_time = _parse_timestamp(test_info.test_result.start_time)
             stop_time = _parse_timestamp(test_info.test_result.stop_time)
             elapsed_time = test_info.elapsed_time
-
+            test_method_name = test_info.test_id.split(".")[-1]
         # Update test_case
         if class_name in ALL_STEP_REPORT:
             ALL_STEP_REPORT[class_name]["time_result"]["Start Time"] = start_time
@@ -454,7 +459,12 @@ def generate_step_report(
             ALL_STEP_REPORT[class_name]["time_result"]["Elapsed Time"] = round(
                 elapsed_time, 2
             )
+            if test_case in test_result.errors:
+                ALL_STEP_REPORT[class_name]["test_list"][test_method_name][
+                    "unexpected_errors"
+                ].append(test_case[1])
 
+                ALL_STEP_REPORT[class_name]["succeed"] = False
     # Render the source template
     render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH))
     template = render_environment.get_template(REPORT_TEMPLATE)

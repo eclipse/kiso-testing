@@ -29,7 +29,7 @@
             </p>
             {#- For each test (setUp, run, tearDown) -#}
             {% for test_name, test_content in class_content["test_list"].items() %}
-                {% set test_success = is_test_success(test_content["steps"]) -%}
+                {% set test_success = is_test_success(test_content) -%}
                 <details {% if not test_success %}open{% endif %}><summary><h3>{{test_name}}
                 {% if test_success -%}<span style="color:green;">Success</span>
                 {% else %}<span style="color:red;">Fail</span>
@@ -84,6 +84,13 @@
                         {%- endfor %}
                     </tbody>
                 </table>
+                {% if test_content.get("unexpected_errors") -%}
+                    <b style='color:red;'><strong>Unexpected errors happened :</strong> <br></b>
+                        {% for error in test_content.get("unexpected_errors") -%}
+                            <pre>{{error}}</pre>
+                        {%- endfor %}
+
+                {%- endif %}
                 </details>
             {%- endfor %}
         </div>
