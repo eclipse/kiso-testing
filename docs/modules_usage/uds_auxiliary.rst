@@ -38,6 +38,7 @@ Find below a complete configuration example :
           # p2_can_server -> 1
           uds_layer:
             transport_protocol: 'CAN'
+            # p2_can specifies receive time outs in seconds
             p2_can_client: 5
             p2_can_server: 1
           # tp_layer parameter is not mandatory and by default the following

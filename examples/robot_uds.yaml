@@ -8,6 +8,7 @@ auxiliaries:
       response_id : 0x321
       uds_layer:
         transport_protocol: 'CAN'
+        # p2_can specifies receive time outs in seconds
         p2_can_client: 5
         p2_can_server: 1
       tp_layer:

@@ -70,7 +70,7 @@ class UdsBaseAuxiliary(DTAuxiliaryInterface):
         """Initialize attributes.
 
         :param com: communication channel connector.
-        :param config_ini_path: UDS parameter file.
+        :param config_ini_path: unused. Legacy UDS parameter file.
         :param odx_file_path: ecu diagnostic definition file.
         :param request_id: optional CAN ID used for sending messages.
         :param response_id: optional CAN ID used for receiving messages.
