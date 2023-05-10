@@ -79,11 +79,17 @@ def test_result():
     test2.test_result.start_time = 1
     test2.test_result.stop_time = 2
     test2.test_result.elapsed_time = 1
+    test2.test_id = "test.class_name.test_method_name"
+
+    test3 = TestCase()
+    test3.start_time = 1
+    test3.stop_time = 2
+    test3.elapsed_time = 1
 
     result.successes = [test1, (subtest,), test2]
     result.expectedFailures = []
     result.failures = [(test2, "")]
-    result.errors = []
+    result.errors = [(test3, "")]
     result.unexpectedSuccesses = []
     return result
 
@@ -238,11 +244,16 @@ def test_add_step():
 
 def test_is_test_success():
 
-    test_ok = [{"succeed": True}, {"succeed": True}, {"succeed": True}]
-    test_fail = [{"succeed": True}, {"succeed": False}, {"succeed": True}]
+    test_ok = {"steps": [{"succeed": True}, {"succeed": True}, {"succeed": True}]}
+    test_fail = {"steps": [{"succeed": True}, {"succeed": False}, {"succeed": True}]}
+    test_fail_error = {
+        "steps": [{"succeed": True}, {"succeed": True}, {"succeed": True}],
+        "unexpected_errors": "error",
+    }
 
     assert assert_step_report.is_test_success(test_ok)
     assert assert_step_report.is_test_success(test_fail) is False
+    assert assert_step_report.is_test_success(test_fail_error) is False
 
 
 @pytest.mark.parametrize(
