@@ -20,6 +20,7 @@ TestRail tool command line interface
 
 """
 import getpass
+import sys
 
 import click
 
@@ -245,11 +246,11 @@ def cli_upload(
     suite: str,
     milestone: str,
     results: str,
-    attr: str,
+    tag: str,
     custom_field: str,
 ) -> None:
     """Upload all test case results on TestRail."""
-    JunitReport.set_id_tag(attr)
+    JunitReport.set_id_tag(tag)
 
     # get all available cases from the given project
     project_id, cases = enumerate_all_cases(
@@ -277,8 +278,12 @@ def cli_upload(
         suite_name=suite,
     )
     # extract the ids from each given JUNIT report and finally get the
-    # couple (TestRail id, req id, state)
+    # tuple (TestRail id, req id, state)
     case_results = extract_test_results(results=results, cases=cases)
+    if len(case_results) == 0:
+        print("Could not match any JUnit result to a Testrail test case, exiting.")
+        sys.exit(1)
+
     case_ids = [rail_id for rail_ids, _, _ in case_results for rail_id in rail_ids]
     # Create a brand new run on TestRail and associate the case ids
     run_id = create_new_run(
