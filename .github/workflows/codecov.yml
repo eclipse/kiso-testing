@@ -18,12 +18,21 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: eclipse/kiso-build-env:v0.2.1
+    runs-on: ubuntu-22.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+
+      # Pre requisite installation
+      - name: Prerequisite installation
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install poetry
+        run: pip3 install poetry
 
       # Runs the preparation
       - name: Prepare working environement
