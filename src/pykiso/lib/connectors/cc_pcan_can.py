@@ -404,7 +404,7 @@ class CCPCanCan(CChannel):
             first_message_line = 33
 
             # Get start time of the first trc file
-            with open(list_of_traces[0], "r") as trc:
+            with list_of_traces[0].open("r") as trc:
                 data = trc.read().splitlines(True)
 
                 first_trc_start_time = CCPCanCan._get_trace_start_time(
@@ -416,7 +416,7 @@ class CCPCanCan(CChannel):
 
             # Append all trace files
             for file in list_of_traces:
-                with open(file, "r") as trc:
+                with file.open("r") as trc:
                     data = trc.read().splitlines(True)
 
                     # Get offset between current and first trc file
@@ -431,7 +431,7 @@ class CCPCanCan(CChannel):
                     )
                     message_idx += len(data[first_message_line:])
 
-                with open(result_trace, "a") as merged_trc:
+                with result_trace.open("a") as merged_trc:
                     merged_trc.writelines(corrected_data)
                 os.remove(file)
 
