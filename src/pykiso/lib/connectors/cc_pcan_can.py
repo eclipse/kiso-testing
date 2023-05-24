@@ -369,7 +369,7 @@ class CCPCanCan(CChannel):
                 log.internal_debug(
                     f"received CAN Message: {frame_id}, {payload}, {timestamp}"
                 )
-                return {"msg": payload, "remote_id": frame_id}
+                return {"msg": payload, "remote_id": frame_id, "timestamp": timestamp}
             else:
                 return {"msg": None}
         except can.CanError as can_error:
