@@ -1,4 +1,4 @@
-Included Auxiliaries
+Existing Auxiliaries
 ====================
 
 `pykiso` comes with some ready to use implementations of different auxiliaries.
