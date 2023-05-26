@@ -19,17 +19,21 @@ Communication Channel Via Serial
 
 """
 
-
+import logging
+import sys
+import time
 from enum import Enum, IntEnum
-from typing import ByteString, Dict, Optional, Union
+from typing import ByteString, Dict, List, Optional, Union
 
 try:
     import serial
+    import serial.tools.list_ports
 except ImportError as e:
     raise ImportError(
         f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'"
     )
 
+log = logging.getLogger(__name__)
 
 from pykiso import Message, connector
 
@@ -63,6 +67,8 @@ class CCSerial(connector.CChannel):
     def __init__(
         self,
         port: str,
+        vid: int = 0,
+        pid: int = 0,
         baudrate: int = 9600,
         bytesize: ByteSize = ByteSize.EIGHT_BITS,
         parity: Parity = Parity.PARITY_NONE,
@@ -119,7 +125,51 @@ class CCSerial(connector.CChannel):
         )
 
         self.current_write_timeout = write_timeout
-        self.serial.port = port
+        self.serial.port = self._get_port(port=port, vid=vid, pid=pid)
+
+    def _find_device(vid: int, pid: int) -> str:
+        """Return the device which matches pid and vid.
+
+        :param vid: vendor id
+        :param pid: product id
+
+        :return: com port for the found device. I.e. "COM4" or "/dev/tty1"
+        """
+
+        attached_com_devices = serial.tools.list_ports.comports()
+        found_devices = [
+            port for port in attached_com_devices if port.pid == pid and port.vid == vid
+        ]
+        if not found_devices:
+            raise ConnectionError(
+                f"Failed to detect connected USB device with IDs {vid:04X}:{pid:04x}."
+            )
+
+        found_devices = [
+            port.name if not sys.platform.startswith("win") else port.device
+            for port in found_devices
+        ]
+        if len(found_devices) > 1:
+            log.warning(
+                f"Found multiple devices, {found_devices}, with matching IDs {vid:04X}:{pid:04x}. Select first device {found_devices[0]}."
+            )
+        return found_devices[0]
+
+    def _get_port(self, port: str, vid: int, pid: int) -> str:
+        """Returns com port depending on the given port argument.
+        If port set to auto, the device will be searched for,
+        using the pid and vid, else the port argument will be returned.
+
+        :param port: port
+        :param vid: vendor id
+        :param pid: product id
+
+        :return: com ports of given or found device. I.e. "COM4" or "/dev/tty1"
+        """
+        if port.lower() == "auto":
+            return CCSerial._find_device(vid=vid, pid=pid)
+        else:
+            return port
 
     def _cc_open(self) -> None:
         """Open serial port"""

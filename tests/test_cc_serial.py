@@ -1,11 +1,17 @@
 import importlib
+import logging
 import sys
+from unittest import mock
 
 import pytest
 import serial
+import serial.tools.list_ports
+from serial.tools.list_ports_common import ListPortInfo
 
 from pykiso.lib.connectors import cc_serial
 from pykiso.lib.connectors.cc_serial import CCSerial
+
+# import serial.tools.list_ports_common
 
 
 def test_import():
@@ -23,6 +29,51 @@ def test_constructor(mocker):
     cc_serial = CCSerial("com666")
 
     assert cc_serial.serial.port == "com666"
+    serial_mock.assert_called_once()
+
+
+def test_constructor_auto_port_timeout(mocker):
+
+    serial_mock = mocker.patch("serial.Serial")
+
+    with pytest.raises(ConnectionError):
+        CCSerial("auto")
+
+
+def test_constructor_auto_port(mocker):
+
+    serial_mock = mocker.patch("serial.Serial")
+    test_device = ListPortInfo(device="test_device")
+    test_device.pid = 1
+    test_device.vid = 2
+    with mock.patch.object(
+        serial.tools.list_ports, "comports", return_value=[test_device]
+    ):
+        cc_serial = CCSerial(port="auto", pid=1, vid=2)
+
+    assert cc_serial.serial.port == "test_device"
+    serial_mock.assert_called_once()
+
+
+def test_constructor_auto_port_warn(caplog, mocker):
+
+    serial_mock = mocker.patch("serial.Serial")
+    test_device = ListPortInfo(device="test_device")
+    test_device.pid = 1
+    test_device.vid = 2
+    test_device2 = ListPortInfo(device="test_device2")
+    test_device2.pid = 1
+    test_device2.vid = 2
+    with mock.patch.object(
+        serial.tools.list_ports, "comports", return_value=[test_device, test_device2]
+    ):
+        with caplog.at_level(logging.WARNING):
+            cc_serial = CCSerial(port="auto", pid=1, vid=2)
+    assert (
+        "Found multiple devices, ['test_device', 'test_device2'], with matching IDs 0002:0001. Select first device test_device."
+        in caplog.text
+    )
+    assert cc_serial.serial.port == "test_device"
     serial_mock.assert_called_once()
 
 
