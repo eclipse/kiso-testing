@@ -16,8 +16,6 @@ Test collection
 :synopsis: allow pytest to collect test suites based on pykiso YAML
     configuration files. Make defined auxiliaries available as fixtures.
 
-.. currentmodule:: collection
-
 """
 
 from __future__ import annotations
@@ -70,9 +68,53 @@ def pytest_auxiliary_load(aux: DTAuxiliaryInterface | str):
 
 @export
 def pytest_addhooks(pluginmanager: PytestPluginManager):
-    from pykiso.pytest import hooks
+    from pykiso.pytest_plugin import hooks
 
     pluginmanager.add_hookspecs(hooks)
+
+
+def pytest_apply_tag_filter(
+    tests: list[TestCaseFunction], user_tags: dict[str, list[str]]
+):
+    found_tags = {tag_name: False for tag_name in user_tags.keys()}
+    for test_case in tests:
+        test_case_tags = test_case.get_closest_marker(name="tags")
+
+        if test_case_tags is None:
+            continue
+
+        # Skip only the test cases that have a matching tag name but no matching tag value
+        for cli_tag_id, cli_tag_value in user_tags.items():
+            # skip any test case that doesn't define a CLI-provided tag name
+            if cli_tag_id not in test_case_tags.kwargs.keys():
+                test_case.add_marker(
+                    pytest.mark.skip(
+                        reason=f"provided tag {cli_tag_id!r} not present in test tags"
+                    )
+                )
+                continue
+            # skip any test case that which tag value don't match the provided tag's value
+            cli_tag_values = (
+                cli_tag_value if isinstance(cli_tag_value, list) else [cli_tag_value]
+            )
+            found_tags[cli_tag_id] = True
+            if not any(
+                cli_val in test_case_tags.kwargs[cli_tag_id]
+                for cli_val in cli_tag_values
+            ):
+                test_case.add_marker(
+                    pytest.mark.skip(
+                        reason=f"non-matching value for tag {cli_tag_id!r}"
+                    )
+                )
+
+    # verify that each provided tag name is defined in at least one test case
+    for cli_tag_name, tag_found in found_tags:
+        if not tag_found:
+            raise NameError(
+                f"Provided tag {cli_tag_name!r} is not defined in any testcase.",
+                cli_tag_name,
+            )
 
 
 def sort_and_filter_items(
@@ -103,13 +145,17 @@ def sort_and_filter_items(
             # retrieve original kiso unittest cases from collected testcases
             kiso_base_testcases = [get_base_testcase(tc) for tc in kiso_testcases]
             # apply filter on them
-            try:
-                apply_tag_filter(kiso_base_testcases, cli_tags)
-            except NameError as e:
-                # as we can't verify the tags for all test suites at once
-                # keep track of those that do not have the tag defined
-                tag_name = e.args[1]
-                tag_not_found_count[tag_name] += 1
+            for apply_filters in (
+                lambda: apply_tag_filter(kiso_base_testcases, cli_tags),
+                lambda: pytest_apply_tag_filter(pytest_testcases, cli_tags),
+            ):
+                try:
+                    apply_filters()
+                except NameError as e:
+                    # as we can't verify the tags for all test suites at once
+                    # keep track of those that do not have the tag defined
+                    tag_name = e.args[1]
+                    tag_not_found_count[tag_name] += 1
             # re-create the originally collected testcases with their skip status
             kiso_testcases = [
                 TestCaseFunction.from_parent(
@@ -126,8 +172,9 @@ def sort_and_filter_items(
         collected_test_items += sorted_kiso_testcases + pytest_testcases
 
     # if none of the collected test suites had the tag defined, better error out than skip everything
+    # this takes into account both pykiso and pytest test suites, hence the x 2
     for tag_name, not_found_count in tag_not_found_count.items():
-        if not_found_count == len(collected_suites):
+        if not_found_count == len(collected_suites) * 2:
             raise pytest.UsageError(
                 f"Tag {tag_name!r} was not found in any of the collected test cases."
             )
@@ -166,7 +213,12 @@ def create_auxiliary_fixture(session: Session, aux_alias: str):
     def auxiliary_scope(
         fixture_name: AuxiliaryAlias = aux_alias, config: Config = session.config
     ) -> str:
-        """Return the scope for all auxiliary fixtures."""
+        """Return the scope for all auxiliary fixtures.
+
+        :param fixture_name: name of the auxiliary fixture (and its alias).
+            Required by pytest's FixtureDef.
+        :param config: the pytest session config.
+        """
         scope = config.getini("auxiliary_scope")
         return scope
 
@@ -190,6 +242,7 @@ def pytest_collection(session: Session):
     """Modify pytest collection to behave like pykiso when a YAML file is provided.
 
     The resulting test collection can be summed up as follows:
+
     - If a YAML configuration file is provided as CLI argument, parse it.
     - If the parsed configuration defines test auxiliaries, create fixtures for
       each of them named with the defined auxiliary's alias.

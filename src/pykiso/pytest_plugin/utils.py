@@ -8,15 +8,9 @@
 ##########################################################################
 
 """
-Common utilities
-****************
-
 :module: utils
 
 :synopsis: implements common utilities to support the pytest-pykiso duality.
-
-.. currentmodule:: utils
-
 """
 
 from __future__ import annotations
@@ -48,11 +42,20 @@ export(export)
 
 @export
 def get_base_testcase(item: TestCaseFunction) -> unittest.TestCase:
+    """Returns the unittest test case wrapped within a pytest test case.
+
+    :param item: pytest-collected test case.
+    :return: wrapped unittest test case (or pykiso test case).
+    """
     return item.parent._obj(item.name)
 
 
 @export
 def is_kiso_testcase(tc):
+    """
+    Determine whether the provided test case is a pykiso test case
+    wrapped by pytest.
+    """
     return isinstance(tc, TestCaseFunction) and isinstance(
         get_base_testcase(tc), (BasicTest, BaseTestSuite)
     )

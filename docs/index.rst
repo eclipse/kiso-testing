@@ -14,6 +14,7 @@ Welcome to pykiso's documentation!
     modules_usage/index
     api
     tools/index
+    pytest/index
     robot_framework/index
 
 Indices and tables

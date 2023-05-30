@@ -15,8 +15,6 @@ Pykiso-specific hooks for pytest
 
 :synopsis: define hooks for test auxiliary fixture customization.
 
-.. currentmodule:: hooks
-
 """
 
 from __future__ import annotations

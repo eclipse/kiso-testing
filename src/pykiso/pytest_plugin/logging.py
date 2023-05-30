@@ -16,8 +16,6 @@ Logging configuration
 :synopsis: initialize the pykiso loggers and patch then onto pytest's loggers
     in order to control CLI and file logging with pytest's built-in options.
 
-.. currentmodule:: logging
-
 """
 
 from __future__ import annotations
@@ -51,6 +49,8 @@ def pytest_sessionstart(session: Session):
     pytest_logger: LoggingPlugin = session.config.pluginmanager.get_plugin(
         "logging-plugin"
     )
+    if pytest_logger.log_cli_level is None:
+        pytest_logger.log_cli_level = logging.INFO
     # run pykiso's logging initialization
     initialize_logging(
         log_path=None,

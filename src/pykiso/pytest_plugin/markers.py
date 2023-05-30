@@ -15,8 +15,6 @@ Markers
 
 :synopsis: define new pykiso-related markers.
 
-.. currentmodule:: markers
-
 """
 
 from _pytest.config import Config
@@ -28,6 +26,9 @@ from .utils import *
 def pytest_configure(config: Config):
     config.addinivalue_line(
         "markers",
-        "test_ids(DUT1=['ABC123', 'DEF456'], DUT2=['123ABC']): "
-        "marker for test IDs or test-related requirements that will appear in the report",
+        "test_ids(DUT1=['ABC123', 'DEF456'], DUT2=['123ABC']): marker for test IDs or test-related requirements that will appear in the report",
+    )
+    config.addinivalue_line(
+        "markers",
+        "tags(variant='DUT1', branch=['main', 'master']): marker to select specific test cases based on the tag name and value",
     )

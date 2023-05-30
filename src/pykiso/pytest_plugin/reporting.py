@@ -15,8 +15,6 @@ Report customization
 
 :synopsis: customize the generated reports with pykiso-specific properties.
 
-.. currentmodule:: reporting
-
 """
 
 from __future__ import annotations

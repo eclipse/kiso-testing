@@ -13,9 +13,7 @@ Pytest command line extension
 
 :module: commandline
 
-:synopsis: define new pykiso-related markers.
-
-.. currentmodule:: markers
+:synopsis: add pykiso-related options and ini values to pytest.
 
 """
 
@@ -53,28 +51,26 @@ def pytest_cmdline_main(config: Config):
 
 @export
 def pytest_addoption(parser: Parser, pluginmanager: PytestPluginManager) -> None:
-    """Add the 'tags' option to pytest's command line interface.
+    """Add the 'tags' option to pytest's command line interface
+    and the 'auxiliary_scope' ini value.
 
     :param parser: the command line parser.
     :param pluginmanager: not used.
     """
-    parser.addoption(
+    group = parser.getgroup("pykiso")
+    group.addoption(
         "--tags",
         nargs="+",
         dest="tags",
-        help="""
-        Additional test tags to select tests to run depending on the tag value,
-        e.g. '--tags variant=var1,var2 level=daily'
-        """,
+        help="Additional test tags to select tests to run depending on the tag value, "
+        "e.g. '--tags variant=var1,var2 level=daily'",
     )
     parser.addini(
         "auxiliary_scope",
         default="session",
         type="string",
-        help="""
-        Change this value to any of 'session', 'module', 'class', 'function' to change the
-        scope for all auxiliaries.
-        Note that if you define a scope of e.g. 'function', you won't be able to request a higher
-        scope for an auxiliary by overriding the associated fixture.
-        """,
+        help="Change this value to any of 'session', 'module', 'class', 'function' to change the "
+        "scope for all auxiliaries. "
+        "Note that if you define a scope of e.g. 'function', you won't be able to request a higher "
+        "scope for an auxiliary by overriding the associated fixture.",
     )
