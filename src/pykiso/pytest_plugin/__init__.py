@@ -19,8 +19,6 @@ pykiso plugin for pytest
 
 """
 
-# import pytest # isort:skip
-
 from . import collection, commandline, hooks, logging, markers, reporting
 from .collection import *
 from .commandline import *
