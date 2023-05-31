@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 @pytest.hookimpl(trylast=True)
 def pytest_sessionstart(session: Session):
     """Initialize pykiso logging and patch the resulting loggers onto
-    pytest's loggers at session start.
+    pytest's logger at session start.
 
     Try to run this hook implementation at last to ensure that logging
     is already preconfigured by pytest.
@@ -61,17 +61,14 @@ def pytest_sessionstart(session: Session):
     )
     root_logger = logging.getLogger()
 
-    # get all handlers that were configured by pykiso and add them to pytest's logger
+    # get all handlers that were configured by pykiso and remove them
     stream_handlers = [
         hdlr for hdlr in root_logger.handlers if isinstance(hdlr, logging.StreamHandler)
     ]
     file_handlers = [
         hdlr for hdlr in root_logger.handlers if isinstance(hdlr, logging.FileHandler)
     ]
-    for hdlr in stream_handlers:
-        root_logger.removeHandler(hdlr)
-
-    for hdlr in file_handlers:
+    for hdlr in stream_handlers + file_handlers:
         root_logger.removeHandler(hdlr)
 
     root_logger.addHandler(pytest_logger.log_cli_handler)

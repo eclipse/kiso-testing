@@ -130,7 +130,7 @@ pykitest = 'pykiso.tool.pykiso_to_pytest.cli:main'
 testrail = "pykiso.tool.testrail.cli:cli_testrail"
 
 [tool.poetry.plugins]
-pytest11 = { pytest_kiso = 'pykiso.pytest' }
+pytest11 = { pytest_kiso = "pykiso.pytest_plugin" }
 
 [tool.pytest.ini_options]
 testpaths = []

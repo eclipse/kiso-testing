@@ -76,6 +76,19 @@ def pytest_addhooks(pluginmanager: PytestPluginManager):
 def pytest_apply_tag_filter(
     tests: list[TestCaseFunction], user_tags: dict[str, list[str]]
 ):
+    """Filter the test cases based on user tags provided via CLI.
+
+    .. note::
+
+        This originates from :py:func:`pykiso.test_coordinator.test_execution.apply_tag_filter`.
+        A refactoring should be made there to maximize the common codebase.
+
+
+    :param tests: list of all test functions to run-
+    :param user_tags: the tags provided by the user via CLI.
+    :raises NameError: if none of the tags provided by the user was found
+        in any test function.
+    """
     found_tags = {tag_name: False for tag_name in user_tags.keys()}
     for test_case in tests:
         test_case_tags = test_case.get_closest_marker(name="tags")
@@ -109,7 +122,7 @@ def pytest_apply_tag_filter(
                 )
 
     # verify that each provided tag name is defined in at least one test case
-    for cli_tag_name, tag_found in found_tags:
+    for cli_tag_name, tag_found in found_tags.items():
         if not tag_found:
             raise NameError(
                 f"Provided tag {cli_tag_name!r} is not defined in any testcase.",
@@ -253,13 +266,14 @@ def pytest_collection(session: Session):
     :param aux: alias of the auxiliary.
     :yield: the corresponding auxiliary instance.
     """
-
     kiso_configs = [arg for arg in session.config.args if arg.endswith(".yaml")]
     if not kiso_configs:
         return
 
     arg = kiso_configs.pop(0)
     session.config.args.remove(arg)
+
+    session.config.pluginmanager.get_plugins()
 
     # parse the provided YAML file
     cfg = parse_config(arg)

@@ -204,6 +204,7 @@ class ConfigRegistry:
         delete all instances.
         """
         cls._linker.uninstall()
+        cls._linker = None
 
     @classmethod
     def get_all_auxes(cls) -> Dict[AuxiliaryAlias, AuxiliaryCommon]:
