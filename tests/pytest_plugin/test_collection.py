@@ -7,9 +7,22 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import sys
+
 import pytest
 from _pytest.pytester import Pytester
-from pytest_mock import MockerFixture
+
+from pykiso.test_result.text_result import ResultStream
+from pykiso.test_setup.config_registry import ConfigRegistry
+
+
+@pytest.fixture
+def setup():
+    """Necessary to restore the changes from the previous tests."""
+    ConfigRegistry._linker = None
+    if isinstance(sys.stderr, ResultStream):
+        sys.stderr.close()
+    yield
 
 
 @pytest.mark.parametrize(
@@ -20,7 +33,7 @@ from pytest_mock import MockerFixture
         "a single mixed pykiso and pytest suite",
     ],
 )
-def test_multiple_testsuites(pytester: Pytester, request, fixture_name):
+def test_multiple_testsuites(setup, pytester: Pytester, request, fixture_name):
     cfg_name = request.getfixturevalue(fixture_name)
     hook_recorder = pytester.inline_run(str(cfg_name), "--collectonly")
 
@@ -28,6 +41,11 @@ def test_multiple_testsuites(pytester: Pytester, request, fixture_name):
     sorted_items = [
         x.items for x in hook_recorder.getcalls("pytest_collection_modifyitems")
     ][0]
+
+    for hookcall in hook_recorder.getcalls("pytest_collection_modifyitems"):
+        sorted_items = hookcall.items
+        if sorted_items == collected_items:
+            continue
 
     assert len(collected_items) == len(sorted_items)
     assert collected_items != sorted_items
@@ -43,7 +61,7 @@ def test_multiple_testsuites(pytester: Pytester, request, fixture_name):
     ]
 
 
-def test_fails_no_matching_tag(pytester: Pytester, dummy_multiple_testsuites):
+def test_fails_no_matching_tag(setup, pytester: Pytester, dummy_multiple_testsuites):
     hook_recorder = pytester.inline_run(
         str(dummy_multiple_testsuites), "--collectonly", "--tags", "nonexistent=breaks"
     )

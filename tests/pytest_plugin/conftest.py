@@ -12,8 +12,6 @@ from textwrap import dedent
 import pytest
 from _pytest.pytester import Pytester
 
-pytest_plugins = ["pytester"]
-
 
 @pytest.fixture
 def dummy_yaml():
@@ -55,12 +53,12 @@ def dummy_pykiso_testmodule():
             from pykiso.auxiliaries import aux1, aux2
 
             @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
-            class SuiteSetup(pykiso.RemoteTestSuiteSetup):
+            class SuiteSetup(pykiso.BasicTestSuiteSetup):
                 def test_suite_setUp(self):
                     pass
 
             @pykiso.define_test_parameters(suite_id=1, aux_list=[aux1, aux2])
-            class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
+            class SuiteTearDown(pykiso.BasicTestSuiteTeardown):
                 def test_suite_tearDown(self):
                     pass
 
@@ -84,7 +82,7 @@ def dummy_pykiso_testmodule():
             @pykiso.define_test_parameters(
                 suite_id=1, case_id=2, aux_list=[aux2], tag={{"branch_level": ["nightly"]}}
             )
-            class MyTest2(pykiso.RemoteTest):
+            class MyTest2(pykiso.BasicTest):
                 def test_run(self):
                     self.assertTrue({False if add_failure else True})
             """

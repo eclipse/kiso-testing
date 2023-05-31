@@ -133,7 +133,9 @@ testrail = "pykiso.tool.testrail.cli:cli_testrail"
 pytest11 = { pytest_kiso = "pykiso.pytest_plugin" }
 
 [tool.pytest.ini_options]
-testpaths = []
+testpaths = [
+    "./tests"
+]
 addopts = """\
     --verbose \
     --log-level=INFO \

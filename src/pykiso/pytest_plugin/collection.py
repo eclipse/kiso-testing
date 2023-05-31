@@ -273,8 +273,6 @@ def pytest_collection(session: Session):
     arg = kiso_configs.pop(0)
     session.config.args.remove(arg)
 
-    session.config.pluginmanager.get_plugins()
-
     # parse the provided YAML file
     cfg = parse_config(arg)
 
