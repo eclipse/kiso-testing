@@ -11,7 +11,7 @@ the pykiso (unittest) style to the pytest style.
 Running Pykiso tests with pytest
 --------------------------------
 
-Let us take as example the following test configuration file and name it ``example.yaml``:
+Let us take as example the following test configuration file named ``example.yaml``:
 
 .. code:: yaml
 
