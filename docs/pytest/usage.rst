@@ -5,7 +5,7 @@ Using Pykiso with Pytest
 The pykiso-pytest plugin allows to run pykiso test suites with pytest without any migration effort.
 Simply run ``pytest my_test_configuration_file.yaml`` and enjoy!
 
-Still, to benefit from all of pytest's features, your existing test suites can be migration from
+Still, to benefit from all of pytest's features, your existing test suites can be migrated from
 the pykiso (unittest) style to the pytest style.
 
 Running Pykiso tests with pytest
