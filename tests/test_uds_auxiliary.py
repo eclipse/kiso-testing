@@ -363,6 +363,7 @@ class TestUdsAuxiliary:
         assert resp.is_negative is True
         assert resp.nrc == NegativeResponseCode.CONDITIONS_NOT_CORRECT
 
+    @pytest.mark.slow
     def test_tester_present_sender(self, uds_raw_aux_inst, mocker):
         mocker.patch("time.sleep", return_value=None)
         send_mock = mocker.patch.object(uds_raw_aux_inst, "send_uds_raw")
