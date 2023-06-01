@@ -18,14 +18,24 @@ Integration Test Framework
 .. currentmodule:: logging
 
 """
+import importlib
+import json
 import logging
 import sys
 import time
+from functools import partialmethod
 from pathlib import Path
-from typing import List, NamedTuple, Optional
+from typing import Any, List, NamedTuple, Optional
 
 from .test_setup.dynamic_loader import PACKAGE
 from .types import PathType
+
+LEVELS = {
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+}
 
 
 class LogOptions(NamedTuple):
@@ -37,6 +47,21 @@ class LogOptions(NamedTuple):
     log_level: str
     report_type: str
     verbose: bool
+
+
+class InternalLogsFilter(logging.Filter):
+    def filter(self, record):
+        """Filters internal log levels
+
+        :param record: event being logged
+
+        :return: False if internal logging, True otherwise
+        """
+        return record.levelno not in (
+            logging.INTERNAL_WARNING,
+            logging.INTERNAL_INFO,
+            logging.INTERNAL_DEBUG,
+        )
 
 
 # used to store the selected logging options
@@ -86,32 +111,12 @@ def initialize_logging(
     log_format = logging.Formatter(
         "%(asctime)s [%(levelname)s] %(module)s:%(lineno)d: %(message)s"
     )
-    levels = {
-        "DEBUG": logging.DEBUG,
-        "INFO": logging.INFO,
-        "WARNING": logging.WARNING,
-        "ERROR": logging.ERROR,
-    }
     # add internal kiso log levels
     add_internal_log_levels()
 
     # update logging options
     global log_options
     log_options = LogOptions(log_path, log_level, report_type, verbose)
-
-    class InternalLogsFilter(logging.Filter):
-        def filter(self, record):
-            """Filters internal log levels
-
-            :param record: event being logged
-
-            :return: False if internal logging, True otherwise
-            """
-            return record.levelno not in (
-                logging.INTERNAL_WARNING,
-                logging.INTERNAL_INFO,
-                logging.INTERNAL_DEBUG,
-            )
 
     # if log_path is given create a file handler
     if log_path is not None:
@@ -122,7 +127,7 @@ def initialize_logging(
             log_path = log_path / fname
         file_handler = logging.FileHandler(log_path, "a+")
         file_handler.setFormatter(log_format)
-        file_handler.setLevel(levels[log_level])
+        file_handler.setLevel(LEVELS[log_level])
         root_logger.addHandler(file_handler)
 
     # if report_type is junit use sys.stdout as stream
@@ -145,13 +150,13 @@ def initialize_logging(
     # for all report types add a StreamHandler
     stream_handler = logging.StreamHandler(stream)
     stream_handler.setFormatter(log_format)
-    stream_handler.setLevel(levels[log_level])
+    stream_handler.setLevel(LEVELS[log_level])
     if not verbose:
         # filter internal log levels
         stream_handler.addFilter(InternalLogsFilter())
     root_logger.addHandler(stream_handler)
 
-    root_logger.setLevel(levels[log_level])
+    root_logger.setLevel(LEVELS[log_level])
 
     return logging.getLogger(__name__)
 
@@ -234,3 +239,94 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
     loggers_to_deactivate = set(relevant_loggers) - set(active_loggers)
     for logger_name in loggers_to_deactivate:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
+
+
+def import_object(path: str) -> Any:
+    """return the object based on the path.
+        For example : logging.Logger will return Logger
+
+    :param path: path to the object
+    """
+    if path:
+        components = path.split(".")
+        mod = importlib.import_module(components[0])
+        for comp in components[1:]:
+            mod = getattr(mod, comp)
+        return mod
+    else:
+        return None
+
+
+def add_filter_to_handler(func):
+    """Decorator function that will add a filter to all the handlers
+        of a logger after a function.
+
+    :param func: function to execute
+    """
+
+    def wrapper(self, *arg, **kwargs):
+        func(self, *arg, **kwargs)
+        for handler in self.handlers:
+            handler.addFilter(InternalLogsFilter())
+
+    return wrapper
+
+
+def remove_handler_from_logger(func):
+    """Decorator that will remove all handlers of a logger after
+        executing a function.
+
+    :param func: function to execute
+    """
+
+    def wrapper(self, *arg, **kwargs):
+        func(self, *arg, **kwargs)
+        for handler in self.handlers:
+            self.removeHandler(handler)
+
+    return wrapper
+
+
+def change_logger_class(log_level: str, verbose: bool, logger: str):
+    """Change the class of all the logger of pykiso.
+
+    :param log_level: level of the log
+    :param logger: str of the path to the logger class
+    """
+    # Get the argument to initialize the logger if needed
+    kwargs_log = {}
+    if "(" in logger:
+        logger_class, arg_logger = logger.split("(")
+        arg_logger = arg_logger[:-1].split(",")
+        kwargs_log = {arg.split("=")[0]: arg.split("=")[1] for arg in arg_logger}
+        # We try to load item to handle int, bool argument
+        for name, arg in kwargs_log.items():
+            try:
+                kwargs_log[name] = json.loads(arg.lower())
+            except json.JSONDecodeError:
+                pass
+    else:
+        logger_class = logger
+    # Import the logger class
+    logger_class = import_object(logger_class)
+    # We modify the init function so that the logger only need the name to be initialized
+    if kwargs_log:
+        logger_class.__init__ = partialmethod(logger_class.__init__, **kwargs_log)
+    # If the verbose is not specified, the filter is added to the handler of the logger
+    if not verbose:
+        logger_class.__init__ = add_filter_to_handler(logger_class.__init__)
+    # Change logging.root since test can use logging.info for example
+    logging.root = logger_class(name="root", level=LEVELS[log_level])
+    # Remove the handler from the new logger else the handler will be called twice with the handler from the root
+    logger_class.__init__ = remove_handler_from_logger(logger_class.__init__)
+
+    # Replace already existing logger with the new class and change the parent
+    for name, module in sys.modules.items():
+        if name.startswith("pykiso"):
+            if getattr(module, "log", None):
+                module.log = logger_class(name=module.log.name, level=LEVELS[log_level])
+                module.log.parent = logging.root
+
+    # Setup the future logger class as the new class for the manager
+    logging.Logger.manager.root = logging.root
+    logging.setLoggerClass(logger_class)

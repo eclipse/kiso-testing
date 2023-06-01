@@ -29,7 +29,7 @@ import click
 from . import __version__
 from .config_parser import parse_config
 from .global_config import Grabber
-from .logging_initializer import initialize_logging
+from .logging_initializer import change_logger_class, initialize_logging
 from .test_coordinator import test_execution
 from .test_setup.config_registry import ConfigRegistry
 from .types import PathType
@@ -166,6 +166,12 @@ def check_file_extension(
     required=False,
     help="test filter pattern, e.g. 'test_suite_1.py' or 'test_*.py'. Or even more granularly 'test_suite_1.py::TestClass::test_name'",
 )
+@click.option(
+    "--logger",
+    type=click.STRING,
+    required=False,
+    help="use the specified logger class in pykiso",
+)
 @click.version_option(__version__)
 @Grabber.grab_cli_config
 @click.pass_context
@@ -179,6 +185,7 @@ def main(
     pattern: Optional[str] = None,
     failfast: bool = False,
     verbose: bool = False,
+    logger: Optional[str] = None,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -199,21 +206,23 @@ def main(
     :param pattern: overwrite the pattern from the YAML file for easier test development
     :param failfast: stop the test run on the first error or failure
     :param verbose: activate logging for the whole framework
+    :param logger: class of the logger that will be used in the tests
     """
+    if logger:
+        change_logger_class(log_level, verbose, logger)
 
     for idx, config_file in enumerate(test_configuration_file):
-
         yaml_name = Path(config_file).stem
         # Set the logging
         if log_path:
             # Put all logs in one file
             if len(log_path) == 1:
-                logger = initialize_logging(
+                log = initialize_logging(
                     log_path[0], log_level, verbose, report_type, yaml_name
                 )
             # Log in different files for each yaml
             elif len(log_path) == len(test_configuration_file):
-                logger = initialize_logging(
+                log = initialize_logging(
                     log_path[idx], log_level, verbose, report_type, yaml_name
                 )
             else:
@@ -222,12 +231,12 @@ def main(
                 )
         else:
             log_path = None
-            logger = initialize_logging(log_path, log_level, verbose, report_type)
-
+            log = initialize_logging(log_path, log_level, verbose, report_type)
         # Get YAML configuration
+
         cfg_dict = parse_config(config_file)
         # Run tests
-        logger.debug("cfg_dict:\n{}".format(pprint.pformat(cfg_dict)))
+        log.debug("cfg_dict:\n{}".format(pprint.pformat(cfg_dict)))
 
         ConfigRegistry.register_aux_con(cfg_dict)
 

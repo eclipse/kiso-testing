@@ -6,10 +6,8 @@
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
+
 import logging
-import os
-from pathlib import Path
-from tabnanny import verbose
 
 import pytest
 
@@ -25,7 +23,6 @@ from pykiso import logging_initializer
     ],
 )
 def test_initialize_logging(mocker, path, level, expected_level, verbose, report_type):
-
     mocker.patch("logging.Logger.addHandler")
     mocker.patch("logging.FileHandler.__init__", return_value=None)
     mkdir_mock = mocker.patch("pathlib.Path.mkdir")
@@ -53,7 +50,6 @@ def test_initialize_logging(mocker, path, level, expected_level, verbose, report
 
 
 def test_get_logging_options():
-
     logging_initializer.log_options = logging_initializer.LogOptions(
         None, "ERROR", None, False
     )
@@ -66,8 +62,74 @@ def test_get_logging_options():
 
 
 def test_deactivate_all_loggers(caplog):
-
     with caplog.at_level(logging.WARNING):
         logging_initializer.initialize_loggers(["all"])
 
     assert "All loggers are activated" in caplog.text
+
+
+def test_import_object(mocker):
+    import_module_mock = mocker.patch("importlib.import_module", return_value="module")
+    get_attr_mock = mocker.patch(
+        "pykiso.logging_initializer.getattr", side_effect=["attr", "attr2"]
+    )
+
+    object = logging_initializer.import_object("test.path.object")
+    no_path_object = logging_initializer.import_object(None)
+
+    assert no_path_object is None
+    assert object == "attr2"
+    import_module_mock.assert_called_once_with("test")
+    assert get_attr_mock.call_count == 2
+
+
+class TestLogger(logging.Logger):
+    def __init__(self, name: str, level=0) -> None:
+        super().__init__(name, level)
+        self.addHandler(logging.StreamHandler())
+
+
+def test_add_filter_to_handler():
+    TestLogger.__init__ = logging_initializer.add_filter_to_handler(TestLogger.__init__)
+
+    log = TestLogger("test")
+
+    assert isinstance(
+        log.handlers[0].filters[0], logging_initializer.InternalLogsFilter
+    )
+
+
+def test_remove_handler_from_logger():
+    TestLogger.__init__ = logging_initializer.remove_handler_from_logger(
+        TestLogger.__init__
+    )
+
+    log = TestLogger("test")
+
+    assert log.handlers == []
+
+
+def test_change_logger_class(mocker):
+    root_save = logging.getLogger()
+    set_logger_class_mock = mocker.patch("logging.setLoggerClass")
+    get_attr_mock = mocker.patch(
+        "pykiso.logging_initializer.getattr", return_value=None
+    )
+
+    class LoggerNewClass(logging.Logger):
+        def __init__(self, name: str, level=0) -> None:
+            super().__init__(name, level)
+
+    import_object_mock = mocker.patch(
+        "pykiso.logging_initializer.import_object", return_value=LoggerNewClass
+    )
+
+    logging_initializer.change_logger_class("INFO", True, "LoggerNewClass")
+
+    assert isinstance(logging.root, LoggerNewClass)
+    assert isinstance(logging.Logger.manager.root, LoggerNewClass)
+    set_logger_class_mock.assert_called_once_with(LoggerNewClass)
+    import_object_mock.assert_called_once_with("LoggerNewClass")
+    get_attr_mock.assert_called()
+    logging.root = root_save
+    logging.Logger.manager.root = root_save
