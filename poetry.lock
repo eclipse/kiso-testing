@@ -1217,14 +1217,14 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pykiso-python-uds"
-version = "3.0.2"
+version = "3.0.3"
 description = "Please use python-uds instead, this is a refactored version with breaking changes, only for pykiso"
 category = "main"
 optional = true
 python-versions = "*"
 files = [
-    {file = "pykiso-python-uds-3.0.2.tar.gz", hash = "sha256:1f1d06029938f7ec2229337d3474d1dd5ca2a52d17638ab504272ebb2023d06e"},
-    {file = "pykiso_python_uds-3.0.2-py3-none-any.whl", hash = "sha256:a4fa12401e4d423c926a13b250126481b9b6f610b7b2782c7078bdf6e6a6766b"},
+    {file = "pykiso-python-uds-3.0.3.tar.gz", hash = "sha256:b499e0ec158f99b72cfc19cfd8f0f55919233f7be0232288f4cf6e20ccea5f91"},
+    {file = "pykiso_python_uds-3.0.3-py3-none-any.whl", hash = "sha256:160a8046de4af29ed5619d8bfb80081d2dff0a7dd45330483bdcf016058ffe6b"},
 ]
 
 [package.dependencies]
