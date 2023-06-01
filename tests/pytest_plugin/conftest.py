@@ -83,7 +83,7 @@ def dummy_pykiso_testmodule():
                 suite_id=1, case_id=2, aux_list=[aux2], tag={{"branch_level": ["nightly"]}}
             )
             class MyTest2(pykiso.BasicTest):
-                def test_run(self):
+                def test_run2(self):
                     self.assertTrue({False if add_failure else True})
             """
         )

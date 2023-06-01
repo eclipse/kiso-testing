@@ -34,6 +34,7 @@ def setup():
     ],
 )
 def test_multiple_testsuites(setup, pytester: Pytester, request, fixture_name):
+    """Verify that the collection and sorting of test items is conform to pykiso."""
     cfg_name = request.getfixturevalue(fixture_name)
     hook_recorder = pytester.inline_run(str(cfg_name), "--collectonly")
 
@@ -42,11 +43,6 @@ def test_multiple_testsuites(setup, pytester: Pytester, request, fixture_name):
         x.items for x in hook_recorder.getcalls("pytest_collection_modifyitems")
     ][0]
 
-    for hookcall in hook_recorder.getcalls("pytest_collection_modifyitems"):
-        sorted_items = hookcall.items
-        if sorted_items == collected_items:
-            continue
-
     assert len(collected_items) == len(sorted_items)
     assert collected_items != sorted_items
 
@@ -54,7 +50,7 @@ def test_multiple_testsuites(setup, pytester: Pytester, request, fixture_name):
     assert sorted_item_names == [
         "test_suite_setUp",
         "test_run1",
-        "test_run",
+        "test_run2",
         "test_suite_tearDown",
         "test_mytest1",
         "test_mytest2",
@@ -62,6 +58,10 @@ def test_multiple_testsuites(setup, pytester: Pytester, request, fixture_name):
 
 
 def test_fails_no_matching_tag(setup, pytester: Pytester, dummy_multiple_testsuites):
+    """
+    Verify that if pytest is invoked with test tags that are not defined in any
+    test case, the collection is interrupted and the session directly finished.
+    """
     hook_recorder = pytester.inline_run(
         str(dummy_multiple_testsuites), "--collectonly", "--tags", "nonexistent=breaks"
     )
