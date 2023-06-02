@@ -11,8 +11,6 @@ from serial.tools.list_ports_common import ListPortInfo
 from pykiso.lib.connectors import cc_serial
 from pykiso.lib.connectors.cc_serial import CCSerial
 
-# import serial.tools.list_ports_common
-
 
 def test_import():
     with pytest.raises(ImportError):
@@ -32,12 +30,12 @@ def test_constructor(mocker):
     serial_mock.assert_called_once()
 
 
-def test_constructor_auto_port_timeout(mocker):
+def test_constructor_auto_port_no_device(mocker):
 
     serial_mock = mocker.patch("serial.Serial")
 
     with pytest.raises(ConnectionError):
-        CCSerial("auto")
+        CCSerial(vid=0, pid=0)
 
 
 def test_constructor_auto_port(mocker):
@@ -49,7 +47,7 @@ def test_constructor_auto_port(mocker):
     with mock.patch.object(
         serial.tools.list_ports, "comports", return_value=[test_device]
     ):
-        cc_serial = CCSerial(port="auto", pid=1, vid=2)
+        cc_serial = CCSerial(port=None, pid=1, vid=2)
 
     assert cc_serial.serial.port == "test_device"
     serial_mock.assert_called_once()
@@ -68,7 +66,7 @@ def test_constructor_auto_port_warn(caplog, mocker):
         serial.tools.list_ports, "comports", return_value=[test_device, test_device2]
     ):
         with caplog.at_level(logging.WARNING):
-            cc_serial = CCSerial(port="auto", pid=1, vid=2)
+            cc_serial = CCSerial(port=None, pid=1, vid=2)
     assert (
         "Found multiple devices, ['test_device', 'test_device2'], with matching IDs 0002:0001. Select first device test_device."
         in caplog.text

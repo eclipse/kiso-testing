@@ -66,9 +66,9 @@ class CCSerial(connector.CChannel):
 
     def __init__(
         self,
-        port: str,
-        vid: int = 0,
-        pid: int = 0,
+        port: Optional[str] = None,
+        vid: Optional[int] = None,
+        pid: Optional[int] = None,
         baudrate: int = 9600,
         bytesize: ByteSize = ByteSize.EIGHT_BITS,
         parity: Parity = Parity.PARITY_NONE,
@@ -127,6 +127,7 @@ class CCSerial(connector.CChannel):
         self.current_write_timeout = write_timeout
         self.serial.port = self._get_port(port=port, vid=vid, pid=pid)
 
+    @staticmethod
     def _find_device(vid: int, pid: int) -> str:
         """Return the device which matches pid and vid.
 
@@ -150,7 +151,7 @@ class CCSerial(connector.CChannel):
             for port in found_devices
         ]
         if len(found_devices) > 1:
-            log.warning(
+            log.internal_warning(
                 f"Found multiple devices, {found_devices}, with matching IDs {vid:04X}:{pid:04x}. Select first device {found_devices[0]}."
             )
         return found_devices[0]
@@ -160,13 +161,13 @@ class CCSerial(connector.CChannel):
         If port set to auto, the device will be searched for,
         using the pid and vid, else the port argument will be returned.
 
-        :param port: port
+        :param port: port  I.e. "COM4" or "/dev/tty1"
         :param vid: vendor id
         :param pid: product id
 
         :return: com ports of given or found device. I.e. "COM4" or "/dev/tty1"
         """
-        if port.lower() == "auto":
+        if port is None:
             return CCSerial._find_device(vid=vid, pid=pid)
         else:
             return port
