@@ -11,21 +11,22 @@ import logging
 
 import pytest
 
-from pykiso.interfaces.dt_auxiliary import (
+from pykiso.auxiliary import (
     AuxCommand,
     AuxiliaryCreationError,
     AuxiliaryNotStarted,
-    DTAuxiliaryInterface,
+    AuxiliaryInterface,
     close_connector,
     open_connector,
     queue,
     threading,
 )
 
+from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface
 
 @pytest.fixture
 def aux_inst(mocker, cchannel_inst):
-    class MockDtAux(DTAuxiliaryInterface):
+    class MockDtAux(AuxiliaryInterface):
         def __init__(self, *arg, **kwargs):
             super().__init__(name="aux")
 

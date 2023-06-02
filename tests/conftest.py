@@ -73,6 +73,9 @@ class TestAux:
     def create_instance(self):
         self.is_instance = True
 
+    def start(self):
+        self.is_instance = True
+
     def stop(self):
         self.is_instance = False
 
@@ -84,6 +87,9 @@ class TestAuxNoConnector:
         self.is_instance = False
 
     def create_instance(self):
+        self.is_instance = True
+
+    def start(self):
         self.is_instance = True
 
     def stop(self):

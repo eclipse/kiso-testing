@@ -28,7 +28,6 @@ except ImportError:  # for Python<3.8
 __version__ = metadata.version(__name__)
 
 from . import (
-    auxiliary,
     cli,
     config_parser,
     connector,
@@ -36,7 +35,7 @@ from . import (
     message,
     types,
 )
-from .auxiliary import AuxiliaryCommon
+from .auxiliary import AuxiliaryInterface
 from .connector import CChannel, Flasher
 from .exceptions import (
     AuxiliaryCreationError,
@@ -44,10 +43,6 @@ from .exceptions import (
     PykisoError,
     TestCollectionError,
 )
-from .interfaces.dt_auxiliary import DTAuxiliaryInterface
-from .interfaces.mp_auxiliary import MpAuxiliaryInterface
-from .interfaces.simple_auxiliary import SimpleAuxiliaryInterface
-from .interfaces.thread_auxiliary import AuxiliaryInterface
 from .logging_initializer import disable_logging
 from .message import Message
 from .test_coordinator import test_case, test_message_handler, test_suite

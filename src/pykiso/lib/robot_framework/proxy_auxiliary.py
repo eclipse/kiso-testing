@@ -22,7 +22,6 @@ Proxy auxiliary plugin
 
 from robot.api.deco import keyword, library
 
-from ..auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary as MpProxyAux
 from ..auxiliaries.proxy_auxiliary import ProxyAuxiliary as ProxyAux
 from .aux_interface import RobotAuxInterface
 
@@ -36,35 +35,6 @@ class ProxyAuxiliary(RobotAuxInterface):
     def __init__(self):
         """Initialize attributes."""
         super().__init__(aux_type=ProxyAux)
-
-    @keyword(name="Suspend")
-    def suspend(self, aux_alias: str) -> None:
-        """Suspend given auxiliary's run.
-
-        :param aux_alias: auxiliary's alias
-        """
-        aux = self._get_aux(aux_alias)
-        aux.suspend()
-
-    @keyword(name="Resume")
-    def resume(self, aux_alias: str) -> None:
-        """Resume given auxiliary's run.
-
-        :param aux_alias: auxiliary's alias
-        """
-        aux = self._get_aux(aux_alias)
-        aux.resume()
-
-
-@library(version="0.1.0")
-class MpProxyAuxiliary(RobotAuxInterface):
-    """Robot framework plugin for MpProxyAuxiliary."""
-
-    ROBOT_LIBRARY_SCOPE = "SUITE"
-
-    def __init__(self):
-        """Initialize attributes."""
-        super().__init__(aux_type=MpProxyAux)
 
     @keyword(name="Suspend")
     def suspend(self, aux_alias: str) -> None:

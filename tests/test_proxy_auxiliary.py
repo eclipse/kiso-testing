@@ -16,9 +16,9 @@ import threading
 import pytest
 
 from pykiso.lib.auxiliaries.proxy_auxiliary import (
+    AuxiliaryInterface,
     CCProxy,
     ConfigRegistry,
-    DTAuxiliaryInterface,
     ProxyAuxiliary,
     log,
 )
@@ -74,7 +74,7 @@ def mock_auxiliaries(mocker, cchannel_inst):
 
 @pytest.fixture
 def mock_aux_interface(mocker, mock_auxiliaries):
-    class MockAuxInterface(DTAuxiliaryInterface):
+    class MockAuxInterface(AuxiliaryInterface):
         def __init__(self, param_1=None, param_2=None, **kwargs):
             self.param_1 = param_1
             self.param_2 = param_2
@@ -155,7 +155,7 @@ def test_get_proxy_con_invalid(mocker, caplog, cchannel_inst):
 
 
 class TestAutoStartStop:
-    class SomeAuxiliary(DTAuxiliaryInterface):
+    class SomeAuxiliary(AuxiliaryInterface):
         def __init__(self, name="fake_aux"):
             self.channel = CCProxy()
             super().__init__(

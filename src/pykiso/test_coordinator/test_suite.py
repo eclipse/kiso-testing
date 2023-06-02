@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Union
 from unittest.suite import _isnotsuite
 
 from .. import message
-from ..interfaces.thread_auxiliary import AuxiliaryInterface
+from ..auxiliary import AuxiliaryInterface
 from .test_message_handler import test_app_interaction
 
 if TYPE_CHECKING:

@@ -30,8 +30,8 @@ from contextlib import ContextDecorator
 from typing import Any, Optional
 
 from pykiso import CChannel, Message
-from pykiso.interfaces.dt_auxiliary import (
-    DTAuxiliaryInterface,
+from pykiso.auxiliary import (
+    AuxiliaryInterface,
     close_connector,
     open_connector,
 )
@@ -61,7 +61,7 @@ class _collect_messages(ContextDecorator):
         self.com_aux.queueing_event.clear()
 
 
-class CommunicationAuxiliary(DTAuxiliaryInterface):
+class CommunicationAuxiliary(AuxiliaryInterface):
     """Auxiliary used to send raw bytes via a connector instead of pykiso.Messages."""
 
     def __init__(self, com: CChannel, **kwargs: dict) -> None:

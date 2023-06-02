@@ -28,7 +28,7 @@ from ..exceptions import PykisoError
 from .dynamic_loader import DynamicImportLinker
 
 if TYPE_CHECKING:
-    from pykiso.auxiliary import AuxiliaryCommon
+    from pykiso import AuxiliaryInterface
     from pykiso.types import (
         AuxiliaryAlias,
         AuxiliaryConfig,
@@ -50,22 +50,19 @@ class ConfigRegistry:
 
     @staticmethod
     def _make_proxy_channel_config(
-        aux_name: AuxiliaryConfig, multiprocessing: bool
+        aux_name: AuxiliaryConfig,
     ) -> Tuple[ConnectorAlias, ConnectorConfig]:
         """Craft the configuration dictionary for a proxy communication
         channel to attach to the auxiliary instead of the 'physical' channel.
 
         :param aux_name: name of the auxiliary to which the proxy channel
             should be plugged.
-        :param multiprocessing: whether the auxiliary is multiprocessing-
-            based or thread-based.
         :return: the resulting proxy channel name and its configuration as
             as a tuple.
         """
-        from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
         from pykiso.lib.connectors.cc_proxy import CCProxy
 
-        cchannel_class = CCProxy if not multiprocessing else CCMpProxy
+        cchannel_class = CCProxy
         name = f"proxy_channel_{aux_name}"
         config = {
             "config": None,
@@ -77,7 +74,6 @@ class ConfigRegistry:
     def _make_proxy_aux_config(
         channel_name: ConnectorAlias,
         aux_list: List[AuxiliaryAlias],
-        multiprocessing: bool,
         auto_start: bool,
     ) -> Tuple[AuxiliaryAlias, AuxiliaryConfig]:
         """Craft the configuration dictionary for a proxy auxiliary to be
@@ -85,15 +81,12 @@ class ConfigRegistry:
 
         :param channel_name: name of the 'physical' channel that should
             be attached to the proxy auxiliary (the only direct connection).
-        :param multiprocessing: whether the communication channel is
-            multiprocessing-based or thread-based.
         :return: the resulting proxy auxiliary name and its configuration as
             as a tuple.
         """
-        from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
         from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
 
-        aux_class = ProxyAuxiliary if not multiprocessing else MpProxyAuxiliary
+        aux_class = ProxyAuxiliary
         name = f"proxy_aux_{channel_name}"
         config = {
             "connectors": {"com": channel_name},
@@ -140,12 +133,6 @@ class ConfigRegistry:
                 # only one auxiliary holds the channel so no proxy is required
                 continue
 
-            # detect if communication channel is multiprocessing-based
-            mp_enabled = False
-            channel_cfg = config["connectors"][channel_name].get("config")
-            if channel_cfg is not None:
-                mp_enabled = channel_cfg.get("processing", False)
-
             # automatically start proxy if at least one auxiliary has the auto_start flag set
             for auxiliary in auxiliaries:
                 try:
@@ -159,16 +146,14 @@ class ConfigRegistry:
 
             # create a proxy auxiliary config for this shared channel
             proxy_aux_name, proxy_aux_cfg = cls._make_proxy_aux_config(
-                channel_name, auxiliaries, mp_enabled, auto_start
+                channel_name, auxiliaries, auto_start
             )
             config["auxiliaries"][proxy_aux_name] = proxy_aux_cfg
             proxies.append(proxy_aux_name)
 
             # create a proxy channel config for each of the auxiliaries sharing the channel
             for aux_name in auxiliaries:
-                cc_proxy_name, cc_proxy_cfg = cls._make_proxy_channel_config(
-                    aux_name, mp_enabled
-                )
+                cc_proxy_name, cc_proxy_cfg = cls._make_proxy_channel_config(aux_name)
                 config["auxiliaries"][aux_name]["connectors"]["com"] = cc_proxy_name
                 config["connectors"][cc_proxy_name] = cc_proxy_cfg
 
@@ -225,7 +210,7 @@ class ConfigRegistry:
             cls.delete_aux_con()
 
     @classmethod
-    def get_all_auxes(cls) -> Dict[AuxiliaryAlias, AuxiliaryCommon]:
+    def get_all_auxes(cls) -> Dict[AuxiliaryAlias, AuxiliaryInterface]:
         """Return all auxiliaires instances and alias
 
         :return: dictionary with alias as keys and instances as values
@@ -234,8 +219,8 @@ class ConfigRegistry:
 
     @classmethod
     def get_auxes_by_type(
-        cls, aux_type: Type[AuxiliaryCommon]
-    ) -> Dict[str, AuxiliaryCommon]:
+        cls, aux_type: Type[AuxiliaryInterface]
+    ) -> Dict[str, AuxiliaryInterface]:
         """Return all auxiliaries who match a specific type.
 
         :param aux_type: auxiliary class type (DUTAuxiliary,
@@ -251,7 +236,7 @@ class ConfigRegistry:
         }
 
     @classmethod
-    def get_aux_by_alias(cls, alias: AuxiliaryAlias) -> AuxiliaryCommon:
+    def get_aux_by_alias(cls, alias: AuxiliaryAlias) -> AuxiliaryInterface:
         """Return the associated auxiliary instance to the given alias.
 
         :param alias: auxiliary's alias

@@ -26,17 +26,14 @@ import time
 from typing import Any, List, Optional, Tuple, Union
 
 from pykiso import CChannel
-from pykiso.interfaces.dt_auxiliary import (
-    DTAuxiliaryInterface,
-    close_connector,
-)
+from pykiso.auxiliary import AuxiliaryInterface, close_connector
 
 from .lib_scpi_commands import LibSCPI
 
 log = logging.getLogger(__name__)
 
 
-class InstrumentControlAuxiliary(DTAuxiliaryInterface):
+class InstrumentControlAuxiliary(AuxiliaryInterface):
     """Auxiliary used to communicate via a VISA connector using the SCPI
     protocol.
     """
