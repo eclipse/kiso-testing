@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 import pykiso.test_result.assert_step_report as step_report
 
 from .. import message
-from ..interfaces.thread_auxiliary import AuxiliaryInterface
+from ..auxiliary import AuxiliaryInterface
 from ..logging_initializer import get_logging_options, initialize_logging
 from .test_message_handler import test_app_interaction
 

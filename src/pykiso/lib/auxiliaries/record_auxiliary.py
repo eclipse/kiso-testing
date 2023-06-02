@@ -29,26 +29,21 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from pykiso import CChannel
-from pykiso.interfaces.dt_auxiliary import (
-    DTAuxiliaryInterface,
+from pykiso.auxiliary import (
+    AuxiliaryInterface,
     close_connector,
     open_connector,
 )
+from pykiso.lib.connectors.cc_proxy import CCProxy
 
 log = logging.getLogger(__name__)
 
 
 class StringIOHandler(io.StringIO):
     def __init__(self, multiprocess: bool = False) -> None:
-        """Constructor
-
-        :param multiprocess: use a thread or multiprocessing lock.
-        """
+        """Constructor"""
         super(StringIOHandler, self).__init__()
-        if multiprocess:
-            self.data_lock = multiprocessing.Lock()
-        else:
-            self.data_lock = threading.Lock()
+        self.data_lock = threading.Lock()
 
     def get_data(self) -> str:
         """Get data from the string
@@ -67,7 +62,7 @@ class StringIOHandler(io.StringIO):
             self.write(data)
 
 
-class RecordAuxiliary(DTAuxiliaryInterface):
+class RecordAuxiliary(AuxiliaryInterface):
     """Auxiliary used to record a connectors receive channel."""
 
     LOG_HEADER = "Received data :"
@@ -107,19 +102,14 @@ class RecordAuxiliary(DTAuxiliaryInterface):
         self.timeout = timeout
         self.stop_receive_event = None
         self._receive_thread_or_process = None
-        self.multiprocess = multiprocess
         self.cursor = 0
         self.log_folder_path = log_folder_path
+        self.multiprocess = multiprocess
         self._data = StringIOHandler(multiprocess)
         self.max_file_size = max_file_size
 
         if self.is_active and not manual_start_record:
             self.start_recording()
-
-        if self.multiprocess:
-            log.internal_warning(
-                "Logs will only be dumped into a file due due to the multiprocess flag"
-            )
 
     def get_data(self) -> str:
         """Return the entire log buffer content.
@@ -149,6 +139,8 @@ class RecordAuxiliary(DTAuxiliaryInterface):
         try:
             if not self.is_active:
                 self.channel.open()
+                if isinstance(self.channel, CCProxy) and self.multiprocess:
+                    self.channel.queue_out = multiprocessing.Queue()
         except Exception:
             log.exception("Error encountered during channel creation.")
             return False
@@ -178,6 +170,8 @@ class RecordAuxiliary(DTAuxiliaryInterface):
         """
         try:
             self.channel.open()
+            if isinstance(self.channel, CCProxy) and self.multiprocessing:
+                self.channel.queue_out = multiprocessing.Queue()
         except Exception:
             log.exception("Error encountered while channel creation.")
             return
@@ -199,10 +193,6 @@ class RecordAuxiliary(DTAuxiliaryInterface):
                     self.set_data(f"\n{source}    {stream}")
                 else:
                     self.set_data("\n" + stream)
-
-        if self.multiprocess:
-            # dump data inside the process
-            self.dump_to_file(f"record_{type(self.channel).__name__}.log")
 
         try:
             self.channel.close()
@@ -235,7 +225,7 @@ class RecordAuxiliary(DTAuxiliaryInterface):
     def clear_buffer(self) -> None:
         """Clean the buffer that contain received messages."""
         log.internal_info("Clearing buffer")
-        self._data = StringIOHandler(self.multiprocess)
+        self._data = StringIOHandler()
         self.cursor = 0
 
     def stop_recording(self) -> None:
@@ -257,15 +247,9 @@ class RecordAuxiliary(DTAuxiliaryInterface):
             self._receive_thread_or_process is None
             or not self._receive_thread_or_process.is_alive()
         ):
-            # define multiprocessing or Thread variables
-            if self.multiprocess:
-                self.stop_receive_event = multiprocessing.Event()
-                self._receive_thread_or_process = multiprocessing.Process(
-                    target=self.receive
-                )
-            else:
-                self.stop_receive_event = threading.Event()
-                self._receive_thread_or_process = threading.Thread(target=self.receive)
+            # define Thread variables
+            self.stop_receive_event = threading.Event()
+            self._receive_thread_or_process = threading.Thread(target=self.receive)
 
             self.clear_buffer()
             self._receive_thread_or_process.start()

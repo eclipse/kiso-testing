@@ -30,15 +30,10 @@ import sys
 import types
 from typing import TYPE_CHECKING, Type, Union
 
-# TODO: remove it after all auxes are adapted to DTAuxiliaryInterface
-#################################################################################
-import pykiso
-
-#################################################################################
 from pykiso.exceptions import ConnectorRequiredError
 
 if TYPE_CHECKING:
-    from ..auxiliary import AuxiliaryCommon
+    from ..auxiliary import AuxiliaryInterface
     from ..connector import Connector
 
 PACKAGE = __package__.split(".")[0]
@@ -124,7 +119,7 @@ class AuxLinkLoader(importlib.abc.Loader):
 
     def create_module(
         self, spec: importlib.machinery.ModuleSpec
-    ) -> Union[types.ModuleType, AuxiliaryCommon]:
+    ) -> Union[types.ModuleType, AuxiliaryInterface]:
         """Create the given module from the supplied module spec.
 
         Under the hood, this module returns a service or a dummy module,
@@ -187,7 +182,7 @@ class ModuleCache:
         self.locations[name] = module
         self.configs[name] = config_params
 
-    def _import(self, name: str) -> Type[Union[AuxiliaryCommon, Connector]]:
+    def _import(self, name: str) -> Type[Union[AuxiliaryInterface, Connector]]:
         """Import the class registered under the alias <name>."""
         try:
             import_path = self.locations[name]
@@ -215,7 +210,7 @@ class ModuleCache:
         log.internal_debug(f"loaded {_class} as {name} from {location}")
         return cls
 
-    def get_instance(self, name: str) -> Union[AuxiliaryCommon, Connector]:
+    def get_instance(self, name: str) -> Union[AuxiliaryInterface, Connector]:
         """Get an instance of alias <name> (create and configure one of not existed)."""
         if name in self.instances:
             log.internal_debug(f"instance for {name} found ({self.instances[name]})")
@@ -265,7 +260,7 @@ class AuxiliaryCache(ModuleCache):
         self.connectors[name] = connectors
         super().provide(name, module, **config_params)
 
-    def get_instance(self, name: str) -> AuxiliaryCommon:
+    def get_instance(self, name: str) -> AuxiliaryInterface:
         """Get an instance of alias <name> (create and configure one of not existed)."""
         for cn, con in self.connectors.get(name, dict()).items():
             # add connector-instances as configs
@@ -280,21 +275,9 @@ class AuxiliaryCache(ModuleCache):
         # if auto start is needed start the auxiliary otherwise store
         # the created instance
         auto_start = getattr(inst, "auto_start", True)
-        # due to the simple aux interface test if start method is part
-        # of the current auxiliary
-        start_method = getattr(inst, "start", None)
 
-        # TODO: remove it after all auxes are adapted to DTAuxiliaryInterface
-        #################################################################################
-        is_dt = isinstance(inst, pykiso.interfaces.dt_auxiliary.DTAuxiliaryInterface)
-        if not inst.is_instance and auto_start and is_dt:
-            inst.create_instance()
-            log.internal_debug(f"called create_instance on {name}")
-        #################################################################################
-        elif not inst.is_instance and auto_start:
-            # if auxiliary is type of thread
-            if start_method is not None:
-                inst.start()
+        if not inst.is_instance and auto_start:
+            inst.start()
             inst.create_instance()
             log.internal_debug(f"called create_instance on {name}")
         self.instances[name] = inst

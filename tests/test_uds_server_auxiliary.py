@@ -33,15 +33,15 @@ class TestUdsServerAuxiliary:
     @pytest.fixture(scope="function")
     def uds_server_aux_inst(self, mocker, ccpcan_inst):
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
+            "pykiso.auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.delete_instance",
+            "pykiso.auxiliary.AuxiliaryInterface.delete_instance",
             return_value=None,
         )
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
+            "pykiso.auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
         mocker.patch("pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary.OdxParser")
