@@ -117,14 +117,16 @@ def test_change_logger_class(mocker):
     )
 
     class LoggerNewClass(logging.Logger):
-        def __init__(self, name: str, level=0) -> None:
+        def __init__(self, name: str, level=0, host="test") -> None:
             super().__init__(name, level)
 
     import_object_mock = mocker.patch(
         "pykiso.logging_initializer.import_object", return_value=LoggerNewClass
     )
 
-    logging_initializer.change_logger_class("INFO", True, "LoggerNewClass")
+    logging_initializer.change_logger_class(
+        "INFO", False, "LoggerNewClass(host='test')"
+    )
 
     assert isinstance(logging.root, LoggerNewClass)
     assert isinstance(logging.Logger.manager.root, LoggerNewClass)
