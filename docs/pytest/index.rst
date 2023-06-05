@@ -1,4 +1,6 @@
 
+.. _pytest_integration:
+
 Pytest Integration
 ==================
 
