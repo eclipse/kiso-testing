@@ -8,6 +8,8 @@
 ##########################################################################
 
 import logging
+import sys
+from copy import deepcopy
 
 import pytest
 
@@ -119,9 +121,10 @@ def test_remove_handler_from_logger():
 def test_change_logger_class(mocker, logger_class):
     root_save = logging.getLogger()
     set_logger_class_mock = mocker.patch("logging.setLoggerClass")
-    get_attr_mock = mocker.patch(
-        "pykiso.logging_initializer.getattr", return_value=None
-    )
+    save_log = {}
+    for name, module in sys.modules.items():
+        if getattr(module, "log", None):
+            save_log[name] = module.log
 
     class LoggerNewClass(logging.Logger):
         def __init__(self, name: str, level=0, host="test") -> None:
@@ -130,13 +133,16 @@ def test_change_logger_class(mocker, logger_class):
     import_object_mock = mocker.patch(
         "pykiso.logging_initializer.import_object", return_value=LoggerNewClass
     )
-
     logging_initializer.change_logger_class("INFO", False, logger_class)
-
     assert isinstance(logging.root, LoggerNewClass)
     assert isinstance(logging.Logger.manager.root, LoggerNewClass)
     set_logger_class_mock.assert_called_once_with(LoggerNewClass)
     import_object_mock.assert_called_once_with("LoggerNewClass")
-    get_attr_mock.assert_called()
+    assert isinstance(
+        sys.modules["pykiso.test_coordinator.test_case"].log, LoggerNewClass
+    )
     logging.root = root_save
     logging.Logger.manager.root = root_save
+    for name, module in sys.modules.items():
+        if getattr(module, "log", None):
+            module.log = save_log[name]
