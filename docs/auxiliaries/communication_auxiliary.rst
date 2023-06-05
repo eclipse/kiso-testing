@@ -1,3 +1,5 @@
+.. _communication_auxiliary:
+
 communication_auxiliary
 =======================
 
