@@ -109,7 +109,14 @@ def test_remove_handler_from_logger():
     assert log.handlers == []
 
 
-def test_change_logger_class(mocker):
+@pytest.mark.parametrize(
+    "logger_class",
+    [
+        ("LoggerNewClass(host='test')"),
+        ("LoggerNewClass"),
+    ],
+)
+def test_change_logger_class(mocker, logger_class):
     root_save = logging.getLogger()
     set_logger_class_mock = mocker.patch("logging.setLoggerClass")
     get_attr_mock = mocker.patch(
@@ -124,9 +131,7 @@ def test_change_logger_class(mocker):
         "pykiso.logging_initializer.import_object", return_value=LoggerNewClass
     )
 
-    logging_initializer.change_logger_class(
-        "INFO", False, "LoggerNewClass(host='test')"
-    )
+    logging_initializer.change_logger_class("INFO", False, logger_class)
 
     assert isinstance(logging.root, LoggerNewClass)
     assert isinstance(logging.Logger.manager.root, LoggerNewClass)
