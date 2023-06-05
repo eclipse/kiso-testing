@@ -21,6 +21,7 @@ Integration Test Framework
 import importlib
 import json
 import logging
+import re
 import sys
 import time
 from functools import partialmethod
@@ -50,7 +51,7 @@ class LogOptions(NamedTuple):
 
 
 class InternalLogsFilter(logging.Filter):
-    def filter(self, record):
+    def filter(self, record: logging.LogRecord) -> bool:
         """Filters internal log levels
 
         :param record: event being logged
@@ -246,6 +247,8 @@ def import_object(path: str) -> Any:
         For example : logging.Logger will return Logger
 
     :param path: path to the object
+
+    :return: object based on the path
     """
     if path:
         components = path.split(".")
@@ -295,9 +298,11 @@ def change_logger_class(log_level: str, verbose: bool, logger: str):
     """
     # Get the argument to initialize the logger if needed
     kwargs_log = {}
-    if "(" in logger:
-        logger_class, arg_logger = logger.split("(")
-        arg_logger = arg_logger[:-1].split(",")
+    # Search if the str has the following pattern name.name(name_arg=arg) or name.name
+    arg_match = re.match(r"([^(]*)\(([^\)]+)\)", logger)
+    if arg_match:
+        logger_class = arg_match.group(1)
+        arg_logger = arg_match.group(2).split(",")
         kwargs_log = {arg.split("=")[0]: arg.split("=")[1] for arg in arg_logger}
         # We try to load item to handle int, bool argument
         for name, arg in kwargs_log.items():
@@ -307,11 +312,14 @@ def change_logger_class(log_level: str, verbose: bool, logger: str):
                 pass
     else:
         logger_class = logger
+
     # Import the logger class
     logger_class = import_object(logger_class)
     # We modify the init function so that the logger only need the name to be initialized
     if kwargs_log:
-        logger_class.__init__ = partialmethod(logger_class.__init__, **kwargs_log)
+        logger_class.__init__ = partialmethod(
+            logger_class.__init__, level=LEVELS[log_level], **kwargs_log
+        )
     # If the verbose is not specified, the filter is added to the handler of the logger
     if not verbose:
         logger_class.__init__ = add_filter_to_handler(logger_class.__init__)
