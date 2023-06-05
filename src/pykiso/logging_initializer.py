@@ -24,6 +24,7 @@ import logging
 import re
 import sys
 import time
+from ast import literal_eval
 from functools import partialmethod
 from pathlib import Path
 from typing import Any, List, NamedTuple, Optional
@@ -252,10 +253,9 @@ def import_object(path: str) -> Any:
     """
     if path:
         components = path.split(".")
-        mod = importlib.import_module(components[0])
-        for comp in components[1:]:
-            mod = getattr(mod, comp)
-        return mod
+        mod = importlib.import_module(".".join(components[:-1]))
+        obj = getattr(mod, components[-1])
+        return obj
     else:
         return None
 
@@ -303,13 +303,9 @@ def change_logger_class(log_level: str, verbose: bool, logger: str):
     if arg_match:
         logger_class = arg_match.group(1)
         arg_logger = arg_match.group(2).split(",")
-        kwargs_log = {arg.split("=")[0]: arg.split("=")[1] for arg in arg_logger}
-        # We try to load item to handle int, bool argument
-        for name, arg in kwargs_log.items():
-            try:
-                kwargs_log[name] = json.loads(arg.lower())
-            except json.JSONDecodeError:
-                pass
+        kwargs_log = {
+            arg.split("=")[0]: literal_eval(arg.split("=")[1]) for arg in arg_logger
+        }
     else:
         logger_class = logger
 

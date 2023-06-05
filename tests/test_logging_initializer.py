@@ -71,16 +71,16 @@ def test_deactivate_all_loggers(caplog):
 def test_import_object(mocker):
     import_module_mock = mocker.patch("importlib.import_module", return_value="module")
     get_attr_mock = mocker.patch(
-        "pykiso.logging_initializer.getattr", side_effect=["attr", "attr2"]
+        "pykiso.logging_initializer.getattr", return_value="attr"
     )
 
     object = logging_initializer.import_object("test.path.object")
     no_path_object = logging_initializer.import_object(None)
 
     assert no_path_object is None
-    assert object == "attr2"
-    import_module_mock.assert_called_once_with("test")
-    assert get_attr_mock.call_count == 2
+    assert object == "attr"
+    import_module_mock.assert_called_once_with("test.path")
+    get_attr_mock.assert_called_once_with("module", "object")
 
 
 class TestLogger(logging.Logger):

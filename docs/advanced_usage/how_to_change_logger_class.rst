@@ -37,4 +37,4 @@ See the following example :
 
 .. code:: bash
 
-  pykiso -c my_config.yaml --logger 'package_test.test_logger.TestLogger(str_arg=str_value,int_arg=12)'
+  pykiso -c my_config.yaml --logger 'package_test.test_logger.TestLogger(str_arg="str_value",int_arg=12)'
