@@ -362,7 +362,9 @@ def test_parse_config_os_error_on_path(mocker, tmp_path):
     with unittest.mock.patch(
         "pykiso.config_parser.Path.resolve", side_effect=[yaml_file, OSError]
     ) as mock_resolve:
-        cfg = yaml.load(yaml_file, Loader=YamlLoader)
+        cfg = yaml.load(
+            yaml_file, Loader=YamlLoader
+        )  # nosec B506 YamlLoader inherits from yaml.SafeLoader.
         assert mock_resolve.call_count == 2
 
     assert mock_is_key.call_count == 5

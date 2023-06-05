@@ -117,7 +117,9 @@ class YamlLoader(yaml.SafeLoader):
         :return: included yaml file's content
         """
         nested_yaml = (self._base_dir / Path(node.value)).resolve()
-        nested_cfg = yaml.load(nested_yaml, Loader=YamlLoader)
+        nested_cfg = yaml.load(
+            nested_yaml, Loader=YamlLoader
+        )  # nosec B506 YamlLoader inherits from yaml.SafeLoader.
         return nested_cfg
 
     def resolve_path(self, node: yaml.nodes.ScalarNode) -> str:
@@ -312,7 +314,9 @@ def parse_config(file_name: PathType) -> Dict:
     :return: config dict with resolved paths where needed
     """
     with open(file_name, "r") as f:
-        cfg = yaml.load(f, Loader=YamlLoader)
+        cfg = yaml.load(
+            f, Loader=YamlLoader
+        )  # nosec B506 YamlLoader inherits from yaml.SafeLoader.
 
     # Check requirements
     requirements = cfg.get("requirements")

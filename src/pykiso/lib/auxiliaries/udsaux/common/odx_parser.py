@@ -24,8 +24,10 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import List
-from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
+
+# Use defusedxml, as xml is not secure against maliciously constructed data.
+from defusedxml import ElementTree
 
 log = logging.getLogger(__name__)
 

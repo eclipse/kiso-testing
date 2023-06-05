@@ -466,7 +466,9 @@ def generate_step_report(
 
                 ALL_STEP_REPORT[class_name]["succeed"] = False
     # Render the source template
-    render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH))
+    render_environment = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(SCRIPT_PATH), autoescape=True
+    )
     template = render_environment.get_template(REPORT_TEMPLATE)
     template.globals.update(jinja_template_functions)
     output_text = template.render({"ALL_STEP_REPORT": ALL_STEP_REPORT})
