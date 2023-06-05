@@ -14,6 +14,53 @@ function toggleDetailsInRow(element, className) {
     }
 }
 
+document.addEventListener("DOMContentLoaded", function() {
+    var failButton = document.getElementById("failButton");
+    failButton.addEventListener("click", function(){
+    var failedDetailElements = document.querySelectorAll(".failed-test-details");
+    failedDetailElements.forEach(function(details){
+        toggleFailDetails(details);
+    });});});
+
+/**
+ * collapse or expand all detail elements which have Fail inside the summary sting.
+ */
+function toggleFailDetails(detailsElement) {
+    if (detailsElement.open)
+    {
+        detailsElement.removeAttribute("open");
+        failButton.innerText = "Expand all failed tests";
+    } else {
+        detailsElement.setAttribute("open", "true");
+        failButton.innerText = "Collapse all failed tests";
+    }
+}
+
+var allButton = document.getElementById("allButton");
+
+allButton.addEventListener("click", toggleAllDetails);
+
+/**
+ * collapse or expand all detail elements.
+ */
+
+function toggleAllDetails() {
+    var detailsElements = document.querySelectorAll("details");
+    if (detailsElements[0].open || detailsElements[1].open) {
+        for (var i = 0; i < detailsElements.length; i++) {
+            detailsElements[i].open = false;
+        }
+        allButton.innerText = "Expand all tests";
+        failButton.innerText = "Expand all failed tests";
+    } else {
+        for (var i = 0; i < detailsElements.length; i++) {
+            detailsElements[i].open = true;
+        }
+        allButton.innerText = "Collapse all tests";
+        failButton.innerText = "Collapse all failed tests";
+    }
+}
+
 /* helper functions */
 
 /**

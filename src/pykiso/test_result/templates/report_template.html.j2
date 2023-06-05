@@ -4,18 +4,26 @@
     <div class="navbar-header" style = " background-color: rgb(255, 255, 255); margin:0; padding:0;">
         <img src = "https://github.com/eclipse/kiso-testing/raw/master/docs/images/pykiso_logo.png" alt = "Pykiso report" width="15%" height="15%">
     </div>
+    <div class="button-container">
+        <button id="failButton">Toggle failed tests</button>
+        <button id="allButton">Toggle all tests</button>
+    </div>
     {# For each TestClass -#}
     {% for class_name, class_content in ALL_STEP_REPORT.items() -%}
         <hr>
-        <div class="col-12 text-left">
+        {% if class_content["succeed"] -%}
+                <details class="hide-marker col-12 text-left">
+        {% else -%}
+                <details open class="hide-marker col-12 text-left failed-test-details">
+        {%- endif %}
             {# Add Title and description -#}
-            <h2>ITF Test Report for:  <a href="{{class_content["file_path"]}}">{{class_name}}</a>
+            <summary style="list-style: none;"><h2>ITF Test Report for:  <a href="{{class_content["file_path"]}}">{{class_name}}</a>
             {% if class_content["succeed"] -%}
                 -> [<span style="color:green;">Success</span>]
             {% else -%}
                 -> [<span style="color:red;">Fail</span>]
             {%- endif %}
-            </h2>
+            </h2></summary>
             <h3>Test Description:</h3>
             <p>{{class_content["description"] | replace("\n", "<br/>\n") }}</p>
             <h3>Date, Time, Software versions:</h3>
@@ -30,7 +38,7 @@
             {#- For each test (setUp, run, tearDown) -#}
             {% for test_name, test_content in class_content["test_list"].items() %}
                 {% set test_success = is_test_success(test_content) -%}
-                <details {% if not test_success %}open{% endif %}><summary><h3>{{test_name}}
+                <details {% if not test_success %}open class="failed-test-details"{% endif %}><summary><h3>{{test_name}}
                 {% if test_success -%}<span style="color:green;">Success</span>
                 {% else %}<span style="color:red;">Fail</span>
                 {%- endif %}</h3></summary>
@@ -93,7 +101,8 @@
                 {%- endif %}
                 </details>
             {%- endfor %}
-        </div>
+
+        </details>
     {%- endfor %}
 </body>
 </html>
