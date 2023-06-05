@@ -33,6 +33,7 @@ from pykiso.test_result.multi_result import MultiTestResult
 
 if TYPE_CHECKING:
     from .test_case import BasicTest
+    from ..types import ConfigDict, SuiteConfig
 
 import enum
 import logging
@@ -42,7 +43,7 @@ import unittest
 from collections import OrderedDict, namedtuple
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 import xmlrunner
 
@@ -80,9 +81,7 @@ class ExitCode(enum.IntEnum):
     BAD_CLI_USAGE = 5
 
 
-def create_test_suite(
-    test_suite_dict: Dict[str, Union[str, int]]
-) -> test_suite.BasicTestSuite:
+def create_test_suite(test_suite_dict: SuiteConfig) -> test_suite.BasicTestSuite:
     """create a test suite based on the config dict
 
     :param test_suite_dict: dict created from config with keys 'suite_dir',
@@ -147,8 +146,10 @@ def apply_tag_filter(
         :return: the skipped testcase as a new instance of the provided
             TestCase subclass.
         """
-        skipped_test_cls = unittest.skip(test_case._skip_msg)(test_case.__class__)
-        return skipped_test_cls()
+        if should_skip(test_case):
+            skipped_test_cls = unittest.skip(test_case._skip_msg)(test_case.__class__)
+            return skipped_test_cls()
+        return test_case
 
     # collect and reformat all CLI and test case tag names
     usr_tags = format_tag_names(usr_tags)
@@ -160,16 +161,16 @@ def apply_tag_filter(
         tc.tag = format_tag_names(tc.tag)
         all_test_tags.extend(tc.tag.keys())
 
+    # skip the tests according to the provided CLI tags and the defined test tags
+    list(map(set_skipped, test_suite.flatten(all_tests_to_run)))
+
     # verify that each provided tag name is defined in at least one test case
     all_test_tags = set(all_test_tags)
     for tag_name in usr_tags:
         if tag_name not in all_test_tags:
             raise NameError(
-                f"Provided tag {tag_name!r} is not defined in any testcase."
+                f"Provided tag {tag_name!r} is not defined in any testcase.", tag_name
             )
-
-    # skip the tests according to the provided CLI tags and the defined test tags
-    list(map(set_skipped, filter(should_skip, test_suite.flatten(all_tests_to_run))))
 
 
 def apply_test_case_filter(
@@ -293,9 +294,9 @@ def _check_module_names(start_dir: str, pattern: str) -> None:
 
 
 def collect_test_suites(
-    config_test_suite_list: List[Dict[str, Union[str, int]]],
+    config_test_suite_list: List[SuiteConfig],
     test_filter_pattern: Optional[str] = None,
-) -> List[Optional[test_suite.BasicTestSuite]]:
+) -> List[test_suite.BasicTestSuite]:
     """Collect and load all test suites defined in the test configuration.
 
     :param config_test_suite_list: list of dictionaries from the configuration
@@ -339,7 +340,7 @@ def abort(reason: str = None) -> None:
 
 
 def execute(
-    config: Dict[str, Any],
+    config: ConfigDict,
     report_type: str = "text",
     report_name: str = "",
     user_tags: Optional[Dict[str, List[str]]] = None,

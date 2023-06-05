@@ -29,6 +29,7 @@ from pykiso.test_coordinator import test_case
 from pykiso.test_coordinator.test_case import define_test_parameters
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
+pytest_plugins = ["pytester"]
 
 ## skip slow test by default
 def pytest_addoption(parser):

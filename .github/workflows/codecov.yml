@@ -40,7 +40,7 @@ jobs:
 
       # Runs the test
       - name: Run unittests
-        run: poetry run pytest --cov=./ --cov-report=xml
+        run: poetry run pytest --cov=./ --cov-report=xml -p no:pytest_kiso --runslow
 
       # Upload the test result
       - name: Upload test-result to codecov

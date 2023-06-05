@@ -19,6 +19,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import datetime
 import os
 import sys
 
@@ -29,8 +30,8 @@ sys.path.insert(0, os.path.abspath("../src/pykiso"))
 import pykiso
 
 project = "pykiso"
-copyright = "2020, Sebastian Fischer, Daniel Bühler, Damien Kayser"
-author = "Sebastian Fischer, Daniel Bühler, Damien Kayser"
+author = "Sebastian Fischer, Daniel Bühler, Damien Kayser, Uwe Lang, Sebastian Clerson, Teddy Riolet"
+copyright = f"{datetime.date.today().year}, {author}"
 
 version = pykiso.__version__.split(".")[0]
 release = pykiso.__version__

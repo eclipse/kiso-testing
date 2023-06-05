@@ -626,18 +626,19 @@ def test_cc_send(mock_can_bus, parameters, raw, mock_PCANBasic):
 
 
 @pytest.mark.parametrize(
-    "raw_data, can_id, timeout, raw,expected_type",
+    "raw_data, can_id, timeout, raw,expected_type, timestamp",
     [
-        (b"\x40\x01\x03\x00\x01\x02\x03\x00", 0x500, 10, False, Message),
+        (b"\x40\x01\x03\x00\x01\x02\x03\x00", 0x500, 10, False, Message, 1),
         (
             b"\x40\x01\x03\x00\x01\x02\x03\x09\x6e\x02\x4f\x4b\x70\x03\x12\x34\x56",
             0x207,
             None,
             None,
             Message,
+            2,
         ),
-        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 10, True, bytearray),
-        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 0, True, bytearray),
+        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 10, True, bytearray, 3),
+        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 0, True, bytearray, 4),
     ],
 )
 def test_can_recv(
@@ -645,12 +646,13 @@ def test_can_recv(
     raw_data,
     can_id,
     timeout,
+    timestamp,
     raw,
     expected_type,
     mock_PCANBasic,
 ):
     mock_can_bus.Bus.recv.return_value = python_can.Message(
-        data=raw_data, arbitration_id=can_id
+        data=raw_data, arbitration_id=can_id, timestamp=timestamp
     )
 
     with CCPCanCan() as can:
@@ -659,6 +661,8 @@ def test_can_recv(
     msg_received = response.get("msg")
     if not raw:
         msg_received = Message.parse_packet(msg_received)
+
+    assert response.get("timestamp") == timestamp
     assert isinstance(msg_received, expected_type)
     assert response.get("remote_id") == can_id
     mock_can_bus.Bus.recv.assert_called_once_with(timeout=timeout or 1e-6)
