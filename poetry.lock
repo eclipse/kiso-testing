@@ -1217,14 +1217,14 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pykiso-python-uds"
-version = "3.0.2"
+version = "3.0.3"
 description = "Please use python-uds instead, this is a refactored version with breaking changes, only for pykiso"
 category = "main"
 optional = true
 python-versions = "*"
 files = [
-    {file = "pykiso-python-uds-3.0.2.tar.gz", hash = "sha256:1f1d06029938f7ec2229337d3474d1dd5ca2a52d17638ab504272ebb2023d06e"},
-    {file = "pykiso_python_uds-3.0.2-py3-none-any.whl", hash = "sha256:a4fa12401e4d423c926a13b250126481b9b6f610b7b2782c7078bdf6e6a6766b"},
+    {file = "pykiso-python-uds-3.0.3.tar.gz", hash = "sha256:b499e0ec158f99b72cfc19cfd8f0f55919233f7be0232288f4cf6e20ccea5f91"},
+    {file = "pykiso_python_uds-3.0.3-py3-none-any.whl", hash = "sha256:160a8046de4af29ed5619d8bfb80081d2dff0a7dd45330483bdcf016058ffe6b"},
 ]
 
 [package.dependencies]
@@ -1543,21 +1543,21 @@ files = [
 
 [[package]]
 name = "requests"
-version = "2.28.2"
+version = "2.31.0"
 description = "Python HTTP for Humans."
 category = "main"
 optional = false
-python-versions = ">=3.7, <4"
+python-versions = ">=3.7"
 files = [
-    {file = "requests-2.28.2-py3-none-any.whl", hash = "sha256:64299f4909223da747622c030b781c0d7811e359c37124b4bd368fb8c6518baa"},
-    {file = "requests-2.28.2.tar.gz", hash = "sha256:98b1b2782e3c6c4904938b84c0eb932721069dfdb9134313beff7c83c2df24bf"},
+    {file = "requests-2.31.0-py3-none-any.whl", hash = "sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"},
+    {file = "requests-2.31.0.tar.gz", hash = "sha256:942c5a758f98d790eaed1a29cb6eefc7ffb0d1cf7af05c3d2791656dbd6ad1e1"},
 ]
 
 [package.dependencies]
 certifi = ">=2017.4.17"
 charset-normalizer = ">=2,<4"
 idna = ">=2.5,<4"
-urllib3 = ">=1.21.1,<1.27"
+urllib3 = ">=1.21.1,<3"
 
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
