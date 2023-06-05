@@ -164,9 +164,11 @@ class CCVectorCan(CChannel):
             if received_msg is not None:
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data
+                timestamp = received_msg.timestamp
+
                 log.internal_debug(f"received CAN Message: {frame_id}, {payload}")
 
-                return {"msg": payload, "remote_id": frame_id}
+                return {"msg": payload, "remote_id": frame_id, "timestamp": timestamp}
             else:
                 return {"msg": None}
         except BaseException:
