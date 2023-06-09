@@ -255,6 +255,8 @@ def import_object(path: str) -> Any:
         components = path.split(".")
         mod = importlib.import_module(".".join(components[:-1]))
         obj = getattr(mod, components[-1])
+        if not issubclass(obj, logging.Logger):
+            raise TypeError(f"{obj} is not derived from logging.Logger.")
         return obj
     else:
         return None

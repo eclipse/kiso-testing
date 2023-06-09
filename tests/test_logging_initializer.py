@@ -70,25 +70,37 @@ def test_deactivate_all_loggers(caplog):
     assert "All loggers are activated" in caplog.text
 
 
+class TestLogger(logging.Logger):
+    def __init__(self, name: str, level=0) -> None:
+        super().__init__(name, level)
+        self.addHandler(logging.StreamHandler())
+
+
 def test_import_object(mocker):
     import_module_mock = mocker.patch("importlib.import_module", return_value="module")
     get_attr_mock = mocker.patch(
-        "pykiso.logging_initializer.getattr", return_value="attr"
+        "pykiso.logging_initializer.getattr", return_value=TestLogger
     )
 
     object = logging_initializer.import_object("test.path.object")
     no_path_object = logging_initializer.import_object(None)
 
     assert no_path_object is None
-    assert object == "attr"
+    assert object == TestLogger
     import_module_mock.assert_called_once_with("test.path")
     get_attr_mock.assert_called_once_with("module", "object")
 
 
-class TestLogger(logging.Logger):
-    def __init__(self, name: str, level=0) -> None:
-        super().__init__(name, level)
-        self.addHandler(logging.StreamHandler())
+def test_import_object_error(mocker):
+    import_module_mock = mocker.patch("importlib.import_module", return_value="module")
+    get_attr_mock = mocker.patch(
+        "pykiso.logging_initializer.getattr", return_value=logging.Manager
+    )
+    with pytest.raises(TypeError):
+        logging_initializer.import_object("test.path.object")
+
+    import_module_mock.assert_called_once_with("test.path")
+    get_attr_mock.assert_called_once_with("module", "object")
 
 
 def test_add_filter_to_handler():
