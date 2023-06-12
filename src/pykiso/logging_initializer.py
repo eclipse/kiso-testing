@@ -27,7 +27,7 @@ import time
 from ast import literal_eval
 from functools import partialmethod
 from pathlib import Path
-from typing import Any, List, NamedTuple, Optional
+from typing import Any, List, NamedTuple, Optional, Union
 
 from .test_setup.dynamic_loader import PACKAGE
 from .types import PathType
@@ -243,7 +243,7 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
 
 
-def import_object(path: str) -> Any:
+def import_object(path: str) -> Union[None, logging.Logger]:
     """return the object based on the path.
         For example : logging.Logger will return Logger
 
