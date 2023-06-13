@@ -219,8 +219,8 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
         test_description = test_method.__doc__ or ""
         ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = {
             "description": test_description,
-            "steps": [],
-            "unexpected_errors": [],
+            "steps": [[]],
+            "unexpected_errors": [[]],
         }
 
 
@@ -234,7 +234,7 @@ def _add_step(
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
 
-    ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"].append(
+    ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1].append(
         dict(zip(REPORT_KEYS, [message, var_name, expected, received, True]))
     )
 
@@ -363,9 +363,9 @@ def assert_decorator(assert_method: types.MethodType):
             log.error(f"Assert step exception: {e}")
             test_case_inst.step_report.last_error_message = f"{e}"
             if parent_method:
-                ALL_STEP_REPORT[test_class_name]["test_list"][test_name][-1][
-                    "succeed"
-                ] = False
+                ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1][
+                    -1
+                ]["succeed"] = False
                 ALL_STEP_REPORT[test_class_name]["succeed"] = False
 
             test_case_inst.step_report.success = False
@@ -396,8 +396,9 @@ def is_test_success(test: dict) -> bool:
     :return: True if each step in a test was successful and no unexpected error
         was raised else False
     """
-    return all([step["succeed"] for step in test["steps"]]) and not test.get(
-        "unexpected_errors"
+    return (
+        all([step["succeed"] for step in test["steps"][-1]])
+        and not test.get("unexpected_errors")[-1]
     )
 
 
@@ -462,9 +463,9 @@ def generate_step_report(
             if test_case in test_result.errors:
                 ALL_STEP_REPORT[class_name]["test_list"][test_method_name][
                     "unexpected_errors"
-                ].append(test_case[1])
-
+                ][-1].append(test_case[1])
                 ALL_STEP_REPORT[class_name]["succeed"] = False
+
     # Render the source template
     render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH))
     template = render_environment.get_template(REPORT_TEMPLATE)

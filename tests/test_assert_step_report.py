@@ -132,7 +132,7 @@ def test_assert_decorator_reraise(mocker, test_case):
     step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
     assert_step_report.ALL_STEP_REPORT = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestCase"] = {
-        "test_list": {"test_assert_decorator_reraise": [{"succeed": True}]}
+        "test_list": {"test_assert_decorator_reraise": {"steps": [[{"succeed": True}]]}}
     }
 
     data_to_test = False
@@ -142,7 +142,7 @@ def test_assert_decorator_reraise(mocker, test_case):
     assert (
         assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
             "test_assert_decorator_reraise"
-        ][-1]["succeed"]
+        ]["steps"][-1][-1]["succeed"]
         == False
     )
     step_result.assert_called_once_with(
@@ -221,7 +221,6 @@ def test_generate(mocker, test_result):
 
 
 def test_add_step():
-
     assert_step_report.ALL_STEP_REPORT["TestCase"] = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"] = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
@@ -229,7 +228,7 @@ def test_add_step():
     ] = {}
     steplist = assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
         "test_assert_step_report_multi_input"
-    ]["steps"] = []
+    ]["steps"] = [[]]
 
     assert_step_report._add_step(
         "TestCase",
@@ -243,12 +242,17 @@ def test_add_step():
 
 
 def test_is_test_success():
-
-    test_ok = {"steps": [{"succeed": True}, {"succeed": True}, {"succeed": True}]}
-    test_fail = {"steps": [{"succeed": True}, {"succeed": False}, {"succeed": True}]}
+    test_ok = {
+        "steps": [[{"succeed": True}, {"succeed": True}, {"succeed": True}]],
+        "unexpected_errors": [[]],
+    }
+    test_fail = {
+        "steps": [[{"succeed": True}, {"succeed": False}, {"succeed": True}]],
+        "unexpected_errors": [[]],
+    }
     test_fail_error = {
-        "steps": [{"succeed": True}, {"succeed": True}, {"succeed": True}],
-        "unexpected_errors": "error",
+        "steps": [[{"succeed": True}, {"succeed": True}, {"succeed": True}]],
+        "unexpected_errors": [["error"]],
     }
 
     assert assert_step_report.is_test_success(test_ok)
