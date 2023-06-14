@@ -100,8 +100,6 @@ RUN pyenv install 3.7 \
 RUN /opt/toolchains/zephyr-sdk-${ZSDK_VERSION}/setup.sh -c
 
 # Install python packages. pip cache disabled to reduce docker image size.
-RUN python3 -m pip install --no-cache-dir poetry \
-    && python3 -m pip install --no-cache-dir tox \
-    && python3 -m pip install --no-cache-dir west \
+RUN python3 -m pip install --no-cache-dir poetry tox west \
     && chmod -R 777 ${HOME}
 ENV PATH="/home/kiso/.local/bin:${PATH}"
