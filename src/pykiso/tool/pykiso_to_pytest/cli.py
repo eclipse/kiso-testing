@@ -118,7 +118,7 @@ def main(filename: str, destination: str):
 
     template_loader = FileSystemLoader(searchpath=str(ROOT_PATH / "templates"))
     # The issue B701 wants autoescape to be set to true in order to filter input strings to escape any HTML content submitted via template variables.
-    # Autoexcape needs to be switched off, since executable python code is included which falsely triggers the issue.
+    # Autoescape needs to be switched off, since executable python code is included which falsely triggers the issue.
     template_env = Environment(loader=template_loader, autoescape=False)  # nosec B701
     template_env.filters["format_value"] = format_value
     template = template_env.get_template("conftest_template.jinja2")
