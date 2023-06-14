@@ -299,8 +299,9 @@ def retry_test_case(
             current_execution = None
             test_class_name = type(self).__name__
             # Prepare report for the current test so we can get the current result for the class
-            step_report._prepare_report(self, self._testMethodName)
-            result_test = step_report.ALL_STEP_REPORT[test_class_name]["succeed"]
+            if getattr(self, "step_report", False) and self.step_report.header:
+                step_report._prepare_report(self, self._testMethodName)
+                result_test = step_report.ALL_STEP_REPORT[test_class_name]["succeed"]
 
             for retry_nb in range(1, max_try + 1):
                 try:
@@ -336,7 +337,9 @@ def retry_test_case(
                             f">>>>>>>>>> Test {retry_nb}/{max_try} failed <<<<<<<<<<"
                         )
                         raise e
-                    else:
+                    elif (
+                        getattr(self, "step_report", False) and self.step_report.header
+                    ):
                         test_information = step_report.ALL_STEP_REPORT[test_class_name][
                             "test_list"
                         ][self._testMethodName]

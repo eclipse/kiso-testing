@@ -9,6 +9,7 @@
 
 import logging
 import unittest
+from collections import OrderedDict
 from functools import partial
 
 import pytest
@@ -354,12 +355,18 @@ def test_retry_on_failure_decorator(
     assert mock_test_case_class.tearDown.call_count == expected_teardown_count
 
 
-def test_retry_on_failure_decorator_step_report(mocker):
+@pytest.mark.parametrize(
+    "header_step_report",
+    (OrderedDict({}), OrderedDict({"ITF version": "pykiso.__version__"})),
+)
+def test_retry_on_failure_decorator_step_report(mocker, header_step_report):
     max_try = 3
     format_exec_mock = mocker.patch("traceback.format_exc", return_value="error_info")
     mock_test_case_class = mocker.Mock()
     mock_test_case_class.test_run.__name__ = "test_run"
     mock_test_case_class._testMethodName = "test_run"
+    mock_test_case_class.step_report = step_report.StepReportData()
+    mock_test_case_class.step_report.header = header_step_report
     all_step_report_mock = {
         type(mock_test_case_class).__name__: {
             "test_list": {
@@ -387,17 +394,18 @@ def test_retry_on_failure_decorator_step_report(mocker):
 
     partial_test_run(mock_test_case_class)
 
-    assert step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
-        "test_list"
-    ]["test_run"]["steps"] == [[{"succeed": False}, {"succeed": True}], [], []]
-    assert step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
-        "test_list"
-    ]["test_run"]["unexpected_errors"] == [["error_info"], ["error_info"], []]
-    assert (
-        step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__]["test_list"][
-            "test_run"
-        ]["max_try"]
-        == max_try
-    )
-    assert format_exec_mock.call_count == 2
-    prepare_report_mock.assert_called_once_with(mock_test_case_class, "test_run")
+    if header_step_report:
+        assert step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
+            "test_list"
+        ]["test_run"]["steps"] == [[{"succeed": False}, {"succeed": True}], [], []]
+        assert step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
+            "test_list"
+        ]["test_run"]["unexpected_errors"] == [["error_info"], ["error_info"], []]
+        assert (
+            step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
+                "test_list"
+            ]["test_run"]["max_try"]
+            == max_try
+        )
+        assert format_exec_mock.call_count == 2
+        prepare_report_mock.assert_called_once_with(mock_test_case_class, "test_run")
