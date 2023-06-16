@@ -503,7 +503,7 @@ class CCPCanCan(CChannel):
         ms_in_a_day = 86400000
         return (start_time % 1) * ms_in_a_day
 
-    def __del__(self) -> None:
+    def shutdown(self) -> None:
         """Destructor method."""
         if self.logging_activated:
             self._merge_trc()
