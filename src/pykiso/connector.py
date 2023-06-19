@@ -101,7 +101,7 @@ class CChannel(Connector):
             self._cc_close()
 
     def shutdown(self) -> None:
-        """Unitialize channel."""
+        """Unitialize channel. Will be called at the end of the test session."""
         pass
 
     def cc_send(self, msg: MsgType, *args, **kwargs) -> None:
