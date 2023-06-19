@@ -100,6 +100,10 @@ class CChannel(Connector):
         with self._lock:
             self._cc_close()
 
+    def shutdown(self) -> None:
+        """Unitialize channel. Will be called at the end of the test session."""
+        pass
+
     def cc_send(self, msg: MsgType, *args, **kwargs) -> None:
         """Send a thread-safe message on the channel and wait for an acknowledgement.
 
