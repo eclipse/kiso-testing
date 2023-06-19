@@ -24,8 +24,9 @@ import enum
 import json
 import xml
 from pathlib import Path
-from typing import List, Optional
-from xml.etree import ElementTree as etree
+from typing import List
+
+from defusedxml import ElementTree as etree
 
 
 class Status(enum.IntEnum):

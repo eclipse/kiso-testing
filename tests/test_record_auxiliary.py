@@ -158,6 +158,15 @@ def test_receive(data, expected_data, mocker, mock_channel):
     mock_dump_to_file.assert_called()
 
 
+def test_parse_bytes_wrong_type(caplog, mocker, mock_channel):
+    mocker.patch.object(threading.Thread, "start", return_value=None)
+    record_aux = RecordAuxiliary(mock_channel, is_active=True)
+    invalid_type = 0
+    with caplog.at_level(logging.ERROR):
+        record_aux.parse_bytes(invalid_type)
+    assert f"Could not parse the received data: {invalid_type}" in caplog.text
+
+
 def test_receive_open_error(caplog, mocker, mock_channel):
     mocker.patch.object(mock_channel, "open", side_effect=Exception("666"))
     mocker.patch.object(threading.Thread, "start")

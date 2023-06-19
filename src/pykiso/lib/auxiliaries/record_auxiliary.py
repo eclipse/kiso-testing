@@ -221,12 +221,12 @@ class RecordAuxiliary(DTAuxiliaryInterface):
         # decode
         try:
             return data.decode()
-        except UnicodeDecodeError:
+        except (UnicodeDecodeError, AttributeError):
             pass
         # get Hex values
         try:
             return data.hex()
-        except Exception:
+        except AttributeError:
             pass
 
         # Fail decoding, parse RAW data in string (avoid losing it)

@@ -134,7 +134,7 @@ class CCProcess(CChannel):
             encoding=self._encoding,
             cwd=self._cwd,
             env=self._env,
-        )
+        )  # nosec B602 Since we only provide an interface to the user to popen, we accept the risk of a vulnerablility to various shell injection attacks.
 
         if self._pipe_stdout:
             self._stdout_thread = self._start_read_thread(

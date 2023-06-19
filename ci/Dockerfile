@@ -22,7 +22,6 @@ RUN apt-get update && apt-get install -y \
     git \
     graphviz \
     lcov \
-    curl \
     python3 \
     python3-pip \
     python3-dev \
@@ -46,7 +45,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # kiso vsc plugin dependencies
-RUN curl -sL https://deb.nodesource.com/setup_15.x| bash -
+# DL3047 wants the --process flag to be set. The flag is already set in the WGET_ARGS.
+# hadolint ignore=DL3047
+RUN wget ${WGET_ARGS} -qO- https://deb.nodesource.com/setup_15.x| bash -
 RUN apt-get update && apt-get -y install nodejs \
     gnupg \
     libxshmfence1 \
@@ -62,12 +63,16 @@ RUN npm install -g vsce
 
 
 # Install CMake (for Zephyr)
+# DL3047 wants the --process flag to be set. The flag is already set in the WGET_ARGS.
+# hadolint ignore=DL3047
 RUN wget ${WGET_ARGS} https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-${HOSTTYPE}.sh && \
 	chmod +x cmake-${CMAKE_VERSION}-Linux-${HOSTTYPE}.sh && \
 	./cmake-${CMAKE_VERSION}-Linux-${HOSTTYPE}.sh --skip-license --prefix=/usr/local && \
 	rm -f ./cmake-${CMAKE_VERSION}-Linux-${HOSTTYPE}.sh
 
 # Install Zephyr SDK
+# DL3047 wants the --process flag to be set. The flag is already set in the WGET_ARGS.
+# hadolint ignore=DL3047
 RUN mkdir -p /opt/toolchains && \
 	cd /opt/toolchains && \
 	wget ${WGET_ARGS} https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${ZSDK_VERSION}/zephyr-sdk-${ZSDK_VERSION}_linux-${HOSTTYPE}.tar.gz && \
@@ -79,7 +84,9 @@ RUN mkdir -p /opt/toolchains && \
 ENV HOME=/home/kiso
 
 # Install pyenv
-RUN curl https://pyenv.run | bash
+# DL3047 wants the --process flag to be set. The flag is already set in the WGET_ARGS.
+# hadolint ignore=DL3047
+RUN wget ${WGET_ARGS} -qO- https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
 
 ENV PYENV_ROOT $HOME/.pyenv
 ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
@@ -92,9 +99,7 @@ RUN pyenv install 3.7 \
 
 RUN /opt/toolchains/zephyr-sdk-${ZSDK_VERSION}/setup.sh -c
 
-# Install python packages
-RUN python3 -m pip install poetry \
-    && python3 -m pip install tox \
-    && python3 -m pip install west \
+# Install python packages. pip cache disabled to reduce docker image size.
+RUN python3 -m pip install --no-cache-dir poetry tox west \
     && chmod -R 777 ${HOME}
 ENV PATH="/home/kiso/.local/bin:${PATH}"

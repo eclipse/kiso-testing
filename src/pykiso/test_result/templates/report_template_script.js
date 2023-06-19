@@ -12,7 +12,8 @@ function toggleDetailsInRow(element, className) {
         details.open = isOpen;
         isOpen ? setSummary("Click to minimize", details) : setTruncatedSummary(details);
     }
-}
+} // no-unused-vars function is used (false positive),eslint-disable-line
+
 
 document.addEventListener("DOMContentLoaded", function() {
     var failButton = document.getElementById("failButton");
