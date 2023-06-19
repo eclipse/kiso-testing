@@ -6,10 +6,10 @@
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
+
 import logging
-import os
-from pathlib import Path
-from tabnanny import verbose
+import sys
+from copy import deepcopy
 
 import pytest
 
@@ -25,7 +25,6 @@ from pykiso import logging_initializer
     ],
 )
 def test_initialize_logging(mocker, path, level, expected_level, verbose, report_type):
-
     mocker.patch("logging.Logger.addHandler")
     mocker.patch("logging.FileHandler.__init__", return_value=None)
     mkdir_mock = mocker.patch("pathlib.Path.mkdir")
@@ -53,7 +52,6 @@ def test_initialize_logging(mocker, path, level, expected_level, verbose, report
 
 
 def test_get_logging_options():
-
     logging_initializer.log_options = logging_initializer.LogOptions(
         None, "ERROR", None, False
     )
@@ -66,8 +64,97 @@ def test_get_logging_options():
 
 
 def test_deactivate_all_loggers(caplog):
-
     with caplog.at_level(logging.WARNING):
         logging_initializer.initialize_loggers(["all"])
 
     assert "All loggers are activated" in caplog.text
+
+
+class TestLogger(logging.Logger):
+    def __init__(self, name: str, level=0) -> None:
+        super().__init__(name, level)
+        self.addHandler(logging.StreamHandler())
+
+
+def test_import_object(mocker):
+    import_module_mock = mocker.patch("importlib.import_module", return_value="module")
+    get_attr_mock = mocker.patch(
+        "pykiso.logging_initializer.getattr", return_value=TestLogger
+    )
+
+    object = logging_initializer.import_object("test.path.object")
+    no_path_object = logging_initializer.import_object(None)
+
+    assert no_path_object is None
+    assert object == TestLogger
+    import_module_mock.assert_called_once_with("test.path")
+    get_attr_mock.assert_called_once_with("module", "object")
+
+
+def test_import_object_error(mocker):
+    import_module_mock = mocker.patch("importlib.import_module", return_value="module")
+    get_attr_mock = mocker.patch(
+        "pykiso.logging_initializer.getattr", return_value=logging.Manager
+    )
+    with pytest.raises(TypeError):
+        logging_initializer.import_object("test.path.object")
+
+    import_module_mock.assert_called_once_with("test.path")
+    get_attr_mock.assert_called_once_with("module", "object")
+
+
+def test_add_filter_to_handler():
+    TestLogger.__init__ = logging_initializer.add_filter_to_handler(TestLogger.__init__)
+
+    log = TestLogger("test")
+
+    assert isinstance(
+        log.handlers[0].filters[0], logging_initializer.InternalLogsFilter
+    )
+
+
+def test_remove_handler_from_logger():
+    TestLogger.__init__ = logging_initializer.remove_handler_from_logger(
+        TestLogger.__init__
+    )
+
+    log = TestLogger("test")
+
+    assert log.handlers == []
+
+
+@pytest.mark.parametrize(
+    "logger_class",
+    [
+        ("LoggerNewClass(host='test')"),
+        ("LoggerNewClass"),
+    ],
+)
+def test_change_logger_class(mocker, logger_class):
+    root_save = logging.getLogger()
+    set_logger_class_mock = mocker.patch("logging.setLoggerClass")
+    save_log = {}
+    for name, module in sys.modules.items():
+        if getattr(module, "log", None):
+            save_log[name] = module.log
+
+    class LoggerNewClass(logging.Logger):
+        def __init__(self, name: str, level=0, host="test") -> None:
+            super().__init__(name, level)
+
+    import_object_mock = mocker.patch(
+        "pykiso.logging_initializer.import_object", return_value=LoggerNewClass
+    )
+    logging_initializer.change_logger_class("INFO", False, logger_class)
+    assert isinstance(logging.root, LoggerNewClass)
+    assert isinstance(logging.Logger.manager.root, LoggerNewClass)
+    set_logger_class_mock.assert_called_once_with(LoggerNewClass)
+    import_object_mock.assert_called_once_with("LoggerNewClass")
+    assert isinstance(
+        sys.modules["pykiso.test_coordinator.test_case"].log, LoggerNewClass
+    )
+    logging.root = root_save
+    logging.Logger.manager.root = root_save
+    for name, module in sys.modules.items():
+        if getattr(module, "log", None):
+            module.log = save_log[name]

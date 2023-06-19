@@ -13,3 +13,4 @@ Advanced Usage
     multiprocessing
     how_to_auxiliary
     how_to_connector
+    how_to_change_logger_class

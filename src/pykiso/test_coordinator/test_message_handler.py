@@ -98,7 +98,6 @@ def test_app_interaction(
             # for all configured auxiliaries just send the associated
             # command and evaluate return test results
             for aux in self.test_auxiliary_list:
-
                 cmd = message.Message(
                     msg_type=message.MessageType.COMMAND,
                     sub_type=message_type,

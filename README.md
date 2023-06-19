@@ -148,6 +148,9 @@ Options:
                                   'test_suite_1.py::test_class::test_name'
   --version                       Show the version and exit.
   -h, --help                      Show this message and exit.
+  --logger                        Change the logger class used in pykiso, value
+                                  is the import path to the logger class, example
+                                  'logging.Logger'
 ```
 
 Suitable config files are available in the `examples` folder.
