@@ -30,6 +30,7 @@ import linecache
 import logging
 import re
 import sys
+import traceback
 import types
 import typing
 import unittest
@@ -41,6 +42,8 @@ from typing import List, Union
 from unittest.case import TestCase, _SubTest
 
 import jinja2
+
+from pykiso.test_coordinator.test_case import BasicTest
 
 from .text_result import BannerTestResult
 from .xml_result import TestInfo, XmlTestResult
@@ -477,3 +480,32 @@ def generate_step_report(
     # Write the output into the output file
     with output_file.open("w") as report_file:
         report_file.write(output_text)
+
+
+def add_retry_information_in_step_report(
+    test: BasicTest, result_test: bool, retry_nb: int, max_try: int, exc: Exception
+) -> None:
+    """Add information in the step report if a test fails and is retried.
+
+    :param test: test failed
+    :param result_test: result of the tests of the class before the retry
+    :param retry_nb: number of the current try
+    :param max_try: maximum tries that will be done
+    :param exc: exception caught
+    """
+    global ALL_STEP_REPORT
+    test_class_name = type(test).__name__
+    test_information = ALL_STEP_REPORT[test_class_name]["test_list"][
+        test._testMethodName
+    ]
+    # Add information about the number of try
+    test_information["number_try"] = retry_nb + 1
+    test_information["max_try"] = max_try
+    # Add another list to steps to differentiate the try
+    test_information["steps"].append([])
+    # We add the error raised if it was not an assertion error
+    if not isinstance(exc, AssertionError):
+        test_information["unexpected_errors"][-1].append(traceback.format_exc())
+    test_information["unexpected_errors"].append([])
+    # Go back to the state before executing the test
+    ALL_STEP_REPORT[test_class_name]["succeed"] = result_test

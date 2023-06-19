@@ -299,3 +299,51 @@ def test_determine_parent_test_function_with_test_function(function_name):
     function = assert_step_report.determine_parent_test_function(function_name)
 
     assert function == function_name
+
+
+@pytest.mark.parametrize("result_test", (False, True))
+def test_add_retry_information_in_step_report(mocker, result_test):
+    max_try = 3
+    retry_nb = 2
+    format_exec_mock = mocker.patch("traceback.format_exc", return_value="error_info")
+    mock_test_case_class = mocker.Mock()
+    mock_test_case_class.test_run.__name__ = "test_run"
+    mock_test_case_class._testMethodName = "test_run"
+    all_step_report_mock = {
+        type(mock_test_case_class).__name__: {
+            "test_list": {
+                "test_run": {
+                    "steps": [[{"succeed": False}, {"succeed": True}]],
+                    "unexpected_errors": [[]],
+                }
+            },
+            "succeed": True,
+        }
+    }
+    assert_step_report.ALL_STEP_REPORT = all_step_report_mock
+
+    assert_step_report.add_retry_information_in_step_report(
+        mock_test_case_class, result_test, retry_nb, max_try, ValueError
+    )
+
+    test_info = assert_step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
+        "test_list"
+    ]["test_run"]
+    assert test_info["steps"] == [
+        [{"succeed": False}, {"succeed": True}],
+        [],
+    ]
+    assert test_info["unexpected_errors"] == [
+        ["error_info"],
+        [],
+    ]
+    assert test_info["max_try"] == max_try
+    assert test_info["number_try"] == retry_nb + 1
+
+    assert (
+        assert_step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
+            "succeed"
+        ]
+        == result_test
+    )
+    format_exec_mock.assert_called_once()

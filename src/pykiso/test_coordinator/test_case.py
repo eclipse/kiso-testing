@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import functools
 import logging
-import traceback
 import unittest
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
@@ -340,24 +339,9 @@ def retry_test_case(
                     elif (
                         getattr(self, "step_report", False) and self.step_report.header
                     ):
-                        test_information = step_report.ALL_STEP_REPORT[test_class_name][
-                            "test_list"
-                        ][self._testMethodName]
-                        # Add information about the number of try
-                        test_information["number_try"] = retry_nb + 1
-                        test_information["max_try"] = max_try
-                        # Add another list to steps to differentiate the try
-                        test_information["steps"].append([])
-                        # We add the error raised if it was not an assertion error
-                        if not isinstance(e, AssertionError):
-                            test_information["unexpected_errors"][-1].append(
-                                traceback.format_exc()
-                            )
-                        test_information["unexpected_errors"].append([])
-                        # Go back to the state before executing the test
-                        step_report.ALL_STEP_REPORT[test_class_name][
-                            "succeed"
-                        ] = result_test
+                        step_report.add_retry_information_in_step_report(
+                            self, result_test, retry_nb, max_try, e
+                        )
 
                     # print counter only after failing test to avoid spamming the console
                     log.info(f">>>>>>>>>> Attempt: {retry_nb +1}/{max_try} <<<<<<<<<<")
