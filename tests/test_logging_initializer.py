@@ -17,7 +17,7 @@ from pykiso import logging_initializer
 
 
 @pytest.mark.parametrize(
-    "path, level, expected_level, expected_path_type verbose, report_type",
+    "path, level, expected_level, expected_path_type, verbose, report_type",
     [
         (None, "INFO", logging.INFO, type(None), False, "junit"),
         ("test/test", "WARNING", logging.WARNING, Path, True, "text"),
