@@ -9,7 +9,7 @@
 
 import logging
 import sys
-from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
@@ -17,14 +17,16 @@ from pykiso import logging_initializer
 
 
 @pytest.mark.parametrize(
-    "path, level, expected_level, verbose, report_type",
+    "path, level, expected_level, expected_path_type verbose, report_type",
     [
-        (None, "INFO", logging.INFO, False, "junit"),
-        ("test/test", "WARNING", logging.WARNING, True, "text"),
-        (None, "ERROR", logging.ERROR, False, None),
+        (None, "INFO", logging.INFO, type(None), False, "junit"),
+        ("test/test", "WARNING", logging.WARNING, Path, True, "text"),
+        (None, "ERROR", logging.ERROR, type(None), False, None),
     ],
 )
-def test_initialize_logging(mocker, path, level, expected_level, verbose, report_type):
+def test_initialize_logging(
+    mocker, path, level, expected_level, expected_path_type, verbose, report_type
+):
     mocker.patch("logging.Logger.addHandler")
     mocker.patch("logging.FileHandler.__init__", return_value=None)
     mkdir_mock = mocker.patch("pathlib.Path.mkdir")
@@ -46,7 +48,7 @@ def test_initialize_logging(mocker, path, level, expected_level, verbose, report
         assert logging_initializer.log_options.verbose == True
     assert isinstance(logger, logging.Logger)
     assert logger.isEnabledFor(expected_level)
-    assert logging_initializer.log_options.log_path == path
+    assert isinstance(logging_initializer.log_options.log_path, expected_path_type)
     assert logging_initializer.log_options.log_level == level
     assert logging_initializer.log_options.report_type == report_type
 

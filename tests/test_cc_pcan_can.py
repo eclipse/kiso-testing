@@ -716,7 +716,9 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
 
     assert response["msg"] is None
     assert response.get("remote_id") is None
-    assert "encountered can error: Invalid Message" in caplog.text
+    assert (
+        "encountered CAN error while receiving message: Invalid Message" in caplog.text
+    )
 
 
 def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):

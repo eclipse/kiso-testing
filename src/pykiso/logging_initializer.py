@@ -44,7 +44,7 @@ class LogOptions(NamedTuple):
     Namedtuple containing the available options for logging configuration.
     """
 
-    log_path: PathType
+    log_path: Optional[PathType]
     log_level: str
     report_type: str
     verbose: bool
@@ -89,7 +89,7 @@ def add_internal_log_levels() -> None:
 
 
 def initialize_logging(
-    log_path: PathType,
+    log_path: Optional[PathType],
     log_level: str,
     verbose: bool,
     report_type: str = None,
