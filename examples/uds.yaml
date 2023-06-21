@@ -38,6 +38,7 @@ connectors:
       interface : 'pcan'
       channel: 'PCAN_USBBUS1'
       state: 'ACTIVE'
+      trace_path: 'my_amazing_trace.trc'
     type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
 test_suite_list:
 - suite_dir: test_uds

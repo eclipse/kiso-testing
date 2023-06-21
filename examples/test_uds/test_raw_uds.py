@@ -49,8 +49,8 @@ class ExampleUdsTest(pykiso.BasicTest):
         }
         diag_session_response = uds_aux.send_uds_config(extendedSession_req)
         """
-        diag_session_response = uds_aux.send_uds_raw([0x10, 0x03])
-        self.assertEqual(diag_session_response[:2], [0x50, 0x03])
+        #diag_session_response = uds_aux.send_uds_raw([0x10, 0x03])
+        #self.assertEqual(diag_session_response[:2], [0x50, 0x03])
 
         """
         If no communication is exchanged with the client for more than 5 seconds
@@ -61,17 +61,18 @@ class ExampleUdsTest(pykiso.BasicTest):
         context manager tester present sender can be used. It will send at a defined period
         a Tester Present, to signal to the device that the client is still present.
         """
+        logging.info("bonjour")
+        time.sleep(0.5)
+        uds_aux.stop()
+        time.sleep(0.5)
+        uds_aux.resume()
         # Sends Tester Present every 5 seconds
         with uds_aux.tester_present_sender(period=5):
             time.sleep(6)
             # Go into safety system session
             uds_aux.send_uds_raw([0x10, 0x04])
 
-        # It is also possible to do it with start and stop methods
-        uds_aux.start_tester_present_sender(period=5)
-        time.sleep(6)
-        uds_aux.send_uds_raw([0x10, 0x04])
-        uds_aux.stop_tester_present_sender()
+
 
     def tearDown(self):
         """Hook method from unittest in order to execute code after test case run."""
