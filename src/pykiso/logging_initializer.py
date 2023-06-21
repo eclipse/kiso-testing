@@ -116,9 +116,19 @@ def initialize_logging(
     # add internal kiso log levels
     add_internal_log_levels()
 
-    # update logging options
-    global log_options
-    log_options = LogOptions(log_path, log_level, report_type, verbose)
+    class InternalLogsFilter(logging.Filter):
+        def filter(self, record):
+            """Filters internal log levels
+
+            :param record: event being logged
+
+            :return: False if internal logging, True otherwise
+            """
+            return record.levelno not in (
+                logging.INTERNAL_WARNING,
+                logging.INTERNAL_INFO,
+                logging.INTERNAL_DEBUG,
+            )
 
     # if log_path is given create a file handler
     if log_path is not None:
@@ -131,6 +141,10 @@ def initialize_logging(
         file_handler.setFormatter(log_format)
         file_handler.setLevel(LEVELS[log_level])
         root_logger.addHandler(file_handler)
+
+    # update logging options after having modified the log path
+    global log_options
+    log_options = LogOptions(log_path, log_level, report_type, verbose)
 
     # if report_type is junit use sys.stdout as stream
     if report_type == "junit":
