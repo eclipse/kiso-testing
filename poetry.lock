@@ -2085,4 +2085,4 @@ testrail = ["requests", "rich"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "502d4218ff939d8ea011eb7873a3ae0499b31215487cf77bb98ccddeaa8651c4"
+content-hash = "f55400cd5f4afd132e9e88c15abc56599de082ab4ea427dab7db4918de5b7628"
