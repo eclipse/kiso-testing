@@ -482,7 +482,7 @@ def generate_step_report(
         report_file.write(output_text)
 
 
-def add_retry_information_in_step_report(
+def add_retry_information(
     test: BasicTest, result_test: bool, retry_nb: int, max_try: int, exc: Exception
 ) -> None:
     """Add information in the step report if a test fails and is retried.

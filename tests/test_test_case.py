@@ -370,7 +370,7 @@ def test_retry_on_failure_decorator_step_report(mocker):
         "pykiso.test_result.assert_step_report._prepare_report"
     )
     add_retry_mocker = mocker.patch(
-        "pykiso.test_result.assert_step_report.add_retry_information_in_step_report"
+        "pykiso.test_result.assert_step_report.add_retry_information"
     )
     mock_test_case_class.test_run.side_effect = [
         Exception("try again"),

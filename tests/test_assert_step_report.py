@@ -302,7 +302,7 @@ def test_determine_parent_test_function_with_test_function(function_name):
 
 
 @pytest.mark.parametrize("result_test", (False, True))
-def test_add_retry_information_in_step_report(mocker, result_test):
+def test_add_retry_information(mocker, result_test):
     max_try = 3
     retry_nb = 2
     format_exec_mock = mocker.patch("traceback.format_exc", return_value="error_info")
@@ -322,7 +322,7 @@ def test_add_retry_information_in_step_report(mocker, result_test):
     }
     assert_step_report.ALL_STEP_REPORT = all_step_report_mock
 
-    assert_step_report.add_retry_information_in_step_report(
+    assert_step_report.add_retry_information(
         mock_test_case_class, result_test, retry_nb, max_try, ValueError
     )
 

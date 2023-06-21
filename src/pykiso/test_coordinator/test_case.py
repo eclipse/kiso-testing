@@ -339,7 +339,7 @@ def retry_test_case(
                     elif (
                         getattr(self, "step_report", False) and self.step_report.header
                     ):
-                        step_report.add_retry_information_in_step_report(
+                        step_report.add_retry_information(
                             self, result_test, retry_nb, max_try, e
                         )
 
