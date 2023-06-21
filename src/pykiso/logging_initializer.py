@@ -19,7 +19,6 @@ Integration Test Framework
 
 """
 import importlib
-import json
 import logging
 import re
 import sys
@@ -27,7 +26,7 @@ import time
 from ast import literal_eval
 from functools import partialmethod
 from pathlib import Path
-from typing import Any, List, NamedTuple, Optional, Union
+from typing import List, NamedTuple, Optional, Union
 
 from .test_setup.dynamic_loader import PACKAGE
 from .types import PathType
@@ -115,20 +114,6 @@ def initialize_logging(
     )
     # add internal kiso log levels
     add_internal_log_levels()
-
-    class InternalLogsFilter(logging.Filter):
-        def filter(self, record):
-            """Filters internal log levels
-
-            :param record: event being logged
-
-            :return: False if internal logging, True otherwise
-            """
-            return record.levelno not in (
-                logging.INTERNAL_WARNING,
-                logging.INTERNAL_INFO,
-                logging.INTERNAL_DEBUG,
-            )
 
     # if log_path is given create a file handler
     if log_path is not None:
