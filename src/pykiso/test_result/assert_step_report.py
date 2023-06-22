@@ -38,7 +38,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import List, Union
+from typing import Dict, List, Union
 from unittest.case import TestCase, _SubTest
 
 import jinja2
@@ -220,7 +220,10 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
     if not ALL_STEP_REPORT[test_class_name]["test_list"].get(test_name):
         test_method = getattr(test, test_name, None)
         test_description = test_method.__doc__ or ""
-        ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = {
+        ALL_STEP_REPORT[test_class_name]["test_list"][test_name]: Dict[
+            str,
+            Union[str, List[List[Dict[str, Union[str, bool]]]], List[List[str]]],
+        ] = {
             "description": test_description,
             "steps": [[]],
             "unexpected_errors": [[]],
