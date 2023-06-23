@@ -140,13 +140,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
                 value = self._count_open_proxy_channels()
             last_connection_closed = value == 0 and self._open_count == 1
             first_connection_opened = value == 1 and self._open_count == 0
-<<<<<<< HEAD
-            # prevent negative values on invalid initialization
-            if value >= 0:
-                self._open_count = value
-=======
             self._open_count = value
->>>>>>> ff79fc5 (fix: handle proxy autostart when being instanciated after auxiliaries and close channel at last)
         # stop proxy if the last attached auxiliary was stopped
         if last_connection_closed and self.is_instance:
             self.delete_instance()
