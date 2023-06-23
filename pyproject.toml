@@ -140,6 +140,7 @@ testpaths = [
 addopts = """\
     --verbose \
     --log-level=INFO \
+    -p no:pytest_kiso \
     --cov=./src \
     --cov-report=html \
     --cov-report html:./tests/coverage_report.html \
