@@ -387,8 +387,9 @@ def close_connector(func: Callable) -> Callable:
         """
         log.internal_info("Close channel")
         try:
+            ret = func(self, *arg, **kwargs)
             self.channel.close()
-            return func(self, *arg, **kwargs)
+            return ret
         except Exception:
             log.exception("Unable to close channel communication")
             return False
