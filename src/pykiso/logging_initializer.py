@@ -19,7 +19,6 @@ Integration Test Framework
 
 """
 import importlib
-import json
 import logging
 import re
 import sys
@@ -27,7 +26,7 @@ import time
 from ast import literal_eval
 from functools import partialmethod
 from pathlib import Path
-from typing import Any, List, NamedTuple, Optional, Union
+from typing import List, NamedTuple, Optional, Union
 
 from .test_setup.dynamic_loader import PACKAGE
 from .types import PathType
@@ -45,7 +44,7 @@ class LogOptions(NamedTuple):
     Namedtuple containing the available options for logging configuration.
     """
 
-    log_path: PathType
+    log_path: Optional[PathType]
     log_level: str
     report_type: str
     verbose: bool
@@ -90,7 +89,7 @@ def add_internal_log_levels() -> None:
 
 
 def initialize_logging(
-    log_path: PathType,
+    log_path: Optional[PathType],
     log_level: str,
     verbose: bool,
     report_type: str = None,
@@ -116,10 +115,6 @@ def initialize_logging(
     # add internal kiso log levels
     add_internal_log_levels()
 
-    # update logging options
-    global log_options
-    log_options = LogOptions(log_path, log_level, report_type, verbose)
-
     # if log_path is given create a file handler
     if log_path is not None:
         log_path = Path(log_path)
@@ -131,6 +126,10 @@ def initialize_logging(
         file_handler.setFormatter(log_format)
         file_handler.setLevel(LEVELS[log_level])
         root_logger.addHandler(file_handler)
+
+    # update logging options after having modified the log path
+    global log_options
+    log_options = LogOptions(log_path, log_level, report_type, verbose)
 
     # if report_type is junit use sys.stdout as stream
     if report_type == "junit":

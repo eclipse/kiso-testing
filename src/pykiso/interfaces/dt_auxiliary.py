@@ -140,6 +140,7 @@ class DTAuxiliaryInterface(abc.ABC):
         with self.lock:
             # if the current aux is alive don't try to create it again
             if self.is_instance:
+                log.internal_info(f"Auxiliary {self.name} is already created")
                 return True
 
             is_created = self._create_auxiliary_instance()
@@ -166,6 +167,7 @@ class DTAuxiliaryInterface(abc.ABC):
             # if the current aux is not alive don't try to delete it
             # again
             if not self.is_instance:
+                log.internal_info(f"Auxiliary {self.name} is already deleted")
                 return True
 
             # stop each auxiliary's tasks
@@ -188,10 +190,9 @@ class DTAuxiliaryInterface(abc.ABC):
             log.internal_debug("transmit task is not needed, don't start it")
             return
 
-        log.internal_debug(f"start transmit task {self.name}_tx")
-        self.tx_thread = threading.Thread(
-            name=f"{self.name}_tx", target=self._transmit_task
-        )
+        task_name = f"{self.name}_tx"
+        log.internal_debug("start transmit task %s", task_name)
+        self.tx_thread = threading.Thread(name=task_name, target=self._transmit_task)
         self.tx_thread.start()
 
     def _start_rx_task(self) -> None:
@@ -200,16 +201,15 @@ class DTAuxiliaryInterface(abc.ABC):
             log.internal_debug("reception task is not needed, don't start it")
             return
 
-        log.internal_debug(f"start reception task {self.name}_rx")
-        self.rx_thread = threading.Thread(
-            name=f"{self.name}_rx", target=self._reception_task
-        )
+        task_name = f"{self.name}_rx"
+        log.internal_debug("start reception task %s", task_name)
+        self.rx_thread = threading.Thread(name=task_name, target=self._reception_task)
         self.rx_thread.start()
 
     def _stop_tx_task(self) -> None:
         """Stop transmission task."""
         if self.tx_task_on is False:
-            log.internal_debug("transmit task was not started, so no need to stop it")
+            log.internal_debug("transmit task was not started, no need to stop it")
             return
 
         log.internal_debug(f"stop transmit task {self.name}_tx")
@@ -221,7 +221,7 @@ class DTAuxiliaryInterface(abc.ABC):
     def _stop_rx_task(self) -> None:
         """Stop reception task."""
         if self.rx_task_on is False:
-            log.internal_debug("recpetion task was not started, so no need t stop it")
+            log.internal_debug("reception task was not started, no need to stop it")
             return
 
         log.internal_debug(f"stop reception task {self.name}_rx")

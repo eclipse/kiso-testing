@@ -126,7 +126,7 @@ class CCProxy(CChannel):
     def _cc_close(self) -> None:
         """Close proxy channel."""
         log.internal_debug("Close proxy channel")
-        self.queue_out = queue.Queue()
+        self.queue_out = None
 
     def _cc_send(self, *args: Any, **kwargs: Any) -> None:
         """Call the attached ProxyAuxiliary's transmission callback

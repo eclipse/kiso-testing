@@ -373,7 +373,9 @@ class CCPCanCan(CChannel):
             else:
                 return {"msg": None}
         except can.CanError as can_error:
-            log.internal_debug(f"encountered can error: {can_error}")
+            log.internal_info(
+                f"encountered CAN error while receiving message: {can_error}"
+            )
             return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
