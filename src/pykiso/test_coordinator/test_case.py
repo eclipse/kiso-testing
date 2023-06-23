@@ -27,6 +27,8 @@ import logging
 import unittest
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
+import pykiso.test_result.assert_step_report as step_report
+
 from .. import message
 from ..interfaces.thread_auxiliary import AuxiliaryInterface
 from ..logging_initializer import get_logging_options, initialize_logging
@@ -294,6 +296,11 @@ def retry_test_case(
         def func_wrapper(self: BasicTest) -> None:
             # track the current execution for logging
             current_execution = None
+            test_class_name = type(self).__name__
+            # Prepare report for the current test so we can get the current result for the class
+            if getattr(self, "step_report", False) and self.step_report.header:
+                step_report._prepare_report(self, self._testMethodName)
+                result_test = step_report.ALL_STEP_REPORT[test_class_name]["succeed"]
 
             for retry_nb in range(1, max_try + 1):
                 try:
@@ -329,6 +336,12 @@ def retry_test_case(
                             f">>>>>>>>>> Test {retry_nb}/{max_try} failed <<<<<<<<<<"
                         )
                         raise e
+                    elif (
+                        getattr(self, "step_report", False) and self.step_report.header
+                    ):
+                        step_report.add_retry_information(
+                            self, result_test, retry_nb, max_try, e
+                        )
 
                     # print counter only after failing test to avoid spamming the console
                     log.info(f">>>>>>>>>> Attempt: {retry_nb +1}/{max_try} <<<<<<<<<<")
