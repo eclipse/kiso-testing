@@ -67,6 +67,7 @@ class CCSerial(connector.CChannel):
     def __init__(
         self,
         port: Optional[str] = None,
+        serial_number: Optional[str] = None,
         vid: Optional[int] = None,
         pid: Optional[int] = None,
         baudrate: int = 9600,
@@ -85,6 +86,9 @@ class CCSerial(connector.CChannel):
         """Init Serial settings
 
         :param port: Device name (e.g. "COM1" for Windows or "/dev/ttyACM0" for Linux)
+        :param serial_number: serial number
+        :param vid: vendor id
+        :param pid: product id
         :param baudrate: Baud rate such as 9600 or 115200 etc, defaults to 9600
         :param bytesize: Number of data bits. Possible values:
           FIVEBITS, SIXBITS, SEVENBITS, EIGHTBITS, defaults to EIGHTBITS
@@ -125,25 +129,31 @@ class CCSerial(connector.CChannel):
         )
 
         self.current_write_timeout = write_timeout
-        self.serial.port = self._get_port(port=port, vid=vid, pid=pid)
+        self.serial.port = self._get_port(
+            port=port, vid=vid, pid=pid, serial_number=serial_number
+        )
 
     @staticmethod
-    def _find_device(vid: int, pid: int) -> str:
-        """Return the device which matches pid and vid.
+    def _find_device(vid: int, pid: int, serial_number: str) -> str:
+        """Return the device which matches the given pid/vid or serial_number.
 
         :param vid: vendor id
         :param pid: product id
+        :param serial_number: serial number
 
         :return: com port for the found device. I.e. "COM4" or "/dev/tty1"
         """
 
         attached_com_devices = serial.tools.list_ports.comports()
         found_devices = [
-            port for port in attached_com_devices if port.pid == pid and port.vid == vid
+            port
+            for port in attached_com_devices
+            if (port.pid == pid and port.vid == vid and pid is not None)
+            or (port.serial_number == serial_number and serial_number is not None)
         ]
         if not found_devices:
             raise ConnectionError(
-                f"Failed to detect connected USB device with IDs {vid:04X}:{pid:04x}."
+                f"Failed to detect connected USB device with IDs {vid:04X}:{pid:04x} or serial_number {serial_number}."
             )
 
         found_devices = [
@@ -152,14 +162,14 @@ class CCSerial(connector.CChannel):
         ]
         if len(found_devices) > 1:
             log.internal_warning(
-                f"Found multiple devices, {found_devices}, with matching IDs {vid:04X}:{pid:04x}. Select first device {found_devices[0]}."
+                f"Found multiple devices, {found_devices}, with matching IDs {vid:04X}:{pid:04X} or serial_number {serial_number}. Select first device {found_devices[0]}."
             )
         return found_devices[0]
 
-    def _get_port(self, port: str, vid: int, pid: int) -> str:
+    def _get_port(self, port: str, vid: int, pid: int, serial_number: str) -> str:
         """Returns com port depending on the given port argument.
-        If port set to auto, the device will be searched for,
-        using the pid and vid, else the port argument will be returned.
+        If port is None, the device will be searched for,
+        using the pid/vid and serial_number, else the port argument will be returned.
 
         :param port: port  I.e. "COM4" or "/dev/tty1"
         :param vid: vendor id
@@ -168,7 +178,7 @@ class CCSerial(connector.CChannel):
         :return: com ports of given or found device. I.e. "COM4" or "/dev/tty1"
         """
         if port is None:
-            return CCSerial._find_device(vid=vid, pid=pid)
+            return CCSerial._find_device(vid=vid, pid=pid, serial_number=serial_number)
         else:
             return port
 
