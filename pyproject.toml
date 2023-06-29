@@ -141,6 +141,7 @@ addopts = """\
     --verbose \
     --log-level=INFO \
     -p no:pytest_kiso \
+    --junitxml=reports/testReport.xml \
     --cov=./src \
     --cov-report=html \
     --cov-report html:./tests/coverage_report.html \
