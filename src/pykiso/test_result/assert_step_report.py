@@ -30,6 +30,7 @@ import linecache
 import logging
 import re
 import sys
+import traceback
 import types
 import typing
 import unittest
@@ -37,10 +38,12 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import List, Union
+from typing import Dict, List, Union
 from unittest.case import TestCase, _SubTest
 
 import jinja2
+
+from pykiso.test_coordinator.test_case import BasicTest
 
 from .text_result import BannerTestResult
 from .xml_result import TestInfo, XmlTestResult
@@ -217,10 +220,13 @@ def _prepare_report(test: unittest.case.TestCase, test_name: str) -> None:
     if not ALL_STEP_REPORT[test_class_name]["test_list"].get(test_name):
         test_method = getattr(test, test_name, None)
         test_description = test_method.__doc__ or ""
-        ALL_STEP_REPORT[test_class_name]["test_list"][test_name] = {
+        ALL_STEP_REPORT[test_class_name]["test_list"][test_name]: Dict[
+            str,
+            Union[str, List[List[Dict[str, Union[str, bool]]]], List[List[str]]],
+        ] = {
             "description": test_description,
-            "steps": [],
-            "unexpected_errors": [],
+            "steps": [[]],
+            "unexpected_errors": [[]],
         }
 
 
@@ -234,7 +240,7 @@ def _add_step(
 ):
     global ALL_STEP_REPORT, REPORT_KEYS
 
-    ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"].append(
+    ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1].append(
         dict(zip(REPORT_KEYS, [message, var_name, expected, received, True]))
     )
 
@@ -363,9 +369,9 @@ def assert_decorator(assert_method: types.MethodType):
             log.error(f"Assert step exception: {e}")
             test_case_inst.step_report.last_error_message = f"{e}"
             if parent_method:
-                ALL_STEP_REPORT[test_class_name]["test_list"][test_name][-1][
-                    "succeed"
-                ] = False
+                ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1][
+                    -1
+                ]["succeed"] = False
                 ALL_STEP_REPORT[test_class_name]["succeed"] = False
 
             test_case_inst.step_report.success = False
@@ -396,8 +402,9 @@ def is_test_success(test: dict) -> bool:
     :return: True if each step in a test was successful and no unexpected error
         was raised else False
     """
-    return all([step["succeed"] for step in test["steps"]]) and not test.get(
-        "unexpected_errors"
+    return (
+        all([step["succeed"] for step in test["steps"][-1]])
+        and not test.get("unexpected_errors")[-1]
     )
 
 
@@ -462,9 +469,9 @@ def generate_step_report(
             if test_case in test_result.errors:
                 ALL_STEP_REPORT[class_name]["test_list"][test_method_name][
                     "unexpected_errors"
-                ].append(test_case[1])
-
+                ][-1].append(test_case[1])
                 ALL_STEP_REPORT[class_name]["succeed"] = False
+
     # Render the source template
     render_environment = jinja2.Environment(
         loader=jinja2.FileSystemLoader(SCRIPT_PATH), autoescape=True
@@ -478,3 +485,32 @@ def generate_step_report(
     # Write the output into the output file
     with output_file.open("w") as report_file:
         report_file.write(output_text)
+
+
+def add_retry_information(
+    test: BasicTest, result_test: bool, retry_nb: int, max_try: int, exc: Exception
+) -> None:
+    """Add information in the step report if a test fails and is retried.
+
+    :param test: test failed
+    :param result_test: result of the tests of the class before the retry
+    :param retry_nb: number of the current try
+    :param max_try: maximum tries that will be done
+    :param exc: exception caught
+    """
+    global ALL_STEP_REPORT
+    test_class_name = type(test).__name__
+    test_information = ALL_STEP_REPORT[test_class_name]["test_list"][
+        test._testMethodName
+    ]
+    # Add information about the number of try
+    test_information["number_try"] = retry_nb + 1
+    test_information["max_try"] = max_try
+    # Add another list to steps to differentiate the try
+    test_information["steps"].append([])
+    # We add the error raised if it was not an assertion error
+    if not isinstance(exc, AssertionError):
+        test_information["unexpected_errors"][-1].append(traceback.format_exc())
+    test_information["unexpected_errors"].append([])
+    # Go back to the state before executing the test
+    ALL_STEP_REPORT[test_class_name]["succeed"] = result_test

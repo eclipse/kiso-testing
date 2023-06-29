@@ -49,6 +49,7 @@ auxiliaries. This auxiliary is only usable through proxy connector.
 """
 
 import logging
+import queue
 import sys
 import time
 from pathlib import Path
@@ -96,6 +97,19 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         self.logger = self._init_trace(activate_trace, trace_dir, trace_name)
         self.proxy_channels = self.get_proxy_con(aux_list)
 
+    def _count_open_proxy_channels(self) -> int:
+        """
+        Get the number of proxy channels connected to this auxiliary
+        that are currently open.
+        """
+        return len(
+            [
+                ccproxy
+                for ccproxy in self.proxy_channels
+                if isinstance(ccproxy.queue_out, queue.Queue)
+            ]
+        )
+
     @property
     def _open_connections(self) -> int:
         """A counter monitoring the number of attached running auxiliaries.
@@ -120,15 +134,19 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
     def _open_connections(self, value: int):
         # locking shouldn't be necessary but we're never too paranoid
         with self.lock:
+            # on the original proxy setup, the auxiliaries are created before the proxy
+            # therefore, when the first auxiliary will be stopped, the counter value will be -1
+            if value < 0:
+                value = self._count_open_proxy_channels()
             last_connection_closed = value == 0 and self._open_count == 1
             first_connection_opened = value == 1 and self._open_count == 0
-            # prevent negative values on invalid initialization
-            if value >= 0:
-                self._open_count = value
-            if last_connection_closed and self.is_instance:
-                self.delete_instance()
-            elif first_connection_opened and not self.is_instance:
-                self.create_instance()
+            self._open_count = value
+        # stop proxy if the last attached auxiliary was stopped
+        if last_connection_closed and self.is_instance:
+            self.delete_instance()
+        # start proxy if the first attached auxiliary is started
+        elif first_connection_opened and not self.is_instance:
+            self.create_instance()
 
     @staticmethod
     def _init_trace(

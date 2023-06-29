@@ -1,8 +1,8 @@
-Modules For Use
+Examples
 ===============
 
 In `pykiso`, auxiliaries and connectors can be contributed. Some of them are more complex to use than others.
-All modules that need a more extensive documentation can be found here.
+Examples for some complex modules that need a more extensive documentation can be found here.
 
 .. toctree::
     :maxdepth: 2

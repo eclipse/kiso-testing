@@ -9,10 +9,12 @@
 
 import logging
 import unittest
+from collections import OrderedDict
 from functools import partial
 
 import pytest
 
+import pykiso.test_result.assert_step_report as step_report
 from pykiso import cli, retry_test_case
 from pykiso.logging_initializer import LogOptions
 from pykiso.test_coordinator import test_case
@@ -334,6 +336,7 @@ def test_retry_on_failure_decorator(
         ]
     # fix __name__ for the mock.test_run
     mock_test_case_class.test_run.__name__ = "test_run"
+    mock_test_case_class._testMethodName = "test_run"
 
     partial_test_run = partial(
         retry_test_case(max_try, rerun_setup, rerun_teardown, stability_test)(
@@ -350,3 +353,36 @@ def test_retry_on_failure_decorator(
     assert mock_test_case_class.setUp.call_count == expected_setup_count
     assert mock_test_case_class.test_run.call_count == expected_run_count
     assert mock_test_case_class.tearDown.call_count == expected_teardown_count
+
+
+def test_retry_on_failure_decorator_step_report(mocker):
+    max_try = 3
+    mock_test_case_class = mocker.Mock()
+    mock_test_case_class.test_run.__name__ = "test_run"
+    mock_test_case_class._testMethodName = "test_run"
+    mock_test_case_class.step_report = step_report.StepReportData()
+    mock_test_case_class.step_report.header = OrderedDict(
+        {"ITF version": "pykiso.__version__"}
+    )
+    all_step_report_mock = {type(mock_test_case_class).__name__: {"succeed": True}}
+    step_report.ALL_STEP_REPORT = all_step_report_mock
+    prepare_report_mock = mocker.patch(
+        "pykiso.test_result.assert_step_report._prepare_report"
+    )
+    add_retry_mocker = mocker.patch(
+        "pykiso.test_result.assert_step_report.add_retry_information"
+    )
+    mock_test_case_class.test_run.side_effect = [
+        Exception("try again"),
+        Exception("try harder"),
+        "bingo",
+    ]
+
+    partial_test_run = partial(
+        retry_test_case(max_try, False, False, False)(mock_test_case_class.test_run)
+    )
+
+    partial_test_run(mock_test_case_class)
+
+    prepare_report_mock.assert_called_once_with(mock_test_case_class, "test_run")
+    assert add_retry_mocker.call_count == 2

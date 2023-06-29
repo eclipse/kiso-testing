@@ -21,6 +21,7 @@ Can Communication Channel using PCAN hardware
 
 import logging
 import os
+import shutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -373,7 +374,9 @@ class CCPCanCan(CChannel):
             else:
                 return {"msg": None}
         except can.CanError as can_error:
-            log.internal_debug(f"encountered can error: {can_error}")
+            log.internal_info(
+                f"encountered CAN error while receiving message: {can_error}"
+            )
             return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
@@ -398,7 +401,10 @@ class CCPCanCan(CChannel):
             else:
                 # Else write the first trace content in the log file and then remove it
                 result_trace = Path(self.trace_path / self.trace_name)
-                list_of_traces[0] = list_of_traces[0].rename(result_trace)
+                list_of_traces[0] = shutil.move(
+                    str(list_of_traces[0]), str(result_trace)
+                )
+                list_of_traces[0] = Path(list_of_traces[0])
 
             # End of the trace header
             first_message_line = 33

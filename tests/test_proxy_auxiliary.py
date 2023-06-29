@@ -154,11 +154,13 @@ def test_get_proxy_con_invalid(mocker, caplog, cchannel_inst):
     assert len(proxy_inst.proxy_channels) == 0
 
 
-def test_auto_start_stop(cchannel_inst):
+class TestAutoStartStop:
     class SomeAuxiliary(DTAuxiliaryInterface):
         def __init__(self, name="fake_aux"):
             self.channel = CCProxy()
-            super().__init__(name, is_proxy_capable=True)
+            super().__init__(
+                name, is_proxy_capable=True, rx_task_on=False, tx_task_on=False
+            )
 
         def _create_auxiliary_instance(self):
             self.channel.open()
@@ -174,35 +176,69 @@ def test_auto_start_stop(cchannel_inst):
         def _run_command(self, cmd_message, cmd_data):
             pass
 
-    aux1 = SomeAuxiliary("aux1")
-    aux2 = SomeAuxiliary("aux2")
-    cchannel_inst._cc_receive.return_value = {"msg": None}
+    def test_normal_usecase(self, cchannel_inst):
+        aux1 = self.SomeAuxiliary("aux1")
+        aux2 = self.SomeAuxiliary("aux2")
+        cchannel_inst._cc_receive.return_value = {"msg": None}
 
-    proxy_inst = ProxyAuxiliary(cchannel_inst, [aux1, aux2], name="proxy")
-    assert proxy_inst._open_connections == 0
-    assert proxy_inst.channel._cc_open.call_count == 0
-    assert proxy_inst.channel._cc_close.call_count == 0
-    assert proxy_inst.is_instance == False
+        # test normal use case
+        proxy_inst = ProxyAuxiliary(cchannel_inst, [aux1, aux2], name="proxy")
+        assert proxy_inst._open_connections == 0
+        assert proxy_inst.channel._cc_open.call_count == 0
+        assert proxy_inst.channel._cc_close.call_count == 0
+        assert proxy_inst.is_instance == False
 
-    aux1.start()
-    assert proxy_inst._open_connections == 1
-    assert proxy_inst.channel._cc_open.call_count == 1
-    assert proxy_inst.is_instance == True
+        aux1.start()
+        assert proxy_inst._open_connections == 1
+        assert proxy_inst.channel._cc_open.call_count == 1
+        assert proxy_inst.is_instance == True
 
-    aux2.start()
-    assert proxy_inst._open_connections == 2
-    assert proxy_inst.channel._cc_open.call_count == 1
-    assert proxy_inst.is_instance == True
+        aux2.start()
+        assert proxy_inst._open_connections == 2
+        assert proxy_inst.channel._cc_open.call_count == 1
+        assert proxy_inst.is_instance == True
 
-    aux1.stop()
-    assert proxy_inst._open_connections == 1
-    assert proxy_inst.channel._cc_close.call_count == 0
-    assert proxy_inst.is_instance == True
+        aux1.stop()
+        assert proxy_inst._open_connections == 1
+        assert proxy_inst.channel._cc_close.call_count == 0
+        assert proxy_inst.is_instance == True
 
-    aux2.stop()
-    assert proxy_inst._open_connections == 0
-    assert proxy_inst.channel._cc_close.call_count == 1
-    assert proxy_inst.is_instance == False
+        aux2.stop()
+        assert proxy_inst._open_connections == 0
+        assert proxy_inst.channel._cc_close.call_count == 1
+        assert proxy_inst.is_instance == False
+
+    def test_preloaded_auxiliaries(self, cchannel_inst):
+        # test when the auxiliaries are started before the proxy auxiliary (pre-loaded auxiliaries)
+        aux1 = self.SomeAuxiliary("aux1")
+        aux2 = self.SomeAuxiliary("aux2")
+        cchannel_inst._cc_receive.return_value = {"msg": None}
+
+        aux1.start()
+        aux2.start()
+
+        proxy_inst = ProxyAuxiliary(cchannel_inst, [aux1, aux2], name="proxy")
+        proxy_inst.rx_task_on = False
+        # reproduce pre-loading by not starting the auxiliaries but the proxy and directly
+        # attaching the proxy channel instances to it
+        proxy_inst.proxy_channels = (aux1.channel, aux2.channel)
+        proxy_inst.start()
+
+        assert proxy_inst._open_connections == 0
+        assert proxy_inst.channel._cc_open.call_count == 1
+        assert proxy_inst.channel._cc_close.call_count == 0
+
+        aux1.stop()
+        assert proxy_inst._open_connections == 1
+        assert proxy_inst.channel._cc_open.call_count == 1
+        assert proxy_inst.channel._cc_close.call_count == 0
+        assert proxy_inst.is_instance == True
+
+        aux2.stop()
+        assert proxy_inst._open_connections == 0
+        assert proxy_inst.channel._cc_open.call_count == 1
+        assert proxy_inst.channel._cc_close.call_count == 1
+        assert proxy_inst.is_instance == False
 
 
 def test_getattr_physical_cchannel(
