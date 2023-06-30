@@ -12,6 +12,7 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Update python version ([#314](https://github.com/eclipse/kiso-testing/issues/314))
 - Handle proxy autostart when being instanciated after auxiliaries and close channel at last
 - Use shutil.move for renaming the merged trace to avoid windows errors
+- Add junitxml option to default pytest options ([#321](https://github.com/eclipse/kiso-testing/issues/321))
 
 ### Miscellaneous Tasks
 
