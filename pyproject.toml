@@ -110,7 +110,7 @@ all = [
 [tool.poetry.group.dev.dependencies]
 black = "22.10.0"
 bump2version = "*"
-coverage = { version = "^6.5", extras = ["toml"] }
+coverage = { version = ">=6.5,<8.0", extras = ["toml"] }
 invoke = "*"
 pdbpp = "*"
 pre-commit = "*"
