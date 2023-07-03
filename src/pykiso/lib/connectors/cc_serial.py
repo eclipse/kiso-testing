@@ -145,12 +145,25 @@ class CCSerial(connector.CChannel):
         """
 
         attached_com_devices = serial.tools.list_ports.comports()
-        found_devices = [
-            port
-            for port in attached_com_devices
-            if (port.pid == pid and port.vid == vid and pid is not None)
-            or (port.serial_number == serial_number and serial_number is not None)
-        ]
+        found_devices = []
+        if pid and vid:
+            found_devices.extend(
+                [
+                    port
+                    for port in attached_com_devices
+                    if port.pid == pid and port.vid == vid
+                ]
+            )
+
+        if serial_number:
+            found_devices.extend(
+                [
+                    port
+                    for port in attached_com_devices
+                    if port.serial_number == serial_number
+                ]
+            )
+
         if not found_devices:
             raise ConnectionError(
                 f"Failed to detect connected USB device with IDs {vid:04X}:{pid:04x} or serial_number {serial_number}."
