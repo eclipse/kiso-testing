@@ -3,7 +3,7 @@
 Controlling an Instrument
 =========================
 
-The instrument-control command offers a way to interface with an arbitrary instrument, such as power supplies from different brands.
+The instrument-control auxiliarie command offers a way to interface with an arbitrary instrument, such as power supplies from different brands.
 The Standard Commands for Programmable Instruments (SCPI) protocol is used to control the desired instrument.
 This section aims to describe how to use instrument-control as an auxiliary for integration testing, and also how to interface directly
 with the instrument using the built-in command line interface (CLI).

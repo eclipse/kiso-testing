@@ -132,7 +132,7 @@ def test_assert_decorator_reraise(mocker, test_case):
     step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
     assert_step_report.ALL_STEP_REPORT = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestCase"] = {
-        "test_list": {"test_assert_decorator_reraise": [{"succeed": True}]}
+        "test_list": {"test_assert_decorator_reraise": {"steps": [[{"succeed": True}]]}}
     }
 
     data_to_test = False
@@ -142,7 +142,7 @@ def test_assert_decorator_reraise(mocker, test_case):
     assert (
         assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
             "test_assert_decorator_reraise"
-        ][-1]["succeed"]
+        ]["steps"][-1][-1]["succeed"]
         == False
     )
     step_result.assert_called_once_with(
@@ -221,7 +221,6 @@ def test_generate(mocker, test_result):
 
 
 def test_add_step():
-
     assert_step_report.ALL_STEP_REPORT["TestCase"] = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"] = OrderedDict()
     assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
@@ -229,7 +228,7 @@ def test_add_step():
     ] = {}
     steplist = assert_step_report.ALL_STEP_REPORT["TestCase"]["test_list"][
         "test_assert_step_report_multi_input"
-    ]["steps"] = []
+    ]["steps"] = [[]]
 
     assert_step_report._add_step(
         "TestCase",
@@ -243,12 +242,17 @@ def test_add_step():
 
 
 def test_is_test_success():
-
-    test_ok = {"steps": [{"succeed": True}, {"succeed": True}, {"succeed": True}]}
-    test_fail = {"steps": [{"succeed": True}, {"succeed": False}, {"succeed": True}]}
+    test_ok = {
+        "steps": [[{"succeed": True}, {"succeed": True}, {"succeed": True}]],
+        "unexpected_errors": [[]],
+    }
+    test_fail = {
+        "steps": [[{"succeed": True}, {"succeed": False}, {"succeed": True}]],
+        "unexpected_errors": [[]],
+    }
     test_fail_error = {
-        "steps": [{"succeed": True}, {"succeed": True}, {"succeed": True}],
-        "unexpected_errors": "error",
+        "steps": [[{"succeed": True}, {"succeed": True}, {"succeed": True}]],
+        "unexpected_errors": [["error"]],
     }
 
     assert assert_step_report.is_test_success(test_ok)
@@ -295,3 +299,51 @@ def test_determine_parent_test_function_with_test_function(function_name):
     function = assert_step_report.determine_parent_test_function(function_name)
 
     assert function == function_name
+
+
+@pytest.mark.parametrize("result_test", (False, True))
+def test_add_retry_information(mocker, result_test):
+    max_try = 3
+    retry_nb = 2
+    format_exec_mock = mocker.patch("traceback.format_exc", return_value="error_info")
+    mock_test_case_class = mocker.Mock()
+    mock_test_case_class.test_run.__name__ = "test_run"
+    mock_test_case_class._testMethodName = "test_run"
+    all_step_report_mock = {
+        type(mock_test_case_class).__name__: {
+            "test_list": {
+                "test_run": {
+                    "steps": [[{"succeed": False}, {"succeed": True}]],
+                    "unexpected_errors": [[]],
+                }
+            },
+            "succeed": True,
+        }
+    }
+    assert_step_report.ALL_STEP_REPORT = all_step_report_mock
+
+    assert_step_report.add_retry_information(
+        mock_test_case_class, result_test, retry_nb, max_try, ValueError
+    )
+
+    test_info = assert_step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
+        "test_list"
+    ]["test_run"]
+    assert test_info["steps"] == [
+        [{"succeed": False}, {"succeed": True}],
+        [],
+    ]
+    assert test_info["unexpected_errors"] == [
+        ["error_info"],
+        [],
+    ]
+    assert test_info["max_try"] == max_try
+    assert test_info["number_try"] == retry_nb + 1
+
+    assert (
+        assert_step_report.ALL_STEP_REPORT[type(mock_test_case_class).__name__][
+            "succeed"
+        ]
+        == result_test
+    )
+    format_exec_mock.assert_called_once()

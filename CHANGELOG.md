@@ -6,6 +6,30 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### Bug Fixes
+
+- Fix step report show wrong result ([#309](https://github.com/eclipse/kiso-testing/issues/309))
+- Update python version ([#314](https://github.com/eclipse/kiso-testing/issues/314))
+- Handle proxy autostart when being instanciated after auxiliaries and close channel at last
+- Use shutil.move for renaming the merged trace to avoid windows errors
+- Add junitxml option to default pytest options ([#321](https://github.com/eclipse/kiso-testing/issues/321))
+
+### Miscellaneous Tasks
+
+- Add unit test for the use case
+
+### New Features
+
+- Change logger class for the test ([#303](https://github.com/eclipse/kiso-testing/issues/303))
+- Added shutdown method to CCHannel [ready for review] ([#310](https://github.com/eclipse/kiso-testing/issues/310))
+
+### Refactorings
+
+- Resolved codefactor issues [ready for review] ([#307](https://github.com/eclipse/kiso-testing/issues/307))
+- Restructure the documentation
+
+## Version 0.22.2 (2023-06-16)
+
 ### Feature
 
 - Pytest integration ([#261](https://github.com/eclipse/kiso-testing/issues/261))

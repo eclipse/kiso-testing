@@ -4,57 +4,59 @@ Pykiso Design
 Introduction
 ------------
 
-Integration Test Framework (Pykiso) is a framework that can be used for both
-white-box and black-box testing as well as in the integration and system
+The *pykiso* Integration Test Framework (ITF) build in a modular and configurable way, which aims to enable the user, to write and run tests on hardware.
+Pykiso is build to orchestrate the entities ( e.g. device under test ) and services ( e.g. flash the target ) which are involved in the test.
+The Testing Framework can be used for both white-box and black-box testing as well as in the integration and system
 testing.
 
 Quality Goals
 -------------
-The framework tries to achieve the following quality goals:
+The Framework tries to achieve the following quality goals:
 
 +---------------------------+----------------------------------------------------------------------------------------------------+
 | Quality Goal (with prio)  | Scenarios                                                                                          |
 +===========================+====================================================================================================+
-| **Portability**           | The framework shall run on linux, windows, macOS                                                   |
+| **Portability**           | The Framework shall run on linux, windows, macOS                                                   |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-|                           | The framework shall run on a raspberryPI or a regular laptop                                       |
+|                           | The Framework shall run on a raspberryPI or a regular laptop                                       |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-| **Modularity**            | The framework shall allow me to implement complex logic and to run it over any communication port  |
+| **Modularity**            | The Framework shall allow me to implement complex logic and to run it over any communication port  |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-|                           | The framework shall allow me to add any communication port                                         |
+|                           | The Framework shall allow me to add any communication port                                         |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-|                           | The framework shall allow me to use private modules within my tests if it respects its APIs        |
+|                           | The Framework shall allow me to use private modules within my tests if it respects its APIs        |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-|                           | The framework shall allow me to define my own test approach                                        |
+|                           | The Framework shall allow me to define my own test approach                                        |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-| **Correctness**           | The framework shall verify that its inputs (test-setup) are correct before performing any test     |
+| **Correctness**           | The Framework shall verify that its inputs (test-setup) are correct before performing any test     |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-|                           | The framework shall execute the provided tests always in the same order                            |
+|                           | The Framework shall execute the provided tests always in the same order                            |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-| **Usability**             | The framework shall feel familiar for embedded developers                                          |
+| **Usability**             | The Framework shall feel familiar for embedded developers                                          |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-|                           | The framework shall feel familiar for system tester                                                |
+|                           | The Framework shall feel familiar for system tester                                                |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-|                           | The framework shall generate test reports that are human and machine readable                      |
+|                           | The Framework shall generate test reports that are human and machine readable                      |
 +---------------------------+----------------------------------------------------------------------------------------------------+
-| **Performance** (new)     | The framework shall use only the right/reasonable amount of resources to run (real-time timings)   |
+| **Performance** (new)     | The Framework shall use only the right/reasonable amount of resources to run (real-time timings)   |
 +---------------------------+----------------------------------------------------------------------------------------------------+
 
 
 Design Overview
 ---------------
 
-.. figure:: ../images/pykiso_context_overview.png
+.. figure:: ../images/pykiso_itf.png
    :alt: Figure 1: Integration Test Framework Context
 
-   Figure 1: Integration Test Framework Context
-
-The *pykiso* Testing Framework is built in a modular and configurable
-way with abstractions both for entities (e.g. a handler for the device
+The *pykiso* ITF is built in a modular and configurable
+way with abstractions for both, entities (e.g. simulated counterpart for the device
 under test) and communication (e.g. UART or TCP/IP).
 
+As illustrated in Figure 1, the *pykiso* ITF
+is composition of a *test-coordinator*, *auxiliaries* and their corresponding *connectors*.
+
 The tests leverage the python *unittest*-Framework which has a similar
-flavor as many available major unit testing frameworks and thus comes
+flavor as many available major unit testing Frameworks and thus comes
 with an ecosystem of tools and utilities.
 
 Test Coordinator
@@ -77,15 +79,17 @@ Auxiliary
 ~~~~~~~~~
 
 The **auxiliary** provides to the **test-coordinator** an interface to
-interact with the physical or digital auxiliary target. It is composed
-by 2 blocks:
+interact with the physical or digital device under test.
+It can be seen as a helping hand for the test-coordinator to communicate with the device under test,
+designated by the term *auxiliary*. It is composed by 2 blocks:
 
 -  instance creation / deletion
 -  connectors to facilitate interaction and communication with the
    device (e.g. messaging with *UART*)
 
-For example auxiliaries like the one interacting with cloud services,
-we may have:
+
+If for example an auxiliary needs to interact with cloud services,
+it could have:
 
 -  A communication channel (**cchannel**) like *REST*
 
@@ -93,14 +97,43 @@ Create an Auxiliary
 ^^^^^^^^^^^^^^^^^^^
 Detailed information can be found here :ref:`how_to_create_aux`.
 
+Existing Auxiliarys
+^^^^^^^^^^^^^^^^^^^
+:ref:`acroname_auxiliary` - control an acroname usb hub.
+
+:ref:`communication_auxiliary` - used to for raw byte communication.
+
+:ref:`dut_auxiliary` - allows to flash and run test on the target device.
+
+:ref:`instrument_control_auxiliary` - interface to arbitrary instrument (e.g. power supplies).
+
+:ref:`mp_proxy_auxiliary` - multiprocessing proxy auxiliary
+
+:ref:`proxy_auxiliary` - connect multiple auxiliaries to one unique connector.
+
+:ref:`record_auxiliary` - logging from connector.
+
+:ref:`simulated_auxiliary` - simulated device under test.
+
+:ref:`uds_auxiliary` - uds requests.
+
+:ref:`uds_server_auxiliary` - simulated uds ecu.
+
+:ref:`ykush_auxiliary` - control Yepkit USB hub.
+
+Detailed information about included auxiliarys can be found here :ref:`Existing Auxiliaries`.
+
 Connector
 ~~~~~~~~~
+
+The communication between the *test-coordinator* and the *device under test* via
+the *auxiliary* is enabled by the corresponding connector. The connector can be used either as a *communication channel* or a *flasher*.
 
 Communication Channel
 ^^^^^^^^^^^^^^^^^^^^^
 
 The Communication Channel - also known as **cchannel** - is the medium
-to communicate with auxiliary target. Example include *UART*, *UDP*,
+which enables the communication with the device under test. Example include *UART*, *UDP*,
 *USB*, *REST*,… The communication protocol itself can be auxiliary
 specific.
 
@@ -111,7 +144,7 @@ Detailed information can be found here :ref:`how_to_create_connector`.
 Dynamic Import Linking
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The `pykiso` framework was developed with modularity and reusability in mind.
+The `pykiso` Framework was developed with modularity and reusability in mind.
 To avoid close coupling between testcases and auxiliaries as well as between auxiliaries and connectors, the linking between those components is defined in a config file (see :ref:`config_file`) and performed by the `TestCoordinator`.
 
 Different instances of connectors and auxiliaries are given *aliases* which identify them within the test session.
