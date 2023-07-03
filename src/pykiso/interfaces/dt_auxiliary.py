@@ -303,6 +303,10 @@ class DTAuxiliaryInterface(abc.ABC):
         except queue.Empty:
             return None
 
+    def shutdown(self):
+        """Uninitialize method. Will be called at the end of the test session."""
+        pass
+
     @abc.abstractmethod
     def _create_auxiliary_instance(self) -> bool:
         """Common interface call at auxiliary creation.
