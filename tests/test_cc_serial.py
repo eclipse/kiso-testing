@@ -53,6 +53,22 @@ def test_constructor_auto_port(mocker):
     serial_mock.assert_called_once()
 
 
+def test_constructor_auto_port_serial_number(mocker):
+
+    serial_mock = mocker.patch("serial.Serial")
+    test_device2 = ListPortInfo(device="test_device2")
+    test_device2.serial_number = "test_number_2"
+    test_device = ListPortInfo(device="test_device")
+    test_device.serial_number = "test_number_1"
+    with mock.patch.object(
+        serial.tools.list_ports, "comports", return_value=[test_device2, test_device]
+    ):
+        cc_serial = CCSerial(port=None, serial_number="test_number_1")
+
+    assert cc_serial.serial.port == "test_device"
+    serial_mock.assert_called_once()
+
+
 def test_constructor_auto_port_warn(caplog, mocker):
 
     serial_mock = mocker.patch("serial.Serial")
@@ -68,7 +84,7 @@ def test_constructor_auto_port_warn(caplog, mocker):
         with caplog.at_level(logging.WARNING):
             cc_serial = CCSerial(port=None, pid=1, vid=2)
     assert (
-        "Found multiple devices, ['test_device', 'test_device2'], with matching IDs 0002:0001. Select first device test_device."
+        "Found multiple devices, ['test_device', 'test_device2'], with matching IDs 0002:0001 or serial_number None. Select first device test_device."
         in caplog.text
     )
     assert cc_serial.serial.port == "test_device"
