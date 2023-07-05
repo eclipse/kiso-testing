@@ -1,5 +1,5 @@
-Version 0.20.2
----------------
+Version 0.23.0
+--------------
 
 New expand and collapse buttons for the StepReport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -22,3 +22,15 @@ Timestamp in pykiso message dictionary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Added the timestamp to the pykiso message dictionary for CAN dongles.
+
+Add changeable logger class for the test
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add the possibility to change the logger class with the CLI.
+For more information please refer to :ref:`change_logger_class`.
+
+Add shutdown method to CCHannel 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add proper shutdown method for connector instead of instead of using
+the del method

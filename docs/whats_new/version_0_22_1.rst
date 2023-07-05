@@ -1,4 +1,4 @@
-Version 0.20.1
+Version 0.22.1
 --------------
 
 Improved logging for multiple yaml
