@@ -61,7 +61,6 @@ class ExampleUdsTest(pykiso.BasicTest):
         context manager tester present sender can be used. It will send at a defined period
         a Tester Present, to signal to the device that the client is still present.
         """
-        logging.info("bonjour")
         time.sleep(0.5)
         uds_aux.stop()
         time.sleep(0.5)

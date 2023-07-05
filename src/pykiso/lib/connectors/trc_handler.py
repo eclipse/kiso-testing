@@ -8,14 +8,14 @@
 ##########################################################################
 
 """
-Can Communication Channel using PCAN hardware
-*********************************************
+TRC file handler based on Python CAN
+************************************
 
-:module: cc_pcan_can
+:module: trc_handler
 
-:synopsis: CChannel implementation for CAN(fd) using PCAN API from python-can
+:synopsis: Additional layer for python-can trc reader and write to handle can FD
 
-.. currentmodule:: cc_pcan_can
+.. currentmodule:: trc_handler
 
 """
 
@@ -38,8 +38,20 @@ log = logging.getLogger(__name__)
 
 
 class TypedMessage(Message):
+    """Message with type attribut added and that can handle empty arbitration id.
+    Necessary because python-can does not handle types from CAN FD and informations 
+    contained in Message are not enough to deduce it.
+    Some of those types (ex: ST) also have no arbitration id which cannot be handle by 
+    python-can Message.
+    """
+    #TODO improve with : https://stackoverflow.com/questions/243836/how-to-copy-all-properties-of-an-object-to-another-object-in-python
+
     def __init__(self, type: str, msg: Message):
-        #TODO improve with : https://stackoverflow.com/questions/243836/how-to-copy-all-properties-of-an-object-to-another-object-in-python
+        """Create a typed message 
+
+        :param type: type of CAN messahe (ex:DT)
+        :param msg: python-can message from which to create the typed message
+        """
         super().__init__()
         self.type = type
         self.timestamp = msg.timestamp
@@ -57,9 +69,9 @@ class TypedMessage(Message):
         self._check = msg._check
 
     def __repr__(self) -> str:
-        """Changes:
-            - Handles arbitration id for ST type
-        """
+        """String representation that can handle messages with no arbitration id
+        
+        return: string representation of the message"""
         if not self.type == "ST":
             args = [
                 f"timestamp={self.timestamp}",
@@ -72,7 +84,6 @@ class TypedMessage(Message):
                 f"arbitration_id={self.arbitration_id}",
                 f"is_extended_id={self.is_extended_id}",
             ]
-
 
         if not self.is_rx:
             args.append("is_rx=False")
@@ -196,6 +207,9 @@ class TRCWriterCanFD(TRCWriter):
             arb_id = f"{msg.arbitration_id}"
         data = [f"{byte:02X}" for byte in msg.data]
 
+        """For the time python-can was doing substraction with the first message timestamp
+        which is incorrect. It should be with the start time of the trace otherwise the 
+        first message will always have an offset of zero."""
         if self.file_version == TRCFileVersion.V1_0:
             serialized = self._msg_fmt_string.format(
                 msgnr=self.msgnr,
@@ -217,7 +231,6 @@ class TRCWriterCanFD(TRCWriter):
                 dlc=msg.dlc,
                 data=" ".join(data),
             )
-
         return serialized
     
     def set_header_data(self, header_data: List[str]):
@@ -235,10 +248,10 @@ class TRCWriterCanFD(TRCWriter):
             raise NotImplementedError("File format is not supported")
         self.header_written = True
 
-    def on_message_received(self, msg: Message) -> None:
+    def on_message_received(self, msg: Message, trace_start_time) -> None:
         if self.first_timestamp is None:
-            self.first_timestamp = msg.timestamp
-            log.error(f"THIS IS THE FIRST TIMESTAMPEA: {self.first_timestamp}")
+            self.first_timestamp = trace_start_time
+            log.error(f"the first timestamp: {self.first_timestamp}")
 
         if msg.is_error_frame:
             log.internal_warning("TRCWriter: Logging error frames is not implemented")
@@ -254,7 +267,10 @@ class TRCWriterCanFD(TRCWriter):
         else:
             # Many interfaces start channel numbering at 0 which is invalid
             channel += 1
-
+        if msg.type == "ST":
+            log.error(f"BEFORE FORMAT: {msg.timestamp}")
         serialized = self._format_message(msg, channel)
+        if msg.type == "ST":
+            log.error(f"After FORMAT: {serialized}")
         self.msgnr += 1
         self.log_event(serialized, msg.timestamp)
