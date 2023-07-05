@@ -22,6 +22,9 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 - Change logger class for the test ([#303](https://github.com/eclipse/kiso-testing/issues/303))
 - Added shutdown method to CCHannel [ready for review] ([#310](https://github.com/eclipse/kiso-testing/issues/310))
+- Added the possibility to connect via serial number ([#319](https://github.com/eclipse/kiso-testing/issues/319))
+- Added shutdown method to auxiliary interface ([#320](https://github.com/eclipse/kiso-testing/issues/320))
+- Make release 0.23.0 ([#327](https://github.com/eclipse/kiso-testing/issues/327))
 
 ### Refactorings
 
