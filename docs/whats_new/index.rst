@@ -4,6 +4,7 @@ What's New In Pykiso?
 .. toctree::
 
     version_ongoing
+    version_0_23_0
     version_0_22_1
     version_0_21_2
     version_0_20_0
