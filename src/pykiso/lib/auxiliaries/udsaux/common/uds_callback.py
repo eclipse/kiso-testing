@@ -15,7 +15,7 @@ Helper classes for UDS callback registration
 
 :synopsis: This module defines classes for the definition of
     UDS callbacks to be registered by the
-    :py:class:`~pykiso.lib.auxiliaries.uds_aux.uds_server_auxiliary.UdsServerAuxiliary`_
+    :py:class:`~pykiso.lib.auxiliaries.uds_aux.uds_server_auxiliary.UdsServerAuxiliary`
     along with callbacks for functional requests (TransferData service).
 
 .. currentmodule:: uds_callback

@@ -204,7 +204,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         from the client.
 
         The callback is stored inside the callbacks dictionary under the format
-        `{"0x2EC4": UdsCallback()}`_, where the keys are case-sensitive and
+        {"0x2EC4": UdsCallback()}, where the keys are case-sensitive and
         correspond to the registered requests.
         If the callback is ODX based, a second key using Service.Parameter
         ("ReadByDataIdentifier.SoftwareVersion") key is registered.
@@ -257,7 +257,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         """Unregister previously registered callback.
 
         The callback is stored inside the callbacks dictionary under the format
-        `{"0x2E01": UdsCallback()}`_, where the keys are case-sensitive and
+        {"0x2E01": UdsCallback()}, where the keys are case-sensitive and
         correspond to the registered requests.
         If more than one key references a callback, all are deleted.
 

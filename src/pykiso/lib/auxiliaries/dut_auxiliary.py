@@ -89,6 +89,7 @@ def check_acknowledgement(func: Callable) -> Callable:
     :return: decorator inner function
     """
 
+    @functools.wraps(func)
     def inner_check(self, *arg: tuple, **kwargs: dict) -> bool:
         """Check if an ACK message was received and if the token is
         valid.
@@ -130,6 +131,7 @@ def restart_aux(func: Callable) -> Callable:
     :return: decorator inner function
     """
 
+    @functools.wraps(func)
     def inner_start(self, *arg: tuple, **kwargs: dict) -> bool:
         """Based on the run_command method return, force the auxiliary
         to create a brand new communication stream with the DUT (call of

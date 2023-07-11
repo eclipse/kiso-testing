@@ -1,5 +1,5 @@
 Examples
-===============
+========
 
 In `pykiso`, auxiliaries and connectors can be contributed. Some of them are more complex to use than others.
 Examples for some complex modules that need a more extensive documentation can be found here.
@@ -12,3 +12,4 @@ Examples for some complex modules that need a more extensive documentation can b
     record
     uds_auxiliary
     uds_server_auxiliary
+    ykush_control

@@ -13,9 +13,9 @@ Process connector
 The Process channel provides functionality to start a process and
 to communicate with it
 
-See :ref:`cc_process`
+See :ref:`connectors/CChannels/cc_process:cc_process`
 
 
 Suite id and Case id are optional for BasicTest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-See :ref:`Define the test information`
+See :ref:`define_test_information`

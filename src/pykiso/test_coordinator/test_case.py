@@ -14,7 +14,7 @@ Generic Test
 :module: test_case
 
 :synopsis: Basic extensible implementation of a TestCase, and of a Remote
-TestCase for Message Protocol / TestApp usage.
+    TestCase for Message Protocol / TestApp usage.
 
 .. currentmodule:: test_case
 

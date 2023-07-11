@@ -69,7 +69,7 @@ It can also be started and stopped by using the following methods:
  `start_tester_present_sender()` and `stop_tester_present_sender()`.
 
 See :ref:`start_stop_tester_present_sender`
-See :ref:`uds_auxiliary`
+See :ref:`uds_auxiliary_usage`
 
 
 RTT connector log folder creation
@@ -96,7 +96,7 @@ To avoid extra waiting time during long/heavy UDS data exchange(flashing) expose
 the parameter tpWaitTime from kiso-testing-python-uds for uds auxilary send_uds_raw
 method
 
-See :ref:`uds_auxiliary`
+See :ref:`uds_auxiliary_usage`
 
 
 Lightweight UDS auxiliary configuration
@@ -109,7 +109,7 @@ See ``kiso-testing/examples/uds.yaml``.
 In addition, if the tp_layer and uds_layer parameters are not given at yaml level
 a default configuration is applied.
 
-See :ref:`uds_auxiliary`
+See :ref:`uds_auxiliary_usage`
 
 
 New serial connector

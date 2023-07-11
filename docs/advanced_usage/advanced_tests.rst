@@ -314,8 +314,7 @@ the `subTest <https://docs.python.org/3/library/unittest.html#unittest.TestCase.
 Implementation of Advanced Tests - Repeat testCases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: pykiso.retry_test_case
-    :members:
+.. autofunction:: pykiso.retry_test_case
 
 **test_suite_1.py**:
 

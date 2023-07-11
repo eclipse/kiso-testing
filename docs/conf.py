@@ -63,7 +63,12 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = [
+    "requirements.txt",
+    "getting_started/getting_started.rst",
+    "getting_started/basic_config_file.rst",
+    "getting_started/basic_tests.rst",
+]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -87,3 +92,6 @@ autoclass_content = "both"
 
 # The default autodoc directive flags
 autodoc_default_flags = ["members", "show-inheritance"]
+
+# Add name of document in label to remove warning about duplicate label
+autosectionlabel_prefix_document = True

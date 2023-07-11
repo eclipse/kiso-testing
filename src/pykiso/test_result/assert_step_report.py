@@ -18,8 +18,7 @@ Create a Step report
     - test description
     - date of execution + elapsed time
     - information gathered during test
-    - assertion detail: data_in, variable
-        name of the data_in, expected, message
+    - assertion detail: data_in, variable, name of the data_in, expected, message
 
 .. currentmodule:: assert_step_report
 

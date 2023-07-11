@@ -21,8 +21,8 @@ First of all, you need accounts for:
   email address.
 
   - Eclipse account, since Kiso-testing is an Eclipse project
-  (full name: Eclipse Kiso-testing),   you need an Eclipse account.
-  Go to https://accounts.eclipse.org/user/register to register one for free.
+    (full name: Eclipse Kiso-testing),   you need an Eclipse account.
+    Go to https://accounts.eclipse.org/user/register to register one for free.
 
 After a successful registration, you need to hook up your github account with
 Eclipse account. Login in Eclipse foundation website and go to ‘Edit My Profile’

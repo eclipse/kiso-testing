@@ -1,6 +1,5 @@
 .. _basic_config_file:
 
-
 Basic configuration
 -------------------
 
