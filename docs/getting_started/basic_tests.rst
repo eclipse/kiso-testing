@@ -20,7 +20,9 @@ Flow
   a log for each yaml file will be stored. If otherwise a filename is provided, all log information
   will be in one logfile.
 
+
 .. _define_test_information:
+
 
 Define the test information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,13 +45,10 @@ will be applied on each .py module and each contained test class.
 
 In other words, If we have the following test suite folder organisation:
 
----> test_suite_folder
- |
- ----> a.py module with classes B/C/A (declare in this order)
- |
- ----> b.py module with classes Z/G (declare in this order)
- |
- ----> c.py module with classes S/T + Suite Setup/Teardown
+| test_suite_folder
+| ├── a.py module with classes B/C/A (declare in this order)
+| ├── b.py module with classes Z/G (declare in this order)
+| ├── c.py module with classes S/T + Suite Setup/Teardown
 
 The framework will execute the tests in the following order:
 
@@ -73,7 +72,7 @@ overridden with the behaviour you want to have.
 
 .. note::
   | Because the python unittest module is used in the background, all methods
-  | starting with "def test_" are executed automatically
+  | starting with "def test\_" are executed automatically
 
 .. note::
   If a test in SuiteSetup raises an exception, all tests which belong to the

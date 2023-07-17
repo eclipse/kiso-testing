@@ -18,7 +18,7 @@ Entirely hidden Proxy Auxiliary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There is now no need at all anymore to manually define a ``ProxyAuxiliary`` and
-``CCProxy``s.
+``CCProxy``\s.
 
 If ``auto_start`` is disabled for all auxiliaries sharing a communication channel,
 then the ``ProxyAuxiliary`` won't be started and the shared communication channel

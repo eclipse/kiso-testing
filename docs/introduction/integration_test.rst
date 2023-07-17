@@ -99,29 +99,29 @@ Detailed information can be found here :ref:`how_to_create_aux`.
 
 Existing Auxiliarys
 ^^^^^^^^^^^^^^^^^^^
-:ref:`acroname_auxiliary` - control an acroname usb hub.
+:ref:`auxiliaries/acroname_auxiliary:acroname_auxiliary` - control an acroname usb hub.
 
-:ref:`communication_auxiliary` - used to for raw byte communication.
+:ref:`auxiliaries/communication_auxiliary:communication_auxiliary` - used to for raw byte communication.
 
-:ref:`dut_auxiliary` - allows to flash and run test on the target device.
+:ref:`auxiliaries/dut_auxiliary:dut_auxiliary` - allows to flash and run test on the target device.
 
 :ref:`instrument_control_auxiliary` - interface to arbitrary instrument (e.g. power supplies).
 
-:ref:`mp_proxy_auxiliary` - multiprocessing proxy auxiliary
+:ref:`auxiliaries/mp_proxy_auxiliary:mp_proxy_auxiliary` - multiprocessing proxy auxiliary
 
-:ref:`proxy_auxiliary` - connect multiple auxiliaries to one unique connector.
+:ref:`auxiliaries/proxy_auxiliary:proxy_auxiliary` - connect multiple auxiliaries to one unique connector.
 
-:ref:`record_auxiliary` - logging from connector.
+:ref:`auxiliaries/record_auxiliary:record_auxiliary` - logging from connector.
 
-:ref:`simulated_auxiliary` - simulated device under test.
+:ref:`auxiliaries/simulated_auxiliary:simulated_auxiliary` - simulated device under test.
 
-:ref:`uds_auxiliary` - uds requests.
+:ref:`uds_auxiliary_usage` - uds requests.
 
 :ref:`uds_server_auxiliary` - simulated uds ecu.
 
-:ref:`ykush_auxiliary` - control Yepkit USB hub.
+:ref:`auxiliaries/ykush_auxiliary:ykush_auxiliary` - control Yepkit USB hub.
 
-Detailed information about included auxiliarys can be found here :ref:`Existing Auxiliaries`.
+Detailed information about included auxiliarys can be found here :ref:`auxiliaries/index:Existing Auxiliaries`.
 
 Connector
 ~~~~~~~~~
@@ -178,4 +178,4 @@ Usage
 
 Please see :ref:`config_file` to have a deep-dive on how the pykiso configuration work.
 
-Please see :ref:`How to make the most of the tests` to have a deep-dive on how pykiso tests work.
+Please see :ref:`advanced_tests` to have a deep-dive on how pykiso tests work.

@@ -166,7 +166,7 @@ see the example below with the cc_pcan_can connector and the return of the remot
 
 
 - **rule 2** : additional arguments associated to _cc_send concret implementation has
-  to be named arguments and used the **kwargs
+  to be named arguments and used the \*\*kwargs
 
 see example below with the cc_pcan_can connector and the additional remote_id parameter:
 

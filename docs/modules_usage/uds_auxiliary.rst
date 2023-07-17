@@ -1,4 +1,4 @@
-.. _uds_auxiliary:
+.. _uds_auxiliary_usage:
 
 Using UDS protocol
 ==================

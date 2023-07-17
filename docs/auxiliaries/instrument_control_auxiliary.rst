@@ -1,3 +1,6 @@
+.. _instrument_control_auxiliary:
+
+
 instrument_control_auxiliary
 ============================
 

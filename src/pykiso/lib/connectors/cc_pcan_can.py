@@ -92,12 +92,12 @@ class CCPCanCan(CChannel):
         :param channel: the can interface name
         :param state: BusState of the channel
         :param trace_path: path to write the trace (can be a folder or a .trc file)
-        .. note:: If the .trc file already exists, it will be overwritten. If the trace_path
-          is an existing folder, a default name will be generated for the trace file
-          containing the timestamp. If the trace_path is a non-existent folder, the
-          folder will be created and the default name will be used for the trace
-          file. If the trace_path is not defined by the user, the default file will be
-          saved in the current working directory.
+            .. note:: If the .trc file already exists, it will be overwritten. If the trace_path
+            is an existing folder, a default name will be generated for the trace file
+            containing the timestamp. If the trace_path is a non-existent folder, the
+            folder will be created and the default name will be used for the trace
+            file. If the trace_path is not defined by the user, the default file will be
+            saved in the current working directory.
         :param trace_size: maximum size of the trace (in MB)
         :param bitrate: Bitrate of channel in bit/s,ignored if using CanFD
         :param is_fd: Should the Bus be initialized in CAN-FD mode
@@ -502,7 +502,7 @@ class CCPCanCan(CChannel):
         :param start_time: float using the format bellow (from PEAK CAN)
             Integral part = Number of days that have passed since 30. December 1899.
             Fractional Part = Fraction of a 24-hour day that has elapsed, resolution is 1
-                millisecond.
+            millisecond.
 
         :return: start time of the trc file in ms since the start of the day
         """

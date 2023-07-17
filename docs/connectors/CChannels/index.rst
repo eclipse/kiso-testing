@@ -24,3 +24,4 @@ Included Connectors
     cc_usb
     cc_vector_can
     cc_visa
+    cc_process

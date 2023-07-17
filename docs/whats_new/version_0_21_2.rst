@@ -34,13 +34,13 @@ Ykush Auxiliary
 ^^^^^^^^^^^^^^^
 Auxiliary that can be used to power on and off the ports of an Ykush USB Hub.
 
-See :ref:`ykush_auxiliary`
+See :ref:`auxiliaries/ykush_auxiliary:ykush_auxiliary`
 
 
 Multiple auxiliaries can share a communication channel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-see :ref:`Sharing a communication channel between multiple auxiliaries`
+see :ref:`advanced_usage/advanced_config_file:Sharing a communication channel between multiple auxiliaries`
 
 
 Remove raw from connector functions

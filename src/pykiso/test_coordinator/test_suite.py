@@ -14,7 +14,7 @@ Test Suite
 :module: test_suite
 
 :synopsis: Create a generic test-suite based on the connected modules, and
-gray test-suite for Message Protocol / TestApp usage.
+    gray test-suite for Message Protocol / TestApp usage.
 
 .. currentmodule:: generic_test_suite
 
@@ -49,7 +49,6 @@ log = logging.getLogger(__name__)
 
 
 class BaseTestSuite(unittest.TestCase):
-
     response_timeout = 10
 
     def __init__(

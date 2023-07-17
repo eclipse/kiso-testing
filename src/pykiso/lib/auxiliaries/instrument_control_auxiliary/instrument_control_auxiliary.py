@@ -8,8 +8,8 @@
 ##########################################################################
 
 """
-Instrument Control Auxiliary
-****************************
+InstrumentControl Auxiliary
+***************************
 
 :module: instrument_control_auxiliary
 
