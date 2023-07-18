@@ -183,7 +183,7 @@ class TRCReaderCanFD(TRCReader):
         else:
             msg.timestamp = float(cols[1]) / 1000
 
-        if type_ not in ["EC", "ER", "ST"]:
+        if type_ not in ["EC", "ER", "ST"] or self.file_version == TRCFileVersion.V2_1:
             msg.arbitration_id = int(cols[self.columns["I"]], 16)
             msg.is_extended_id = len(cols[self.columns["I"]]) > 4
         # No arbitration id for ST / ER and EC messages
