@@ -18,13 +18,11 @@ TRC file handler based on Python CAN
 .. currentmodule:: trc_handler
 
 """
-
 import logging
 from typing import List, Optional
 from datetime import datetime, timedelta
 
 try:
-    import can.bus
     from can.io.trc import TRCFileVersion, TRCReader, TRCWriter
     from can.util import channel2int, dlc2len, len2dlc
     from can import Message
@@ -42,10 +40,8 @@ class TypedMessage(Message):
     Necessary because python-can does not handle types from CAN FD and informations 
     contained in Message are not enough to deduce it.
     Some of those types (ex: ST) also have no arbitration id which cannot be handle by 
-    python-can Message.
+    python-can Message object.
     """
-    #TODO improve with : https://stackoverflow.com/questions/243836/how-to-copy-all-properties-of-an-object-to-another-object-in-python
-
     def __init__(self, type: str, msg: Message):
         """Create a typed message 
 
@@ -72,7 +68,7 @@ class TypedMessage(Message):
         """String representation that can handle messages with no arbitration id
         
         return: string representation of the message"""
-        if not self.type == "ST":
+        if self.type not in ["EC", "ER", "ST"]:
             args = [
                 f"timestamp={self.timestamp}",
                 f"arbitration_id={self.arbitration_id:#x}",
@@ -113,49 +109,62 @@ class TRCReaderCanFD(TRCReader):
     Unlike the base TRCReader class, also retrieve message type
     """
 
-    def _nomalize_cols(self, cols):
+    def _nomalize_cols(self, cols: dict) -> dict:
+        """Insert missing columns for specific messages (Hardware Status, Error Frames 
+        and Error Counter Changes) to avoid 
+        
+        :param cols: message informations with missing columns
+
+        :return: normalized message
+        """
         type_ = cols[self.columns["T"]]
-        if type_ == "ST":    
-            cols.insert(self.columns["I"], "0000")
-            log.error(f"THIS IS COLS: {cols}")
+        if type_ in ["EC", "ER", "ST"]:
+            if self.file_version == TRCFileVersion.V2_0:    
+                cols.insert(self.columns["I"], "    ")
+            else:
+                cols.insert(self.columns["I"], "   -")
             if "l" in self.columns:
                 cols.insert(self.columns["l"], " ")
             if "L" in self.columns:
                 cols.insert(self.columns["L"], " ")
         return cols
 
-    def _parse_line(self, line: str) -> Optional[Message]:
-        log.error("TRCReader: Parse '%s'", line)
-        try:
-            cols = line.split()
-            log.error(f"len of cols: {len(cols)} len of self.cols {len(self.columns)}")
-            return self._parse_cols(cols)
-        except IndexError:
-            log.error("TRCReader: Failed to parse message '%s'", line)
-            return None
+    def _parse_cols_V2_x(self, cols: List[str]) -> Optional[TypedMessage]:
+        """Parse columns for file version 2.0 and 2.1.
 
-    def _parse_cols_V2_x(self, cols: List[str]) -> Optional[Message]:
-        """Changes from TRCReader:
-            - Handles ST message type
+        :param cols: list of columns to parse
+
+        :return: typed message or None if message type is not supported
         """
         dtype = cols[self.columns["T"]]
         cols = self._nomalize_cols(cols)
 
-        if dtype in ["DT", "FD", "FB", "ST"]:
+        if dtype in ["DT", "FD", "FB", "EC", "ER", "ST"]:
             return self._parse_msg_V2_x(cols)
         else:
             log.info("TRCReader: Unsupported type '%s'", dtype)
             return None
 
     def _parse_msg_V2_x(self, cols: List[str]) -> Optional[Message]:
-        """Changes from TRCReader:
-            - Handles ST message type
-            - Returns a TypedMessage
+        """Parse messages for file version 2.0 and 2.1.
+
+        :param cols: list of columns to parse
+
+        return: typed message
         """
         type_ = cols[self.columns["T"]]
         bus = self.columns.get("B", None)
 
-        if type_ != "ST":
+        # For 2.0 ST / ER and EC messages dlc and length are not in the trace but length is fixed 
+        if type_ in ["EC", "ER", "ST"] and self.file_version == TRCFileVersion.V2_0:
+            if type_ == "ST":
+                length = 4
+            elif type_ == "ER":
+                length = 5
+            else:
+                length = 2
+            dlc = len2dlc(length)
+        else: 
             if "l" in self.columns:
                 length = int(cols[self.columns["l"]])
                 dlc = len2dlc(length)
@@ -165,14 +174,6 @@ class TRCReaderCanFD(TRCReader):
             else:
                 raise ValueError("No length/dlc columns present.")
         
-        # ST dlc is 4 bytes but dlc should not be display on trace
-        if type_ == "ST":
-            length = 4
-            dlc = len2dlc(length)
-            #cols[self.columns["l"]]=str(length)
-            cols[self.columns["L"]]=str(dlc)
-
-
         msg = Message()
         if isinstance(self.start_time, datetime):
             msg.timestamp = (
@@ -180,13 +181,14 @@ class TRCReaderCanFD(TRCReader):
             ).timestamp()
         else:
             msg.timestamp = float(cols[1]) / 1000
-        # Add hanling of ST message type
-        if not type_ == "ST":
+
+        if type_ not in ["EC", "ER", "ST"]:
             msg.arbitration_id = int(cols[self.columns["I"]], 16)
             msg.is_extended_id = len(cols[self.columns["I"]]) > 4
+        # No arbitration id for ST / ER and EC messages
         else:
-            msg.arbitration_id = "    "
-            msg.is_extended_id = len(cols[self.columns["I"]]) > 4
+            msg.arbitration_id = cols[self.columns["I"]]
+            msg.is_extended_id = False
                
         msg.channel = int(cols[bus]) if bus is not None else 1
         msg.dlc = dlc
@@ -197,14 +199,15 @@ class TRCReaderCanFD(TRCReader):
         msg.is_fd = type_ in ["FD", "FB", "FE", "BI"]
         msg.bitrate_switch = type_ in ["FB", " FE"]
         msg.error_state_indicator = type_ in ["FE", "BI"]
-        if type_ == "ST":
-            log.error(f"ST Message at the end of reader - dlc: {msg.dlc} - data: {msg.data}")
+        msg.is_error_frame = (type_ == "ER")
+        msg.is_remote_frame = (type_ == "RR")
+
         return TypedMessage(type_, msg)
 
 class TRCWriterCanFD(TRCWriter):
     """Logs CAN FD data to text file (.trc)"""
 
-    # type has been added to FORMAT_MESSAGE >= 2.0
+    # Type has been added to FORMAT_MESSAGE >= 2.0
     FORMAT_MESSAGE_V2_1 = (
         "{msgnr:>7} {time:13.3f} {type:>2} {channel:>2} {id:>8} {dir:>2} -  {dlc:<4} {data}"
     )
@@ -213,7 +216,11 @@ class TRCWriterCanFD(TRCWriter):
         "{msgnr:>7} {time:13.3f} {type:>2} {id:>8} {dir:>2}  {dlc:<2} {data}"
     )
 
-    def _format_message_init(self, msg, channel):
+    def _format_message_init(self, msg: TypedMessage, channel:int) -> str:
+        """ Pick message format from file version and format initial message
+
+        :return: message informations formated in a string
+        """
         # Fix error from python can -> message number should start at one not zero
         self.msgnr = 1
 
@@ -230,8 +237,12 @@ class TRCWriterCanFD(TRCWriter):
         else:
             raise NotImplementedError("File format is not supported")
     
-    def _format_message_by_format(self, msg, channel):
-        if not msg.type == "ST":
+    def _format_message_by_format(self, msg: TypedMessage, channel: int):
+        """ Format messages
+
+        :return: message informations formated in a string
+        """
+        if msg.type not in ["EC", "ER", "ST"]:
             if msg.is_extended_id:
                 arb_id = f"{msg.arbitration_id:07X}"
             else:
@@ -243,7 +254,6 @@ class TRCWriterCanFD(TRCWriter):
         """For the time python-can was doing substraction with the first message timestamp
         which is incorrect. It should be with the start time of the trace otherwise the 
         first message will always have an offset of zero."""
-
         if self.file_version == TRCFileVersion.V1_0:
             serialized = self._msg_fmt_string.format(
                 msgnr=self.msgnr,
@@ -254,20 +264,6 @@ class TRCWriterCanFD(TRCWriter):
                 dlc=msg.dlc,
                 data=" ".join(data),
             )
-        elif self.file_version == TRCFileVersion.V2_0:
-            serialized = self._msg_fmt_string.format(
-                msgnr=self.msgnr,
-                time=(msg.timestamp - self.first_timestamp) * 1000,
-                type=msg.type,
-                channel=channel,
-                id=arb_id,
-                dir="Rx" if msg.is_rx else "Tx",
-                dlc="  ",
-                data=" ".join(data),
-            )
-            if msg.arbitration_id == "    ":
-                log.error(f"Serialized message: {serialized}")
-                log.error(f"MY DLC: {msg.dlc}")
         else:
             serialized = self._msg_fmt_string.format(
                 msgnr=self.msgnr,
@@ -276,7 +272,7 @@ class TRCWriterCanFD(TRCWriter):
                 channel=channel,
                 id=arb_id,
                 dir="Rx" if msg.is_rx else "Tx",
-                dlc="    ",
+                dlc=msg.dlc,
                 data=" ".join(data),
             )
         return serialized
@@ -284,30 +280,33 @@ class TRCWriterCanFD(TRCWriter):
     def set_header_data(self, header_data: List[str]):
         """Get all header info so trc writter can write it when needed
 
-        :param lines: list of all header lines
+        :param header_data: list of all header lines
         """
         self.header_data = header_data
 
     def write_header(self, timestamp: float) -> None:
-        # write start of file header
+        """Modified write header that just write previously given header data
+        
+        :param timestamp: unused parameter kept to avoid breaking changes
+        """
         if self.file_version in [TRCFileVersion.V1_0, TRCFileVersion.V2_0, TRCFileVersion.V2_1]:
             self.file.writelines(line for line in self.header_data)
         else:
             raise NotImplementedError("File format is not supported")
         self.header_written = True
 
-    def on_message_received(self, msg: Message, trace_start_time) -> None:
+    def on_message_received(self, msg: TypedMessage, trace_start_time: float) -> None:
+        """Log a message in the trace. Handles CAN FD.
+
+        In python can the reference is the timestamp of the first message (the first 
+        message offset is always zero), to fix this we take the begining of the trace.
+
+        :param msg: typed message to log
+        :param trace_start_time: timestamp of the start of the trace
+        """
+
         if self.first_timestamp is None:
             self.first_timestamp = trace_start_time
-            log.error(f"the first timestamp: {self.first_timestamp}")
-
-        if msg.is_error_frame:
-            log.internal_warning("TRCWriter: Logging error frames is not implemented")
-            return
-
-        if msg.is_remote_frame:
-            log.internal_warning("TRCWriter: Logging remote frames is not implemented")
-            return
 
         channel = channel2int(msg.channel)
         if channel is None:
