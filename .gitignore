@@ -9,6 +9,7 @@ Pipfile.lock
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
 
 # C extensions
 *.so
@@ -25,6 +26,7 @@ eggs/
 lib64/
 parts/
 sdist/
+src/pykiso/auxiliaries.py
 var/
 wheels/
 pip-wheel-metadata/
