@@ -63,6 +63,8 @@ PyVISA-py = {version = "~0.5.3", optional = true}
 python-can = {version = "^4.2.1", optional = true, extras = ["pcan,vector"]}
 defusedxml = "^0.7.1"
 packaging = "*"
+grpcio = {version = "^1.0.0", optional = true}
+protobuf = {version = "^4.24.2", optional = true}
 
 [tool.poetry.extras]
 plugins = [
@@ -72,6 +74,8 @@ plugins = [
     "pyserial",
     "PyVISA",
     "PyVISA-py",
+    "grpcio",
+    "protobuf",
 ]
 can = [
     "pykiso-python-uds",
@@ -86,6 +90,10 @@ instrument = [
 ]
 serial = [
     "pyserial",
+]
+grpc = [
+    "grpcio",
+    "protobuf",
 ]
 testrail = [
     "rich",
@@ -106,6 +114,8 @@ all = [
     "requests",
     "isort",
     "black",
+    "grpcio",
+    "protobuf",
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -143,7 +153,6 @@ addopts = """\
     --log-level=DEBUG \
     -p no:pytest_kiso \
     --junitxml=reports/testReport.xml \
-    --cov=./src \
     --cov-report=html \
     --cov-report html:./tests/coverage_report.html \
     --ignore=tests/test_acroname_usb_auxiliary.py \

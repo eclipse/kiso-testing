@@ -25,3 +25,4 @@ Included Connectors
     cc_vector_can
     cc_visa
     cc_process
+    cc_grpc_client
