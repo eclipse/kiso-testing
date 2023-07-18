@@ -37,13 +37,14 @@ log = logging.getLogger(__name__)
 
 class TypedMessage(Message):
     """Message with type attribut added and that can handle empty arbitration id.
-    Necessary because python-can does not handle types from CAN FD and informations 
+    Necessary because python-can does not handle types from CAN FD and informations
     contained in Message are not enough to deduce it.
-    Some of those types (ex: ST) also have no arbitration id which cannot be handle by 
+    Some of those types (ex: ST) also have no arbitration id which cannot be handle by
     python-can Message object.
     """
+
     def __init__(self, type: str, msg: Message):
-        """Create a typed message 
+        """Create a typed message
 
         :param type: type of CAN messahe (ex:DT)
         :param msg: python-can message from which to create the typed message
@@ -66,7 +67,7 @@ class TypedMessage(Message):
 
     def __repr__(self) -> str:
         """String representation that can handle messages with no arbitration id
-        
+
         return: string representation of the message"""
         if self.type not in ["EC", "ER", "ST"]:
             args = [
@@ -110,16 +111,16 @@ class TRCReaderCanFD(TRCReader):
     """
 
     def _nomalize_cols(self, cols: dict) -> dict:
-        """Insert missing columns for specific messages (Hardware Status, Error Frames 
-        and Error Counter Changes) to avoid 
-        
+        """Insert missing columns for specific messages (Hardware Status, Error Frames
+        and Error Counter Changes) to avoid
+
         :param cols: message informations with missing columns
 
         :return: normalized message
         """
         type_ = cols[self.columns["T"]]
         if type_ in ["EC", "ER", "ST"]:
-            if self.file_version == TRCFileVersion.V2_0:    
+            if self.file_version == TRCFileVersion.V2_0:
                 cols.insert(self.columns["I"], "    ")
             else:
                 cols.insert(self.columns["I"], "   -")
@@ -155,7 +156,7 @@ class TRCReaderCanFD(TRCReader):
         type_ = cols[self.columns["T"]]
         bus = self.columns.get("B", None)
 
-        # For 2.0 ST / ER and EC messages dlc and length are not in the trace but length is fixed 
+        # For 2.0 ST / ER and EC messages dlc and length are not in the trace but length is fixed
         if type_ in ["EC", "ER", "ST"] and self.file_version == TRCFileVersion.V2_0:
             if type_ == "ST":
                 length = 4
@@ -164,7 +165,7 @@ class TRCReaderCanFD(TRCReader):
             else:
                 length = 2
             dlc = len2dlc(length)
-        else: 
+        else:
             if "l" in self.columns:
                 length = int(cols[self.columns["l"]])
                 dlc = len2dlc(length)
@@ -173,7 +174,7 @@ class TRCReaderCanFD(TRCReader):
                 length = dlc2len(dlc)
             else:
                 raise ValueError("No length/dlc columns present.")
-        
+
         msg = Message()
         if isinstance(self.start_time, datetime):
             msg.timestamp = (
@@ -189,7 +190,7 @@ class TRCReaderCanFD(TRCReader):
         else:
             msg.arbitration_id = cols[self.columns["I"]]
             msg.is_extended_id = False
-               
+
         msg.channel = int(cols[bus]) if bus is not None else 1
         msg.dlc = dlc
         msg.data = bytearray(
@@ -199,25 +200,24 @@ class TRCReaderCanFD(TRCReader):
         msg.is_fd = type_ in ["FD", "FB", "FE", "BI"]
         msg.bitrate_switch = type_ in ["FB", " FE"]
         msg.error_state_indicator = type_ in ["FE", "BI"]
-        msg.is_error_frame = (type_ == "ER")
-        msg.is_remote_frame = (type_ == "RR")
+        msg.is_error_frame = type_ == "ER"
+        msg.is_remote_frame = type_ == "RR"
 
         return TypedMessage(type_, msg)
+
 
 class TRCWriterCanFD(TRCWriter):
     """Logs CAN FD data to text file (.trc)"""
 
     # Type has been added to FORMAT_MESSAGE >= 2.0
-    FORMAT_MESSAGE_V2_1 = (
-        "{msgnr:>7} {time:13.3f} {type:>2} {channel:>2} {id:>8} {dir:>2} -  {dlc:<4} {data}"
-    )
+    FORMAT_MESSAGE_V2_1 = "{msgnr:>7} {time:13.3f} {type:>2} {channel:>2} {id:>8} {dir:>2} -  {dlc:<4} {data}"
 
     FORMAT_MESSAGE_V2_0 = (
         "{msgnr:>7} {time:13.3f} {type:>2} {id:>8} {dir:>2}  {dlc:<2} {data}"
     )
 
-    def _format_message_init(self, msg: TypedMessage, channel:int) -> str:
-        """ Pick message format from file version and format initial message
+    def _format_message_init(self, msg: TypedMessage, channel: int) -> str:
+        """Pick message format from file version and format initial message
 
         :return: message informations formated in a string
         """
@@ -236,9 +236,9 @@ class TRCWriterCanFD(TRCWriter):
             self._format_message = self._format_message_by_format
         else:
             raise NotImplementedError("File format is not supported")
-    
+
     def _format_message_by_format(self, msg: TypedMessage, channel: int):
-        """ Format messages
+        """Format messages
 
         :return: message informations formated in a string
         """
@@ -276,7 +276,7 @@ class TRCWriterCanFD(TRCWriter):
                 data=" ".join(data),
             )
         return serialized
-    
+
     def set_header_data(self, header_data: List[str]):
         """Get all header info so trc writter can write it when needed
 
@@ -286,10 +286,14 @@ class TRCWriterCanFD(TRCWriter):
 
     def write_header(self, timestamp: float) -> None:
         """Modified write header that just write previously given header data
-        
+
         :param timestamp: unused parameter kept to avoid breaking changes
         """
-        if self.file_version in [TRCFileVersion.V1_0, TRCFileVersion.V2_0, TRCFileVersion.V2_1]:
+        if self.file_version in [
+            TRCFileVersion.V1_0,
+            TRCFileVersion.V2_0,
+            TRCFileVersion.V2_1,
+        ]:
             self.file.writelines(line for line in self.header_data)
         else:
             raise NotImplementedError("File format is not supported")
@@ -298,7 +302,7 @@ class TRCWriterCanFD(TRCWriter):
     def on_message_received(self, msg: TypedMessage, trace_start_time: float) -> None:
         """Log a message in the trace. Handles CAN FD.
 
-        In python can the reference is the timestamp of the first message (the first 
+        In python can the reference is the timestamp of the first message (the first
         message offset is always zero), to fix this we take the begining of the trace.
 
         :param msg: typed message to log
