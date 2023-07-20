@@ -164,7 +164,7 @@ class TRCReaderCanFD(TRCReader):
                 length = 5
             else:
                 length = 2
-            dlc = len2dlc(length)
+            dlc = "  "
         else:
             if "l" in self.columns:
                 length = int(cols[self.columns["l"]])
@@ -210,10 +210,10 @@ class TRCWriterCanFD(TRCWriter):
     """Logs CAN FD data to text file (.trc)"""
 
     # Type has been added to FORMAT_MESSAGE >= 2.0
-    FORMAT_MESSAGE_V2_1 = "{msgnr:>7} {time:13.3f} {type:>2} {channel:>2} {id:>8} {dir:>2} -  {dlc:<4} {data}"
+    FORMAT_MESSAGE_V2_1 = "{msgnr:>7} {time:13.3f} {type:>2} {channel:>2} {id:>8} {dir:>2} - {dlc:<4} {data}"
 
     FORMAT_MESSAGE_V2_0 = (
-        "{msgnr:>7} {time:13.3f} {type:>2} {id:>8} {dir:>2}  {dlc:<2} {data}"
+        "{msgnr:>7} {time:13.3f} {type:>2} {id:>8} {dir:>2} {dlc:<2} {data}"
     )
 
     def _format_message_init(self, msg: TypedMessage, channel: int) -> str:
@@ -227,6 +227,7 @@ class TRCWriterCanFD(TRCWriter):
         if self.file_version == TRCFileVersion.V1_0:
             self._msg_fmt_string = self.FORMAT_MESSAGE_V1_0
             self._format_message = self._format_message_by_format
+            return self._format_message_by_format(msg, channel)
         elif self.file_version == TRCFileVersion.V2_0:
             self._msg_fmt_string = self.FORMAT_MESSAGE_V2_0
             self._format_message = self._format_message_by_format
@@ -234,6 +235,7 @@ class TRCWriterCanFD(TRCWriter):
         elif self.file_version == TRCFileVersion.V2_1:
             self._msg_fmt_string = self.FORMAT_MESSAGE_V2_1
             self._format_message = self._format_message_by_format
+            return self._format_message_by_format(msg, channel)
         else:
             raise NotImplementedError("File format is not supported")
 
@@ -284,7 +286,7 @@ class TRCWriterCanFD(TRCWriter):
         """
         self.header_data = header_data
 
-    def write_header(self, timestamp: float) -> None:
+    def write_header(self, timestamp: float = 0) -> None:
         """Modified write header that just write previously given header data
 
         :param timestamp: unused parameter kept to avoid breaking changes

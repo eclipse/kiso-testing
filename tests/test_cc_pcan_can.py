@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import datetime
 import importlib
 import logging
 import os
@@ -22,6 +23,7 @@ import pytest
 from pykiso import Message
 from pykiso.lib.connectors import cc_pcan_can
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan, PCANBasic, can
+from pykiso.lib.connectors.trc_handler import TRCReaderCanFD
 from pykiso.message import (
     MessageAckType,
     MessageCommandType,
@@ -131,16 +133,26 @@ trc_merge_data = """;$FILEVERSION=2.0
       2         2.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00
       3         3.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00
       4         4.000 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      5        11.005 ST          Rx    00 00 00 00
-      6        12.005 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      7        13.005 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      8        14.005 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-      9       101.008 ST          Rx    00 00 00 00
-     10       102.008 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-     11       103.008 FB     0200 Rx 8  00 00 00 00 00 00 00 00
-     12       104.008 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
+      5        21.010 ST          Rx    00 00 00 00
+      6        22.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      7        23.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      8        24.010 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+      9       201.016 ST          Rx    00 00 00 00
+     10       202.016 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+     11       203.016 FB     0200 Rx 8  00 00 00 00 00 00 00 00
+     12       204.016 FB     0200 Rx 8  00 00 00 00 00 00 00 00\n"""
 
-import time
+
+@pytest.fixture
+def mock_trc_reader(mocker):
+    class MockTrcReader:
+        def __init__(self, **kwargs):
+            pass
+
+        _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
+        _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
+
+    return MockTrcReader()
 
 
 @pytest.fixture
@@ -739,6 +751,7 @@ def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):
 def test_merge_trc_with_file_name(trc_files, mock_can_bus, mock_PCANBasic):
 
     path = trc_files[0].parent / "result_file.trc"
+
     cc_pcan = CCPCanCan(trace_path=path)
     cc_pcan.trc_count = 3
 
@@ -749,3 +762,34 @@ def test_merge_trc_with_file_name(trc_files, mock_can_bus, mock_PCANBasic):
         result = trc.read()
 
     assert trc_merge_data == result
+
+
+def test_read_trace_messages(mocker, trc_files, caplog):
+
+    cc_pcan = CCPCanCan(trace_path=trc_files[0])
+    cc_pcan.trc_file_version = python_can.TRCFileVersion.V2_0
+
+    mocker.patch.object(CCPCanCan, "_remove_offset", side_effect=["msg1", "msg2"])
+
+    with caplog.at_level(logging.DEBUG):
+        result = cc_pcan._read_trace_messages(trc_files, trc_files[0])
+
+    result_trace = trc_files[0]
+    trc_files.pop(0)
+    for trc in trc_files:
+        assert f"Merging trace {trc.name} into {result_trace.name}" in caplog.text
+
+    assert len(result) == 12
+    assert cc_pcan.trc_file_version == python_can.TRCFileVersion.V2_0
+
+
+def test_remove_offset():
+    class Msg:
+        def __init__(self, timestamp):
+            self.timestamp = timestamp
+
+    list_msg = [Msg(10), Msg(15), Msg(20)]
+    CCPCanCan._remove_offset(list_msg, 10)
+    assert list_msg[0].timestamp == 20
+    assert list_msg[1].timestamp == 25
+    assert list_msg[2].timestamp == 30
