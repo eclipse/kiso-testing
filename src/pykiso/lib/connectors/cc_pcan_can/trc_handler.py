@@ -19,13 +19,13 @@ TRC file handler based on Python CAN
 
 """
 import logging
-from typing import List, Optional
 from datetime import datetime, timedelta
+from typing import List, Optional
 
 try:
+    from can import Message
     from can.io.trc import TRCFileVersion, TRCReader, TRCWriter
     from can.util import channel2int, dlc2len, len2dlc
-    from can import Message
 except ImportError as e:
     raise ImportError(
         f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
@@ -33,6 +33,10 @@ except ImportError as e:
 
 
 log = logging.getLogger(__name__)
+
+
+NO_ARBITRATION_ID_TYPES = {"EC", "ER", "ST"}
+TRC_V2_FRAME_TYPES = {"DT", "FD", "FB", "FE", "BI", "RR", "EC", "ER", "ST"}
 
 
 class TypedMessage(Message):
@@ -43,42 +47,32 @@ class TypedMessage(Message):
     python-can Message object.
     """
 
-    def __init__(self, type: str, msg: Message):
-        """Create a typed message
+    __slots__ = "type"
 
-        :param type: type of CAN messahe (ex:DT)
-        :param msg: python-can message from which to create the typed message
+    def __init__(self, type: str, **kwargs):
+        """Create a CAN message with message type information.
+
+        :param type: type of CAN message (ex:DT)
+        :param kwargs: all of the keyword arguments expected by can.Message
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.type = type
-        self.timestamp = msg.timestamp
-        self.arbitration_id = msg.arbitration_id
-        self.is_extended_id = msg.is_extended_id
-        self.is_remote_frame = msg.is_remote_frame
-        self.is_error_frame = msg.is_error_frame
-        self.channel = msg.channel
-        self.dlc = msg.dlc
-        self.data = msg.data
-        self.is_fd = msg.is_fd
-        self.is_rx = msg.is_rx
-        self.bitrate_switch = msg.bitrate_switch
-        self.error_state_indicator = msg.error_state_indicator
-        self._check = msg._check
 
     def __repr__(self) -> str:
         """String representation that can handle messages with no arbitration id
 
-        return: string representation of the message"""
-        if self.type not in ["EC", "ER", "ST"]:
+        :return: string representation of the message.
+        """
+        if self.type in NO_ARBITRATION_ID_TYPES:
             args = [
                 f"timestamp={self.timestamp}",
-                f"arbitration_id={self.arbitration_id:#x}",
+                f"arbitration_id={self.arbitration_id}",
                 f"is_extended_id={self.is_extended_id}",
             ]
         else:
             args = [
                 f"timestamp={self.timestamp}",
-                f"arbitration_id={self.arbitration_id}",
+                f"arbitration_id={self.arbitration_id:#x}",
                 f"is_extended_id={self.is_extended_id}",
             ]
 
@@ -119,7 +113,7 @@ class TRCReaderCanFD(TRCReader):
         :return: normalized message
         """
         type_ = cols[self.columns["T"]]
-        if type_ in ["EC", "ER", "ST"]:
+        if type_ in NO_ARBITRATION_ID_TYPES:
             if self.file_version == TRCFileVersion.V2_0:
                 cols.insert(self.columns["I"], "    ")
             else:
@@ -140,7 +134,7 @@ class TRCReaderCanFD(TRCReader):
         dtype = cols[self.columns["T"]]
         cols = self._nomalize_cols(cols)
 
-        if dtype in ["DT", "FD", "FB", "EC", "ER", "ST"]:
+        if dtype in TRC_V2_FRAME_TYPES:
             return self._parse_msg_V2_x(cols)
         else:
             log.info("TRCReader: Unsupported type '%s'", dtype)
@@ -157,7 +151,10 @@ class TRCReaderCanFD(TRCReader):
         bus = self.columns.get("B", None)
 
         # For 2.0 ST / ER and EC messages dlc and length are not in the trace but length is fixed
-        if type_ in ["EC", "ER", "ST"] and self.file_version == TRCFileVersion.V2_0:
+        if (
+            type_ in NO_ARBITRATION_ID_TYPES
+            and self.file_version == TRCFileVersion.V2_0
+        ):
             if type_ == "ST":
                 length = 4
             elif type_ == "ER":
@@ -175,35 +172,49 @@ class TRCReaderCanFD(TRCReader):
             else:
                 raise ValueError("No length/dlc columns present.")
 
-        msg = Message()
         if isinstance(self.start_time, datetime):
-            msg.timestamp = (
+            timestamp = (
                 self.start_time + timedelta(milliseconds=float(cols[self.columns["O"]]))
             ).timestamp()
         else:
-            msg.timestamp = float(cols[1]) / 1000
+            timestamp = float(cols[1]) / 1000
 
-        if type_ not in ["EC", "ER", "ST"] or self.file_version == TRCFileVersion.V2_1:
-            msg.arbitration_id = int(cols[self.columns["I"]], 16)
-            msg.is_extended_id = len(cols[self.columns["I"]]) > 4
+        if (
+            type_ not in NO_ARBITRATION_ID_TYPES
+            or self.file_version == TRCFileVersion.V2_1
+        ):
+            arbitration_id = int(cols[self.columns["I"]], 16)
+            is_extended_id = len(cols[self.columns["I"]]) > 4
         # No arbitration id for ST / ER and EC messages
         else:
-            msg.arbitration_id = cols[self.columns["I"]]
-            msg.is_extended_id = False
+            arbitration_id = cols[self.columns["I"]]
+            is_extended_id = False
 
-        msg.channel = int(cols[bus]) if bus is not None else 1
-        msg.dlc = dlc
-        msg.data = bytearray(
-            [int(cols[i + self.columns["D"]], 16) for i in range(length)]
+        channel = int(cols[bus]) if bus is not None else 1
+        dlc = dlc
+        data = bytearray([int(cols[i + self.columns["D"]], 16) for i in range(length)])
+        is_rx = cols[self.columns["d"]] == "Rx"
+        is_fd = type_ in ["FD", "FB", "FE", "BI"]
+        bitrate_switch = type_ in ["FB", " FE"]
+        error_state_indicator = type_ in ["FE", "BI"]
+        is_error_frame = type_ == "ER"
+        is_remote_frame = type_ == "RR"
+
+        return TypedMessage(
+            type_,
+            timestamp=timestamp,
+            arbitration_id=arbitration_id,
+            is_extended_id=is_extended_id,
+            is_error_frame=is_error_frame,
+            is_remote_frame=is_remote_frame,
+            channel=channel,
+            dlc=dlc,
+            data=data,
+            is_fd=is_fd,
+            is_rx=is_rx,
+            bitrate_switch=bitrate_switch,
+            error_state_indicator=error_state_indicator,
         )
-        msg.is_rx = cols[self.columns["d"]] == "Rx"
-        msg.is_fd = type_ in ["FD", "FB", "FE", "BI"]
-        msg.bitrate_switch = type_ in ["FB", " FE"]
-        msg.error_state_indicator = type_ in ["FE", "BI"]
-        msg.is_error_frame = type_ == "ER"
-        msg.is_remote_frame = type_ == "RR"
-
-        return TypedMessage(type_, msg)
 
 
 class TRCWriterCanFD(TRCWriter):
@@ -211,10 +222,14 @@ class TRCWriterCanFD(TRCWriter):
 
     # Type has been added to FORMAT_MESSAGE >= 2.0
     FORMAT_MESSAGE_V2_1 = "{msgnr:>7} {time:13.3f} {type:>2} {channel:>2} {id:>8} {dir:>2} - {dlc:<4} {data}"
-
     FORMAT_MESSAGE_V2_0 = (
         "{msgnr:>7} {time:13.3f} {type:>2} {id:>8} {dir:>2} {dlc:<2} {data}"
     )
+    FILE_VERSION_TO_FORMAT = {
+        TRCFileVersion.V1_0: TRCWriter.FORMAT_MESSAGE_V1_0,
+        TRCFileVersion.V2_0: FORMAT_MESSAGE_V2_0,
+        TRCFileVersion.V2_1: FORMAT_MESSAGE_V2_1,
+    }
 
     def _format_message_init(self, msg: TypedMessage, channel: int) -> str:
         """Pick message format from file version and format initial message
@@ -224,38 +239,32 @@ class TRCWriterCanFD(TRCWriter):
         # Fix error from python can -> message number should start at one not zero
         self.msgnr = 1
 
-        if self.file_version == TRCFileVersion.V1_0:
-            self._msg_fmt_string = self.FORMAT_MESSAGE_V1_0
-            self._format_message = self._format_message_by_format
-            return self._format_message_by_format(msg, channel)
-        elif self.file_version == TRCFileVersion.V2_0:
-            self._msg_fmt_string = self.FORMAT_MESSAGE_V2_0
-            self._format_message = self._format_message_by_format
-            return self._format_message_by_format(msg, channel)
-        elif self.file_version == TRCFileVersion.V2_1:
-            self._msg_fmt_string = self.FORMAT_MESSAGE_V2_1
-            self._format_message = self._format_message_by_format
-            return self._format_message_by_format(msg, channel)
-        else:
-            raise NotImplementedError("File format is not supported")
+        try:
+            self._msg_fmt_string = self.FILE_VERSION_TO_FORMAT[self.file_version]
+        except KeyError as e:
+            raise NotImplementedError(f"File format {e} is not supported")
+
+        self._format_message = self._format_message_by_format
+        return self._format_message_by_format(msg, channel)
 
     def _format_message_by_format(self, msg: TypedMessage, channel: int):
         """Format messages
 
         :return: message informations formated in a string
         """
-        if msg.type not in ["EC", "ER", "ST"]:
+        if msg.type in NO_ARBITRATION_ID_TYPES:
+            arb_id = f"{msg.arbitration_id}"
+        else:
             if msg.is_extended_id:
                 arb_id = f"{msg.arbitration_id:07X}"
             else:
                 arb_id = f"{msg.arbitration_id:04X}"
-        else:
-            arb_id = f"{msg.arbitration_id}"
+
         data = [f"{byte:02X}" for byte in msg.data]
 
-        """For the time python-can was doing substraction with the first message timestamp
-        which is incorrect. It should be with the start time of the trace otherwise the 
-        first message will always have an offset of zero."""
+        # For the time python-can was doing substraction with the first message timestamp
+        # which is incorrect. It should be with the start time of the trace otherwise the
+        # first message will always have an offset of zero.
         if self.file_version == TRCFileVersion.V1_0:
             serialized = self._msg_fmt_string.format(
                 msgnr=self.msgnr,
@@ -291,11 +300,7 @@ class TRCWriterCanFD(TRCWriter):
 
         :param timestamp: unused parameter kept to avoid breaking changes
         """
-        if self.file_version in [
-            TRCFileVersion.V1_0,
-            TRCFileVersion.V2_0,
-            TRCFileVersion.V2_1,
-        ]:
+        if self.file_version in self.FILE_VERSION_TO_FORMAT.keys():
             self.file.writelines(line for line in self.header_data)
         else:
             raise NotImplementedError("File format is not supported")

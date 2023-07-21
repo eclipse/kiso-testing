@@ -265,7 +265,7 @@ def test_trc_reader_can_fd_parse_cols_V2_x(mocker, trc_file_v20, cols, caplog):
                 "    ",
                 False,
                 1,
-                '  ',
+                "  ",
                 bytearray(b"\x00\x00\x00\x00"),
                 True,
                 False,
@@ -284,7 +284,7 @@ def test_trc_reader_can_fd_parse_cols_V2_x(mocker, trc_file_v20, cols, caplog):
                 "    ",
                 False,
                 1,
-                '  ',
+                "  ",
                 bytearray(b"\x00\x00\x00\x00\x00"),
                 True,
                 False,
@@ -303,7 +303,7 @@ def test_trc_reader_can_fd_parse_cols_V2_x(mocker, trc_file_v20, cols, caplog):
                 "    ",
                 False,
                 1,
-                '  ',
+                "  ",
                 bytearray(b"\x00\x00"),
                 True,
                 False,
@@ -437,6 +437,28 @@ def test_trc_reader_can_fd_parse_msg_V2_x(
     assert result_msg.error_state_indicator == expected_result[10]
     assert result_msg.is_error_frame == expected_result[11]
     assert result_msg.is_remote_frame == expected_result[12]
+
+
+def test_trc_reader_can_fd_parse_msg_V2_x_length(trc_file_v21):
+    my_reader = TRCReaderCanFD(trc_file_v21)
+    my_reader.file_version = TRCFileVersion.V2_1
+    my_reader.columns = {"N": 0, "O": 1, "T": 2, "I": 3, "d": 4, "l": 5, "D": 6}
+    cols = ["1", "639.182", "FD", "0200", "Rx", "4", "00", "00", "00", "00"]
+
+    result_msg = my_reader._parse_msg_V2_x(cols)
+
+    assert result_msg.dlc == 4
+
+
+def test_trc_reader_can_fd_parse_msg_V2_x_error(trc_file_v21):
+    my_reader = TRCReaderCanFD(trc_file_v21)
+    my_reader.file_version = TRCFileVersion.V2_1
+    my_reader.columns = {"N": 0, "O": 1, "T": 2, "I": 3, "d": 4, "D": 6}
+    cols = ["1", "639.182", "FD", "0200", "Rx", "4", "00", "00", "00", "00"]
+
+    with pytest.raises(ValueError) as e:
+        my_reader._parse_msg_V2_x(cols)
+        assert str(e.value) == "No length/dlc columns present."
 
 
 FORMAT_MESSAGE_V1_0 = "{msgnr:>6}) {time:7.0f} {id:>8} {dlc:<1} {data}"
