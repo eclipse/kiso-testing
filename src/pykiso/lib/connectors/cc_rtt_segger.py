@@ -25,7 +25,7 @@ import logging
 import threading
 import time
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 
 try:
     import pylink
@@ -92,6 +92,7 @@ class CCRttSegger(connector.CChannel):
         rtt_log_buffer_idx: int = 0,
         rtt_log_speed: float = 1000,
         connection_timeout: int = 5,
+        search_range: int = None,
         **kwargs,
     ):
         """Initialize attributes.
@@ -108,6 +109,7 @@ class CCRttSegger(connector.CChannel):
         :param rtt_log_speed: number of log per second to be pulled (manage the CPU load for logging)
             None value fetch log at the CPU's speed. Default 1000 logs/s
         :param connection_timeout: available time (in seconds) to open the connection
+        :param search_range: range to search for the block of the device
         """
         super().__init__(**kwargs)
         self.serial_number = serial_number if isinstance(serial_number, int) else None
@@ -128,6 +130,8 @@ class CCRttSegger(connector.CChannel):
         self.rtt_log_thread = threading.Thread(target=self.receive_log)
         self.rtt_log_path = rtt_log_path
         self.rtt_log = logging.getLogger(f"{__name__}{serial_number or ''}.RTT")
+        self.search_range = search_range
+
         if self.rtt_log_path is not None:
             self.rtt_log_buffer_size = 0
             self.rtt_log_path = Path(rtt_log_path)
@@ -191,6 +195,15 @@ class CCRttSegger(connector.CChannel):
             )
         else:
             log.internal_debug("connection to J-Link already started")
+
+        if self.search_range:
+            self.jlink.exec_command(
+                f"SetRTTSearchRanges {hex(self.block_address)} {hex(self.search_range)}"
+            )
+            log.internal_info(
+                f"RTT Search range has been set at the following address {hex(self.block_address)} and size {hex(self.search_range)}"
+            )
+
         # set target interface to SWD
         self.jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
         # connect debugger to  the specified target
@@ -209,8 +222,9 @@ class CCRttSegger(connector.CChannel):
             time.sleep(self.connection_timeout)
         # start rtt at the specified address
         self.jlink.rtt_start(self.block_address)
-        log.internal_info(f"RTT communication started at address {self.block_address}")
-
+        log.internal_info(
+            f"RTT communication started at address {hex(self.block_address)}"
+        )
         t_start = time.perf_counter()
         while True:
             try:
@@ -276,7 +290,6 @@ class CCRttSegger(connector.CChannel):
         :param msg: message to send, should be bytes.
         """
         try:
-
             msg = list(msg)
             bytes_written = self.jlink.rtt_write(self.tx_buffer_idx, msg)
             log.internal_debug(
