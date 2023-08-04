@@ -109,7 +109,8 @@ class CCRttSegger(connector.CChannel):
         :param rtt_log_speed: number of log per second to be pulled (manage the CPU load for logging)
             None value fetch log at the CPU's speed. Default 1000 logs/s
         :param connection_timeout: available time (in seconds) to open the connection
-        :param search_range: range to search for the block of the device
+        :param search_range: range length to search for the block of the device
+            starting from the specified block address.
         """
         super().__init__(**kwargs)
         self.serial_number = serial_number if isinstance(serial_number, int) else None
