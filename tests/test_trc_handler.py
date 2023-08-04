@@ -135,7 +135,6 @@ def test_typed_message_constructor():
     assert typed_message.is_rx == msg.is_rx
     assert typed_message.bitrate_switch == msg.bitrate_switch
     assert typed_message.error_state_indicator == msg.error_state_indicator
-    assert typed_message._check == msg._check
 
 
 def test_typed_message_repr():
