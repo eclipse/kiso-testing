@@ -21,9 +21,13 @@ import can as python_can
 import pytest
 
 from pykiso import Message
-from pykiso.lib.connectors import cc_pcan_can
-from pykiso.lib.connectors.cc_pcan_can import CCPCanCan, PCANBasic, can
-from pykiso.lib.connectors.trc_handler import TRCReaderCanFD
+from pykiso.lib.connectors.cc_pcan_can import cc_pcan_can
+from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import (
+    CCPCanCan,
+    PCANBasic,
+    can,
+)
+from pykiso.lib.connectors.cc_pcan_can.trc_handler import TRCReaderCanFD
 from pykiso.message import (
     MessageAckType,
     MessageCommandType,
@@ -732,6 +736,7 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
         "encountered CAN error while receiving message: Invalid Message" in caplog.text
     )
 
+
 def test_extract_header(trc_files):
     header_data = """;$FILEVERSION=2.0
 ;$STARTTIME=55555.0000000000
@@ -767,9 +772,10 @@ def test_extract_header(trc_files):
 ;   |         |       |    |      |  |  |
 ;---+-- ------+------ +- --+----- +- +- +- -- -- -- -- -- -- --
 """
-    
+
     result = CCPCanCan._extract_header(trc_files[0])
     assert result == header_data
+
 
 def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):
 
@@ -831,6 +837,7 @@ def test_remove_offset():
     assert list_msg[0].timestamp == 20
     assert list_msg[1].timestamp == 25
     assert list_msg[2].timestamp == 30
+
 
 def test_shutdown(mocker, mock_can_bus, mock_PCANBasic):
     cc_pcan = CCPCanCan()

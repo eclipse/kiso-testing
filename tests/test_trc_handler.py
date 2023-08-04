@@ -8,16 +8,17 @@
 ##########################################################################
 import logging
 import os
+from pathlib import Path
 from unittest import mock
+
 import pytest
 from can import Message
 from can.io.trc import TRCFileVersion
-from pathlib import Path
 
-from pykiso.lib.connectors.trc_handler import (
-    TypedMessage,
+from pykiso.lib.connectors.cc_pcan_can.trc_handler import (
     TRCReaderCanFD,
     TRCWriterCanFD,
+    TypedMessage,
 )
 
 trc_data_v20 = """;$FILEVERSION=2.0
