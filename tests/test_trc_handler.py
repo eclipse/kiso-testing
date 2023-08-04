@@ -106,7 +106,21 @@ def trc_file_v21(tmp_path):
 
 def test_typed_message_constructor():
     msg = Message()
-    typed_message = TypedMessage("ST", msg)
+    typed_message = TypedMessage(
+        "ST",
+        timestamp=msg.timestamp,
+        arbitration_id=msg.arbitration_id,
+        is_extended_id=msg.is_extended_id,
+        is_error_frame=msg.is_error_frame,
+        is_remote_frame=msg.is_remote_frame,
+        channel=msg.channel,
+        dlc=msg.dlc,
+        data=msg.data,
+        is_fd=msg.is_fd,
+        is_rx=msg.is_rx,
+        bitrate_switch=msg.bitrate_switch,
+        error_state_indicator=msg.error_state_indicator,
+    )
 
     assert typed_message.type == "ST"
     assert typed_message.timestamp == msg.timestamp
@@ -126,7 +140,21 @@ def test_typed_message_constructor():
 
 def test_typed_message_repr():
     msg = Message()
-    typed_message = TypedMessage("DT", msg)
+    typed_message = TypedMessage(
+        "DT",
+        timestamp=msg.timestamp,
+        arbitration_id=msg.arbitration_id,
+        is_extended_id=msg.is_extended_id,
+        is_error_frame=msg.is_error_frame,
+        is_remote_frame=msg.is_remote_frame,
+        channel=msg.channel,
+        dlc=msg.dlc,
+        data=msg.data,
+        is_fd=msg.is_fd,
+        is_rx=msg.is_rx,
+        bitrate_switch=msg.bitrate_switch,
+        error_state_indicator=msg.error_state_indicator,
+    )
 
     assert (
         typed_message.__repr__()
@@ -138,7 +166,21 @@ def test_typed_message_repr():
     msg.is_error_frame = True
     msg.channel = 1
     msg.is_fd = True
-    typed_message_error_frame = TypedMessage("ER", msg)
+    typed_message_error_frame = TypedMessage(
+        "ER",
+        timestamp=msg.timestamp,
+        arbitration_id=msg.arbitration_id,
+        is_extended_id=msg.is_extended_id,
+        is_error_frame=msg.is_error_frame,
+        is_remote_frame=msg.is_remote_frame,
+        channel=msg.channel,
+        dlc=msg.dlc,
+        data=msg.data,
+        is_fd=msg.is_fd,
+        is_rx=msg.is_rx,
+        bitrate_switch=msg.bitrate_switch,
+        error_state_indicator=msg.error_state_indicator,
+    )
 
     result_error_frame = "can.Message(timestamp=0.0, arbitration_id=0, is_extended_id=True, is_rx=False, is_remote_frame=True, is_error_frame=True, channel=1, dlc=0, data=[], is_fd=True, bitrate_switch=False, error_state_indicator=False)"
     assert typed_message_error_frame.__repr__() == result_error_frame
@@ -485,7 +527,21 @@ def test_trc_writter_can_fd_format_message_init(
 ):
 
     msg = Message()
-    typed_message = TypedMessage("ST", msg)
+    typed_message = TypedMessage(
+        "ST",
+        timestamp=msg.timestamp,
+        arbitration_id=msg.arbitration_id,
+        is_extended_id=msg.is_extended_id,
+        is_error_frame=msg.is_error_frame,
+        is_remote_frame=msg.is_remote_frame,
+        channel=msg.channel,
+        dlc=msg.dlc,
+        data=msg.data,
+        is_fd=msg.is_fd,
+        is_rx=msg.is_rx,
+        bitrate_switch=msg.bitrate_switch,
+        error_state_indicator=msg.error_state_indicator,
+    )
 
     if file_version == TRCFileVersion.V2_0:
         my_writter = TRCWriterCanFD(trc_file_v20)
