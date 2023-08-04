@@ -36,9 +36,9 @@ except ImportError as e:
     )
 
 
-from pykiso import CChannel, Message
+from pykiso import CChannel
 
-MessageType = Union[Message, bytes]
+from .trc_handler import TRCReaderCanFD, TRCWriterCanFD, TypedMessage
 
 log = logging.getLogger(__name__)
 
@@ -168,7 +168,6 @@ class CCPCanCan(CChannel):
 
         :raises ValueError: if the trace_path is a file but not a trc file
         """
-
         # Handle trace path and name
         if self.trace_path.suffix == ".trc":
             self.trace_name = self.trace_path.name
@@ -325,9 +324,7 @@ class CCPCanCan(CChannel):
             finally:
                 self.raw_pcan_interface = None
 
-    def _cc_send(
-        self, msg: MessageType, remote_id: Optional[int] = None, **kwargs
-    ) -> None:
+    def _cc_send(self, msg: bytes, remote_id: Optional[int] = None, **kwargs) -> None:
         """Send a CAN message at the configured id.
 
         If remote_id parameter is not given take configured ones
@@ -382,10 +379,27 @@ class CCPCanCan(CChannel):
             log.exception(f"encountered error while receiving message via {self}")
             return {"msg": None}
 
-    # TODO: refactor to use trc reader when new version of python can is release
-    def _merge_trc(self) -> None:
-        """Merge multiple trc files in one."""
+    @staticmethod
+    def _extract_header(trace: Path) -> str:
+        """Extract data from trc file header
 
+        :param trace: trc file from which to extract the data
+
+        :return: header data
+        """
+        header_data = ""
+
+        with trace.open("r") as trc:
+            data = trc.read().splitlines(True)
+            for line in data:
+                if line.startswith(";"):
+                    header_data += line
+                else:
+                    break
+        return header_data
+
+    def _merge_trc(self) -> None:
+        """Merge all traces file in one and fix potential inconsistencies."""
         if isinstance(self.trace_path, str):
             self.trace_path = Path(self.trace_path)
 
@@ -396,118 +410,84 @@ class CCPCanCan(CChannel):
 
         try:
             if self.trace_name is None:
-                # If a log file is not provided, take the fist trace created as result file
+                # If a log file is not provided, merge everything into the first created trace
                 result_trace = list_of_traces[0]
             else:
-                # Else write the first trace content in the log file and then remove it
+                # Otherwise create a separate file
                 result_trace = Path(self.trace_path / self.trace_name)
-                list_of_traces[0] = shutil.move(
-                    str(list_of_traces[0]), str(result_trace)
+                # replace the first trace with the result trace in the trace list
+                # to ensure that all traces except the merged trace are deleted in _read_trace_messages
+                list_of_traces[0] = Path(
+                    shutil.move(str(list_of_traces[0]), str(result_trace))
                 )
-                list_of_traces[0] = Path(list_of_traces[0])
 
-            # End of the trace header
-            first_message_line = 33
+            # Extract header
+            header_data = CCPCanCan._extract_header(list_of_traces[0])
 
-            # Get start time of the first trc file
-            with list_of_traces[0].open("r") as trc:
-                data = trc.read().splitlines(True)
+            # Get messages from all traces
+            messages = self._read_trace_messages(list_of_traces, result_trace)
 
-                first_trc_start_time = CCPCanCan._get_trace_start_time(
-                    data, first_message_line
-                )
-                message_idx = len(data[first_message_line:])
+            # Write header in result trace
+            result_trace.write_text(header_data)
 
-            list_of_traces.pop(0)
-
-            # Append all trace files
-            for file in list_of_traces:
-                with file.open("r") as trc:
-                    data = trc.read().splitlines(True)
-
-                    # Get offset between current and first trc file
-                    trc_start_time = CCPCanCan._get_trace_start_time(
-                        data, first_message_line
-                    )
-                    offset = trc_start_time - first_trc_start_time
-
-                    # Fix message number and time offset inconstistancies
-                    corrected_data = CCPCanCan._fix_merge_inconsistencies(
-                        data[first_message_line:], offset, message_idx
-                    )
-                    message_idx += len(data[first_message_line:])
-
-                with result_trace.open("a") as merged_trc:
-                    merged_trc.writelines(corrected_data)
-                os.remove(file)
+            # Write all messages in result trace
+            with TRCWriterCanFD(result_trace) as writer:
+                writer.file_version = self.trc_file_version
+                log.internal_debug("TRC file version is %s", self.trc_file_version)
+                writer.header_data = header_data
+                for msg in messages:
+                    writer.on_message_received(msg, self.trc_start_time.timestamp())
 
         except IndexError:
             log.internal_warning("No trace to merge")
 
-    @staticmethod
-    def _fix_merge_inconsistencies(
-        data: List[str], offset: float, message_idx: int
-    ) -> List[str]:
-        """Fix merge inconsistencies such as message number and time offset
+    def _read_trace_messages(
+        self, list_of_traces: List[Path], result_trace: Path
+    ) -> List[TypedMessage]:
+        """Get the list of messages for all traces with corrected offset
 
-        :param data: can messages to fix
-        :param offset: time offset beetween first trace and current trace in milliseconds
-        :param message_idx: message number from last trace file
+        :param list_of_traces: list of all traces
+        :param result_trace: trace where to merge
 
-        :return: corrected can messages
+        :return: list of corrected typed messages from all traces
         """
-        message_number_idx = 7
-        time_stamp_idx = 22
+        messages = []
+        for trc in list_of_traces:
+            log.internal_debug("Merging trace %s into %s", trc.name, result_trace.name)
+            with TRCReaderCanFD(trc) as reader:
+                current_trc_messages = list(reader)
 
-        for line_number in range(len(data)):
-            message_number = str(line_number + 1 + message_idx)
-            line = data[line_number]
-
-            # Format time offset
-            time_stamp = round(
-                float(line[message_number_idx:time_stamp_idx]) + offset, 3
-            )
-            time_stamp = "{:10.3f}".format(time_stamp)
-
-            # Fix message number
-            data[line_number] = (
-                message_number.rjust(message_number_idx)
-                + time_stamp.rjust(time_stamp_idx - message_number_idx - 1)
-                + line[time_stamp_idx - 1 :]
-            )
-        return data
-
-    @staticmethod
-    def _get_trace_start_time(data: List[str], first_message_line: int) -> float:
-        """Get trace start time.
-
-        :param trace: path of the trc file
-        :param first_message_line: first line after the header
-
-        :raises ValueError: raised if no start time is found in the trace
-        :return: start time in milliseconds
-        """
-        # Search for the start time in the header of the tace
-        for line in data[:first_message_line]:
-            if line.find(";$STARTTIME=") != -1:
-                start_time = float(line[len(";$STARTTIME=") :])
-                return CCPCanCan._convert_peak_format_to_start_time(start_time)
-        raise ValueError("No start time was found in the trace file")
+                if trc == result_trace:
+                    # Get info for the first trace
+                    self.trc_start_time = reader.start_time
+                    self.trc_file_version = reader.file_version
+                else:
+                    # Get offset in miliseconds
+                    current_trc_start_time = reader.start_time
+                    offset = (
+                        current_trc_start_time - self.trc_start_time
+                    ).total_seconds()
+                    current_trc_messages = CCPCanCan._remove_offset(
+                        current_trc_messages, offset
+                    )
+                    os.remove(trc)
+                messages += current_trc_messages
+        return messages
 
     @staticmethod
-    def _convert_peak_format_to_start_time(start_time: float) -> float:
-        """Get the start time of a trc file in milliseconds since the start of the day
-        from the peak start time format
+    def _remove_offset(
+        messages: List[TypedMessage], offset: float
+    ) -> List[TypedMessage]:
+        """Remove offset to the timestamp of a list of messages
 
-        :param start_time: float using the format bellow (from PEAK CAN)
-            Integral part = Number of days that have passed since 30. December 1899.
-            Fractional Part = Fraction of a 24-hour day that has elapsed, resolution is 1
-            millisecond.
+        :param messages: list of messages to adapt
+        :param offset: offset to add in seconds
 
-        :return: start time of the trc file in ms since the start of the day
+        :return: List of message with corrected timestamps
         """
-        ms_in_a_day = 86400000
-        return (start_time % 1) * ms_in_a_day
+        for msg in messages:
+            msg.timestamp = msg.timestamp + offset
+        return messages
 
     def shutdown(self) -> None:
         """Destructor method."""
