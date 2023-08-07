@@ -116,6 +116,19 @@ def test_test_execution_with_user_tags(tmp_test, capsys):
     assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
 
 
+def test_config_registry_context_manager(tmp_test, mocker):
+    mock_register_aux_con = mocker.patch.object(ConfigRegistry, "register_aux_con")
+    mocker_delete_aux_con = mocker.patch.object(ConfigRegistry, "delete_aux_con")
+
+    cfg = parse_config(tmp_test)
+
+    with ConfigRegistry.provide_auxiliaries(cfg):
+        pass
+
+    mock_register_aux_con.assert_called_once_with(cfg)
+    mocker_delete_aux_con.assert_called_once_with()
+
+
 def test_parse_test_selection_pattern():
     test_file_pattern = ()
     test_file_pattern = test_execution.parse_test_selection_pattern("first::")
