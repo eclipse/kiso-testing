@@ -14,6 +14,7 @@ import pytest
 from pykiso.interfaces.dt_auxiliary import (
     AuxCommand,
     AuxiliaryCreationError,
+    AuxiliaryNotStarted,
     DTAuxiliaryInterface,
     queue,
     threading,
@@ -232,6 +233,8 @@ def test_run_command(mocker, aux_inst):
     queue_put = mocker.patch.object(aux_inst.queue_in, "put")
     queue_get = mocker.patch.object(aux_inst.queue_out, "get", return_value=b"\x02")
 
+    aux_inst.is_instance = True
+
     value = aux_inst.run_command(
         cmd_message="send", cmd_data=b"\x01", blocking=False, timeout_in_s=0
     )
@@ -239,14 +242,46 @@ def test_run_command(mocker, aux_inst):
     assert value == b"\x02"
 
 
-def test_run_command_empty(mocker, aux_inst):
+def test_run_command_timeout(mocker, aux_inst):
     queue_put = mocker.patch.object(aux_inst.queue_in, "put")
+
+    aux_inst.is_instance = True
 
     value = aux_inst.run_command(
         cmd_message="send", cmd_data=b"\x01", blocking=False, timeout_in_s=0
     )
 
     assert value is None
+
+
+def test_run_command_timeout_with_user_defined_return(mocker, aux_inst):
+    queue_put = mocker.patch.object(aux_inst.queue_in, "put")
+
+    aux_inst.is_instance = True
+
+    value = aux_inst.run_command(
+        cmd_message="send",
+        cmd_data=b"\x01",
+        blocking=False,
+        timeout_in_s=0,
+        timeout_result="something",
+    )
+
+    assert value == "something"
+    queue_put.assert_called_once()
+
+
+def test_run_command_aux_not_started(mocker, aux_inst):
+    queue_put = mocker.patch.object(aux_inst.queue_in, "put")
+
+    aux_inst.is_instance = False
+
+    with pytest.raises(AuxiliaryNotStarted):
+        aux_inst.run_command(
+            cmd_message="send", cmd_data=b"\x01", blocking=False, timeout_in_s=0
+        )
+
+    queue_put.assert_not_called()
 
 
 def test_wait_for_queue_out(aux_inst):
