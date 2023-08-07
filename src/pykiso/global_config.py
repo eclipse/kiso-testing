@@ -21,8 +21,13 @@ Configuration collection
 import functools
 import json
 import threading
+from copy import copy
 from types import SimpleNamespace
 from typing import Any, Callable
+
+import click
+
+import pykiso.cli as cli
 
 
 class Singleton(type):
@@ -135,15 +140,21 @@ class Grabber:
         """
 
         @functools.wraps(func)
-        def grab_inner(*args, **kwargs) -> None:
+        def grab_inner(click_context: click.Context, *args, **kwargs) -> None:
             """Grab the given values from cli entry point level and
             store it in the GlobalConfig instance.
 
+            :param click_context: click context
             :param args: positonal arguments
             :param kwargs: named arguments
             """
-            object_config = Grabber.create_config_object(kwargs)
+            kwargs_copy = copy(kwargs)
+            click_args = cli.eval_user_tags(click_context)
+            for tag in list(click_args.keys()):
+                click_args[tag.replace("-", "_")] = click_args.pop(tag)
+            kwargs_copy.update(click_args)
+            object_config = Grabber.create_config_object(kwargs_copy)
             GlobalConfig().cli = object_config
-            return func(*args, **kwargs)
+            return func(click_context, *args, **kwargs)
 
         return grab_inner

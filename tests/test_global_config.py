@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import click
 import pytest
 
 from pykiso.global_config import GlobalConfig, Grabber
@@ -50,32 +51,33 @@ yaml_config = {
 
 
 @pytest.fixture
-def config_instance():
+def config_instance(mocker):
     @Grabber.grab_yaml_config
     def config_parser():
         return yaml_config
 
     @Grabber.grab_cli_config
     def cli_parser(
+        click_context: click.Context,
         test_configuration_file,
         log_path,
         log_level,
         report_type,
-        variant,
-        branch_level,
         pattern,
+        **kwargs,
     ):
         return None
 
     config_parser()
+    context_mock = mocker.patch("click.Context")
+    context_mock.args = ["--variant", "variant1,", "--branch-level", "daily"]
 
     cli_parser(
+        click_context=context_mock,
         test_configuration_file="examples/conf_access.yaml",
         log_path=None,
         log_level="INFO",
         report_type="text",
-        variant=("variant1",),
-        branch_level=("daily",),
         pattern=None,
     )
     return GlobalConfig()
@@ -103,6 +105,5 @@ def test_singleton_implemetation(config_instance):
 
 
 def test_writing_forbidden(config_instance):
-
     with pytest.raises(AttributeError):
         config_instance.yaml.auxiliaries = "value"
