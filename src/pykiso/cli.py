@@ -214,6 +214,9 @@ def main(
             f"Mismatch: {len(log_path)} log files were provided for {len(test_configuration_file)} yaml configuration files"
         )
 
+    # parse provided tags (any unknown option)
+    user_tags = eval_user_tags(click_context)
+
     if logger:
         change_logger_class(log_level, verbose, logger)
 
@@ -235,7 +238,6 @@ def main(
 
         # Run tests
         with ConfigRegistry.provide_auxiliaries(cfg_dict):
-            user_tags = eval_user_tags(click_context)
             exit_code = test_execution.execute(
                 cfg_dict,
                 report_type,
