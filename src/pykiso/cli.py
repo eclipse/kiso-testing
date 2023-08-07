@@ -22,7 +22,7 @@ import logging
 import pprint
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import click
 
