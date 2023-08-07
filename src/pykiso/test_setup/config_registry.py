@@ -207,8 +207,8 @@ class ConfigRegistry:
         cls._linker.uninstall()
         cls._linker = None
 
-    @contextmanager
     @classmethod
+    @contextmanager
     def provide_auxiliaries(cls, config: ConfigDict) -> Iterator[None]:
         """Context manager that registers importable auxiliary
         aliases and cleans them up at exit.
