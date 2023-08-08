@@ -64,7 +64,6 @@ def config_instance(mocker):
         log_level,
         report_type,
         pattern,
-        **kwargs,
     ):
         return None
 
