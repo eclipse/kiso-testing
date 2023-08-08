@@ -49,7 +49,10 @@ class AuxiliaryCreationError(PykisoError):
 
 
 class AuxiliaryNotStarted(PykisoError):
-    """Raised when an auxiliary instance creation failed."""
+    """
+    Raised when an action that requires an auxiliary to be running
+    is executed although the auxiliary is stopped.
+    """
 
     def __init__(self, aux_name: str) -> None:
         """Initialize attributes.
