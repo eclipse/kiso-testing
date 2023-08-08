@@ -50,21 +50,6 @@ class LogOptions(NamedTuple):
     verbose: bool
 
 
-class InternalLogsFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Filters internal log levels
-
-        :param record: event being logged
-
-        :return: False if internal logging, True otherwise
-        """
-        return record.levelno not in (
-            logging.INTERNAL_WARNING,
-            logging.INTERNAL_INFO,
-            logging.INTERNAL_DEBUG,
-        )
-
-
 # used to store the selected logging options
 log_options: Optional[LogOptions] = None
 
@@ -83,9 +68,9 @@ def get_logging_options() -> LogOptions:
 def add_internal_log_levels() -> None:
     """Create pykiso's internal log levels if not already done."""
     if not hasattr(logging, "INTERNAL_WARNING"):
-        add_logging_level("INTERNAL_WARNING", logging.WARNING + 1)
-        add_logging_level("INTERNAL_INFO", logging.INFO + 1)
-        add_logging_level("INTERNAL_DEBUG", logging.DEBUG + 1)
+        add_logging_level("INTERNAL_WARNING", logging.WARNING - 1)
+        add_logging_level("INTERNAL_INFO", logging.INFO - 1)
+        add_logging_level("INTERNAL_DEBUG", logging.DEBUG - 1)
 
 
 def initialize_logging(
@@ -124,7 +109,8 @@ def initialize_logging(
             log_path = log_path / fname
         file_handler = logging.FileHandler(log_path, "a+")
         file_handler.setFormatter(log_format)
-        file_handler.setLevel(LEVELS[log_level])
+        # always include internal logs in log files
+        file_handler.setLevel(LEVELS[log_level] - 1)
         root_logger.addHandler(file_handler)
 
     # update logging options after having modified the log path
@@ -151,10 +137,10 @@ def initialize_logging(
     # for all report types add a StreamHandler
     stream_handler = logging.StreamHandler(stream)
     stream_handler.setFormatter(log_format)
-    stream_handler.setLevel(LEVELS[log_level])
-    if not verbose:
-        # filter internal log levels
-        stream_handler.addFilter(InternalLogsFilter())
+    # disable internal logs if no verbose is wanted
+    stream_handler.setLevel(
+        LEVELS[log_level] if not verbose else (LEVELS[log_level] - 1)
+    )
     root_logger.addHandler(stream_handler)
 
     root_logger.setLevel(LEVELS[log_level])
@@ -261,21 +247,6 @@ def import_object(path: str) -> Union[None, logging.Logger]:
         return None
 
 
-def add_filter_to_handler(func):
-    """Decorator function that will add a filter to all the handlers
-        of a logger after a function.
-
-    :param func: function to execute
-    """
-
-    def wrapper(self, *arg, **kwargs):
-        func(self, *arg, **kwargs)
-        for handler in self.handlers:
-            handler.addFilter(InternalLogsFilter())
-
-    return wrapper
-
-
 def remove_handler_from_logger(func):
     """Decorator that will remove all handlers of a logger after
         executing a function.
@@ -317,9 +288,6 @@ def change_logger_class(log_level: str, verbose: bool, logger: str):
         logger_class.__init__ = partialmethod(
             logger_class.__init__, level=LEVELS[log_level], **kwargs_log
         )
-    # If the verbose is not specified, the filter is added to the handler of the logger
-    if not verbose:
-        logger_class.__init__ = add_filter_to_handler(logger_class.__init__)
     # Change logging.root since test can use logging.info for example
     logging.root = logger_class(name="root", level=LEVELS[log_level])
     # Remove the handler from the new logger else the handler will be called twice with the handler from the root
