@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple, Type
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Type
 
 from ..exceptions import PykisoError
 from .dynamic_loader import DynamicImportLinker
@@ -260,7 +260,7 @@ class ConfigRegistry:
         return cls._linker._aux_cache.get_instance(alias)
 
     @classmethod
-    def get_aux_config(cls, name: AuxiliaryAlias) -> AuxiliaryConfig:
+    def get_aux_config(cls, name: AuxiliaryAlias) -> Dict[str, Any]:
         """Return the registered auxiliary configuration based on his
         name.
 
