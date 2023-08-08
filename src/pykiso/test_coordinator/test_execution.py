@@ -65,7 +65,6 @@ from ..test_result.xml_result import XmlTestResult
 from . import test_suite
 from ..exceptions import NoTestsFoundException
 
-
 log = logging.getLogger(__name__)
 
 TestFilterPattern = namedtuple("TestFilterPattern", "test_file, test_class, test_case")
@@ -217,7 +216,6 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
 
     :return: an ExitCode object
     """
-
     failed, errored = result.failures, result.errors
     if failed and errored:
         exit_code = ExitCode.ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTION

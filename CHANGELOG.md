@@ -18,6 +18,7 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ## Version 0.23.0 (2023-07-05)
 
 ### Bug Fixes
+
 - Fix step report show wrong result ([#309](https://github.com/eclipse/kiso-testing/issues/309))
 - Update python version ([#314](https://github.com/eclipse/kiso-testing/issues/314))
 - Handle proxy autostart when being instanciated after auxiliaries and close channel at last
