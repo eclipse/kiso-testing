@@ -74,3 +74,14 @@ class InvalidTestModuleName(PykisoError):
             "needs to start with a letter or underscore"
         )
         super().__init__(self.message)
+
+
+class NoTestsFoundException(Exception):
+    """ Raise when zero tests was found from configuration file
+    """
+
+    def __init__(self) -> None:
+        """Initialize attributes.
+        """
+        self.message = "No test found in any suite in configuration"
+        super().__init__(self.message)

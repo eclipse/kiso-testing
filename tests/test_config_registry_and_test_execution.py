@@ -27,6 +27,8 @@ from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
 from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
 from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_coordinator import test_execution
+from pykiso.test_coordinator import test_suite
+from pykiso.exceptions import NoTestsFoundException
 from pykiso.test_setup.config_registry import (
     ConfigRegistry,
     DynamicImportLinker,
@@ -69,10 +71,7 @@ def test_test_execution_with_pattern(tmp_test, capsys):
     exit_code = test_execution.execute(cfg, pattern_inject="my_test.py")
     ConfigRegistry.delete_aux_con()
 
-    output = capsys.readouterr()
-    assert "FAIL" not in output.err
-    assert "Ran 0 tests" in output.err
-    assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
+    assert exit_code == test_execution.ExitCode.NO_TEST_SELECTED
 
 
 @pytest.mark.parametrize(
@@ -245,6 +244,22 @@ def test_collect_suites_with_invalid_cli_pattern(tmp_test, mocker):
     )
 
     ConfigRegistry.delete_aux_con()
+
+
+def test_collect_test_suites_without_any_tests(mocker):
+    config_test_suite_list, test_suites = [], []
+    for num in range(2):
+        basic_test_suite = mocker.Mock(spec=test_suite.BasicTestSuite)
+        basic_test_suite._tests = []
+
+        config_test_suite_list.append({"suite_dir": f"test_dir_{num}", "test_filter_pattern": f"test_{num}_*"})
+        test_suites.append(basic_test_suite)
+
+    mocker.patch("pykiso.test_coordinator.test_execution._check_module_names")  # Potentially use return_value=None if this doesn't work
+    mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite", side_effect=test_suites)
+
+    with pytest.raises(NoTestsFoundException, match="No test found in any suite in configuration"):
+        test_execution.collect_test_suites(config_test_suite_list)
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)

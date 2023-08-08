@@ -63,6 +63,8 @@ from ..test_result.assert_step_report import (
 from ..test_result.text_result import BannerTestResult, ResultStream
 from ..test_result.xml_result import XmlTestResult
 from . import test_suite
+from ..exceptions import NoTestsFoundException
+
 
 log = logging.getLogger(__name__)
 
@@ -79,6 +81,7 @@ class ExitCode(enum.IntEnum):
     ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTION = 3
     AUXILIARY_CREATION_FAILED = 4
     BAD_CLI_USAGE = 5
+    NO_TEST_SELECTED = 6
 
 
 def create_test_suite(test_suite_dict: SuiteConfig) -> test_suite.BasicTestSuite:
@@ -214,6 +217,7 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
 
     :return: an ExitCode object
     """
+
     failed, errored = result.failures, result.errors
     if failed and errored:
         exit_code = ExitCode.ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTION
@@ -322,6 +326,8 @@ def collect_test_suites(
             list_of_test_suites.append(current_test_suite)
         except BaseException as e:
             raise TestCollectionError(test_suite_configuration["suite_dir"]) from e
+    if not any(test_suite._tests for test_suite in list_of_test_suites):
+        raise NoTestsFoundException()
     return list_of_test_suites
 
 
@@ -433,6 +439,9 @@ def execute(
     except KeyboardInterrupt:
         log.exception("Keyboard Interrupt detected")
         exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
+    except NoTestsFoundException:
+        log.exception("No tests found in given test suites")
+        exit_code = ExitCode.NO_TEST_SELECTED
     except Exception:
         log.exception(f'Issue detected in the test-suite: {config["test_suite_list"]}!')
         exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
