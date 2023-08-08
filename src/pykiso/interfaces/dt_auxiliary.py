@@ -77,7 +77,7 @@ class DTAuxiliaryInterface(abc.ABC):
         self.name = name
         self.is_proxy_capable = is_proxy_capable
         self.auto_start = auto_start
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.stop_tx = threading.Event()
         self.stop_rx = threading.Event()
         self.queue_in = queue.Queue()
@@ -221,8 +221,6 @@ class DTAuxiliaryInterface(abc.ABC):
             return
 
         log.internal_debug(f"stop transmit task {self.name}_tx")
-        for _ in range(self.queue_in.qsize()):
-            self.queue_in.get_nowait()
         self.queue_in.put((AuxCommand.DELETE_AUXILIARY, None))
         self.stop_tx.set()
         self.tx_thread.join()
