@@ -21,7 +21,6 @@ Configuration collection
 import functools
 import json
 import threading
-from copy import copy
 from types import SimpleNamespace
 from typing import Any, Callable
 
@@ -148,12 +147,13 @@ class Grabber:
             :param args: positonal arguments
             :param kwargs: named arguments
             """
-            kwargs_copy = copy(kwargs)
             click_args = cli.eval_user_tags(click_context)
-            for tag in list(click_args.keys()):
-                click_args[tag.replace("-", "_")] = click_args.pop(tag)
-            kwargs_copy.update(click_args)
-            object_config = Grabber.create_config_object(kwargs_copy)
+            # replace all dashes with underscore to make valid variable names out of the tag names
+            click_args = {
+                tag_name.replace("-", "_"): tag_value
+                for tag_name, tag_value in click_args.items()
+            }
+            object_config = Grabber.create_config_object({**click_args, **kwargs})
             GlobalConfig().cli = object_config
             return func(click_context, *args, **kwargs)
 

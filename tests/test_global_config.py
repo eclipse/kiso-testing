@@ -10,7 +10,7 @@
 import click
 import pytest
 
-from pykiso.global_config import GlobalConfig, Grabber
+from pykiso.global_config import GlobalConfig, Grabber, ProtectedNamespace
 
 yaml_config = {
     "auxiliaries": {
@@ -69,7 +69,7 @@ def config_instance(mocker):
 
     config_parser()
     context_mock = mocker.patch("click.Context")
-    context_mock.args = ["--variant", "variant1,", "--branch-level", "daily"]
+    context_mock.args = ["--variant", "variant1,variant2", "--branch-level", "daily"]
 
     cli_parser(
         click_context=context_mock,
@@ -101,6 +101,15 @@ def test_singleton_implemetation(config_instance):
     assert config_instance.cli.variant == other_conf.cli.variant
     assert config_instance.cli.branch_level == other_conf.cli.branch_level
     assert config_instance.cli.pattern == other_conf.cli.pattern
+
+
+def test_grabber(config_instance):
+    assert config_instance.cli.log_path == None
+    assert config_instance.cli.log_level == "INFO"
+    assert config_instance.cli.report_type == "text"
+    assert config_instance.cli.variant == ["variant1", "variant2"]
+    assert config_instance.cli.branch_level == ["daily"]
+    assert config_instance.cli.pattern == None
 
 
 def test_writing_forbidden(config_instance):
