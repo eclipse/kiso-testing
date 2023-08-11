@@ -173,8 +173,8 @@ def check_file_extension(
     help="use the specified logger class in pykiso",
 )
 @click.version_option(__version__)
-@Grabber.grab_cli_config
 @click.pass_context
+@Grabber.grab_cli_config
 def main(
     click_context: click.Context,
     test_configuration_file: Tuple[PathType],
