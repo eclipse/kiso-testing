@@ -64,6 +64,11 @@ def test_get_logging_options():
     assert options.log_level == "ERROR"
     assert options.report_type is None
 
+    # restore log level, otherwise the caplog fixture is misconfigured
+    logging_initializer.log_options = logging_initializer.LogOptions(
+        None, "DEBUG", None, False
+    )
+
 
 def test_deactivate_all_loggers(caplog):
     with caplog.at_level(logging.WARNING):

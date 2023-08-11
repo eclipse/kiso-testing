@@ -208,44 +208,46 @@ def main(
     :param verbose: activate logging for the whole framework
     :param logger: class of the logger that will be used in the tests
     """
+    # we are expecting one log file path or as many as the provided configuration files
+    if log_path and len(log_path) not in (1, len(test_configuration_file)):
+        raise click.UsageError(
+            f"Mismatch: {len(log_path)} log files were provided for {len(test_configuration_file)} yaml configuration files"
+        )
+
+    # parse provided tags (any unknown option)
+    user_tags = eval_user_tags(click_context)
+
     if logger:
         change_logger_class(log_level, verbose, logger)
 
     for idx, config_file in enumerate(test_configuration_file):
         yaml_name = Path(config_file).stem
-        # Set the logging
+
+        # Setup the logging
         if log_path:
-            # Put all logs in one file
-            if len(log_path) == 1:
-                log = initialize_logging(
-                    log_path[0], log_level, verbose, report_type, yaml_name
-                )
-            # Log in different files for each yaml
-            elif len(log_path) == len(test_configuration_file):
-                log = initialize_logging(
-                    log_path[idx], log_level, verbose, report_type, yaml_name
-                )
-            else:
-                raise click.UsageError(
-                    f"Mismatch: {len(test_configuration_file)} yaml config files provided but {len(log_path)} log files"
-                )
+            # Put all logs in one file if only one file is provided, otherwise use a new file for each yaml
+            log_file = log_path[0] if len(log_path) == 1 else log_path[idx]
         else:
-            log_path = None
-            log = initialize_logging(log_path, log_level, verbose, report_type)
+            log_file = None
+
+        log = initialize_logging(log_file, log_level, verbose, report_type, yaml_name)
+
         # Get YAML configuration
-
         cfg_dict = parse_config(config_file)
+        log.debug("cfg_dict:\n%s", pprint.pprint(cfg_dict))
+
         # Run tests
-        log.debug("cfg_dict:\n{}".format(pprint.pformat(cfg_dict)))
+        with ConfigRegistry.provide_auxiliaries(cfg_dict):
+            exit_code = test_execution.execute(
+                cfg_dict,
+                report_type,
+                yaml_name,
+                user_tags,
+                step_report,
+                pattern,
+                failfast,
+            )
 
-        ConfigRegistry.register_aux_con(cfg_dict)
-
-        user_tags = eval_user_tags(click_context)
-
-        exit_code = test_execution.execute(
-            cfg_dict, report_type, yaml_name, user_tags, step_report, pattern, failfast
-        )
-        ConfigRegistry.delete_aux_con()
         for handler in logging.getLogger().handlers:
             if isinstance(handler, logging.FileHandler):
                 logging.getLogger().removeHandler(handler)

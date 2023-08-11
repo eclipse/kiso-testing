@@ -205,6 +205,9 @@ def add_logging_level(level_name: str, level_num: int):
 def initialize_loggers(loggers: Optional[List[str]]) -> None:
     """Deactivate all external loggers except the specified ones.
 
+    Store the loggers that should remain active globally to keep them
+    activated when this function is called multiple times.
+
     :param loggers: list of logger names to keep activated
     """
     global active_loggers
@@ -240,6 +243,10 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
     loggers_to_deactivate = set(relevant_loggers) - set(active_loggers)
     for logger_name in loggers_to_deactivate:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
+
+    # but keep the other ones to the configured level as they could have deactivated by a previous call
+    for logger_name in active_loggers:
+        logging.getLogger(logger_name).setLevel(log_options.log_level)
 
 
 def import_object(path: str) -> Union[None, logging.Logger]:
