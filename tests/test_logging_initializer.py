@@ -9,6 +9,7 @@
 
 import logging
 import sys
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -165,3 +166,19 @@ def test_change_logger_class(mocker, logger_class):
     for name, module in sys.modules.items():
         if getattr(module, "log", None):
             module.log = save_log[name]
+
+
+@pytest.mark.parametrize("level", (logging.INFO, logging.DEBUG, logging.CRITICAL))
+def test_disable_logging(mocker, level, caplog):
+    message = "not in log"
+
+    @logging_initializer.disable_logging(level)
+    def test_func(message):
+        logging.debug(message)
+
+    with caplog.at_level(logging.DEBUG):
+        test_func(message)
+        logging.debug("in log")
+
+    assert message not in caplog.text
+    assert "in log" in caplog.text
