@@ -186,7 +186,7 @@ class CCPCanCan(CChannel):
         if not 0 < self.trace_size <= 100:
             self.trace_size = 10
             log.internal_warning(
-                f"Make sure trace size is between 1 and 100 Mb. Setting trace size to default value "
+                "Make sure trace size is between 1 and 100 Mb. Setting trace size to default value "
                 f"value : {self.trace_size}."
             )
 
@@ -237,14 +237,14 @@ class CCPCanCan(CChannel):
             if self.trace_path is not None:
                 if not Path(self.trace_path).exists():
                     Path(self.trace_path).mkdir(parents=True, exist_ok=True)
-                    log.internal_info(f"Path {self.trace_path} created")
+                    log.internal_info("Path %s created", self.trace_path)
                 self._pcan_set_value(
                     pcan_channel,
                     PCANBasic.PCAN_TRACE_LOCATION,
                     bytes(self.trace_path),
                 )
                 log.internal_info(
-                    f"Tracefile path in PCAN device configured to {self.trace_path}"
+                    "Tracefile path in PCAN device configured to %s", self.trace_path
                 )
 
             if sys.platform != "darwin":
@@ -256,7 +256,7 @@ class CCPCanCan(CChannel):
                 )
 
                 if self.trace_size != 10:
-                    log.internal_info(f"Trace size set to {self.trace_size} MB.")
+                    log.internal_info("Trace size set to %d MB.", self.trace_size)
                     self._pcan_set_value(
                         pcan_channel, PCANBasic.PCAN_TRACE_SIZE, self.trace_size
                     )
@@ -345,7 +345,7 @@ class CCPCanCan(CChannel):
         )
         self.bus.send(can_msg)
 
-        log.internal_debug(f"{self} sent CAN Message: {can_msg}, data: {msg}")
+        log.internal_debug("%s sent CAN Message: %s, data: %s", self, can_msg, msg)
 
     def _cc_receive(
         self, timeout: float = 0.0001
@@ -365,14 +365,14 @@ class CCPCanCan(CChannel):
                 timestamp = received_msg.timestamp
 
                 log.internal_debug(
-                    f"received CAN Message: {frame_id}, {payload}, {timestamp}"
+                    "received CAN Message: %s, %s, %s", frame_id, payload, timestamp
                 )
                 return {"msg": payload, "remote_id": frame_id, "timestamp": timestamp}
             else:
                 return {"msg": None}
         except can.CanError as can_error:
             log.internal_info(
-                f"encountered CAN error while receiving message: {can_error}"
+                "encountered CAN error while receiving message: %s", can_error
             )
             return {"msg": None}
         except Exception:
