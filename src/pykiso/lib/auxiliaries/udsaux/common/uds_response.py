@@ -32,10 +32,17 @@ class UdsResponse(UserList):
 
     NEGATIVE_RESPONSE_SID = 0x7F
 
-    def __init__(self, response_data: List[int]) -> None:
+    def __init__(
+        self,
+        response_data: List[int],
+        resp_time: float = None,
+        pending_resp_times: List[float] = None,
+    ) -> None:
         """Initialize attributes.
 
         :param response_data: the original response data.
+        :param resp_time: time to get the response
+        :param pending_resp_times: list of the times between each response pending
         """
         super().__init__(response_data)
         self.is_negative = False
@@ -43,10 +50,14 @@ class UdsResponse(UserList):
         if self.data and self.data[0] == self.NEGATIVE_RESPONSE_SID:
             self.is_negative = True
             self.nrc = NegativeResponseCode(self.data[2])
+        self.resp_time = resp_time
+        self.pending_resp_times = pending_resp_times
 
     def __repr__(self):
         if self.data:
-            return "0x" + bytes(self.data).hex().upper()
+            if self.is_negative:
+                return f"NegativeUdsResponse({bytes(self.data).hex(sep=' ')}, nrc={self.nrc.name})"
+            return f"{self.__class__.__name__}({bytes(self.data).hex(sep=' ')})"
         else:
             return "No data."
 
