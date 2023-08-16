@@ -48,6 +48,21 @@ class AuxiliaryCreationError(PykisoError):
         super().__init__(self.message)
 
 
+class AuxiliaryNotStarted(PykisoError):
+    """
+    Raised when an action that requires an auxiliary to be running
+    is executed although the auxiliary is stopped.
+    """
+
+    def __init__(self, aux_name: str) -> None:
+        """Initialize attributes.
+
+        :param aux_name: configured auxiliary alias.
+        """
+        self.message = f"Auxiliary {aux_name} was not started, cannot run command"
+        super().__init__(self.message)
+
+
 class ConnectorRequiredError(PykisoError):
     """Raised when an auxiliary instance creation failed because a connector is
     required and none is provided

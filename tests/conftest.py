@@ -319,7 +319,7 @@ def tmp_test(request, tmp_path, mocker):
         return_value=log_options,
     )
 
-    aux1, aux2, should_fail = request.param
+    aux1, aux2, should_fail = getattr(request, "param", ("dummy1", "dummy2", False))
     ts_folder = tmp_base / f"test_suite_{aux1}_{aux2}"
     ts_folder.mkdir(parents=True)
     tc_file = ts_folder / f"test_{aux1}_{aux2}.py"

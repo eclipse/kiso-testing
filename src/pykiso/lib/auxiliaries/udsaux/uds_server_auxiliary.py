@@ -294,11 +294,12 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 uds_data = self.uds_config.tp.decode_isotp(
                     received_data=msg, use_external_snd_rcv_functions=True
                 )
-                log.internal_debug(
-                    "Received ISO TP data: %s || UDS data: %s",
-                    f"0x{msg.hex()}",
-                    self.format_data(uds_data),
-                )
+                if log.isEnabledFor(logging.getLogger().level):
+                    log.internal_debug(
+                        "Received ISO TP data: 0x%s || UDS data: %s",
+                        msg.hex(),
+                        self.format_data(uds_data),
+                    )
             except Exception as e:
                 # avoid timeouts that would break the thread
                 log.exception(e)
@@ -399,7 +400,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         callback = UdsCallback(
             uds_request, full_uds_response, response_data, data_length, callback
         )
-        log.internal_debug(f"Callback configured from odx: {callback}")
+        log.internal_debug("Callback configured from odx: %s", callback)
         return callback
 
     def _get_odx_callback_param(
@@ -414,7 +415,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             positive response with the specified response_data. Accepts ODX based dictionary
         :return: name of the parameter
         """
-        logging.debug(f"--> req {request}, res= {response}")
+        logging.debug("--> req %s, res= %s", request, response)
         if isinstance(request, dict):
             key = request["data"]["parameter"]
             return key
