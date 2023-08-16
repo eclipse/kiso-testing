@@ -132,7 +132,7 @@ def test_define_test_parameters_on_basic_tc(
     assert tc_inst.test_auxiliary_list == aux_list
 
     if setup_timeout is not None:
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.INTERNAL_WARNING):
             assert (
                 "BasicTest does not support test timeouts, it will be discarded"
                 in caplog.text

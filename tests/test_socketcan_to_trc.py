@@ -197,7 +197,7 @@ def test_on_message_received(caplog, mocker, tmp_file):
     for _ in range(10):
         logger.on_message_received(can_msg)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         can_msg.is_error_frame = True
         logger.on_message_received(can_msg)
 

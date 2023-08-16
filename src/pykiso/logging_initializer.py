@@ -65,12 +65,25 @@ def get_logging_options() -> LogOptions:
     return log_options
 
 
+def get_internal_level(log_level: Union[str, int]) -> int:
+    """Retrieve the internal log level corresponding to the provided one.
+
+    :param log_level: logging's log level for which the corresponding
+        internal one should be retrieved. Can be a string (e.g. "DEBUG")
+        or an integer (e.g. 10 or ``logging.DEBUG``)
+    :return: the corresponding internal log level as an integer.
+    """
+    if isinstance(log_level, str):
+        log_level = LEVELS[log_level]
+    return log_level - 1
+
+
 def add_internal_log_levels() -> None:
     """Create pykiso's internal log levels if not already done."""
     if not hasattr(logging, "INTERNAL_WARNING"):
-        add_logging_level("INTERNAL_WARNING", logging.WARNING - 1)
-        add_logging_level("INTERNAL_INFO", logging.INFO - 1)
-        add_logging_level("INTERNAL_DEBUG", logging.DEBUG - 1)
+        add_logging_level("INTERNAL_WARNING", get_internal_level(logging.WARNING))
+        add_logging_level("INTERNAL_INFO", get_internal_level(logging.INFO))
+        add_logging_level("INTERNAL_DEBUG", get_internal_level(logging.DEBUG))
 
 
 def initialize_logging(
@@ -110,7 +123,7 @@ def initialize_logging(
         file_handler = logging.FileHandler(log_path, "a+")
         file_handler.setFormatter(log_format)
         # always include internal logs in log files
-        file_handler.setLevel(LEVELS[log_level] - 1)
+        file_handler.setLevel(get_internal_level(log_level))
         root_logger.addHandler(file_handler)
 
     # update logging options after having modified the log path
@@ -139,11 +152,17 @@ def initialize_logging(
     stream_handler.setFormatter(log_format)
     # disable internal logs if no verbose is wanted
     stream_handler.setLevel(
-        LEVELS[log_level] if not verbose else (LEVELS[log_level] - 1)
+        LEVELS[log_level] if not verbose else get_internal_level(log_level)
     )
     root_logger.addHandler(stream_handler)
 
-    root_logger.setLevel(LEVELS[log_level])
+    # set the root logger's level to the internal one if any of the provided options activates internal logging
+    if verbose or log_path is not None:
+        root_level = get_internal_level(log_level)
+    else:
+        root_level = log_level
+
+    root_logger.setLevel(root_level)
 
     return logging.getLogger(__name__)
 

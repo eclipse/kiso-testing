@@ -333,7 +333,7 @@ def test_constructor(constructor_params, expected_config, caplog, mocker):
     param = constructor_params.values()
     log = logging.getLogger("can.pcan")
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         can_inst = CCPCanCan(*param)
     log.warning("Bus error: an error counter")
     can_inst.trace_path = ""
@@ -420,7 +420,7 @@ def test_macos_instantiation(mock_can_bus, mock_PCANBasic, mocker, caplog):
     # Instantiation to test
     connector = CCPCanCan(logging_activated=True)
     # Run the action to test
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         connector._cc_open()
     # Validation of the warning popped
     assert "TRACE_FILE_SEGMENTED deactivated for macos!" in [
@@ -725,7 +725,7 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
 
     logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
 
         with CCPCanCan() as can:
             response = can._cc_receive(timeout=0.0001)
@@ -815,7 +815,7 @@ def test_read_trace_messages(mocker, trc_files, caplog):
 
     mocker.patch.object(CCPCanCan, "_remove_offset", side_effect=["msg1", "msg2"])
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         result = cc_pcan._read_trace_messages(trc_files, trc_files[0])
 
     result_trace = trc_files[0]

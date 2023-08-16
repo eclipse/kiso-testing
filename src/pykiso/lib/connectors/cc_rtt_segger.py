@@ -343,7 +343,7 @@ class CCRttSegger(connector.CChannel):
                 self.rtt_log_buffer_idx, self.rtt_log_buffer_size
             )
             if log_msg:
-                self.rtt_log.internal_debug(bytes(log_msg).decode())
+                self.rtt_log.debug(bytes(log_msg).decode())
             time.sleep(self.rtt_log_refresh_time)  # reduce resource consumption
 
     @_need_connection

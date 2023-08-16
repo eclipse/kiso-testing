@@ -153,9 +153,7 @@ def mock_msg(mocker):
 def test_constructor(mocker, caplog):
     mocker.patch.object(simulation.Simulation, "__init__", return_value=None)
 
-    with caplog.at_level(
-        logging.DEBUG,
-    ):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         simulated_aux = simulated_auxiliary.SimulatedAuxiliary(
             name="test_aux",
         )
@@ -171,10 +169,9 @@ def test_create_auxiliary_instance(mocker, simulated_constructor_init, caplog):
 
     mocker.patch.object(simulated_aux, "channel")
 
-    with caplog.at_level(
-        logging.INFO,
-    ):
+    with caplog.at_level(logging.INTERNAL_INFO):
         result_create_inst = simulated_aux._create_auxiliary_instance()
+
     assert result_create_inst is True
     assert "Create auxiliary instance" in caplog.text
     assert "Enable channel" in caplog.text
@@ -183,10 +180,10 @@ def test_create_auxiliary_instance(mocker, simulated_constructor_init, caplog):
 def test_delete_auxiliary_instance(mocker, simulated_constructor_init, caplog):
     simulated_aux = simulated_constructor_init
     mock_channel_close = mocker.patch.object(simulated_aux.channel, "close")
-    with caplog.at_level(
-        logging.INFO,
-    ):
+
+    with caplog.at_level(logging.INTERNAL_INFO):
         result_del_inst = simulated_aux._delete_auxiliary_instance()
+
     assert result_del_inst is True
     assert "Delete auxiliary instance" in caplog.text
     mock_channel_close.assert_called()

@@ -122,7 +122,7 @@ def test_import():
 def test_constructor(constructor_params, expected_config, caplog):
     param = constructor_params.values()
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         can_inst = CCSocketCan(*param)
 
     assert can_inst.channel == expected_config["channel"]

@@ -144,7 +144,7 @@ def test_open(
     caplog, lauterbach_flasher, mock_psutil, mock_subprocess, mock_remote_api
 ):
     lauterbach_flasher.loadup_wait_time = 0
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         lauterbach_flasher.open()
         assert (
             "Trace32 process open with arguments ['fake_path', '-c', 'fake_config_file']"
@@ -191,7 +191,7 @@ def test_close(
     lauterbach_flasher.loadup_wait_time = 0
     lauterbach_flasher.open()
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         lauterbach_flasher.close()
 
     assert "Disconnect from Trace32 with state 0" in caplog.text
@@ -222,7 +222,7 @@ def test_flash(
     mocker.patch.object(ctypes, "c_int", return_value=CtypeTypeMock(0))
     mocker.patch("time.sleep", return_value=None)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         lauterbach_flasher.flash()
 
     assert "flash procedure successful" in caplog.text
