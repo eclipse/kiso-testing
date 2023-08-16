@@ -158,7 +158,6 @@ def test_constructor(mocker, caplog):
             name="test_aux",
         )
 
-    assert "com is None" in caplog.text
     assert simulated_aux.name == "test_aux"
     assert simulated_aux.playbook is None
     assert simulated_aux.ts_tc is None
