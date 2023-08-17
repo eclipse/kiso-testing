@@ -70,7 +70,9 @@ class ExampleUdsTest(pykiso.BasicTest):
         # It is also possible to do it with start and stop methods
         uds_aux.start_tester_present_sender(period=5)
         time.sleep(6)
-        uds_aux.send_uds_raw([0x10, 0x04])
+        response = uds_aux.send_uds_raw([0x10, 0x04])
+        # It is possible to check the maximum interval between to pending response messages
+        assert uds_aux.check_max_pending_time(response, 3)
         uds_aux.stop_tester_present_sender()
 
     def tearDown(self):
