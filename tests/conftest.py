@@ -285,6 +285,8 @@ def mock_uds_config(mocker, mock_tp):
         send = mocker.stub(name="send")
         rdbi = mocker.stub(name="rdbi")
         disconnect = mocker.stub(name="disconnect")
+        last_resp_time = mocker.stub(name="last_resp_time")
+        last_pending_resp_times = mocker.stub(name="last_pending_resp_times")
 
     return MockUdsConfig()
 

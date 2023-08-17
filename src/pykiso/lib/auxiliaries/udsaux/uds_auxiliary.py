@@ -147,27 +147,17 @@ class UdsAuxiliary(UdsBaseAuxiliary):
         )
         return resp
 
+    @staticmethod
     def check_max_pending_time(resp: UdsResponse, max_pending_time: float):
         """Check that the time between pending response messages does not exceed a
         max value
 
         :param resp: uds response to check
-        :param max_pending_time: max pending time
+        :param max_pending_time: max pending time, in seconds
 
         :return: True if the max value is not exceeded, False otherwise
         """
-        previous_pending_time = 0
-        for response_pending_time in resp.pending_resp_times:
-            pending_time = response_pending_time - previous_pending_time
-            previous_pending_time = response_pending_time
-            if pending_time >= max_pending_time:
-                log.internal_warning(
-                    f"max pending time of %s as been exceeded, pending time is %s",
-                    max_pending_time,
-                    pending_time,
-                )
-                return False
-        return True
+        return max_pending_time >= max(resp.pending_resp_times)
 
     def check_raw_response_positive(self, resp: UdsResponse) -> Optional[bool]:
         """Check if the response is positive, raise an error if not

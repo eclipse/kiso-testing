@@ -41,8 +41,8 @@ class UdsResponse(UserList):
         """Initialize attributes.
 
         :param response_data: the original response data.
-        :param resp_time: time to get the response
-        :param pending_resp_times: list of the times between each response pending
+        :param resp_time: time to get the response in seconds
+        :param pending_resp_times: list of the times between each response pending, in senconds
         """
         super().__init__(response_data)
         self.is_negative = False
