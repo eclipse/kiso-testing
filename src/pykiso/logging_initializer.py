@@ -305,7 +305,7 @@ def change_logger_class(log_level: str, verbose: bool, logger: str):
     # We modify the init function so that the logger only need the name to be initialized
     if kwargs_log:
         logger_class.__init__ = partialmethod(
-            logger_class.__init__, level=LEVELS[log_level], **kwargs_log
+            logger_class.__init__, **kwargs_log
         )
     # Change logging.root since test can use logging.info for example
     logging.root = logger_class(name="root", level=LEVELS[log_level])
