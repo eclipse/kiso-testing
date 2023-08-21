@@ -48,6 +48,7 @@ from .interfaces.dt_auxiliary import DTAuxiliaryInterface
 from .interfaces.mp_auxiliary import MpAuxiliaryInterface
 from .interfaces.simple_auxiliary import SimpleAuxiliaryInterface
 from .interfaces.thread_auxiliary import AuxiliaryInterface
+from .logging_initializer import disable_logging
 from .message import Message
 from .test_coordinator import test_case, test_message_handler, test_suite
 from .test_coordinator.test_case import (

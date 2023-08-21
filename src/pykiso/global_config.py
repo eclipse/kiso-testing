@@ -24,6 +24,10 @@ import threading
 from types import SimpleNamespace
 from typing import Any, Callable
 
+import click
+
+import pykiso.cli as cli
+
 
 class Singleton(type):
     """Thread safe Singleton pattern implementation."""
@@ -135,15 +139,22 @@ class Grabber:
         """
 
         @functools.wraps(func)
-        def grab_inner(*args, **kwargs) -> None:
+        def grab_inner(click_context: click.Context, *args, **kwargs) -> None:
             """Grab the given values from cli entry point level and
             store it in the GlobalConfig instance.
 
+            :param click_context: click context
             :param args: positonal arguments
             :param kwargs: named arguments
             """
-            object_config = Grabber.create_config_object(kwargs)
+            click_args = cli.eval_user_tags(click_context)
+            # replace all dashes with underscore to make valid variable names out of the tag names
+            click_args = {
+                tag_name.replace("-", "_"): tag_value
+                for tag_name, tag_value in click_args.items()
+            }
+            object_config = Grabber.create_config_object({**click_args, **kwargs})
             GlobalConfig().cli = object_config
-            return func(*args, **kwargs)
+            return func(click_context, *args, **kwargs)
 
         return grab_inner

@@ -45,10 +45,9 @@ class UdsResponse(UserList):
             self.nrc = NegativeResponseCode(self.data[2])
 
     def __repr__(self):
-        if self.data:
-            return "0x" + bytes(self.data).hex().upper()
-        else:
-            return "No data."
+        if self.is_negative:
+            return f"NegativeUdsResponse({bytes(self.data).hex(sep=' ')}, nrc={self.nrc.name})"
+        return f"{self.__class__.__name__}({bytes(self.data).hex(sep=' ')})"
 
 
 class NegativeResponseCode(IntEnum):

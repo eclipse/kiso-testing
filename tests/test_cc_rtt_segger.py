@@ -80,6 +80,7 @@ def mock_pylink_square_socket(mocker):
 
         opened = mocker.stub(name="opened")
         open = mocker.stub(name="open")
+        exec_command = mocker.stub(name="exec_command")
         rtt_write = mocker.stub(name="rtt_write")
         set_tif = mocker.stub(name="set_tif")
         connect = mocker.stub(name="connect")
@@ -121,13 +122,18 @@ def test_rtt_segger_already_open(mocker, mock_pylink_square_socket):
     mock_pylink_square_socket.JLink.close.assert_called_once()
 
 
-def test_rtt_segger_open(mocker, mock_pylink_square_socket):
+@pytest.mark.parametrize("search_range", (None, 222222))
+def test_rtt_segger_open(mocker, mock_pylink_square_socket, search_range):
     mocker.patch("pylink.JLink.opened", return_value=False)
 
-    with CCRttSegger() as cc_rtt_inst:
+    with CCRttSegger(search_range=search_range) as cc_rtt_inst:
         pass
 
     mock_pylink_square_socket.JLink.open.assert_called_once()
+    if search_range is not None:
+        mock_pylink_square_socket.JLink.exec_command.assert_called_once_with(
+            f"SetRTTSearchRanges 0x2003f800 {hex(search_range)}"
+        )
     mock_pylink_square_socket.JLink.set_tif.assert_called_once()
     mock_pylink_square_socket.JLink.connect.assert_called_once()
     mock_pylink_square_socket.JLink.halted.assert_called_once()
@@ -138,7 +144,6 @@ def test_rtt_segger_open(mocker, mock_pylink_square_socket):
 
 
 def test_rtt_segger_close_invalid(mock_pylink_square_socket):
-
     cc_rtt_inst = CCRttSegger()
     cc_rtt_inst._cc_close()
 
@@ -147,7 +152,6 @@ def test_rtt_segger_close_invalid(mock_pylink_square_socket):
 
 
 def test_rtt_segger_close_valid(mock_pylink_square_socket):
-
     cc_rtt_inst = CCRttSegger()
     cc_rtt_inst._cc_open()
     cc_rtt_inst._cc_close()
@@ -157,7 +161,6 @@ def test_rtt_segger_close_valid(mock_pylink_square_socket):
 
 
 def test_rtt_segger_rtt_logger_not_running(mock_pylink_square_socket, mocker):
-
     mocker_thread_start = mocker.patch(
         "pykiso.lib.connectors.cc_rtt_segger.threading.Thread.start"
     )
@@ -240,7 +243,6 @@ def test_rtt_segger_rtt_logger_running(
     rtt_log,
     tmpdir,
 ):
-
     mock_buffer = mocker.patch(
         "pykiso.lib.connectors.cc_rtt_segger.pylink.JLink.rtt_get_buf_descriptor",
         return_value=pylink.jlink.structs.JLinkRTTerminalBufDesc(
@@ -282,7 +284,6 @@ def test_rtt_segger_send(mock_pylink_square_socket, msg_to_send, raw_state):
 
 
 def test_rtt_segger_send_error(mock_pylink_square_socket, mocker, caplog):
-
     with CCRttSegger() as cc_rtt_inst:
         mocker.patch.object(cc_rtt_inst.jlink, "rtt_write", side_effect=Exception)
         with caplog.at_level(
@@ -414,7 +415,6 @@ def test_receive_log(
 
 
 def test_reset_jlink(mocker):
-
     cc_rtt_inst = CCRttSegger()
     mock_jlink = mocker.Mock()
     cc_rtt_inst.jlink = mock_jlink

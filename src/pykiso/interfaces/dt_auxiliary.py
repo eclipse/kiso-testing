@@ -27,7 +27,7 @@ import threading
 from enum import Enum, unique
 from typing import Any, Callable, List, Optional
 
-from ..exceptions import AuxiliaryCreationError
+from ..exceptions import AuxiliaryCreationError, AuxiliaryNotStarted
 from ..logging_initializer import add_internal_log_levels, initialize_loggers
 
 log = logging.getLogger(__name__)
@@ -96,6 +96,7 @@ class DTAuxiliaryInterface(abc.ABC):
         cmd_data: Any = None,
         blocking: bool = True,
         timeout_in_s: int = 5,
+        timeout_result: Any = None,
     ) -> Any:
         """Send a request by transmitting it through queue_in and
         waiting for a response using queue_out.
@@ -107,15 +108,22 @@ class DTAuxiliaryInterface(abc.ABC):
             blocking or not
         :param timeout_in_s: Number of time (in s) you want to wait
             for an answer
+        :param timeout_result: Value to return when the command times
+            out. Defaults to None.
 
+        :raises pykiso.exceptions.AuxiliaryNotStarted: if a command is
+            executed although the auxiliary was not started.
         :return: True if the request is correctly executed otherwise
             False
         """
         with self.lock:
+            if not self.is_instance:
+                raise AuxiliaryNotStarted(self.name)
+
             log.internal_debug(
                 f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
             )
-            response_received = None
+            response_received = timeout_result
             self.queue_in.put((cmd_message, cmd_data))
             try:
                 response_received = self.queue_out.get(blocking, timeout_in_s)

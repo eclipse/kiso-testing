@@ -233,7 +233,9 @@ class UdsDownloadCallback(UdsCallback):
         request_download_response = self.make_request_download_response()
         aux.send_response(request_download_response)
         log.internal_info(
-            f"Sent response to request {aux.format_data(download_request)}: {aux.format_data(request_download_response)}"
+            "Sent response to request %s: %s",
+            aux.format_data(download_request),
+            aux.format_data(request_download_response),
         )
 
         # get expected transfer data size from DownloadData request
@@ -294,15 +296,17 @@ class UdsDownloadCallback(UdsCallback):
                 if data[0] != expected_pci:
                     block_data_len += len(data) - 1
                     log.internal_warning(
-                        f"Consecutive frame missed: "
-                        f"expected PCI {hex(expected_pci)}, got {hex(data[0])}"
+                        "Consecutive frame missed: expected PCI "
+                        f"{hex(expected_pci)}, got {hex(data[0])}",
                     )
                 block_data_len += len(data) - 1
 
             transfer_size += block_data_len
             log.internal_info(
-                f"Block number {sequence_number}: "
-                f"Received {transfer_size} B out of {expected_transfer_size} B"
+                "Block number %s : Received %s B out of %s B",
+                sequence_number,
+                transfer_size,
+                expected_transfer_size,
             )
             # send TransferData positive response with current sequence number
             success_response = [

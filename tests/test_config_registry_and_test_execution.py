@@ -23,6 +23,7 @@ from pytest_mock import MockerFixture
 
 import pykiso
 import pykiso.test_coordinator.test_execution
+from pykiso import CChannel, DTAuxiliaryInterface
 from pykiso.config_parser import parse_config
 from pykiso.exceptions import TestCollectionError
 from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
@@ -53,6 +54,34 @@ def test_test_execution(tmp_test, capsys):
     assert "->  PASSED" in output.err
     assert "->  FAILED" not in output.err
     assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
+
+
+@pytest.mark.parametrize("tmp_test", [("aux3", "aux4", False)], indirect=True)
+def test_config_registry(tmp_test):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method
+
+    Validation criteria:
+        -  run is executed without error
+    """
+    cfg = parse_config(tmp_test)
+
+    with ConfigRegistry.provide_auxiliaries(cfg):
+
+        assert isinstance(ConfigRegistry.get_aux_by_alias("aux3"), DTAuxiliaryInterface)
+
+        auxes_by_type = ConfigRegistry.get_auxes_by_type(DTAuxiliaryInterface)
+        assert isinstance(auxes_by_type, dict)
+
+        all_auxes = ConfigRegistry.get_all_auxes()
+        # all auxiliaries are subclasses of DTAuxiliaryInterface, thus the expected equality
+        assert all_auxes == auxes_by_type
+
+        aux3_config = ConfigRegistry.get_aux_config("aux3")
+        assert tuple(aux3_config.keys()) == ("com",)
+        assert isinstance(aux3_config["com"], CChannel)
+
+        assert ConfigRegistry.get_auxes_alias() == ["aux3", "aux4"]
 
 
 @pytest.mark.parametrize("file_name", ["my_test.py", "test_aux1_aux2.cpp"])
@@ -114,6 +143,19 @@ def test_test_execution_with_user_tags(tmp_test, capsys):
     assert "FAIL" not in output.err
     assert "SKIPPED TEST" in output.err
     assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
+
+
+def test_config_registry_context_manager(tmp_test, mocker):
+    mock_register_aux_con = mocker.patch.object(ConfigRegistry, "register_aux_con")
+    mocker_delete_aux_con = mocker.patch.object(ConfigRegistry, "delete_aux_con")
+
+    cfg = parse_config(tmp_test)
+
+    with ConfigRegistry.provide_auxiliaries(cfg):
+        pass
+
+    mock_register_aux_con.assert_called_once_with(cfg)
+    mocker_delete_aux_con.assert_called_once_with()
 
 
 def test_parse_test_selection_pattern():
