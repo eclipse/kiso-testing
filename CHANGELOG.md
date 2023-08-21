@@ -9,10 +9,20 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Bug Fixes
 
 - What's up for 0.23.0
+- Re-enable active loggers and add context manager for ConfigRegistry ([#340](https://github.com/eclipse/kiso-testing/issues/340))
 
 ### Miscellaneous Tasks
 
 - Clean up sphinx documentation warnings ([#330](https://github.com/eclipse/kiso-testing/issues/330))
+
+### New Features
+
+- Implement search size for rtt segger ([#338](https://github.com/eclipse/kiso-testing/issues/338))
+- Make release 0.24.0 ([#354](https://github.com/eclipse/kiso-testing/issues/354))
+
+### Performance
+
+- Improve log for uds auxiliary for performance ([#335](https://github.com/eclipse/kiso-testing/issues/335))
 
 ## Version 0.23.0 (2023-07-05)
 
