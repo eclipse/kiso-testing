@@ -49,10 +49,7 @@ import xmlrunner
 
 import pykiso
 
-from ..exceptions import (
-    AuxiliaryCreationError,
-    TestCollectionError,
-)
+from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from ..logging_initializer import get_logging_options
 from ..test_result.assert_step_report import (
     StepReportData,
@@ -78,7 +75,6 @@ class ExitCode(enum.IntEnum):
     ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTION = 3
     AUXILIARY_CREATION_FAILED = 4
     BAD_CLI_USAGE = 5
-    NO_TEST_SELECTED = 6
 
 
 def create_test_suite(test_suite_dict: SuiteConfig) -> test_suite.BasicTestSuite:
@@ -289,7 +285,9 @@ def _is_valid_module(start_dir: str, pattern: str) -> bool:
     path = Path(start_dir)
     file_paths = list(path.glob(pattern))
 
-    return all([VALID_MODULE_NAME.match(file.name) for file in file_paths])
+    return bool(
+        file_paths and all([VALID_MODULE_NAME.match(file.name) for file in file_paths])
+    )
 
 
 def collect_test_suites(
@@ -316,13 +314,19 @@ def collect_test_suites(
             test_suite_configuration["test_filter_pattern"] = test_filter_pattern
 
         if _is_valid_module(
-                start_dir=test_suite_configuration["suite_dir"],
-                pattern=test_suite_configuration["test_filter_pattern"]):
+            start_dir=test_suite_configuration["suite_dir"],
+            pattern=test_suite_configuration["test_filter_pattern"],
+        ):
 
             valid_test_modules.append(test_suite_configuration)
 
     if not valid_test_modules:
-        raise TestCollectionError([test_suite_config['suite_dir'] for test_suite_config in config_test_suite_list])
+        raise TestCollectionError(
+            [
+                test_suite_config["suite_dir"]
+                for test_suite_config in config_test_suite_list
+            ]
+        )
 
     for test_suite_configuration in valid_test_modules:
         try:

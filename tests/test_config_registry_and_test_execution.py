@@ -10,6 +10,7 @@
 import copy
 import logging
 import pathlib
+import re
 import signal
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
@@ -23,16 +24,13 @@ from pytest_mock import MockerFixture
 import pykiso
 import pykiso.test_coordinator.test_execution
 from pykiso.config_parser import parse_config
+from pykiso.exceptions import TestCollectionError
 from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
 from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
 from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
 from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_coordinator import test_execution
-from pykiso.test_setup.config_registry import (
-    ConfigRegistry,
-)
-from pykiso.exceptions import TestCollectionError
-import re
+from pykiso.test_setup.config_registry import ConfigRegistry
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -57,8 +55,9 @@ def test_test_execution(tmp_test, capsys):
     assert exit_code == test_execution.ExitCode.ALL_TESTS_SUCCEEDED
 
 
+@pytest.mark.parametrize("file_name", ["my_test.py", "test_aux1_aux2.cpp"])
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
-def test_test_execution_with_pattern(tmp_test, capsys):
+def test_test_execution_with_pattern(tmp_test, file_name):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
     by specifying a pattern
@@ -68,10 +67,12 @@ def test_test_execution_with_pattern(tmp_test, capsys):
     """
     cfg = parse_config(tmp_test)
     ConfigRegistry.register_aux_con(cfg)
-    exit_code = test_execution.execute(cfg, pattern_inject="my_test.py")
+    exit_code = test_execution.execute(cfg, pattern_inject=file_name)
     ConfigRegistry.delete_aux_con()
-
-    assert exit_code == test_execution.ExitCode.NO_TEST_SELECTED
+    assert (
+        exit_code
+        == test_execution.ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
+    )
 
 
 @pytest.mark.parametrize(
@@ -176,12 +177,11 @@ def test_test_execution_collect_error(tmp_test, capsys, mocker):
             "test_module*",
             True,
         ),
-        ([pathlib.Path("test_module-1.py")], "test_*",
-         False),
+        ([pathlib.Path("test_module-1.py")], "test_*", False),
         (
             [pathlib.Path("test_module.py"), pathlib.Path("test_module-1.py")],
             "test_module*",
-            False
+            False,
         ),
     ],
 )
@@ -207,7 +207,9 @@ def test_collect_suites_with_invalid_cli_pattern(tmp_test, mocker):
         "pykiso.test_coordinator.test_execution._is_valid_module",
         return_value=False,
     )
-    create_test_suite = mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite")
+    create_test_suite = mocker.patch(
+        "pykiso.test_coordinator.test_execution.create_test_suite"
+    )
 
     pattern = "test_module*"
 
@@ -232,14 +234,25 @@ def test_collect_suites_with_invalid_cli_pattern(tmp_test, mocker):
 
 def test_collect_test_suites_without_any_tests(mocker):
     is_valid_module_return = [False, False]
-    config_test_suite_list = [{"suite_dir": f"test_dir_{num}",
-                               "test_filter_pattern": f"test_{num}_*"} for num in range(len(is_valid_module_return))]
+    config_test_suite_list = [
+        {"suite_dir": f"test_dir_{num}", "test_filter_pattern": f"test_{num}_*"}
+        for num in range(len(is_valid_module_return))
+    ]
 
-    mocker.patch("pykiso.test_coordinator.test_execution._is_valid_module", side_effect=is_valid_module_return)
-    create_test_suite = mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite")
+    mocker.patch(
+        "pykiso.test_coordinator.test_execution._is_valid_module",
+        side_effect=is_valid_module_return,
+    )
+    create_test_suite = mocker.patch(
+        "pykiso.test_coordinator.test_execution.create_test_suite"
+    )
 
-    error_suites_dir = ', '.join(config['suite_dir'] for config in config_test_suite_list)
-    with pytest.raises(TestCollectionError, match=f"Failed to collect test suites {error_suites_dir}"):
+    error_suites_dir = ", ".join(
+        config["suite_dir"] for config in config_test_suite_list
+    )
+    with pytest.raises(
+        TestCollectionError, match=f"Failed to collect test suites {error_suites_dir}"
+    ):
         test_execution.collect_test_suites(config_test_suite_list)
 
     create_test_suite.assert_not_called()
@@ -247,11 +260,18 @@ def test_collect_test_suites_without_any_tests(mocker):
 
 @pytest.mark.parametrize("is_valid_module_return", [(True, True), (False, True)])
 def test_collect_test_suites_with_tests(mocker, is_valid_module_return):
-    config_test_suite_list = [{"suite_dir": f"test_dir_{num}",
-                               "test_filter_pattern": f"test_{num}_*"} for num in range(len(is_valid_module_return))]
+    config_test_suite_list = [
+        {"suite_dir": f"test_dir_{num}", "test_filter_pattern": f"test_{num}_*"}
+        for num in range(len(is_valid_module_return))
+    ]
 
-    mocker.patch("pykiso.test_coordinator.test_execution._is_valid_module", side_effect=is_valid_module_return)
-    create_test_suite = mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite")
+    mocker.patch(
+        "pykiso.test_coordinator.test_execution._is_valid_module",
+        side_effect=is_valid_module_return,
+    )
+    create_test_suite = mocker.patch(
+        "pykiso.test_coordinator.test_execution.create_test_suite"
+    )
 
     calls_list = []
     for config_num in range((len(is_valid_module_return))):
@@ -275,7 +295,9 @@ def test_collect_suites_with_invalid_cfg_pattern(tmp_test, mocker):
         "pykiso.test_coordinator.test_execution._is_valid_module",
         return_value=False,
     )
-    create_test_suite = mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite")
+    create_test_suite = mocker.patch(
+        "pykiso.test_coordinator.test_execution.create_test_suite"
+    )
 
     pattern = "test_module*"
 
@@ -283,7 +305,9 @@ def test_collect_suites_with_invalid_cfg_pattern(tmp_test, mocker):
     cfg["test_suite_list"][0]["test_filter_pattern"] = pattern
 
     ConfigRegistry.register_aux_con(cfg)
-    test_suite_dir = re.escape(rf"Failed to collect test suites {cfg['test_suite_list'][0]['suite_dir']}")
+    test_suite_dir = re.escape(
+        rf"Failed to collect test suites {cfg['test_suite_list'][0]['suite_dir']}"
+    )
     with pytest.raises(pykiso.TestCollectionError, match=test_suite_dir):
         test_execution.collect_test_suites(cfg["test_suite_list"])
 
