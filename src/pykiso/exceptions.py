@@ -16,7 +16,7 @@
 """
 
 
-from typing import Union, List
+from typing import List, Union
 
 
 class PykisoError(Exception):
@@ -35,7 +35,11 @@ class TestCollectionError(PykisoError):
         :param test_suite_dir: path to the test suite in which a test
             case failed to be loaded.
         """
-        suites_dir = test_suite_dir if not isinstance(test_suite_dir, list) else ', '.join(test_suite_dir)
+        suites_dir = (
+            test_suite_dir
+            if not isinstance(test_suite_dir, list)
+            else ", ".join(test_suite_dir)
+        )
         self.message = f"Failed to collect test suites {suites_dir}"
         super().__init__(self.message)
 
