@@ -59,7 +59,7 @@ class UdsResponse(UserList):
                 return f"NegativeUdsResponse({bytes(self.data).hex(sep=' ')}, nrc={self.nrc.name})"
             return f"{self.__class__.__name__}({bytes(self.data).hex(sep=' ')})"
         else:
-            return "No data."
+            return f"{self.__class__.__name__} no data."
 
 
 class NegativeResponseCode(IntEnum):
