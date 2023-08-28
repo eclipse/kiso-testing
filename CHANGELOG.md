@@ -13,7 +13,6 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Miscellaneous Tasks
 
 - Clean up sphinx documentation warnings ([#330](https://github.com/eclipse/kiso-testing/issues/330))
-- Throw exception when no tests founds in given test suites
 
 ## Version 0.23.0 (2023-07-05)
 
