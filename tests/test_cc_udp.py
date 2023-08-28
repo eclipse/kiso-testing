@@ -130,9 +130,7 @@ def test_udp_recv_invalid(mocker, mock_udp_socket, expected_exception, caplog):
     mocker.patch("socket.socket.recvfrom", side_effect=expected_exception)
 
     with CCUdp("120.0.0.7", 5005) as udp_inst:
-        with caplog.at_level(
-            logging.DEBUG,
-        ):
+        with caplog.at_level(logging.INTERNAL_DEBUG):
             msg_received = udp_inst._cc_receive(timeout=0.0000001)
         assert (
             f"encountered error while receiving message via {udp_inst}" in caplog.text

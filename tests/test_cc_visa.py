@@ -162,7 +162,7 @@ def test__process_request(mocker, constructor_params_serial, scpi_cmds, caplog):
         request="query", request_data=scpi_cmds["trigger_other_error"]
     ) == {"msg": ""}
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         assert visa_inst._process_request(
             request="Test", request_data=scpi_cmds["trigger_other_error"]
         ) == {"msg": ""}

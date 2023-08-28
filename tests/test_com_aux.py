@@ -60,7 +60,7 @@ def test_com_aux_messaging(com_aux_linker, caplog):
 
     with com_aux.collect_messages():
         assert com_aux.send_message(msg)
-        with caplog.at_level(logging.DEBUG):
+        with caplog.at_level(logging.INTERNAL_DEBUG):
             rec_msg = com_aux.receive_message()
 
     assert rec_msg == msg

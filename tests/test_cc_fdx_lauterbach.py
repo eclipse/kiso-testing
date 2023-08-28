@@ -306,7 +306,7 @@ def test_cc_close(mocker, caplog):
     lauterbach_inst.t32_api = mock_t32_api
     mock_load_script = mocker.patch.object(lauterbach_inst, "load_script")
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         cc_closed = lauterbach_inst._cc_close()
 
     assert (

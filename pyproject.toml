@@ -139,7 +139,7 @@ testpaths = [
 ]
 addopts = """\
     --verbose \
-    --log-level=INFO \
+    --log-level=DEBUG \
     -p no:pytest_kiso \
     --junitxml=reports/testReport.xml \
     --cov=./src \

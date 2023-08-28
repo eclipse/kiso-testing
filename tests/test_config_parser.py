@@ -289,7 +289,7 @@ def test_parse_config(tmp_cfg, tmp_path, mocker, caplog):
     )
     mock_check_req = mocker.patch("pykiso.config_parser.check_requirements")
 
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         cfg = parse_config(tmp_cfg)
 
     mock_check_req.assert_called_once_with([{"pykiso": ">=0.0.0"}])
@@ -428,7 +428,7 @@ def test_parse_config_folder_conflict(tmp_cfg_folder_conflict, tmp_path, caplog)
     # without enforcing ./ notation or putting the value in single quotes
     old_cwd = Path.cwd()
     os.chdir(tmp_path)
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         cfg = parse_config(tmp_cfg_folder_conflict)
 
     # key should not be parsed if it matches a folder/file
@@ -565,7 +565,7 @@ def test_check_requirements(
     mocker.patch("pkg_resources.get_distribution", new=get_version)
     mock_exit = mocker.patch("sys.exit")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         check_requirements(requirements)
 
     if exit_reason:
@@ -578,7 +578,7 @@ def test_check_requirements(
 def test_check_requirements_package(caplog, mocker):
     mock_exit = mocker.patch("sys.exit")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         check_requirements([{"not_installed_package": "1.2.3"}])
 
     mock_exit.assert_called_once_with(1)

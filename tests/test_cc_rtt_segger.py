@@ -189,9 +189,7 @@ def test_rtt_segger_cc_open_rtt_error(
     mocker_thread_start = mocker.patch(
         "pykiso.lib.connectors.cc_rtt_segger.threading.Thread.start"
     )
-    with caplog.at_level(
-        logging.INFO,
-    ):
+    with caplog.at_level(logging.INTERNAL_INFO):
         cc_rtt_inst = CCRttSegger(
             rtt_log_path=tmpdir, connection_timeout=0, rtt_log_buffer_idx=5
         )
@@ -286,9 +284,7 @@ def test_rtt_segger_send(mock_pylink_square_socket, msg_to_send, raw_state):
 def test_rtt_segger_send_error(mock_pylink_square_socket, mocker, caplog):
     with CCRttSegger() as cc_rtt_inst:
         mocker.patch.object(cc_rtt_inst.jlink, "rtt_write", side_effect=Exception)
-        with caplog.at_level(
-            logging.ERROR,
-        ):
+        with caplog.at_level(logging.ERROR):
             cc_rtt_inst._cc_send(msg=[0])
         assert (
             f"ERROR occurred while sending {len([0])} bytes on buffer {cc_rtt_inst.tx_buffer_idx}"
@@ -411,7 +407,7 @@ def test_receive_log(
 
     mocker_sleep.assert_called_once_with(expected_sleep)
     if log_return:
-        mock_rtt_log.internal_debug.assert_called_once_with("rtt_log")
+        mock_rtt_log.debug.assert_called_once_with("rtt_log")
 
 
 def test_reset_jlink(mocker):
