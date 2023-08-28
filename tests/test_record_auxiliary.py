@@ -101,7 +101,7 @@ def test_instance_active_error_thread_start(caplog, mocker, mock_channel):
 
     record_aux = RecordAuxiliary(mock_channel, is_active=False)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         record_aux._create_auxiliary_instance()
 
     assert "Error encountered during channel creation" in caplog.text
@@ -112,7 +112,7 @@ def test_delete_aux_error(caplog, mocker, mock_channel):
     mocker.patch.object(threading.Thread, "start")
     record_aux = RecordAuxiliary(mock_channel, is_active=False)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         record_aux._delete_auxiliary_instance()
     assert "Unable to close Channel." in caplog.text
 
@@ -173,7 +173,7 @@ def test_receive_open_error(caplog, mocker, mock_channel):
 
     record_aux = RecordAuxiliary(mock_channel, is_active=False)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         record_aux.receive()
     assert "Error encountered while channel creation." in caplog.text
 
@@ -188,7 +188,7 @@ def test_receive_close_error(caplog, mocker, mock_channel):
     record_aux.stop_receive_event = mock_event
     mocker.patch.object(record_aux, "set_data", side_effect="Received data: test")
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         record_aux.receive()
     assert "Error encountered while closing channel." in caplog.text
 
@@ -297,7 +297,7 @@ def test_wait_message_in_log_failed(mocker, caplog, exception_on_failure, mock_c
                 timeout=0.1,
             )
     else:
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.INTERNAL_WARNING):
             record_aux.wait_for_message_in_log(
                 message="test", timeout=0.1, exception_on_failure=False
             )
@@ -429,7 +429,7 @@ def test_dumping_failed_path_log_empty(mocker, caplog, mock_channel):
     record_aux = RecordAuxiliary(mock_channel, is_active=True)
     record_aux.set_data("Received data :")
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         result = record_aux.dump_to_file(filename="test.log")
 
     assert "Log data is empty. skip dump to file." in caplog.text
@@ -467,6 +467,6 @@ def test_stop_recording(mocker, caplog, mock_channel):
     )
     record_aux = RecordAuxiliary(mock_channel, is_active=True)
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         record_aux.stop_recording()
         assert f"{record_aux.name} Recording has stopped" in caplog.text

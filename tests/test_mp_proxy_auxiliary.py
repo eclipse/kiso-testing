@@ -197,7 +197,7 @@ def test_get_proxy_con_pre_load(mocker, mp_proxy_auxiliary_inst, caplog):
 
     ConfigRegistry._linker = Linker()
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         result_get_proxy = mp_proxy_auxiliary_inst.get_proxy_con(["later_aux"])
 
     assert (
@@ -319,7 +319,7 @@ def test_getattr_physical_cchannel(
 
 def test_create_auxiliary_instance(mp_proxy_auxiliary_inst, caplog):
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         result_create_inst = mp_proxy_auxiliary_inst._create_auxiliary_instance()
     assert result_create_inst is True
     assert "Create auxiliary instance" in caplog.text
@@ -340,7 +340,7 @@ def test_delete_auxiliary_instance(
     mock_empty_queue = mocker.patch.object(MpProxyAuxiliary, "_empty_queue")
     mp_proxy_auxiliary_inst.proxy_channels = [mock_auxiliaries[1], mock_auxiliaries[2]]
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
 
         result = mp_proxy_auxiliary_inst._delete_auxiliary_instance()
     assert "Delete auxiliary instance" in caplog.text
@@ -364,7 +364,7 @@ def test_receive_message(mp_proxy_auxiliary_inst, mock_auxiliaries, caplog):
         "remote_id": "Test_source",
     }
     mp_proxy_auxiliary_inst.proxy_channels = [proxy_channel_test]
-    with caplog.at_level(logging.DEBUG):
+    with caplog.at_level(logging.INTERNAL_DEBUG):
         result_rec_message = mp_proxy_auxiliary_inst._receive_message(1)
     assert (
         f"raw data : {b'340'.hex()} || channel : {mp_proxy_auxiliary_inst.channel.name}"
