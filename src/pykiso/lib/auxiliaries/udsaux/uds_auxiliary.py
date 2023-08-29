@@ -139,7 +139,8 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             resp_time=self.uds_config.last_resp_time,
             pending_resp_times=self.uds_config.last_pending_resp_times,
         )
-        log.internal_info(repr(resp))
+        log.internal_info("UDS response received %s", resp)
+To keep the same message
         return resp
 
     @staticmethod
