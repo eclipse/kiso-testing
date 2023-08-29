@@ -134,21 +134,16 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             else:
                 raise self.errors.ResponseNotReceivedError(msg_to_send)
 
-        resp_print = (
-            f"UDS response received {['0x{:02X}'.format(i) for i in resp]}"
-            if not isinstance(resp, bool)
-            else resp
-        )
-        log.internal_info(resp_print)
         resp = UdsResponse(
             resp,
             resp_time=self.uds_config.last_resp_time,
             pending_resp_times=self.uds_config.last_pending_resp_times,
         )
+        log.internal_info(repr(resp))
         return resp
 
     @staticmethod
-    def check_max_pending_time(resp: UdsResponse, max_pending_time: float):
+    def check_max_pending_time(resp: UdsResponse, max_pending_time: float) -> bool:
         """Check that the time between pending response messages does not exceed a
         max value
 
