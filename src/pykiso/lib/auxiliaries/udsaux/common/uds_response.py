@@ -42,7 +42,7 @@ class UdsResponse(UserList):
         self.nrc = None
         if self.data and self.data[0] == self.NEGATIVE_RESPONSE_SID:
             self.is_negative = True
-            self.nrc = NegativeResponseCode(self.data[2])
+            self.nrc = NegativeResponseCode(bytes(self.data[2]).hex(sep=' '))
 
     def __repr__(self):
         if self.is_negative:
