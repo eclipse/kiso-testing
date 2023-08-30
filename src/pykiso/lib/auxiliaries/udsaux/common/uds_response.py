@@ -49,7 +49,7 @@ class UdsResponse(UserList):
         self.nrc = None
         if self.data and self.data[0] == self.NEGATIVE_RESPONSE_SID:
             self.is_negative = True
-            self.nrc = NegativeResponseCode(bytes(self.data[2]).hex(sep=' '))
+            self.nrc = NegativeResponseCode(self.data[2])
         self.resp_time = resp_time
         self.pending_resp_times = pending_resp_times
 
