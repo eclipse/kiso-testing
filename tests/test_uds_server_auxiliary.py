@@ -389,7 +389,7 @@ class TestUdsServerAuxiliary:
         mocker.patch.object(UdsServerAuxiliary, "callbacks", return_value=dict())
 
         received_request = [0x01, 0x02]
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.INTERNAL_WARNING):
             uds_server_aux_inst._dispatch_callback(received_request)
 
         assert "Unregistered request received" in caplog.text

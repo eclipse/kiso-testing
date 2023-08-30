@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 class ScriptState(enum.IntEnum):
     """Use to determine script command execution."""
 
-    UNKWON = -1
+    UNKNOWN = -1
     NOT_RUNNING = 0
     RUNNING = 1
     DIALOG_OPEN = 2
@@ -168,7 +168,7 @@ class LauterbachFlasher(connector.Flasher):
             raise Exception("TRACE32 Remote API communication error")
         else:
             # wait until script's end
-            script_state = ctypes.c_int(ScriptState.UNKWON)
+            script_state = ctypes.c_int(ScriptState.UNKNOWN)
             request_state = 0
             error_count = 0
             while not script_state.value == ScriptState.NOT_RUNNING:

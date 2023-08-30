@@ -281,7 +281,7 @@ def test_trc_reader_can_fd_parse_cols_V2_x(mocker, trc_file_v20, cols, caplog):
 
     mocker.patch.object(TRCReaderCanFD, "_nomalize_cols", return_value=cols)
     mocker.patch.object(TRCReaderCanFD, "_parse_msg_V2_x", return_value="result")
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.INTERNAL_INFO):
         result = my_reader._parse_cols_V2_x(cols)
 
     TRCReaderCanFD._nomalize_cols.assert_called_once_with(cols)

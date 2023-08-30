@@ -24,7 +24,11 @@ from pykiso.lib.auxiliaries import dut_auxiliary
 from pykiso.lib.connectors import cc_example
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
-from pykiso.logging_initializer import LogOptions, get_logging_options
+from pykiso.logging_initializer import (
+    LogOptions,
+    get_logging_options,
+    initialize_logging,
+)
 from pykiso.test_coordinator import test_case
 from pykiso.test_coordinator.test_case import define_test_parameters
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
@@ -285,6 +289,8 @@ def mock_uds_config(mocker, mock_tp):
         send = mocker.stub(name="send")
         rdbi = mocker.stub(name="rdbi")
         disconnect = mocker.stub(name="disconnect")
+        last_resp_time = mocker.stub(name="last_resp_time")
+        last_pending_resp_times = mocker.stub(name="last_pending_resp_times")
 
     return MockUdsConfig()
 

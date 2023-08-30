@@ -91,7 +91,7 @@ def test_channel_cc_send(channel_obj):
 def test_channel_cc_send_raw(channel_obj, caplog):
     cc_inst = channel_obj(name="thread-channel")
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         cc_inst.cc_send(msg=b"\x01\x02\x03", raw=True)
     assert (
         "Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_send'."
@@ -111,7 +111,7 @@ def test_channel_cc_receive(channel_obj):
 def test_channel_cc_receive_raw(channel_obj, caplog):
     cc_inst = channel_obj(name="thread-channel")
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         cc_inst.cc_receive(raw=True)
     assert (
         "Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_receive'."

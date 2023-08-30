@@ -82,7 +82,7 @@ def test_resume(mocker, aux_instance):
 def test_resume_error(caplog, aux_instance):
     aux_instance.is_instance = True
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         aux_instance.resume()
 
     assert "is already running" in caplog.text
@@ -103,7 +103,7 @@ def test_suspend(mocker, aux_instance):
 def test_suspend_error(caplog, aux_instance):
     aux_instance.is_instance = False
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         aux_instance.suspend()
 
     assert "is already stopped" in caplog.text

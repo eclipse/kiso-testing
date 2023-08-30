@@ -49,11 +49,7 @@ import xmlrunner
 
 import pykiso
 
-from ..exceptions import (
-    AuxiliaryCreationError,
-    InvalidTestModuleName,
-    TestCollectionError,
-)
+from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from ..logging_initializer import get_logging_options
 from ..test_result.assert_step_report import (
     StepReportData,
@@ -278,7 +274,7 @@ def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
     return TestFilterPattern(*parsed_patterns)
 
 
-def _check_module_names(start_dir: str, pattern: str) -> None:
+def _is_valid_module(start_dir: str, pattern: str) -> bool:
     """Checks if a given pattern matches invalid python modules in the given directory
 
     :param start_dir: the directory to search
@@ -288,9 +284,10 @@ def _check_module_names(start_dir: str, pattern: str) -> None:
     """
     path = Path(start_dir)
     file_paths = list(path.glob(pattern))
-    for file in file_paths:
-        if not VALID_MODULE_NAME.match(file.name):
-            raise InvalidTestModuleName(file.name)
+
+    return bool(
+        file_paths and all([VALID_MODULE_NAME.match(file.name) for file in file_paths])
+    )
 
 
 def collect_test_suites(
@@ -310,14 +307,29 @@ def collect_test_suites(
     :return: a list of all loaded test suites.
     """
     list_of_test_suites = []
+    valid_test_modules = []
+
     for test_suite_configuration in config_test_suite_list:
+        if test_filter_pattern is not None:
+            test_suite_configuration["test_filter_pattern"] = test_filter_pattern
+
+        if _is_valid_module(
+            start_dir=test_suite_configuration["suite_dir"],
+            pattern=test_suite_configuration["test_filter_pattern"],
+        ):
+
+            valid_test_modules.append(test_suite_configuration)
+
+    if not valid_test_modules:
+        raise TestCollectionError(
+            [
+                test_suite_config["suite_dir"]
+                for test_suite_config in config_test_suite_list
+            ]
+        )
+
+    for test_suite_configuration in valid_test_modules:
         try:
-            if test_filter_pattern is not None:
-                test_suite_configuration["test_filter_pattern"] = test_filter_pattern
-            _check_module_names(
-                start_dir=test_suite_configuration["suite_dir"],
-                pattern=test_suite_configuration["test_filter_pattern"],
-            )
             current_test_suite = create_test_suite(test_suite_configuration)
             list_of_test_suites.append(current_test_suite)
         except BaseException as e:

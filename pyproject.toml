@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.23.0"
+version = "0.24.0"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -56,7 +56,7 @@ requests = {version = "^2.28.2", optional = true}
 isort = {version = ">=5.11.4",optional = true}
 black = {version = "22.10.0",optional = true}
 pylink-square = {version = ">=0.12,<0.15", optional = true}
-pykiso-python-uds = {version = "~3.0.2", optional = true}
+pykiso-python-uds = {version = "~3.1.0", optional = true}
 pyserial = {version = "^3.0", optional = true}
 PyVISA = {version = "^1.12.0", optional = true}
 PyVISA-py = {version = "~0.5.3", optional = true}
@@ -139,7 +139,7 @@ testpaths = [
 ]
 addopts = """\
     --verbose \
-    --log-level=INFO \
+    --log-level=DEBUG \
     -p no:pytest_kiso \
     --junitxml=reports/testReport.xml \
     --cov=./src \

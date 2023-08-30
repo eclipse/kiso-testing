@@ -16,6 +16,9 @@
 """
 
 
+from typing import List, Union
+
+
 class PykisoError(Exception):
     """Pykiso specific exception used as basis for all others."""
 
@@ -26,13 +29,18 @@ class PykisoError(Exception):
 class TestCollectionError(PykisoError):
     """Collection of test cases by the TestLoader failed."""
 
-    def __init__(self, test_suite_dir: str) -> None:
+    def __init__(self, test_suite_dir: Union[str, List[str]]) -> None:
         """Initialize attributes.
 
         :param test_suite_dir: path to the test suite in which a test
             case failed to be loaded.
         """
-        self.message = f"Failed to collect test suite '{test_suite_dir}'"
+        suites_dir = (
+            test_suite_dir
+            if not isinstance(test_suite_dir, list)
+            else ", ".join(test_suite_dir)
+        )
+        self.message = f"Failed to collect test suites {suites_dir}"
         super().__init__(self.message)
 
 

@@ -81,7 +81,7 @@ def test_constructor_auto_port_warn(caplog, mocker):
     with mock.patch.object(
         serial.tools.list_ports, "comports", return_value=[test_device, test_device2]
     ):
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.INTERNAL_WARNING):
             cc_serial = CCSerial(port=None, pid=1, vid=2)
     assert (
         "Found multiple devices, ['test_device', 'test_device2'], with matching IDs 0002:0001 or serial_number None. Select first device test_device."

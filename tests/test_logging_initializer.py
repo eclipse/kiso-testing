@@ -72,7 +72,7 @@ def test_get_logging_options():
 
 
 def test_deactivate_all_loggers(caplog):
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INTERNAL_WARNING):
         logging_initializer.initialize_loggers(["all"])
 
     assert "All loggers are activated" in caplog.text
@@ -109,16 +109,6 @@ def test_import_object_error(mocker):
 
     import_module_mock.assert_called_once_with("test.path")
     get_attr_mock.assert_called_once_with("module", "object")
-
-
-def test_add_filter_to_handler():
-    TestLogger.__init__ = logging_initializer.add_filter_to_handler(TestLogger.__init__)
-
-    log = TestLogger("test")
-
-    assert isinstance(
-        log.handlers[0].filters[0], logging_initializer.InternalLogsFilter
-    )
 
 
 def test_remove_handler_from_logger():

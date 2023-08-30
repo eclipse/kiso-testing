@@ -138,6 +138,11 @@ class TestUdsAuxiliary:
         assert call_arg.data == data
         assert call_arg.is_extended_id == False
 
+    def test_check_max_pending_time(self, uds_raw_aux_inst, mock_uds_config):
+        response = UdsResponse([0x00, 0x00, 0x00], pending_resp_times=[1, 5, 7])
+        assert uds_raw_aux_inst.check_max_pending_time(response, 10) is True
+        assert uds_raw_aux_inst.check_max_pending_time(response, 2) is False
+
     def test_send_uds_raw(self, mock_uds_config, uds_odx_aux_inst):
         mock_uds_config.send.return_value = [0x50, 0x03]
         uds_odx_aux_inst.uds_config = mock_uds_config
