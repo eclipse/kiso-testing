@@ -30,7 +30,11 @@ from io import TextIOBase
 from pathlib import Path
 from typing import Callable, Dict, List, TextIO, Union
 
-import pkg_resources
+if sys.version_info < (3, 8):
+    import importlib_metadata as metadata
+else:
+    from importlib import metadata
+
 import yaml
 from packaging import version
 
@@ -241,7 +245,7 @@ def check_requirements(requirements: List[dict]):
     for package, expected_version in requirements.items():
         try:
             logging.debug(f"Check YAML requirements: {package}")
-            current_version = pkg_resources.get_distribution(package).version
+            current_version = metadata.version(package)
             logging.debug(f"current_version: {current_version}")
 
             if expected_version == "any":
@@ -287,7 +291,7 @@ def check_requirements(requirements: List[dict]):
 
                 requirement_satisfied &= check
 
-        except pkg_resources.DistributionNotFound:
+        except metadata.PackageNotFoundError:
             # package not installed or misspelled
             requirement_satisfied = False
             logging.error(f"Dependency issue: {package} not found")
