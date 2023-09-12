@@ -25,11 +25,13 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
+import subprocess
 
 try:
     import can
     import can.bus
     import can.interfaces.pcan.basic as PCANBasic
+    from can.interfaces.pcan.pcan import PcanCanInitializationError
 except ImportError as e:
     raise ImportError(
         f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
@@ -192,23 +194,30 @@ class CCPCanCan(CChannel):
 
     def _cc_open(self) -> None:
         """Open a can bus channel, set filters for reception and activate PCAN log."""
-        self.bus = can.interface.Bus(
-            interface=self.interface,
-            channel=self.channel,
-            state=self.state,
-            bitrate=self.bitrate,
-            fd=self.is_fd,
-            f_clock_mhz=self.f_clock_mhz,
-            nom_brp=self.nom_brp,
-            nom_tseg1=self.nom_tseg1,
-            nom_tseg2=self.nom_tseg2,
-            nom_sjw=self.nom_sjw,
-            data_brp=self.data_brp,
-            data_tseg1=self.data_tseg1,
-            data_tseg2=self.data_tseg2,
-            data_sjw=self.data_sjw,
-            can_filters=self.can_filters,
-        )
+
+        try:
+            self.bus = can.interface.Bus(
+                interface=self.interface,
+                channel=self.channel,
+                state=self.state,
+                bitrate=self.bitrate,
+                fd=self.is_fd,
+                f_clock_mhz=self.f_clock_mhz,
+                nom_brp=self.nom_brp,
+                nom_tseg1=self.nom_tseg1,
+                nom_tseg2=self.nom_tseg2,
+                nom_sjw=self.nom_sjw,
+                data_brp=self.data_brp,
+                data_tseg1=self.data_tseg1,
+                data_tseg2=self.data_tseg2,
+                data_sjw=self.data_sjw,
+                can_filters=self.can_filters,
+            )
+        except PcanCanInitializationError as e:
+            if sys.platform == "linux":
+                result = subprocess.run(["lsof", "/dev/pcan32"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                print(f"Pcan dongle currently used by\n {result.stdout}")
+            raise e
 
         if self.logging_activated and self.raw_pcan_interface is None:
             self.raw_pcan_interface = PCANBasic.PCANBasic()
