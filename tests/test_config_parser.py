@@ -19,7 +19,12 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from pykiso.config_parser import YamlLoader, check_requirements, parse_config
+from pykiso.config_parser import (
+    YamlLoader,
+    check_requirements,
+    metadata,
+    parse_config,
+)
 from pykiso.exceptions import ConnectorRequiredError
 
 
@@ -557,12 +562,10 @@ def test_parse_config_folder_conflict(tmp_cfg_folder_conflict, tmp_path, caplog)
 def test_check_requirements(
     requirements, mock_installed_versions, caplog, exit_reason, mocker
 ):
-    Version = namedtuple("Version", "version")
-
     def get_version(package):
-        return Version(mock_installed_versions[package])
+        return mock_installed_versions[package]
 
-    mocker.patch("pkg_resources.get_distribution", new=get_version)
+    mocker.patch.object(metadata, "version", new=get_version)
     mock_exit = mocker.patch("sys.exit")
 
     with caplog.at_level(logging.INTERNAL_INFO):
