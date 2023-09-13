@@ -10,6 +10,9 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 - Bump sphinxcontrib-serializinghtml from 1.1.5 to 1.1.9
 - Bump hidapi from 0.12.0.post2 to 0.14.0
+- Bump rich from 13.4.1 to 13.5.2
+- Bump python-can from 4.2.1 to 4.2.2
+- Bump importlib-metadata from 5.2.0 to 6.7.0
 
 ### New Features
 
