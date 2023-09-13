@@ -6,6 +6,17 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### Miscellaneous Tasks
+
+- Bump sphinxcontrib-serializinghtml from 1.1.5 to 1.1.9
+- Bump hidapi from 0.12.0.post2 to 0.14.0
+
+### New Features
+
+- Replace pkg_resources with importlib.metadata for faster load time ([#366](https://github.com/eclipse/kiso-testing/issues/366))
+
+## Version 0.24.1 (2023-09-06)
+
 ### Bug Fixes
 
 - Enum types ([#355](https://github.com/eclipse/kiso-testing/issues/355))
