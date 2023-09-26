@@ -274,20 +274,70 @@ def parse_test_selection_pattern(pattern: str) -> TestFilterPattern:
     return TestFilterPattern(*parsed_patterns)
 
 
+def find_folders_between_paths(start_path: Path, end_path: Path) -> List[Path]:
+    """Find and return a list of folders between two specified paths.
+
+    :param start_path: the starting path
+    :param end_path: the ending path
+    :return: a list of folders between `start_path` (exclusive) and `end_path` (inclusive). If `end_path` is not
+        a subpath of `start_path`, an empty list is returned.
+    """
+    start_path = start_path
+    end_path = end_path
+    folders_between = []
+
+    while start_path != end_path:
+        folders_between.append(end_path.parent)
+        end_path = end_path.parent
+        if len(end_path.parents) == 1:
+            return []
+    return folders_between
+
+
 def _is_valid_module(start_dir: str, pattern: str) -> bool:
-    """Checks if a given pattern matches invalid python modules in the given directory
+    """Check if the test files found in the specified directory and its subdirectories
+    conform to the requirements of a valid module.
 
     :param start_dir: the directory to search
     :param pattern: pattern that matches the file names
-    :raises InvalidTestModuleName: if a test file name contains a character other
-        than letters, numbers, and _ or starts with a number
     """
-    path = Path(start_dir)
-    file_paths = list(path.glob(pattern))
+    start_dir = Path(start_dir)
+    test_files_found = list(start_dir.glob(f"**/{pattern}"))
 
-    return bool(
-        file_paths and all([VALID_MODULE_NAME.match(file.name) for file in file_paths])
-    )
+    # remove folders
+    test_files_found = [
+        test_file for test_file in test_files_found if test_file.is_file()
+    ]
+
+    # If found test files are in given test suite directory don't check for __init__.py
+    if any(test_file.parent == start_dir for test_file in test_files_found):
+        return True
+
+    # No file matches the test filter pattern
+    if not test_files_found:
+        log.critical(
+            f"Test filter {pattern=} doesn't match any files in folder {start_dir}"
+        )
+        return False
+
+    # Check that all sub folders of a nested testsuite have an __init__.py file
+    testsuite_folders = {filepath.parent for filepath in test_files_found}
+    all_folders_to_check = []
+    for folder in testsuite_folders:
+        all_folders_to_check.extend(find_folders_between_paths(start_dir, folder))
+    all_folders_to_check.extend(testsuite_folders)
+    all_folders_to_check = list(set(all_folders_to_check))
+
+    if start_dir in all_folders_to_check:
+        all_folders_to_check.remove(start_dir)
+
+    for folder in all_folders_to_check:
+        if not any(file_path.name == "__init__.py" for file_path in folder.iterdir()):
+            log.critical(f'Could not find file "__init__.py" in folder {folder}')
+            return False
+
+    # check that the test file has a valid module name
+    return all(VALID_MODULE_NAME.match(file.name) for file in test_files_found)
 
 
 def collect_test_suites(

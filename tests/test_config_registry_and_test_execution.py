@@ -211,29 +211,92 @@ def test_test_execution_collect_error(tmp_test, capsys, mocker):
 
 
 @pytest.mark.parametrize(
-    "paths, pattern, expected",
+    "pattern, expected",
     [
-        ([pathlib.Path("test_module.py")], "test_*", True),
-        (
-            [pathlib.Path("test_module.py"), pathlib.Path("test_module_1.py")],
-            "test_module*",
-            True,
-        ),
-        ([pathlib.Path("test_module-1.py")], "test_*", False),
-        (
-            [pathlib.Path("test_module.py"), pathlib.Path("test_module-1.py")],
-            "test_module*",
-            False,
-        ),
+        ("test_*", True),
+        ("banana", False),
     ],
 )
-def test__is_valid_module(paths, pattern, expected, mocker):
-    mock_glob = mocker.patch("pathlib.Path.glob", return_value=paths)
-    test_dir = "test_dir"
+def test_is_valid_module_test_file_in_test_suite(pattern, expected, tmp_path):
 
-    actual = test_execution._is_valid_module(test_dir, pattern)
+    suite_folder = tmp_path / "test_suite"
+    test_moule = suite_folder / "test_module_1.py"
+    test_moule.parent.mkdir()
+    test_moule.touch()
+
+    actual = test_execution._is_valid_module(suite_folder, pattern)
     assert actual == expected
-    mock_glob.assert_called_with(pattern)
+
+
+@pytest.mark.parametrize(
+    "pattern, init_exist,expected",
+    [
+        ("test_*", True, True),
+        ("test_*", False, False),
+        ("banana", True, False),
+    ],
+)
+def test_is_valid_module_test_file_in_module(pattern, init_exist, expected, tmp_path):
+
+    suite_folder = tmp_path / "test_suite"
+    test_moule = suite_folder / "test_module_1.py"
+    test_moule.parent.mkdir()
+    test_moule.touch()
+
+    if init_exist:
+        init_file = suite_folder / "__init__.py"
+        init_file.touch()
+
+    actual = test_execution._is_valid_module(tmp_path, pattern)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "start, end, expected",
+    [
+        (
+            "/path/to/start",
+            "/path/to/start/folder1/folder2",
+            ["/path/to/start/folder1", "/path/to/start"],
+        ),
+        ("/path/to/start", "/path/not/inside/start", []),
+        ("/path/to/start", "/path/to/start", []),
+    ],
+)
+def test_find_folders_between_paths(start, end, expected):
+    start_path = Path(start)
+    end_path = Path(end)
+    result = test_execution.find_folders_between_paths(start_path, end_path)
+    assert result == [Path(path) for path in expected]
+
+
+@pytest.mark.parametrize(
+    "pattern, parent_init_exist,child_init_exist,expected",
+    [
+        ("test_*", True, True, True),
+        ("*.py", False, True, False),
+        ("banana", True, True, False),
+    ],
+)
+def test_is_valid_module_test_nested_module(
+    pattern, parent_init_exist, child_init_exist, expected, tmp_path
+):
+
+    suite_folder = tmp_path / "test_suite_root" / "test_suite_lvl_1"
+    test_moule = suite_folder / "test_module_1.py"
+    test_moule.parent.mkdir(parents=True, exist_ok=True)
+    test_moule.touch()
+
+    if parent_init_exist:
+        init_file = tmp_path / "test_suite_root" / "__init__.py"
+        init_file.touch()
+
+    if child_init_exist:
+        init_file = suite_folder / "__init__.py"
+        init_file.touch()
+
+    actual = test_execution._is_valid_module(tmp_path, pattern)
+    assert actual == expected
 
 
 @pytest.mark.parametrize("tmp_test", [("aux1", "aux2", False)], indirect=True)
@@ -590,7 +653,7 @@ def test_failure_and_error_handling():
             {"k1": "v1", "k2": ["v12", "v13"]},  # cli_tags
             does_not_raise(),
             True,  # expect_skip
-            id="multple tag names match but no value",
+            id="multiple tag names match but no value",
         ),
         pytest.param(
             {
@@ -788,7 +851,7 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
         mocker.call("proxy_channel_aux2", f"{cc_class.__module__}:{cc_class.__name__}"),
     ]
 
-    # auto_start is expected to be set if any of the attached auxiliaries has it explicitely set
+    # auto_start is expected to be set if any of the attached auxiliaries has it explicitly set
     # or if it isn't specified (default is auto_start enabled)
     expected_proxy_auto_start = aux1_auto_start in (True, None) or aux2_auto_start in (
         True,

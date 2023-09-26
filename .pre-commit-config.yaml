@@ -36,3 +36,12 @@ repos:
     hooks:
       - id: commitizen
         stages: [commit-msg]
+-   repo: https://github.com/codespell-project/codespell
+    rev: v1.16.0
+    hooks:
+    -   id: codespell
+        name: codespell
+        description: Checks for common misspellings in text files.
+        entry: codespell
+        language: python
+        types: [text]
