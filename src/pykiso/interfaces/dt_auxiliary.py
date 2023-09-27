@@ -368,13 +368,15 @@ def open_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.internal_info(f"Open channel {self.channel.name!r}")
+        log.internal_info(
+            f"Open {self.channel.__class__.__name__} channel {self.channel.name!r}"
+        )
         try:
             self.channel.open()
             return func(self, *arg, **kwargs)
         except Exception:
             log.exception(
-                f"Unable to open channel communication for {self.channel.name!r}"
+                f"Unable to open {self.channel.__class__.__name__} channel communication for {self.channel.name!r}"
             )
             return False
 
@@ -398,14 +400,16 @@ def close_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.internal_info(f"Close channel {self.channel.name!r}")
+        log.internal_info(
+            f"Close {self.channel.__class__.__name__} channel {self.channel.name!r}"
+        )
         try:
             ret = func(self, *arg, **kwargs)
             self.channel.close()
             return ret
         except Exception:
             log.exception(
-                f"Unable to close channel communication {self.channel.name!r}"
+                f"Unable to close  {self.channel.__class__.__name__}  channel communication {self.channel.name!r}"
             )
             return False
 
