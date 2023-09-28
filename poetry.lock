@@ -477,16 +477,6 @@ docs = ["furo (>=2023.5.20)", "sphinx (>=7.0.1)", "sphinx-autodoc-typehints (>=1
 testing = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "diff-cover (>=7.5)", "pytest (>=7.3.1)", "pytest-cov (>=4.1)", "pytest-mock (>=3.10)", "pytest-timeout (>=2.1)"]
 
 [[package]]
-name = "future"
-version = "0.18.3"
-description = "Clean single-source support for Python 3 and 2"
-optional = true
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-files = [
-    {file = "future-0.18.3.tar.gz", hash = "sha256:34a17436ed1e96697a86f9de3d15a3b0be01d8bc8de9c1dffd59fb8234ed5307"},
-]
-
-[[package]]
 name = "hidapi"
 version = "0.14.0"
 description = "A Cython interface to the hidapi from https://github.com/libusb/hidapi"
@@ -1177,17 +1167,16 @@ test = ["pytest", "pytest-mock"]
 
 [[package]]
 name = "pylink-square"
-version = "0.14.3"
+version = "1.2.0"
 description = "Python interface for SEGGER J-Link."
 optional = true
 python-versions = "*"
 files = [
-    {file = "pylink-square-0.14.3.tar.gz", hash = "sha256:1c403c00b15d60e28721370fcbfeb9a558f4971daff0a707ae6ccc5d2acb2e2f"},
-    {file = "pylink_square-0.14.3-py2.py3-none-any.whl", hash = "sha256:ef0007be93209f0c4bac53c1252ffe01a2e1a848919e236c94c2b7f426f9acf3"},
+    {file = "pylink-square-1.2.0.tar.gz", hash = "sha256:736cf9e0272e87cdca1189f632f8d511e8f079c0ab96252fc331189490253ac3"},
+    {file = "pylink_square-1.2.0-py2.py3-none-any.whl", hash = "sha256:9aa81b23d20c70461137456d626091ce748c2a2bd53f1013633b609b5a1665de"},
 ]
 
 [package.dependencies]
-future = "*"
 psutil = ">=5.2.2"
 six = "*"
 
@@ -1994,4 +1983,4 @@ testrail = ["requests", "rich"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "2630ea88ed2a20222d3c6e08071897b8ff3ac65bfb90910cf634eba48de19b0d"
+content-hash = "ad3414f60d227cabb9c2dd48b0c18592b7a9e447e5d6add3f10a03757b836e42"
