@@ -87,13 +87,16 @@ def test_create_instance_exception(aux_inst):
         aux_inst.create_instance()
 
 
-def test_create_delete_with_channel(mocker, aux_inst_with_channel, caplog):
+def test_create_delete_with_channel(aux_inst_with_channel, caplog):
     with caplog.at_level(logging.INTERNAL_INFO):
-        thread_start = mocker.patch.object(threading.Thread, "start")
         result = aux_inst_with_channel.create_instance()
 
         assert result is True
         assert "Open TCChan channel 'test-channel'" in caplog.text
+
+        result = aux_inst_with_channel.delete_instance()
+        assert result is True
+        assert "Close TCChan channel 'test-channel'" in caplog.text
 
 
 def test_delete_instance(mocker, aux_inst):
