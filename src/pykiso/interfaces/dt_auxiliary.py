@@ -171,7 +171,6 @@ class DTAuxiliaryInterface(abc.ABC):
         log.internal_info(f"Deleting instance of auxiliary {self.name}")
 
         with self.lock:
-
             # if the current aux is not alive don't try to delete it
             # again
             if not self.is_instance:
@@ -369,12 +368,16 @@ def open_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.internal_info("Open channel")
+        log.internal_info(
+            f"Open {self.channel.__class__.__name__} channel {self.channel.name!r}"
+        )
         try:
             self.channel.open()
             return func(self, *arg, **kwargs)
         except Exception:
-            log.exception("Unable to open channel communication")
+            log.exception(
+                f"Unable to open {self.channel.__class__.__name__} channel communication for {self.channel.name!r}"
+            )
             return False
 
     return inner_open
@@ -397,13 +400,17 @@ def close_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.internal_info("Close channel")
+        log.internal_info(
+            f"Close {self.channel.__class__.__name__} channel {self.channel.name!r}"
+        )
         try:
             ret = func(self, *arg, **kwargs)
             self.channel.close()
             return ret
         except Exception:
-            log.exception("Unable to close channel communication")
+            log.exception(
+                f"Unable to close  {self.channel.__class__.__name__}  channel communication {self.channel.name!r}"
+            )
             return False
 
     return inner_close

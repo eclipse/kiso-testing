@@ -16,6 +16,8 @@ from pykiso.interfaces.dt_auxiliary import (
     AuxiliaryCreationError,
     AuxiliaryNotStarted,
     DTAuxiliaryInterface,
+    close_connector,
+    open_connector,
     queue,
     threading,
 )
@@ -29,6 +31,27 @@ def aux_inst(mocker, cchannel_inst):
 
         _create_auxiliary_instance = mocker.stub(name="_create_auxiliary_instance")
         _delete_auxiliary_instance = mocker.stub(name="_delete_auxiliary_instance")
+        _run_command = mocker.stub(name="_run_command")
+        _receive_message = mocker.stub(name="_receive_message")
+
+    return MockDtAux()
+
+
+@pytest.fixture
+def aux_inst_with_channel(mocker, cchannel_inst):
+    class MockDtAux(DTAuxiliaryInterface):
+        def __init__(self, *arg, **kwargs):
+            super().__init__(name="aux")
+            self.channel = cchannel_inst
+
+        @open_connector
+        def _create_auxiliary_instance(self):
+            return True
+
+        @close_connector
+        def _delete_auxiliary_instance(self):
+            return True
+
         _run_command = mocker.stub(name="_run_command")
         _receive_message = mocker.stub(name="_receive_message")
 
@@ -62,6 +85,18 @@ def test_create_instance_exception(aux_inst):
 
     with pytest.raises(AuxiliaryCreationError):
         aux_inst.create_instance()
+
+
+def test_create_delete_with_channel(aux_inst_with_channel, caplog):
+    with caplog.at_level(logging.INTERNAL_INFO):
+        result = aux_inst_with_channel.create_instance()
+
+        assert result is True
+        assert "Open TCChan channel 'test-channel'" in caplog.text
+
+        result = aux_inst_with_channel.delete_instance()
+        assert result is True
+        assert "Close TCChan channel 'test-channel'" in caplog.text
 
 
 def test_delete_instance(mocker, aux_inst):
