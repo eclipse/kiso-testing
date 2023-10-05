@@ -181,6 +181,7 @@ class DTAuxiliaryInterface(abc.ABC):
             # if the current aux is not alive don't try to delete it again
             if not self.is_instance:
                 log.internal_info(f"Auxiliary {self.name} is already deleted")
+                self._stop_event.clear()
                 return True
 
             # stop each auxiliary's tasks
