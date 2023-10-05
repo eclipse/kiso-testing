@@ -107,6 +107,9 @@ def initialize_logging(
     :returns: configured Logger
     """
     root_logger = logging.getLogger()
+    # reset all previously added handlers to allow multiple calls
+    root_logger.handlers = []
+
     log_format = logging.Formatter(
         "%(asctime)s [%(levelname)s] %(module)s:%(lineno)d: %(message)s"
     )
@@ -130,22 +133,8 @@ def initialize_logging(
     global log_options
     log_options = LogOptions(log_path, log_level, report_type, verbose)
 
-    # if report_type is junit use sys.stdout as stream
-    if report_type == "junit":
-        stream = sys.stdout
-        # flush all StreamHandlers
-        for handler in root_logger.handlers:
-            if isinstance(handler, logging.StreamHandler):
-                handler.flush()
-        # and remove them from the handlers (keep FileHandlers only)
-        root_logger.handlers = [
-            handler
-            for handler in root_logger.handlers
-            if isinstance(handler, logging.FileHandler)
-        ]
-    # report type is not junit just instanciate a StreamHandler that prints to stderr
-    else:
-        stream = sys.stderr
+    # for junit use sys.stdout as stream, otherwise print to stderr
+    stream = sys.stdout if report_type == "junit" else sys.stderr
 
     # for all report types add a StreamHandler
     stream_handler = logging.StreamHandler(stream)
@@ -157,7 +146,7 @@ def initialize_logging(
     root_logger.addHandler(stream_handler)
 
     # set the root logger's level to the internal one if any of the provided options activates internal logging
-    if verbose or log_path is not None or report_type == "junit":
+    if verbose or log_path is not None:
         root_level = get_internal_level(log_level)
     else:
         root_level = log_level
