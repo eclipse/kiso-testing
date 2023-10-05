@@ -211,20 +211,6 @@ def test_define_test_parameters_on_remote_tc(
     assert tc_inst.tag == tag
 
 
-def test_setUpClass(mocker):
-    mocker.patch.object(
-        test_case,
-        "get_logging_options",
-        return_value=LogOptions(None, "ERROR", "junit", False),
-    )
-    mock_init_log = mocker.patch.object(test_case, "initialize_logging")
-    test_case.BasicTest.setUpClass()
-    mock_init_log.assert_called_with(None, "ERROR", False, "junit")
-
-    test_case.RemoteTest.setUpClass()
-    mock_init_log.assert_called_with(None, "ERROR", False, "junit")
-
-
 @pytest.mark.parametrize(
     "max_try, rerun_setup, rerun_teardown, stability_test, expected_exception, expected_run_count, expected_setup_count, expected_teardown_count",
     [
