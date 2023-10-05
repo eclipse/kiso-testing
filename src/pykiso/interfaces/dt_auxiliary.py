@@ -78,6 +78,7 @@ class DTAuxiliaryInterface(abc.ABC):
         self.is_proxy_capable = is_proxy_capable
         self.auto_start = auto_start
         self.lock = threading.RLock()
+        self._stop_event = threading.Event()
         self.stop_tx = threading.Event()
         self.stop_rx = threading.Event()
         self.queue_in = queue.Queue()
@@ -116,6 +117,11 @@ class DTAuxiliaryInterface(abc.ABC):
         :return: True if the request is correctly executed otherwise
             False
         """
+        # avoid a deadlock in case run_command is called within a _receive_message implementation
+        # (for e.g. callback implementation) while delete_instance is being executed from the main thread
+        if self._stop_event.is_set():
+            return timeout_result
+
         with self.lock:
             if not self.is_instance:
                 raise AuxiliaryNotStarted(self.name)
@@ -171,8 +177,8 @@ class DTAuxiliaryInterface(abc.ABC):
         log.internal_info(f"Deleting instance of auxiliary {self.name}")
 
         with self.lock:
-            # if the current aux is not alive don't try to delete it
-            # again
+            self._stop_event.set()
+            # if the current aux is not alive don't try to delete it again
             if not self.is_instance:
                 log.internal_info(f"Auxiliary {self.name} is already deleted")
                 return True
@@ -189,6 +195,7 @@ class DTAuxiliaryInterface(abc.ABC):
                 )
 
             self.is_instance = False
+            self._stop_event.clear()
             return is_deleted
 
     def _start_tx_task(self) -> None:
