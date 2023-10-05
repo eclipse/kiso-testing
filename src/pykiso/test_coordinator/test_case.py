@@ -115,6 +115,7 @@ class BasicTest(unittest.TestCase):
         """
         options = get_logging_options()
         if options.report_type == "junit":
+            # explicitly set the log file path to None as at this point, file logging is already configured
             initialize_logging(
                 None, options.log_level, options.verbose, options.report_type
             )

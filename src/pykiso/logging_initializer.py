@@ -157,7 +157,7 @@ def initialize_logging(
     root_logger.addHandler(stream_handler)
 
     # set the root logger's level to the internal one if any of the provided options activates internal logging
-    if verbose or log_path is not None:
+    if verbose or log_path is not None or report_type == "junit":
         root_level = get_internal_level(log_level)
     else:
         root_level = log_level
