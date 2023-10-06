@@ -35,6 +35,7 @@ def mock_jlink(mocker):
         halt = mocker.stub(name="halt")
         reset = mocker.stub(name="reset")
         flash_file = mocker.stub(name="flash_file")
+        erase = mocker.stub(name="erase")
 
     class MockJLib:
         def __init__(self, lib=None, **kwargs):
@@ -76,3 +77,4 @@ def test_jlink_flasher(tmp_file, mock_jlink):
     mock_jlink.JLink.flash_file.assert_called_once()
     mock_jlink.JLink.open.assert_called_once_with(serial_no=1234)
     mock_jlink.JLink.close.assert_called_once()
+    mock_jlink.JLink.erase.assert_called_once()
