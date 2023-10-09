@@ -29,6 +29,7 @@ from typing import Dict, Optional
 
 try:
     import pylink
+    from pylink.errors import JLinkRTTException
 except ImportError as e:
     raise ImportError(
         f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[debugger]'"
@@ -174,6 +175,19 @@ class CCRttSegger(connector.CChannel):
         return mem_vals
 
     def _cc_open(self) -> None:
+        """Connect debugger/microcontroller and retry if the connection fails due
+        to instability
+        """
+        try:
+            self._connect_jlink()
+        except (JLinkRTTException, ValueError):
+            log.error(
+                "An error occured while connecting to the Jlink, trying a second time"
+            )
+            self._cc_close()
+            self._connect_jlink()
+
+    def _connect_jlink(self) -> None:
         """Connect debugger/microcontroller.
 
         This method proceed to the following actions :

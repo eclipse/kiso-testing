@@ -171,7 +171,7 @@ def test_rtt_segger_rtt_logger_not_running(mock_pylink_square_socket, mocker):
     mocker_thread_start.assert_not_called()
 
 
-def test_rtt_segger_cc_open_rtt_error(
+def test_rtt_segger_connect_jlink_rtt_error(
     mock_pylink_square_socket,
     mocker,
     tmpdir,
@@ -193,7 +193,7 @@ def test_rtt_segger_cc_open_rtt_error(
         cc_rtt_inst = CCRttSegger(
             rtt_log_path=tmpdir, connection_timeout=0, rtt_log_buffer_idx=5
         )
-        cc_rtt_inst._cc_open()
+        cc_rtt_inst._connect_jlink()
         assert (
             f"J-Link is halted, reset target and wait for {cc_rtt_inst.connection_timeout}s"
             in caplog.text
@@ -204,7 +204,7 @@ def test_rtt_segger_cc_open_rtt_error(
     mocker_thread_start.assert_called()
 
 
-def test_rtt_segger_cc_open_timeout(
+def test_rtt_segger_connect_jlink_timeout(
     mock_pylink_square_socket,
     mocker,
     tmpdir,
@@ -218,7 +218,7 @@ def test_rtt_segger_cc_open_timeout(
     )
     with pytest.raises(Exception):
         cc_rtt_inst = CCRttSegger(rtt_log_path=tmpdir, connection_timeout=0)
-        cc_rtt_inst._cc_open()
+        cc_rtt_inst._connect_jlink()
 
     mock_pylink_square_socket.JLink.rtt_get_num_up_buffers.assert_called()
     mock_buffer.assert_not_called()
@@ -419,3 +419,25 @@ def test_reset_jlink(mocker):
 
     cc_rtt_inst.jlink.reset.assert_called_once()
     cc_rtt_inst.jlink.enable_reset_pulls_reset.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "return_value,jlink_call_count,close_call_count",
+    [(None, 1, 0), ([ValueError, None], 2, 1)],
+)
+def test_cc_open(mocker, return_value, jlink_call_count, close_call_count):
+    cc_rtt_inst = CCRttSegger()
+    mock_connect_jlink = mocker.patch.object(
+        cc_rtt_inst,
+        "_connect_jlink",
+        side_effect=return_value,
+    )
+    mock_close = mocker.patch.object(
+        cc_rtt_inst,
+        "_cc_close",
+    )
+
+    cc_rtt_inst._cc_open()
+
+    assert mock_connect_jlink.call_count == jlink_call_count
+    assert mock_close.call_count == close_call_count
