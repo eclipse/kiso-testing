@@ -6,6 +6,10 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### Bug Fixes
+
+- Enable internal file logging when junit option is provided ([#385](https://github.com/eclipse/kiso-testing/issues/385))
+
 ### Miscellaneous Tasks
 
 - Bump sphinxcontrib-serializinghtml from 1.1.5 to 1.1.9
@@ -13,10 +17,15 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Bump rich from 13.4.1 to 13.5.2
 - Bump python-can from 4.2.1 to 4.2.2
 - Bump importlib-metadata from 5.2.0 to 6.7.0
+- Bump urllib3 from 2.0.3 to 2.0.6
+- Bump pytest-mock from 3.10.0 to 3.11.1
+- Bump sphinxcontrib-applehelp from 1.0.4 to 1.0.7
+- Bump sphinxcontrib-devhelp from 1.0.2 to 1.0.5
 
 ### New Features
 
 - Replace pkg_resources with importlib.metadata for faster load time ([#366](https://github.com/eclipse/kiso-testing/issues/366))
+- Give all connectors a name ([#371](https://github.com/eclipse/kiso-testing/issues/371))
 
 ## Version 0.24.1 (2023-09-06)
 
