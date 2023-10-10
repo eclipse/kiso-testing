@@ -304,7 +304,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
                 UDSCommands.TesterPresent.TESTER_PRESENT_NO_RESPONSE,
                 response_required=False,
             )
-            time.sleep(period)
+            stop_event.wait(period)
 
     @contextmanager
     def tester_present_sender(self, period: int = 4) -> Iterator[None]:
