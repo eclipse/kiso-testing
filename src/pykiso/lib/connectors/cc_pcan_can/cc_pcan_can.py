@@ -491,5 +491,5 @@ class CCPCanCan(CChannel):
 
     def shutdown(self) -> None:
         """Destructor method."""
-        if self.logging_activated:
+        if self.logging_activated and self.is_fd:
             self._merge_trc()
