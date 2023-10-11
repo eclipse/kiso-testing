@@ -20,7 +20,6 @@ Record Auxiliary
 
 import io
 import logging
-import multiprocessing
 import re
 import sys
 import threading
@@ -86,11 +85,7 @@ class RecordAuxiliary(AuxiliaryInterface):
         :param timeout: timeout for the receive channel
         :param log_path: path to the log folder
         :param max_file_size: maximal size of the data string
-        :param multiprocess: use a Process instead of a Thread for
-            active polling.
-            Note1: the data will automatically be saved.
-            Note2: if proxy usage, all connectors should be 'CCMpProxy'
-            and 'processing' flag set to True
+        :param multiprocess: deprecated, will not be taken into account.
         :param manual_start_record: flag to not start recording on
             auxiliary creation
         """
@@ -139,8 +134,6 @@ class RecordAuxiliary(AuxiliaryInterface):
         try:
             if not self.is_active:
                 self.channel.open()
-                if isinstance(self.channel, CCProxy) and self.multiprocess:
-                    self.channel.queue_out = multiprocessing.Queue()
         except Exception:
             log.exception("Error encountered during channel creation.")
             return False
@@ -170,8 +163,6 @@ class RecordAuxiliary(AuxiliaryInterface):
         """
         try:
             self.channel.open()
-            if isinstance(self.channel, CCProxy) and self.multiprocessing:
-                self.channel.queue_out = multiprocessing.Queue()
         except Exception:
             log.exception("Error encountered while channel creation.")
             return

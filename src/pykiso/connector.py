@@ -21,7 +21,6 @@ Interface Definition for Connectors, CChannels and Flasher
 """
 import abc
 import logging
-import multiprocessing
 import pathlib
 import threading
 from typing import Dict, Optional
@@ -78,17 +77,13 @@ class CChannel(Connector):
     def __init__(self, processing=False, **kwargs: dict) -> None:
         """Constructor.
 
-        :param processing: if multiprocessing object is used.
+        :param processing: deprecated, will not be taken into account.
         """
         super().__init__(**kwargs)
-        if processing:
-            self._lock_tx = multiprocessing.RLock()
-            self._lock_rx = multiprocessing.RLock()
-            self._lock = multiprocessing.Lock()
-        else:
-            self._lock_tx = threading.RLock()
-            self._lock_rx = threading.RLock()
-            self._lock = threading.Lock()
+
+        self._lock_tx = threading.RLock()
+        self._lock_rx = threading.RLock()
+        self._lock = threading.Lock()
 
     def open(self) -> None:
         """Open a thread-safe channel."""
