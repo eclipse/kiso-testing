@@ -14,15 +14,15 @@ import pytest
 from pykiso.auxiliary import (
     AuxCommand,
     AuxiliaryCreationError,
-    AuxiliaryNotStarted,
     AuxiliaryInterface,
+    AuxiliaryNotStarted,
     close_connector,
     open_connector,
     queue,
     threading,
 )
-
 from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface
+
 
 @pytest.fixture
 def aux_inst(mocker, cchannel_inst):
