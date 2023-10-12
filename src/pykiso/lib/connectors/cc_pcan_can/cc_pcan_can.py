@@ -26,6 +26,8 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+from can import TRCFileVersion
+
 try:
     import can
     import can.bus
@@ -425,7 +427,11 @@ class CCPCanCan(CChannel):
             header_data = CCPCanCan._extract_header(list_of_traces[0])
 
             # Get messages from all traces
-            messages = self._read_trace_messages(list_of_traces, result_trace)
+            try:
+                messages = self._read_trace_messages(list_of_traces, result_trace)
+            except ValueError:
+                return
+
 
             # Write header in result trace
             result_trace.write_text(header_data)
@@ -471,6 +477,9 @@ class CCPCanCan(CChannel):
                         current_trc_messages, offset
                     )
                     os.remove(trc)
+                if self.trc_file_version in [TRCFileVersion.V1_1, TRCFileVersion.V1_2, TRCFileVersion.V1_3]:
+                    log.warning("Trace merging is not available for trc file version %s", self.trc_file_version)
+                    raise ValueError
                 messages += current_trc_messages
         return messages
 
@@ -491,5 +500,5 @@ class CCPCanCan(CChannel):
 
     def shutdown(self) -> None:
         """Destructor method."""
-        if self.logging_activated and self.is_fd:
+        if self.logging_activated:
             self._merge_trc()
