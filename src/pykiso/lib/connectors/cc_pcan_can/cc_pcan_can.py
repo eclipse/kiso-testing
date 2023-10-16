@@ -26,12 +26,12 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from can import TRCFileVersion
 
 try:
     import can
     import can.bus
     import can.interfaces.pcan.basic as PCANBasic
+    from can import TRCFileVersion
 except ImportError as e:
     raise ImportError(
         f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
