@@ -432,7 +432,6 @@ class CCPCanCan(CChannel):
             except ValueError:
                 return
 
-
             # Write header in result trace
             result_trace.write_text(header_data)
 
@@ -477,8 +476,15 @@ class CCPCanCan(CChannel):
                         current_trc_messages, offset
                     )
                     os.remove(trc)
-                if self.trc_file_version in [TRCFileVersion.V1_1, TRCFileVersion.V1_2, TRCFileVersion.V1_3]:
-                    log.warning("Trace merging is not available for trc file version %s", self.trc_file_version)
+                if self.trc_file_version in [
+                    TRCFileVersion.V1_1,
+                    TRCFileVersion.V1_2,
+                    TRCFileVersion.V1_3,
+                ]:
+                    log.warning(
+                        "Trace merging is not available for trc file version %s",
+                        self.trc_file_version,
+                    )
                     raise ValueError
                 messages += current_trc_messages
         return messages
