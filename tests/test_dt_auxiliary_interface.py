@@ -277,6 +277,28 @@ def test_run_command(mocker, aux_inst):
     assert value == b"\x02"
 
 
+def test_run_command_stop_event_set(mocker, aux_inst):
+    queue_put = mocker.patch.object(aux_inst.queue_in, "put")
+    queue_get = mocker.patch.object(aux_inst.queue_out, "get", return_value=b"\x02")
+
+    aux_inst.is_instance = True
+    aux_inst._stop_event.set()
+
+    value = aux_inst.run_command(
+        cmd_message="send",
+        cmd_data=b"\x01",
+        blocking=False,
+        timeout_in_s=0,
+        timeout_result="dummy",
+    )
+
+    aux_inst._stop_event.clear()
+
+    assert queue_get.call_count == 0
+    assert queue_put.call_count == 0
+    assert value == "dummy"
+
+
 def test_run_command_timeout(mocker, aux_inst):
     queue_put = mocker.patch.object(aux_inst.queue_in, "put")
 
