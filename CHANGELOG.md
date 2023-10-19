@@ -9,6 +9,9 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Bug Fixes
 
 - Enable internal file logging when junit option is provided ([#385](https://github.com/eclipse/kiso-testing/issues/385))
+- Replace time sleep so tester present sender does not wait for the period end ([#390](https://github.com/eclipse/kiso-testing/issues/390))
+- Support normal CAN for trc files ([#391](https://github.com/eclipse/kiso-testing/issues/391))
+- Add event to avoid deadlocks on run_command calls ([#386](https://github.com/eclipse/kiso-testing/issues/386))
 
 ### Miscellaneous Tasks
 
@@ -21,11 +24,15 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Bump pytest-mock from 3.10.0 to 3.11.1
 - Bump sphinxcontrib-applehelp from 1.0.4 to 1.0.7
 - Bump sphinxcontrib-devhelp from 1.0.2 to 1.0.5
+- Bump certifi from 2023.5.7 to 2023.7.22 ([#388](https://github.com/eclipse/kiso-testing/issues/388))
+- Bump debian from 11 to 12 in /ci ([#325](https://github.com/eclipse/kiso-testing/issues/325))
 
 ### New Features
 
 - Replace pkg_resources with importlib.metadata for faster load time ([#366](https://github.com/eclipse/kiso-testing/issues/366))
 - Give all connectors a name ([#371](https://github.com/eclipse/kiso-testing/issues/371))
+- Improve testsuite validation ([#389](https://github.com/eclipse/kiso-testing/issues/389))
+- Make release ([#396](https://github.com/eclipse/kiso-testing/issues/396))
 
 ## Version 0.24.1 (2023-09-06)
 
