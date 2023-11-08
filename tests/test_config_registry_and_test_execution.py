@@ -31,6 +31,7 @@ from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
 from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
 from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_coordinator import test_execution
+from pykiso.test_coordinator.test_execution import filter_test_modules_by_suite
 from pykiso.test_setup.config_registry import ConfigRegistry
 
 
@@ -208,6 +209,25 @@ def test_test_execution_collect_error(tmp_test, capsys, mocker):
     output = capsys.readouterr()
     assert "FAIL" not in output.err
     assert "Ran 0 tests" not in output.err
+
+
+def test_filter_test_modules_by_suite():
+    test_modules = [
+        {"suite_dir": "suite1", "name": "test1"},
+        {"suite_dir": "suite2", "name": "test2"},
+        {"suite_dir": "suite1", "name": "test3"},
+        {"suite_dir": "suite3", "name": "test4"},
+    ]
+
+    filtered_modules = filter_test_modules_by_suite(test_modules)
+
+    expected_result = [
+        {"suite_dir": "suite1", "name": "test1"},
+        {"suite_dir": "suite2", "name": "test2"},
+        {"suite_dir": "suite3", "name": "test4"},
+    ]
+
+    assert filtered_modules == expected_result
 
 
 @pytest.mark.parametrize(

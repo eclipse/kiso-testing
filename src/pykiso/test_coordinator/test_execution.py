@@ -340,6 +340,26 @@ def _is_valid_module(start_dir: str, pattern: str) -> bool:
     return all(VALID_MODULE_NAME.match(file.name) for file in test_files_found)
 
 
+def filter_test_modules_by_suite(test_modules: List[SuiteConfig]) -> List[SuiteConfig]:
+    """Filter a list of test modules by their suite directory to avoid running duplicates.
+
+    :param test_modules: List of test modules to filter.
+    :return: Filtered list of test modules with unique suite directories
+    """
+    seen_suite_dirs = {}
+    filtered_data = []
+
+    for module in test_modules:
+        suite_dir = module["suite_dir"]
+
+        # Check if the suite directory is seen for the first time
+        if suite_dir not in seen_suite_dirs:
+            seen_suite_dirs[suite_dir] = module
+            filtered_data.append(module)
+
+    return filtered_data
+
+
 def collect_test_suites(
     config_test_suite_list: List[SuiteConfig],
     test_filter_pattern: Optional[str] = None,
@@ -369,6 +389,9 @@ def collect_test_suites(
         ):
 
             valid_test_modules.append(test_suite_configuration)
+
+    if test_filter_pattern:
+        valid_test_modules = filter_test_modules_by_suite(valid_test_modules)
 
     if not valid_test_modules:
         raise TestCollectionError(
