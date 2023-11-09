@@ -8,6 +8,17 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Multiple execution if file pattern is provided ([#403](https://github.com/eclipse/kiso-testing/issues/403))
+- Make pykiso work with pipx ([#407](https://github.com/eclipse/kiso-testing/issues/407))
+
+### Miscellaneous Tasks
+
+- Bump urllib3 from 2.0.6 to 2.0.7
+
+## Version 0.25.0 (2023-10-19)
+
+### Bug Fixes
+
 - Enable internal file logging when junit option is provided ([#385](https://github.com/eclipse/kiso-testing/issues/385))
 - Replace time sleep so tester present sender does not wait for the period end ([#390](https://github.com/eclipse/kiso-testing/issues/390))
 - Support normal CAN for trc files ([#391](https://github.com/eclipse/kiso-testing/issues/391))
