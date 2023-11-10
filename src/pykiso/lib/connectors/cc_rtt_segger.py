@@ -92,6 +92,7 @@ class CCRttSegger(connector.CChannel):
         rtt_log_path: Optional[str] = None,
         rtt_log_buffer_idx: int = 0,
         rtt_log_speed: float = 1000,
+        rtt_decode_strategy: str = "replace",
         connection_timeout: int = 5,
         search_range: int = None,
         **kwargs,
@@ -109,6 +110,9 @@ class CCRttSegger(connector.CChannel):
         :param rtt_log_buffer_idx: buffer index used for RTT logging
         :param rtt_log_speed: number of log per second to be pulled (manage the CPU load for logging)
             None value fetch log at the CPU's speed. Default 1000 logs/s
+        :param rtt_decode_strategy: how to handle undecodable bytes received on the rtt stream.
+            Possible options are 'ignore' or 'replace' which replace the character with an suitable replacement
+            character. Default 'replace'
         :param connection_timeout: available time (in seconds) to open the connection
         :param search_range: range length to search for the block of the device
             starting from the specified block address.
@@ -133,6 +137,11 @@ class CCRttSegger(connector.CChannel):
         self.rtt_log_path = rtt_log_path
         self.rtt_log = logging.getLogger(f"{__name__}{serial_number or ''}.RTT")
         self.search_range = search_range
+
+        if rtt_decode_strategy in ["replace", "ignore"]:
+            self.rtt_decode_strategy = rtt_decode_strategy
+        else:
+            raise ValueError("rtt_decode_strategy must be 'replace' or 'ignore'")
 
         if self.rtt_log_path is not None:
             self.rtt_log_buffer_size = 0
@@ -182,7 +191,7 @@ class CCRttSegger(connector.CChannel):
             self._connect_jlink()
         except (JLinkRTTException, ValueError):
             log.error(
-                "An error occured while connecting to the Jlink, trying a second time"
+                "An error occurred while connecting to the Jlink, trying a second time"
             )
             self._cc_close()
             self._connect_jlink()
@@ -237,9 +246,10 @@ class CCRttSegger(connector.CChannel):
             time.sleep(self.connection_timeout)
         # start rtt at the specified address
         self.jlink.rtt_start(self.block_address)
-        log.internal_info(
-            f"RTT communication started at address {hex(self.block_address)}"
-        )
+        if self.block_address:
+            log.internal_info(
+                f"RTT communication started at address {hex(self.block_address)}"
+            )
         t_start = time.perf_counter()
         while True:
             try:
@@ -371,7 +381,9 @@ class CCRttSegger(connector.CChannel):
                 self.rtt_log_buffer_idx, self.rtt_log_buffer_size
             )
             if log_msg:
-                self.rtt_log.debug(bytes(log_msg).decode())
+                self.rtt_log.debug(
+                    bytes(log_msg).decode("utf8", errors=self.rtt_decode_strategy)
+                )
             time.sleep(self.rtt_log_refresh_time)  # reduce resource consumption
 
     @_need_connection
