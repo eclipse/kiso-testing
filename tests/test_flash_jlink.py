@@ -77,4 +77,4 @@ def test_jlink_flasher(tmp_file, mock_jlink):
     mock_jlink.JLink.flash_file.assert_called_once()
     mock_jlink.JLink.open.assert_called_once_with(serial_no=1234)
     mock_jlink.JLink.close.assert_called_once()
-    mock_jlink.JLink.erase.assert_called_once()
+    mock_jlink.JLink.erase.assert_not_called()
