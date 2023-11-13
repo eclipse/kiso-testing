@@ -127,7 +127,6 @@ class JLinkFlasher(Flasher):
             during flashing.
         """
         log.internal_debug("flashing device")
-        self.jlink.erase()
         self.jlink.flash_file(
             str(self.binary), addr=self.start_addr, power_on=self.power_on
         )
