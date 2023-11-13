@@ -143,6 +143,11 @@ def test_rtt_segger_open(mocker, mock_pylink_square_socket, search_range):
     mock_pylink_square_socket.JLink.close.assert_called_once()
 
 
+def test_rtt_segger_invalid_rtt_strategy(mocker):
+    with pytest.raises(ValueError, match=r"rtt_decode_strategy must be"):
+        cc_rtt_inst = CCRttSegger(rtt_decode_strategy="banana")
+
+
 def test_rtt_segger_close_invalid(mock_pylink_square_socket):
     cc_rtt_inst = CCRttSegger()
     cc_rtt_inst._cc_close()
