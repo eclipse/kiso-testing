@@ -65,6 +65,15 @@ def test___getattr__(multi_result_instance_multiple_classes, test_mock, mocker):
     assert multi_result_instance_multiple_classes.skipped == [(test_mock, reason)]
 
 
+@pytest.mark.parametrize("failfast", [True, False])
+def test___setattr__(multi_result_instance_multiple_classes, test_mock, failfast):
+
+    multi_result_instance_multiple_classes.failfast = failfast
+
+    for result in multi_result_instance_multiple_classes.result_classes:
+        assert result.failfast == failfast
+
+
 @pytest.mark.parametrize(
     "name_function,argument",
     [
