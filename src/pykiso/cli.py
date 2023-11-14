@@ -40,9 +40,9 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     arguments.
 
     :param click_context: click context
-    :raises click.NoSuchOption: if key doesnt start with "--" or has an invalid
+    :raises click.NoSuchOption: if key doesn't start with "--" or has an invalid
       character like "_"
-    :raises click.BadOptionUsage: no value specfied for user tag
+    :raises click.BadOptionUsage: no value specified for user tag
     :return: user tags with values
     """
     user_tags = {}
@@ -89,19 +89,27 @@ def check_file_extension(
             )
     return paths
 
+
 class CommandWithOptionalFlagValues(click.Command):
     def parse_args(self, ctx, args):
-        """ Translate any flag `--opt=value` as flag `--opt` with changed flag_value=value """
+        """Translate any flag `--opt=value` as flag `--opt` with changed flag_value=value"""
         # filter flags
-        flags = [o for o in self.params if isinstance(o, click.Option) and o.is_flag and not isinstance(o.flag_value, bool)]
-        prefixes = {p: o for o in flags for p in o.opts if p.startswith('--junit')}
+        flags = [
+            o
+            for o in self.params
+            if isinstance(o, click.Option)
+            and o.is_flag
+            and not isinstance(o.flag_value, bool)
+        ]
+        prefixes = {p: o for o in flags for p in o.opts if p.startswith("--junit")}
         for i, flag in enumerate(args):
-            flag = flag.split('=')
+            flag = flag.split("=")
             if flag[0] in prefixes and len(flag) > 1:
                 prefixes[flag[0]].flag_value = flag[1]
                 args[i] = flag[0]
 
         return super(CommandWithOptionalFlagValues, self).parse_args(ctx, args)
+
 
 @click.command(
     context_settings={
@@ -109,7 +117,7 @@ class CommandWithOptionalFlagValues(click.Command):
         "ignore_unknown_options": True,
         "allow_extra_args": True,
     },
-    cls=CommandWithOptionalFlagValues
+    cls=CommandWithOptionalFlagValues,
 )
 @click.option(
     "-c",
@@ -139,14 +147,12 @@ class CommandWithOptionalFlagValues(click.Command):
     ),
     help="set the verbosity of the logging",
 )
-
 @click.option(
     "--junit",
     is_flag=True,
-    flag_value='.',
+    flag_value="",
     help="enable junit",
 )
-
 @click.option(
     "--step-report",
     required=False,
@@ -193,8 +199,7 @@ def main(
     failfast: bool = False,
     verbose: bool = False,
     logger: Optional[str] = None,
-    junit: Optional[str] = None
-
+    junit: Optional[str] = None,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -222,7 +227,7 @@ def main(
         raise click.UsageError(
             f"Mismatch: {len(log_path)} log files were provided for {len(test_configuration_file)} yaml configuration files"
         )
-    
+
     if junit is not None:
         report_type = "junit"
 
@@ -258,7 +263,7 @@ def main(
                 step_report,
                 pattern,
                 failfast,
-                junit
+                junit,
             )
 
         for handler in logging.getLogger().handlers:
