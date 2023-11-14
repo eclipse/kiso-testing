@@ -89,13 +89,27 @@ def check_file_extension(
             )
     return paths
 
+class CommandWithOptionalFlagValues(click.Command):
+    def parse_args(self, ctx, args):
+        """ Translate any flag `--opt=value` as flag `--opt` with changed flag_value=value """
+        # filter flags
+        flags = [o for o in self.params if isinstance(o, click.Option) and o.is_flag and not isinstance(o.flag_value, bool)]
+        prefixes = {p: o for o in flags for p in o.opts if p.startswith('--junit')}
+        for i, flag in enumerate(args):
+            flag = flag.split('=')
+            if flag[0] in prefixes and len(flag) > 1:
+                prefixes[flag[0]].flag_value = flag[1]
+                args[i] = flag[0]
+
+        return super(CommandWithOptionalFlagValues, self).parse_args(ctx, args)
 
 @click.command(
     context_settings={
         "help_option_names": ["-h", "--help"],
         "ignore_unknown_options": True,
         "allow_extra_args": True,
-    }
+    },
+    cls=CommandWithOptionalFlagValues
 )
 @click.option(
     "-c",
@@ -125,21 +139,14 @@ def check_file_extension(
     ),
     help="set the verbosity of the logging",
 )
+
 @click.option(
     "--junit",
-    "report_type",
-    flag_value="junit",
-    required=False,
-    help="enables the generation of a junit report",
+    is_flag=True,
+    flag_value='.',
+    help="enable junit",
 )
-@click.option(
-    "--text",
-    "report_type",
-    flag_value="text",
-    required=False,
-    default=True,
-    help="default, test results are only displayed in the console",
-)
+
 @click.option(
     "--step-report",
     required=False,
@@ -186,6 +193,8 @@ def main(
     failfast: bool = False,
     verbose: bool = False,
     logger: Optional[str] = None,
+    junit: Optional[bool] = False
+
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -213,6 +222,9 @@ def main(
         raise click.UsageError(
             f"Mismatch: {len(log_path)} log files were provided for {len(test_configuration_file)} yaml configuration files"
         )
+    
+    if junit is not None:
+        report_type = "junit"
 
     # parse provided tags (any unknown option)
     user_tags = eval_user_tags(click_context)
@@ -246,6 +258,7 @@ def main(
                 step_report,
                 pattern,
                 failfast,
+                junit
             )
 
         for handler in logging.getLogger().handlers:

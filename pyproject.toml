@@ -142,9 +142,6 @@ addopts = """\
     --log-level=DEBUG \
     -p no:pytest_kiso \
     --junitxml=reports/testReport.xml \
-    --cov=./src \
-    --cov-report=html \
-    --cov-report html:./tests/coverage_report.html \
     --ignore=tests/test_acroname_usb_auxiliary.py \
     --ignore=tests/test_robot_acroname.py \
 """
