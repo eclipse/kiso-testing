@@ -63,6 +63,15 @@ trc_data_start_2 = """;$FILEVERSION=2.0
 trc_data_start_3 = """;$FILEVERSION=2.0
 ;$STARTTIME=55555.0000011575\n"""
 
+trc_data_start_4 = """;$FILEVERSION=1.1
+;$STARTTIME=55555.0000000000\n"""
+
+trc_data_start_5 = """;$FILEVERSION=1.1
+;$STARTTIME=55555.0000001158\n"""
+
+trc_data_start_6 = """;$FILEVERSION=1.1
+;$STARTTIME=55555.0000011575\n"""
+
 
 trc_data_end = """;$COLUMNS=N,O,T,I,d,L,D
 ;
@@ -175,6 +184,31 @@ def trc_files(tmp_path):
         trc_folder / "trc_1.trc",
         trc_folder / "trc_2.trc",
         trc_folder / "trc_3.trc",
+    ]
+    for idx, file in enumerate(file_paths):
+        with open(file, "w+") as f:
+            f.write(traces[idx])
+            # Sleep to avoid failure on integration tests
+        os.utime(file, (1602179630 + idx * 2, 1602179630 + idx * 2))
+    return file_paths
+
+
+@pytest.fixture
+def trc_files_v1_1(tmp_path):
+    """
+    create fake trc files at a temporary directory
+    """
+    traces = [
+        trc_data_start_4 + trc_data_end,
+        trc_data_start_5 + trc_data_end,
+        trc_data_start_6 + trc_data_end,
+    ]
+    trc_folder = Path(tmp_path / "traces")
+    trc_folder.mkdir(parents=True, exist_ok=True)
+    file_paths = [
+        trc_folder / "trc_4.trc",
+        trc_folder / "trc_5.trc",
+        trc_folder / "trc_6.trc",
     ]
     for idx, file in enumerate(file_paths):
         with open(file, "w+") as f:
@@ -808,6 +842,21 @@ def test_merge_trc_with_file_name(trc_files, mock_can_bus, mock_PCANBasic):
     assert trc_merge_data == result
 
 
+def test_merge_trc_with_old_file_version(trc_files_v1_1, mock_can_bus, mock_PCANBasic):
+    path = trc_files_v1_1[0].parent / "result_file.trc"
+
+    cc_pcan = CCPCanCan(trace_path=path)
+    cc_pcan.trc_count = 3
+
+    result_path = path
+    cc_pcan._merge_trc()
+
+    with open(result_path, "r") as trc:
+        result = trc.read()
+
+    assert trc_data_start_4 + trc_data_end == result
+
+
 def test_read_trace_messages(mocker, trc_files, caplog):
 
     cc_pcan = CCPCanCan(trace_path=trc_files[0])
@@ -825,6 +874,22 @@ def test_read_trace_messages(mocker, trc_files, caplog):
 
     assert len(result) == 12
     assert cc_pcan.trc_file_version == python_can.TRCFileVersion.V2_0
+
+
+def test_read_trace_messages_with_old_file_version(mocker, trc_files_v1_1, caplog):
+
+    cc_pcan = CCPCanCan(trace_path=trc_files_v1_1[0])
+    cc_pcan.trc_file_version = python_can.TRCFileVersion.V1_1
+
+    mocker.patch.object(CCPCanCan, "_remove_offset", side_effect=["msg1", "msg2"])
+
+    with pytest.raises(ValueError):
+        with caplog.at_level(logging.INTERNAL_WARNING):
+            result = cc_pcan._read_trace_messages(trc_files_v1_1, trc_files_v1_1[0])
+            assert (
+                "Trace merging is not available for trc file version TRCFileVersion.V1_1"
+                in caplog.text
+            )
 
 
 def test_remove_offset():

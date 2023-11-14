@@ -9,7 +9,6 @@
 
 import logging
 import sys
-from functools import partial
 from pathlib import Path
 
 import pytest
@@ -31,22 +30,20 @@ def test_initialize_logging(
     mocker.patch("logging.Logger.addHandler")
     mocker.patch("logging.FileHandler.__init__", return_value=None)
     mkdir_mock = mocker.patch("pathlib.Path.mkdir")
-    flush_mock = mocker.patch("logging.StreamHandler.flush", return_value=None)
 
     logger = logging_initializer.initialize_logging(path, level, verbose, report_type)
-
-    if report_type == "junit":
-        flush_mock.assert_called()
 
     if path is not None:
         mkdir_mock.assert_called()
     else:
         mkdir_mock.assert_not_called()
+
     if verbose is True:
         assert hasattr(logging, "INTERNAL_INFO")
         assert hasattr(logging, "INTERNAL_WARNING")
         assert hasattr(logging, "INTERNAL_DEBUG")
         assert logging_initializer.log_options.verbose == True
+
     assert isinstance(logger, logging.Logger)
     assert logger.isEnabledFor(expected_level)
     assert isinstance(logging_initializer.log_options.log_path, expected_path_type)

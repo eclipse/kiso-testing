@@ -104,21 +104,6 @@ class BasicTest(unittest.TestCase):
 
         self.fail(info_to_print)
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        """A class method called before tests in an individual class are
-        run.
-
-        This implementation is only mandatory to enable logging in junit
-        report. The logging configuration has to be call inside test
-        runner run, otherwise stdout is never caught.
-        """
-        options = get_logging_options()
-        if options.report_type == "junit":
-            initialize_logging(
-                None, options.log_level, options.verbose, options.report_type
-            )
-
     def setUp(self) -> None:
         """Startup hook method to execute code before each test method."""
         pass

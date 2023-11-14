@@ -26,10 +26,12 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+
 try:
     import can
     import can.bus
     import can.interfaces.pcan.basic as PCANBasic
+    from can import TRCFileVersion
 except ImportError as e:
     raise ImportError(
         f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
@@ -425,7 +427,10 @@ class CCPCanCan(CChannel):
             header_data = CCPCanCan._extract_header(list_of_traces[0])
 
             # Get messages from all traces
-            messages = self._read_trace_messages(list_of_traces, result_trace)
+            try:
+                messages = self._read_trace_messages(list_of_traces, result_trace)
+            except ValueError:
+                return
 
             # Write header in result trace
             result_trace.write_text(header_data)
@@ -471,6 +476,16 @@ class CCPCanCan(CChannel):
                         current_trc_messages, offset
                     )
                     os.remove(trc)
+                if self.trc_file_version in [
+                    TRCFileVersion.V1_1,
+                    TRCFileVersion.V1_2,
+                    TRCFileVersion.V1_3,
+                ]:
+                    log.warning(
+                        "Trace merging is not available for trc file version %s",
+                        self.trc_file_version,
+                    )
+                    raise ValueError
                 messages += current_trc_messages
         return messages
 

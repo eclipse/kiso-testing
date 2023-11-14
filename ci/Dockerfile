@@ -1,5 +1,5 @@
 # Get latest debian (>=11)
-FROM debian:11
+FROM debian:12
 
 # Zephyr arguments
 ARG ZSDK_VERSION=0.14.2

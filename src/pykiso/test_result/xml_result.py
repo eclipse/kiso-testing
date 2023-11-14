@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 import xmlrunner.result
 import xmlrunner.runner
 
-from .text_result import BannerTestResult
+from pykiso.logging_initializer import get_logging_options, initialize_logging
 
 
 class TestInfo(xmlrunner.result._TestInfo):
@@ -71,6 +71,17 @@ class TestInfo(xmlrunner.result._TestInfo):
         super().__init__(
             test_result, test_case, outcome, err, subTest, filename, lineno, doc
         )
+
+        # reinitialize logging inside XmlTestRunner's run
+        # otherwise stdout is never caught in the JUnit report
+        log_options = get_logging_options()
+        initialize_logging(
+            log_options.log_path,
+            log_options.log_level,
+            log_options.verbose,
+            log_options.report_type,
+        )
+
         # handle class setup error
         if isinstance(test_case, unittest.suite._ErrorHolder):
             test_case._testMethodDoc = ""
@@ -113,7 +124,6 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         :param properties: junit testsuite properties
         :param infoclass: class containing the test information
         """
-
         xmlrunner.runner._XMLTestResult.__init__(
             self,
             stream=stream,

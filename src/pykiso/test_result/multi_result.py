@@ -72,15 +72,27 @@ class MultiTestResult:
 
     def __getattr__(self, name: str) -> Any:
         """Function implemented to get the attributes such as error, failures,
-            sucesses,expectedFailures.
+            successes,expectedFailures.
 
         :param name: name of the attribute
         """
         return getattr(self.result_classes[0], name)
 
+    def __setattr__(self, name: str, value: Any) -> Any:
+        """Function implemented to set the attributes such as failfast
+            of all of the result classes
+
+        :param name: name of the attribute
+        """
+        super().__setattr__(name, value)
+        # condition to avoid infinite loop with the __getattr__
+        if name != "result_classes":
+            for result in self.result_classes:
+                setattr(result, name, value)
+
     @property
     def error_occurred(self) -> Optional[bool]:
-        """Return if an error occured for a BannerTestResult"""
+        """Return if an error occurred for a BannerTestResult"""
         for result in self.result_classes:
             if hasattr(result, "error_occurred"):
                 return result.error_occurred
@@ -163,7 +175,7 @@ class MultiTestResult:
         """Call the addSubTest function for all result classes.
 
         :param test: running testcase
-        :param subtest: subtest runned
+        :param subtest: subtest run
         :param err: tuple returned by sys.exc_info
         """
         for result in self.result_classes:

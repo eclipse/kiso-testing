@@ -246,7 +246,7 @@ def main(
 
         # Get YAML configuration
         cfg_dict = parse_config(config_file)
-        log.debug("cfg_dict:\n%s", pprint.pprint(cfg_dict))
+        log.debug("cfg_dict:\n%s", pprint.pformat(cfg_dict))
 
         # Run tests
         with ConfigRegistry.provide_auxiliaries(cfg_dict):

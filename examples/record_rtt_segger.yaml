@@ -17,6 +17,9 @@ connectors:
       verbose: True
       tx_buffer_idx: 1
       rx_buffer_idx: 1
+      # Decode strategy for undecodable bytes received by the rtt stream. Valid option are 'ignore' or 'replace'
+      # Default 'replace' to replace undecodable bytes with a suitable replacement character
+      rtt_decode_strategy: "ignore"
       # Path relative to this yaml where the RTT logs should be written to.
       # Creates a file named rtt.log
       rtt_log_path: ./
