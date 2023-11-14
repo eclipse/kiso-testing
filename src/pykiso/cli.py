@@ -193,7 +193,7 @@ def main(
     failfast: bool = False,
     verbose: bool = False,
     logger: Optional[str] = None,
-    junit: Optional[bool] = False
+    junit: Optional[str] = None
 
 ):
     """Embedded Integration Test Framework - CLI Entry Point.

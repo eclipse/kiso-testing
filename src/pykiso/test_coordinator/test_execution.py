@@ -477,7 +477,7 @@ def execute(
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
         #pykiso --junit 
         if report_type == "junit":
-            if junit_path == None or junit_path == '.':
+            if junit_path == None or junit_path == "reports":
                 junit_report_name = time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml")
                 project_folder = Path.cwd()
                 reports_path = project_folder / "reports"
