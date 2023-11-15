@@ -150,7 +150,7 @@ class CommandWithOptionalFlagValues(click.Command):
 @click.option(
     "--junit",
     is_flag=True,
-    flag_value="",
+    flag_value="reports",
     help="enable junit",
 )
 @click.option(
