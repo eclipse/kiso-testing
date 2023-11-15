@@ -488,7 +488,7 @@ def execute(
                     full_report_path
                     / Path(time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml"))
                 )
-                full_report_path.parent.mkdir(exist_ok=True)
+                full_report_path.mkdir(exist_ok=True)
             with open(junit_report_path, "wb") as junit_output, ResultStream(
                 log_file_path
             ) as stream:
