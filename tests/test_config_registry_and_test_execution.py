@@ -609,8 +609,28 @@ def test_test_execution_with_junit_reporting_with_file_name(tmp_test, capsys, mo
     mock_open = mocker.patch("builtins.open")
     ConfigRegistry.register_aux_con(cfg)
     test_execution.execute(cfg, report_option, junit_path="test_file.xml")
-    ConfigRegistry.delete_aux_con()
+    #ConfigRegistry.delete_aux_con()
     mock_open.assert_called_with(HasSubstring("test_file.xml"), "wb")
+
+    output = capsys.readouterr()
+    assert "FAIL" not in output.err
+    assert "RUNNING TEST: " in output.err
+    assert "END OF TEST: " in output.err
+    assert "PASSED" in output.err
+
+    test_execution.execute(cfg, report_option, junit_path="test_dir")
+    #ConfigRegistry.delete_aux_con()
+    mock_open.assert_called_with(HasSubstring("test_dir"), "wb")
+
+    output = capsys.readouterr()
+    assert "FAIL" not in output.err
+    assert "RUNNING TEST: " in output.err
+    assert "END OF TEST: " in output.err
+    assert "PASSED" in output.err
+
+    test_execution.execute(cfg, report_option, report_name="banana")
+    #ConfigRegistry.delete_aux_con()
+    mock_open.assert_called_with(HasSubstring("banana"), "wb")
 
     output = capsys.readouterr()
     assert "FAIL" not in output.err
