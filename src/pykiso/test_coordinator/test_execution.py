@@ -476,17 +476,19 @@ def execute(
         log_file_path = get_logging_options().log_path
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
         # pykiso --junit
+        breakpoint()
         if report_type == "junit":
             report_path = junit_path
             full_report_path = Path.cwd() / report_path
             if full_report_path.suffix == ".xml":
                 junit_report_path = str(full_report_path)
-                full_report_path.mkdir(exist_ok=True)
+                full_report_path.parent.mkdir(exist_ok=True)
             else:
                 junit_report_path = str(
                     full_report_path
                     / Path(time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml"))
                 )
+                full_report_path.parent.mkdir(exist_ok=True)
             with open(junit_report_path, "wb") as junit_output, ResultStream(
                 log_file_path
             ) as stream:
