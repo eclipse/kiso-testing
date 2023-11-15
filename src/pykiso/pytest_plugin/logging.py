@@ -51,6 +51,7 @@ def pytest_sessionstart(session: Session):
     )
     if pytest_logger.log_cli_level is None:
         pytest_logger.log_cli_level = logging.INFO
+
     # run pykiso's logging initialization
     initialize_logging(
         log_path=None,
@@ -61,15 +62,40 @@ def pytest_sessionstart(session: Session):
     )
     root_logger = logging.getLogger()
 
-    # get all handlers that were configured by pykiso and remove them
-    stream_handlers = [
-        hdlr for hdlr in root_logger.handlers if isinstance(hdlr, logging.StreamHandler)
-    ]
-    file_handlers = [
-        hdlr for hdlr in root_logger.handlers if isinstance(hdlr, logging.FileHandler)
-    ]
-    for hdlr in stream_handlers + file_handlers:
-        root_logger.removeHandler(hdlr)
+    # get all handlers that were configured by pykiso to retrieve their level
+    stream_handler = next(
+        (
+            hdlr
+            for hdlr in root_logger.handlers
+            if isinstance(hdlr, logging.StreamHandler)
+        ),
+        None,
+    )
+    file_handler = next(
+        (
+            hdlr
+            for hdlr in root_logger.handlers
+            if isinstance(hdlr, logging.FileHandler)
+        ),
+        None,
+    )
+
+    if (
+        pytest_logger.log_cli_handler.level != logging.NOTSET
+        and stream_handler is not None
+    ):
+        pytest_logger.log_cli_handler.level = stream_handler.level
+        pytest_logger.log_cli_level = stream_handler.level
+
+    if (
+        pytest_logger.log_file_handler.level != logging.NOTSET
+        and file_handler is not None
+    ):
+        pytest_logger.log_file_handler.level = file_handler.level
+        pytest_logger.log_file_level = file_handler.level
+
+    root_logger.handlers.clear()
+    pytest_logger.log_level = root_logger.level
 
     root_logger.addHandler(pytest_logger.log_cli_handler)
     root_logger.addHandler(pytest_logger.log_file_handler)
