@@ -585,9 +585,8 @@ def test_test_execution_with_junit_reporting(tmp_test, capsys, mocker):
     assert "PASSED" in output.err
 
 
-
-pytest.mark.parametrize(
-    "tmp_test", [("juint_aux3", "juint_aux4", False)], indirect=True
+@pytest.mark.parametrize(
+    "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
 )
 def test_test_execution_with_junit_reporting_with_file_name(tmp_test, capsys, mocker):
     """Call execute function from test_execution using
@@ -620,8 +619,8 @@ def test_test_execution_with_junit_reporting_with_file_name(tmp_test, capsys, mo
     assert "PASSED" in output.err
 
 
-pytest.mark.parametrize(
-    "tmp_test", [("juint_aux5", "juint_aux6", False)], indirect=True
+@pytest.mark.parametrize(
+    "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
 )
 def test_test_execution_with_junit_reporting_with_dir(tmp_test, capsys, mocker):
     """Call execute function from test_execution using
