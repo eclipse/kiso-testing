@@ -642,7 +642,7 @@ def test_test_execution_with_junit_reporting_with_dir(tmp_test, capsys, mocker):
     report_option = "junit"
     mock_open = mocker.patch("builtins.open")
     ConfigRegistry.register_aux_con(cfg)
-    test_execution.execute(cfg, report_option, report_name="report_folder", junit_path="test_dir")
+    test_execution.execute(cfg, report_option, junit_path="test_dir")
     ConfigRegistry.delete_aux_con()
     mock_open.assert_called_with(HasSubstring("test_dir"), "wb")
 
