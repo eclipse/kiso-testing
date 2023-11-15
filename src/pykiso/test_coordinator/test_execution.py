@@ -432,7 +432,7 @@ def execute(
     step_report: Optional[Path] = None,
     pattern_inject: Optional[str] = None,
     failfast: bool = False,
-    junit_path: str = None,
+    junit_path: str = "reports",
 ) -> int:
     """Create test environment based on test configuration.
 
