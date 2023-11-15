@@ -485,7 +485,7 @@ def execute(
             else:
                 junit_report_path = str(
                     full_report_path
-                    / time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml")
+                    / Path(time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml"))
                 )
             with open(junit_report_path, "wb") as junit_output, ResultStream(
                 log_file_path
