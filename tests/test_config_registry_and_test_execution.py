@@ -585,6 +585,74 @@ def test_test_execution_with_junit_reporting(tmp_test, capsys, mocker):
     assert "PASSED" in output.err
 
 
+
+pytest.mark.parametrize(
+    "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
+)
+def test_test_execution_with_junit_reporting_with_file_name(tmp_test, capsys, mocker):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method and
+    --junit option to show the test results in console
+    and to generate a junit xml report in file with name test_file.xml
+
+    Validation criteria:
+        -  run is executed without error
+    """
+
+    class HasSubstring(str):
+        """Test if string is in passed argument"""
+
+        def __eq__(self, other: Any):
+            return self in str(other)
+
+    cfg = parse_config(tmp_test)
+    report_option = "junit"
+    mock_open = mocker.patch("builtins.open")
+    ConfigRegistry.register_aux_con(cfg)
+    test_execution.execute(cfg, report_option, junit_path="test_file.xml")
+    ConfigRegistry.delete_aux_con()
+    mock_open.assert_called_with(HasSubstring("test_file.xml"), "wb")
+
+    output = capsys.readouterr()
+    assert "FAIL" not in output.err
+    assert "RUNNING TEST: " in output.err
+    assert "END OF TEST: " in output.err
+    assert "PASSED" in output.err
+
+pytest.mark.parametrize(
+    "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
+)
+def test_test_execution_with_junit_reporting_with_dir(tmp_test, capsys, mocker):
+    """Call execute function from test_execution using
+    configuration data coming from parse_config method and
+    --junit option to show the test results in console
+    and to generate a junit xml report with default name ("%Y-%m-%d_%H-%M-%S-{report_name}.xml) 
+
+    Validation criteria:
+        -  run is executed without error
+    """
+
+    class HasSubstring(str):
+        """Test if string is in passed argument"""
+
+        def __eq__(self, other: Any):
+            return self in str(other)
+
+    cfg = parse_config(tmp_test)
+    report_option = "junit"
+    mock_open = mocker.patch("builtins.open")
+    ConfigRegistry.register_aux_con(cfg)
+    test_execution.execute(cfg, report_option, report_name="test_name", junit_path="test_dir")
+    ConfigRegistry.delete_aux_con()
+    mock_open.assert_called_with(HasSubstring("test_dir"), "wb")
+
+    output = capsys.readouterr()
+    assert "FAIL" not in output.err
+    assert "RUNNING TEST: " in output.err
+    assert "END OF TEST: " in output.err
+    assert "PASSED" in output.err
+
+
 @pytest.mark.parametrize("tmp_test", [("step_aux1", "step_aux2", False)], indirect=True)
 def test_test_execution_with_step_report(tmp_test, capsys):
     """Call execute function from test_execution using
