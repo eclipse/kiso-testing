@@ -21,6 +21,7 @@ Logging configuration
 from __future__ import annotations
 
 import logging
+import os
 from typing import TYPE_CHECKING
 
 import pytest
@@ -54,8 +55,13 @@ def pytest_sessionstart(session: Session):
         pytest_logger.log_cli_level = logging.INFO
 
     # run pykiso's logging initialization
+    if pytest_logger.log_file_handler.baseFilename == os.devnull:
+        log_file_path = None
+    else:
+        log_file_path = pytest_logger.log_file_handler.baseFilename
+
     initialize_logging(
-        log_path=pytest_logger.log_file_handler.baseFilename,
+        log_path=log_file_path,
         log_level=logging.getLevelName(pytest_logger.log_cli_level),
         report_type="text",
         # display internal logs at least -vv is provided
