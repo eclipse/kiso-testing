@@ -7,8 +7,11 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import logging
+
 import pytest
 from _pytest.pytester import Pytester
+from pytest import CaptureFixture
 
 
 @pytest.mark.slow
@@ -26,9 +29,18 @@ def test_run_pykiso_testsuite_with_tags(pytester: Pytester, dummy_pykiso_testsui
 
 
 @pytest.mark.slow
-def test_run_pytest_testsuite(pytester: Pytester, dummy_pytest_testsuite):
-    result = pytester.runpytest(dummy_pytest_testsuite)
+def test_run_pytest_testsuite(
+    pytester: Pytester, capsys: CaptureFixture, dummy_pytest_testsuite
+):
+    result = pytester.runpytest(
+        dummy_pytest_testsuite,
+        "--log-cli-level=INFO",
+        "--log-file=./tmp.log",
+        "--log-file-level=INFO",
+        "-vv",
+    )
 
+    assert "INTERNAL_INFO" in capsys.readouterr().out
     result.assert_outcomes(passed=2)
 
 
