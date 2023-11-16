@@ -24,6 +24,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import pytest
+from _pytest.logging import ColoredLevelFormatter
 
 from pykiso.logging_initializer import initialize_logging
 
@@ -54,7 +55,7 @@ def pytest_sessionstart(session: Session):
 
     # run pykiso's logging initialization
     initialize_logging(
-        log_path=None,
+        log_path=pytest_logger.log_file_handler.baseFilename,
         log_level=logging.getLevelName(pytest_logger.log_cli_level),
         report_type="text",
         # display internal logs at least -vv is provided
@@ -84,8 +85,18 @@ def pytest_sessionstart(session: Session):
         pytest_logger.log_cli_handler.level != logging.NOTSET
         and stream_handler is not None
     ):
-        pytest_logger.log_cli_handler.level = stream_handler.level
         pytest_logger.log_cli_level = stream_handler.level
+        pytest_logger.log_cli_handler.level = stream_handler.level
+        if isinstance(pytest_logger.log_cli_handler.formatter, ColoredLevelFormatter):
+            pytest_logger.log_cli_handler.formatter.add_color_level(
+                logging.INTERNAL_WARNING, "yellow", "light"
+            )
+            pytest_logger.log_cli_handler.formatter.add_color_level(
+                logging.INTERNAL_INFO, "green", "light"
+            )
+            pytest_logger.log_cli_handler.formatter.add_color_level(
+                logging.INTERNAL_DEBUG, "purple", "light"
+            )
 
     if (
         pytest_logger.log_file_handler.level != logging.NOTSET
