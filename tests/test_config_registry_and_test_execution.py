@@ -586,7 +586,7 @@ def test_test_execution_with_junit_reporting(tmp_test, capsys, mocker):
 
 
 @pytest.mark.parametrize(
-    "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
+    "tmp_test", [("juint_file_aux1", "juint_file_aux2", False)], indirect=True
 )
 def test_test_execution_with_junit_reporting_with_file_name(tmp_test, capsys, mocker):
     """Call execute function from test_execution using
@@ -620,13 +620,13 @@ def test_test_execution_with_junit_reporting_with_file_name(tmp_test, capsys, mo
 
 
 @pytest.mark.parametrize(
-    "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
+    "tmp_test", [("juint_dir_aux1", "juint_dir_aux2", False)], indirect=True
 )
 def test_test_execution_with_junit_reporting_with_dir(tmp_test, capsys, mocker):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
     --junit option to show the test results in console
-    and to generate a junit xml report with default name ("%Y-%m-%d_%H-%M-%S-{report_name}.xml) 
+    and to generate a junit xml report with default name ("%Y-%m-%d_%H-%M-%S-{report_name}.xml)
 
     Validation criteria:
         -  run is executed without error
