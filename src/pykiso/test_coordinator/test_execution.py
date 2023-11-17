@@ -446,6 +446,7 @@ def execute(
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
     :param failfast: stop the test run on the first error or failure.
+    :param junit_path: path (file or dir) to junit report
 
     :return: exit code corresponding to the result of the test execution
         (tests failed, unexpected exception, ...)

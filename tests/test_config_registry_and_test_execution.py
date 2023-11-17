@@ -18,12 +18,14 @@ from typing import Any
 from unittest import TestCase, TestResult
 from unittest.mock import call
 
+import click
 import pytest
 from pytest_mock import MockerFixture
 
 import pykiso
 import pykiso.test_coordinator.test_execution
 from pykiso import CChannel, DTAuxiliaryInterface
+from pykiso.cli import CommandWithOptionalFlagValues
 from pykiso.config_parser import parse_config
 from pykiso.exceptions import TestCollectionError
 from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
@@ -651,6 +653,21 @@ def test_test_execution_with_junit_reporting_with_dir(tmp_test, capsys, mocker):
     assert "RUNNING TEST: " in output.err
     assert "END OF TEST: " in output.err
     assert "PASSED" in output.err
+
+
+def test_click_junit_arguments(mocker):
+    mock_parse_args = mocker.patch("click.Command.parse_args")
+    args_parser = CommandWithOptionalFlagValues("name")
+    click_opts = [
+        click.Option(param_decls=["--junit"], is_flag=True, flag_value="reports"),
+        click.Option(param_decls=["--log_report"], is_flag=True),
+        click.Option(param_decls=["--log_junit"], is_flag=False),
+        "Test",
+    ]
+
+    args_parser.params = click_opts
+    args_parser.parse_args("", ["-c", ".\\examples\\dummy.yaml", "--junit=file.xml"])
+    mock_parse_args.assert_called_with("", ["-c", ".\\examples\\dummy.yaml", "--junit"])
 
 
 @pytest.mark.parametrize("tmp_test", [("step_aux1", "step_aux2", False)], indirect=True)

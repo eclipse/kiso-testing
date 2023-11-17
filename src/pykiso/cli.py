@@ -92,23 +92,29 @@ def check_file_extension(
 
 class CommandWithOptionalFlagValues(click.Command):
     def parse_args(self, ctx, args):
-        """Translate any flag `--opt=value` as flag `--opt` with changed flag_value=value"""
+        """Translate any flag `--junit=value` as flag `--junit` with changed flag_value=value"""
         # filter flags
         flags = [
-            o
-            for o in self.params
-            if isinstance(o, click.Option)
-            and o.is_flag
-            and not isinstance(o.flag_value, bool)
+            flag
+            for flag in self.params
+            if isinstance(flag, click.Option)
+            and flag.is_flag
+            and not isinstance(flag.flag_value, bool)
         ]
-        prefixes = {p: o for o in flags for p in o.opts if p.startswith("--junit")}
+        junit_prefixes = {
+            flag_str: flag
+            for flag in flags
+            for flag_str in flag.opts
+            if flag_str.startswith("--junit")
+        }
+
         for i, flag in enumerate(args):
             flag = flag.split("=")
-            if flag[0] in prefixes and len(flag) > 1:
-                prefixes[flag[0]].flag_value = flag[1]
+            if flag[0] in junit_prefixes and len(flag) > 1:
+                junit_prefixes[flag[0]].flag_value = flag[1]
                 args[i] = flag[0]
-
-        return super(CommandWithOptionalFlagValues, self).parse_args(ctx, args)
+        result_args = super(CommandWithOptionalFlagValues, self).parse_args(ctx, args)
+        return result_args
 
 
 @click.command(
@@ -151,7 +157,7 @@ class CommandWithOptionalFlagValues(click.Command):
     "--junit",
     is_flag=True,
     flag_value="reports",
-    help="enable junit",
+    help="Enable junit reports, if you want to save report in specific dir relative to current or .xml file, use --junit=(name or dir). The default dir is './reports' and default name is '%Y-%m-%d_%H-%M-%S-{report_name}.xml'",
 )
 @click.option(
     "--step-report",
