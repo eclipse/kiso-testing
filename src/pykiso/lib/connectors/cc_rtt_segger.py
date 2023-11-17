@@ -309,10 +309,11 @@ class CCRttSegger(connector.CChannel):
             self.jlink.close()
             log.internal_info("RTT communication closed")
 
-    def _cc_send(self, msg: bytes) -> None:
+    def _cc_send(self, msg: bytes, **kwargs) -> None:
         """Send message using the corresponding RTT buffer.
 
         :param msg: message to send, should be bytes.
+        :param kwargs: not used
         """
         try:
             msg = list(msg)

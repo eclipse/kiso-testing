@@ -60,10 +60,11 @@ class CCUdp(connector.CChannel):
         """Close the udp socket."""
         self.udp_socket.close()
 
-    def _cc_send(self, msg: bytes) -> None:
+    def _cc_send(self, msg: bytes, **kwargs) -> None:
         """Send message using udp socket
 
         :param msg: message to send, should bytes.
+        :param kwargs: not used
         """
 
         self.udp_socket.sendto(msg, (self.dest_ip, self.dest_port))

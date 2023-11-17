@@ -14,8 +14,6 @@ test_suite_1
 :synopsis: Showcase of grpc with pykiso
 """
 
-import importlib
-import logging
 
 import pykiso
 from pykiso.auxiliaries import com_aux
@@ -26,8 +24,9 @@ class DefaultTest(pykiso.BasicTest):
     """With default parameters"""
 
     def test_run(self):
-        answer = com_aux.send_message("")
-        assert answer == "Hello World!"
+        com_aux.send_message("")
+        answer = com_aux.receive_message()
+        assert answer.message == "Hello, World!"
 
 
 @pykiso.define_test_parameters(suite_id=1, case_id=2, aux_list=[com_aux])
@@ -35,11 +34,12 @@ class SpecificTest(pykiso.BasicTest):
     """With specific parameters"""
 
     def test_run(self):
-        answer = com_aux.send_message(
+        com_aux.send_message(
             "",
             service_name="Greeter",
             rpc_name="SayHello",
             message_name="HelloRequest",
             message_fields={"name": "World"},
         )
-        assert answer == "Hello World!"
+        answer = com_aux.receive_message()
+        assert answer.message == "Hello, World!"

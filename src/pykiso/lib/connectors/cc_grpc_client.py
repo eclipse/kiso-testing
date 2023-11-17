@@ -132,6 +132,7 @@ class CCGrpcClient(connector.CChannel):
         """Send message to grpc server.
 
         :param msg: message to send, should bytes.
+        :param kwargs: used to extract the service_name, rpc_name, message_name and message_fields
 
         In addition to the message, the following keyword arguments are supported:
 

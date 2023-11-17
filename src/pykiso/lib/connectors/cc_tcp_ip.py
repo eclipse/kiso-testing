@@ -62,10 +62,11 @@ class CCTcpip(CChannel):
         )
         self.socket.close()
 
-    def _cc_send(self, msg: bytes or str) -> None:
+    def _cc_send(self, msg: bytes or str, **kwargs) -> None:
         """Send a message via socket.
 
         :param msg: message to send
+        :param kwargs: not used
         """
         if isinstance(msg, str):
             msg = msg.encode()

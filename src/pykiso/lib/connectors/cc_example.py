@@ -52,10 +52,11 @@ class CCExample(connector.CChannel):
         """Close the channel."""
         log.internal_info("close channel")
 
-    def _cc_send(self, msg: bytes) -> None:
+    def _cc_send(self, msg: bytes, **kwargs) -> None:
         """Sends the message on the channel.
 
         :param msg: message to send.
+        :param kwargs: not used
 
         """
         with self.lock:
