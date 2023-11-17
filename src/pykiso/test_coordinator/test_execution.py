@@ -476,7 +476,6 @@ def execute(
 
         log_file_path = get_logging_options().log_path
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
-        # pykiso --junit
         if report_type == "junit":
             report_path = junit_path
             full_report_path = Path.cwd() / report_path
