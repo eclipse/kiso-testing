@@ -8,8 +8,8 @@ connectors:
     config:
       dest_ip: "127.0.0.1"
       dest_port: 50051
-      generated_protobuf_data_types_file: ../tests/grpc_test_files/helloworld_pb2.py
-      generated_protobuf_grpc_file: ../tests/grpc_test_files/helloworld_pb2_grpc.py
+      generated_protobuf_data_types_file: ./test_suite_grpc/helloworld_pb2.py
+      generated_protobuf_grpc_file: ./test_suite_grpc/helloworld_pb2_grpc.py
       default_service_name: "Greeter"
       default_rpc_name: "SayHello"
       default_message_name: "HelloRequest"

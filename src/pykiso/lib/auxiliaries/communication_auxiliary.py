@@ -95,14 +95,16 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         log.internal_info("Auxiliary instance deleted")
         return True
 
-    def send_message(self, raw_msg: bytes) -> bool:
+    def send_message(self, raw_msg: bytes, **kwargs) -> bool:
         """Send a raw message (bytes) via the communication channel.
 
         :param raw_msg: message to send
+        :param kwargs: additional arguments to be passed to the
+            underlying connector
 
         :return: True if command was executed otherwise False
         """
-        return self.run_command("send", raw_msg)
+        return self.run_command("send", {"msg": raw_msg, **kwargs})
 
     def run_command(
         self,
@@ -202,7 +204,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         state = False
         if cmd_message == "send":
             try:
-                self.channel.cc_send(msg=cmd_data)
+                self.channel.cc_send(**cmd_data)
                 state = True
             except Exception:
                 log.exception(

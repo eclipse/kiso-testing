@@ -61,10 +61,11 @@ class CCUdpServer(connector.CChannel):
         log.internal_info(f"UDP socket closed at address: {self.address}")
         self.udp_socket.close()
 
-    def _cc_send(self, msg: bytes) -> None:
+    def _cc_send(self, msg: bytes, **kwargs) -> None:
         """Send back a UDP message to the previous sender.
 
         :param msg: message to sent, should be bytes
+        :param kwargs: not used
         """
         log.internal_debug(f"UDP server send: {msg} at {self.address}")
         self.udp_socket.sendto(msg, self.address)
