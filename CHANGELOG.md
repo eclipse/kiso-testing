@@ -6,10 +6,19 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### New Features
+
+- Make release 0.25.1 ([#415](https://github.com/eclipse/kiso-testing/issues/415))
+
+## Version 0.25.1 (2023-11-13)
+
 ### Bug Fixes
 
 - Multiple execution if file pattern is provided ([#403](https://github.com/eclipse/kiso-testing/issues/403))
 - Make pykiso work with pipx ([#407](https://github.com/eclipse/kiso-testing/issues/407))
+- Undecodeable bytes received from rtt segger ([#410](https://github.com/eclipse/kiso-testing/issues/410))
+- Jlink flash ([#412](https://github.com/eclipse/kiso-testing/issues/412))
+- Fix fail fast ([#409](https://github.com/eclipse/kiso-testing/issues/409))
 
 ### Miscellaneous Tasks
 
