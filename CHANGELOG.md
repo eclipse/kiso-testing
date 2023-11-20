@@ -6,11 +6,13 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
-### New Features
+### Miscellaneous Tasks
 
-- Make release 0.25.1 ([#415](https://github.com/eclipse/kiso-testing/issues/415))
+- Bump click from 8.1.3 to 8.1.7
+- Bump invoke from 2.1.2 to 2.2.0
+- Bump coverage from 6.5.0 to 7.2.7
 
-## Version 0.25.1 (2023-11-13)
+## Version 0.25.1 (2023-11-17)
 
 ### Bug Fixes
 
@@ -23,6 +25,10 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Miscellaneous Tasks
 
 - Bump urllib3 from 2.0.6 to 2.0.7
+
+### New Features
+
+- Make release 0.25.1 ([#415](https://github.com/eclipse/kiso-testing/issues/415))
 
 ## Version 0.25.0 (2023-10-19)
 
