@@ -588,13 +588,20 @@ def test_test_execution_with_junit_reporting(tmp_test, capsys, mocker):
 
 
 @pytest.mark.parametrize(
-    "tmp_test", [("juint_file_aux1", "juint_file_aux2", False)], indirect=True
+    "tmp_test, path",
+    [
+        (("juint_file_aux1", "juint_file_aux2", False), "test_file.xml"),
+        (("juint_dir_aux1", "juint_dir_aux2", False), "test_dir"),
+    ],
+    indirect=["tmp_test"],
 )
-def test_test_execution_with_junit_reporting_with_file_name(tmp_test, capsys, mocker):
+def test_test_execution_with_junit_reporting_with_file_name(
+    tmp_test, path, capsys, mocker
+):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
     --junit option to show the test results in console
-    and to generate a junit xml report in file with name test_file.xml
+    and to generate a junit xml report in file with name test_file.xml and in dir with default name ("%Y-%m-%d_%H-%M-%S-{report_name}.xml)
 
     Validation criteria:
         -  run is executed without error
@@ -610,43 +617,9 @@ def test_test_execution_with_junit_reporting_with_file_name(tmp_test, capsys, mo
     report_option = "junit"
     mock_open = mocker.patch("builtins.open")
     ConfigRegistry.register_aux_con(cfg)
-    test_execution.execute(cfg, report_option, junit_path="test_file.xml")
+    test_execution.execute(cfg, report_option, junit_path=path)
     ConfigRegistry.delete_aux_con()
-    mock_open.assert_called_with(HasSubstring("test_file.xml"), "wb")
-
-    output = capsys.readouterr()
-    assert "FAIL" not in output.err
-    assert "RUNNING TEST: " in output.err
-    assert "END OF TEST: " in output.err
-    assert "PASSED" in output.err
-
-
-@pytest.mark.parametrize(
-    "tmp_test", [("juint_dir_aux1", "juint_dir_aux2", False)], indirect=True
-)
-def test_test_execution_with_junit_reporting_with_dir(tmp_test, capsys, mocker):
-    """Call execute function from test_execution using
-    configuration data coming from parse_config method and
-    --junit option to show the test results in console
-    and to generate a junit xml report with default name ("%Y-%m-%d_%H-%M-%S-{report_name}.xml)
-
-    Validation criteria:
-        -  run is executed without error
-    """
-
-    class HasSubstring(str):
-        """Test if string is in passed argument"""
-
-        def __eq__(self, other: Any):
-            return self in str(other)
-
-    cfg = parse_config(tmp_test)
-    report_option = "junit"
-    mock_open = mocker.patch("builtins.open")
-    ConfigRegistry.register_aux_con(cfg)
-    test_execution.execute(cfg, report_option, junit_path="test_dir")
-    ConfigRegistry.delete_aux_con()
-    mock_open.assert_called_with(HasSubstring("test_dir"), "wb")
+    mock_open.assert_called_with(HasSubstring(path), "wb")
 
     output = capsys.readouterr()
     assert "FAIL" not in output.err
