@@ -157,7 +157,7 @@ class CommandWithOptionalFlagValues(click.Command):
     "--junit",
     is_flag=True,
     flag_value="reports",
-    help="Enable junit reports, if you want to save report in specific dir relative to current or .xml file, use --junit=(name or dir). The default dir is './reports' and default name is '%Y-%m-%d_%H-%M-%S-{report_name}.xml'",
+    help="Enable junit reports, if you want to save report in specific dir relative to current or .xml file, use --junit=(name or dir). The default dir is './reports' and default name is '%Y-%m-%d_%H-%M-%S-{config_name}.xml'",
 )
 @click.option(
     "--step-report",
