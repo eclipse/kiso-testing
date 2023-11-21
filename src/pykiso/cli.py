@@ -108,12 +108,12 @@ class CommandWithOptionalFlagValues(click.Command):
             if flag_str.startswith("--junit")
         }
 
-        for i, flag in enumerate(args):
-            flag = flag.split("=")
-            if len(flag) < 2:
+        for index, arg in enumerate(args):
+            arg = arg.split("=")
+            if len(arg) < 2:
                 continue
-            junit_prefixes[flag[0]].flag_value = flag[1]
-            args[i] = flag[0]
+            junit_prefixes[arg[0]].flag_value = arg[1]
+            args[index] = arg[0]
         result_args = super(CommandWithOptionalFlagValues, self).parse_args(ctx, args)
         return result_args
 
