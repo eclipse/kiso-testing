@@ -9,6 +9,7 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Bug Fixes
 
 - Apply internal log level to pytest logger ([#414](https://github.com/eclipse/kiso-testing/issues/414))
+- Reformatted
 
 ### Miscellaneous Tasks
 
@@ -20,6 +21,11 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 - Initial addition
 - Extend communication_aux to support multi parameters in send
+
+### Refactorings
+
+- Remove deprecated interfaces
+- Remove remaining multiprocessing
 
 ## Version 0.25.1 (2023-11-17)
 
