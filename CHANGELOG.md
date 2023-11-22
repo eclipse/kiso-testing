@@ -6,11 +6,20 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### Bug Fixes
+
+- Apply internal log level to pytest logger ([#414](https://github.com/eclipse/kiso-testing/issues/414))
+
 ### Miscellaneous Tasks
 
 - Bump click from 8.1.3 to 8.1.7
 - Bump invoke from 2.1.2 to 2.2.0
 - Bump coverage from 6.5.0 to 7.2.7
+
+### New Features
+
+- Initial addition
+- Extend communication_aux to support multi parameters in send
 
 ## Version 0.25.1 (2023-11-17)
 
