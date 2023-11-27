@@ -11,14 +11,9 @@ import threading
 
 import pytest
 
-from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
 from pykiso.lib.robot_framework import proxy_auxiliary
 from pykiso.lib.robot_framework.aux_interface import RobotAuxInterface
-from pykiso.lib.robot_framework.proxy_auxiliary import (
-    MpProxyAux,
-    ProxyAux,
-    ProxyAuxiliary,
-)
+from pykiso.lib.robot_framework.proxy_auxiliary import ProxyAux, ProxyAuxiliary
 from pykiso.test_setup.config_registry import ConfigRegistry
 
 
@@ -39,17 +34,17 @@ def proxy_aux(robot_proxy_aux):
 
 @pytest.fixture()
 def mpproxy_aux(mocker, cchannel_inst):
-    mocker.patch.object(MpProxyAuxiliary, "get_proxy_con")
+    mocker.patch.object(ProxyAux, "get_proxy_con")
     mocker.patch("pykiso.logging_initializer.get_logging_options")
     mocker.patch.object(
         RobotAuxInterface,
         "_get_aux",
-        return_value=MpProxyAuxiliary(
-            cchannel_inst, ["test_mp_proxy"], name="mp_proxy"
+        return_value=ProxyAux(
+            com=cchannel_inst, aux_list=["test_mp_proxy"], name="mp_proxy"
         ),
     )
     mocker.patch.object(ConfigRegistry, "get_auxes_by_type")
-    return proxy_auxiliary.MpProxyAuxiliary()
+    return proxy_auxiliary.ProxyAuxiliary()
 
 
 def test_suspend(mocker, robot_proxy_aux, proxy_aux):
@@ -69,7 +64,7 @@ def test_resume(mocker, robot_proxy_aux, proxy_aux):
 
 
 def test_mp_suspend(mocker, mpproxy_aux):
-    suspend_mock = mocker.patch.object(MpProxyAuxiliary, "suspend")
+    suspend_mock = mocker.patch.object(ProxyAux, "suspend")
 
     mpproxy_aux.suspend("proxy")
 
@@ -77,7 +72,7 @@ def test_mp_suspend(mocker, mpproxy_aux):
 
 
 def test_mp_resume(mocker, mpproxy_aux):
-    resume_mock = mocker.patch.object(MpProxyAuxiliary, "resume")
+    resume_mock = mocker.patch.object(ProxyAux, "resume")
 
     mpproxy_aux.resume("proxy")
 

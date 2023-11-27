@@ -30,8 +30,8 @@ from contextlib import ContextDecorator
 from typing import Any, Optional
 
 from pykiso import CChannel, Message
-from pykiso.interfaces.dt_auxiliary import (
-    DTAuxiliaryInterface,
+from pykiso.auxiliary import (
+    AuxiliaryInterface,
     close_connector,
     open_connector,
 )
@@ -61,7 +61,7 @@ class _collect_messages(ContextDecorator):
         self.com_aux.queueing_event.clear()
 
 
-class CommunicationAuxiliary(DTAuxiliaryInterface):
+class CommunicationAuxiliary(AuxiliaryInterface):
     """Auxiliary used to send raw bytes via a connector instead of pykiso.Messages."""
 
     def __init__(self, com: CChannel, **kwargs: dict) -> None:
@@ -95,14 +95,16 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         log.internal_info("Auxiliary instance deleted")
         return True
 
-    def send_message(self, raw_msg: bytes) -> bool:
+    def send_message(self, raw_msg: bytes, **kwargs) -> bool:
         """Send a raw message (bytes) via the communication channel.
 
         :param raw_msg: message to send
+        :param kwargs: additional arguments to be passed to the
+            underlying connector
 
         :return: True if command was executed otherwise False
         """
-        return self.run_command("send", raw_msg)
+        return self.run_command("send", {"msg": raw_msg, **kwargs})
 
     def run_command(
         self,
@@ -202,7 +204,7 @@ class CommunicationAuxiliary(DTAuxiliaryInterface):
         state = False
         if cmd_message == "send":
             try:
-                self.channel.cc_send(msg=cmd_data)
+                self.channel.cc_send(**cmd_data)
                 state = True
             except Exception:
                 log.exception(

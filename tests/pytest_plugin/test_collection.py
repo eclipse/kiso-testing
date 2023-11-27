@@ -7,10 +7,12 @@
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
 
+import logging
 import sys
 
 import pytest
 from _pytest.pytester import Pytester
+from pytest import FixtureRequest
 
 from pykiso.test_result.text_result import ResultStream
 from pykiso.test_setup.config_registry import ConfigRegistry

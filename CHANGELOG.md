@@ -8,12 +8,42 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Apply internal log level to pytest logger ([#414](https://github.com/eclipse/kiso-testing/issues/414))
+- Reformatted
+
+### Miscellaneous Tasks
+
+- Bump click from 8.1.3 to 8.1.7
+- Bump invoke from 2.1.2 to 2.2.0
+- Bump coverage from 6.5.0 to 7.2.7
+
+### New Features
+
+- Initial addition
+- Extend communication_aux to support multi parameters in send
+
+### Refactorings
+
+- Remove deprecated interfaces
+- Remove remaining multiprocessing
+
+## Version 0.25.1 (2023-11-17)
+
+### Bug Fixes
+
 - Multiple execution if file pattern is provided ([#403](https://github.com/eclipse/kiso-testing/issues/403))
 - Make pykiso work with pipx ([#407](https://github.com/eclipse/kiso-testing/issues/407))
+- Undecodeable bytes received from rtt segger ([#410](https://github.com/eclipse/kiso-testing/issues/410))
+- Jlink flash ([#412](https://github.com/eclipse/kiso-testing/issues/412))
+- Fix fail fast ([#409](https://github.com/eclipse/kiso-testing/issues/409))
 
 ### Miscellaneous Tasks
 
 - Bump urllib3 from 2.0.6 to 2.0.7
+
+### New Features
+
+- Make release 0.25.1 ([#415](https://github.com/eclipse/kiso-testing/issues/415))
 
 ## Version 0.25.0 (2023-10-19)
 

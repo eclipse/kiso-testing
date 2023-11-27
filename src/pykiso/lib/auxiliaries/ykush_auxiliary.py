@@ -25,7 +25,7 @@ from typing import Any, List, Optional, Tuple
 
 import hid
 
-from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface
+from pykiso.auxiliary import AuxiliaryInterface
 
 log = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ class PortState(IntEnum):
     ON = 1
 
 
-class YkushAuxiliary(DTAuxiliaryInterface):
+class YkushAuxiliary(AuxiliaryInterface):
     """Auxiliary used to power on and off the ports."""
 
     def __init__(self, serial_number: str = None, **kwargs):

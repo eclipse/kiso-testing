@@ -24,7 +24,7 @@ from typing import Any, Optional
 import brainstem
 from brainstem.result import Result
 
-from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface
+from pykiso.auxiliary import AuxiliaryInterface
 from pykiso.types import MsgType
 
 log = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ ERROR_MESSAGES = {
 }
 
 
-class AcronameAuxiliary(DTAuxiliaryInterface):
+class AcronameAuxiliary(AuxiliaryInterface):
     """Auxiliary used to control acroname usb hubs"""
 
     MICROVOLT_TO_UNIT = {"uV": 1, "mV": 1e-3, "V": 1e-6}

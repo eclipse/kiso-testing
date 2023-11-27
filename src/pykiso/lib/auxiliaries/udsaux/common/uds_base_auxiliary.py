@@ -28,17 +28,17 @@ from typing import Optional, Union
 
 from uds import Config, Uds
 
-from pykiso.connector import CChannel
-from pykiso.interfaces.dt_auxiliary import (
-    DTAuxiliaryInterface,
+from pykiso.auxiliary import (
+    AuxiliaryInterface,
     close_connector,
     open_connector,
 )
+from pykiso.connector import CChannel
 
 log = logging.getLogger(__name__)
 
 
-class UdsBaseAuxiliary(DTAuxiliaryInterface):
+class UdsBaseAuxiliary(AuxiliaryInterface):
     """Base Auxiliary class for handling UDS protocol."""
 
     POSITIVE_RESPONSE_OFFSET = 0x40

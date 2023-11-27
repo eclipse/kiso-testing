@@ -9,7 +9,6 @@
 
 import builtins
 import logging
-import multiprocessing
 import pathlib
 import threading
 
@@ -68,7 +67,6 @@ def test_constructor(
     assert record_aux.max_file_size == 456
     assert record_aux._receive_thread_or_process is None
     assert record_aux.stop_receive_event is None
-    assert record_aux.multiprocess is False
 
     if expected_start_record:
         mock_start_record.assert_called_once()
@@ -144,7 +142,7 @@ def test_receive(data, expected_data, mocker, mock_channel):
     )
     mocker.patch.object(threading.Thread, "start", return_value=None)
     record_aux = RecordAuxiliary(mock_channel, is_active=True)
-    record_aux.multiprocess = True
+
     mock_dump_to_file = mocker.patch.object(record_aux, "dump_to_file")
     mocker.patch.object(record_aux.channel, "cc_receive", return_value=data)
     mock_set_data = mocker.patch.object(record_aux, "set_data")
@@ -155,7 +153,6 @@ def test_receive(data, expected_data, mocker, mock_channel):
     mock_channel.open.assert_called_once()
     mock_channel.close.assert_called_once()
     mock_set_data.assert_called_once_with(expected_data)
-    mock_dump_to_file.assert_called()
 
 
 def test_parse_bytes_wrong_type(caplog, mocker, mock_channel):
@@ -193,18 +190,11 @@ def test_receive_close_error(caplog, mocker, mock_channel):
     assert "Error encountered while closing channel." in caplog.text
 
 
-@pytest.mark.parametrize(
-    "multiprocess",
-    [False, True],
-)
-def test_start_recording(multiprocess, mocker, mock_channel):
+def test_start_recording(mocker, mock_channel):
     mock_thread_start = mocker.patch.object(threading.Thread, "start")
-    mock_process_start = mocker.patch.object(multiprocessing.Process, "start")
     mock_clear_buffer = mocker.patch.object(RecordAuxiliary, "clear_buffer")
 
-    record_aux = RecordAuxiliary(
-        mock_channel, is_active=True, multiprocess=multiprocess
-    )
+    record_aux = RecordAuxiliary(mock_channel, is_active=True)
 
     # simulate a second start in a row
     mocker.patch.object(
@@ -212,14 +202,8 @@ def test_start_recording(multiprocess, mocker, mock_channel):
     )
     record_aux.start_recording()
 
-    if multiprocess:
-        mock_process_start.assert_called_once()
-        assert isinstance(
-            record_aux.stop_receive_event, multiprocessing.synchronize.Event
-        )
-    else:
-        mock_thread_start.assert_called_once()
-        assert isinstance(record_aux.stop_receive_event, threading.Event)
+    mock_thread_start.assert_called_once()
+    assert isinstance(record_aux.stop_receive_event, threading.Event)
     mock_clear_buffer.assert_called_once()
 
 

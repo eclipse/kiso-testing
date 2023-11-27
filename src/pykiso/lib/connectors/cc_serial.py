@@ -99,7 +99,7 @@ class CCSerial(connector.CChannel):
           STOPBITS_ONE, STOPBITS_ONE_POINT_FIVE, STOPBITS_TWO,
           defaults to STOPBITS_ONE
         :param timeout: Set a read timeout value in seconds, defaults to None
-        :param xonxoff: Enable software flow contro, defaults to False
+        :param xonxoff: Enable software flow control, defaults to False
         :param rtscts: Enable hardware (RTS/CTS) flow control, defaults to False
         :param write_timeout: Set a write timeout value in seconds, defaults to None
         :param dsrdtr: Enable hardware (DSR/DTR) flow control, defaults to False
@@ -203,12 +203,13 @@ class CCSerial(connector.CChannel):
         """Close serial port"""
         self.serial.close()
 
-    def _cc_send(self, msg: ByteString, timeout: float = None) -> None:
+    def _cc_send(self, msg: ByteString, timeout: float = None, **kwargs) -> None:
         """Sends data to the serial port
 
         :param msg: data to send
         :param timeout: write timeout in seconds. None sets it to blocking,
           defaults to None
+        :param kwargs: not used
         :raises: SerialTimeoutException - In case a write timeout is configured
           for the port and the time is exceeded.
         """

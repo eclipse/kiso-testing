@@ -42,15 +42,15 @@ class TestUdsAuxiliary:
     def uds_odx_aux_inst(self, mocker, ccpcan_inst):
 
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
+            "pykiso.auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.delete_instance",
+            "pykiso.auxiliary.AuxiliaryInterface.delete_instance",
             return_value=None,
         )
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
+            "pykiso.auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
         mocker.patch(
@@ -66,15 +66,15 @@ class TestUdsAuxiliary:
     def uds_odx_aux_inst_v(self, mocker, ccvector_inst):
 
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
+            "pykiso.auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.delete_instance",
+            "pykiso.auxiliary.AuxiliaryInterface.delete_instance",
             return_value=None,
         )
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
+            "pykiso.auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
         TestUdsAuxiliary.uds_aux_instance_odx_v = UdsAuxiliary(
@@ -85,15 +85,15 @@ class TestUdsAuxiliary:
     @pytest.fixture(scope="function")
     def uds_raw_aux_inst(self, mocker, ccpcan_inst):
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.create_instance",
+            "pykiso.auxiliary.AuxiliaryInterface.create_instance",
             return_value=None,
         )
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.delete_instance",
+            "pykiso.auxiliary.AuxiliaryInterface.delete_instance",
             return_value=None,
         )
         mocker.patch(
-            "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run_command",
+            "pykiso.auxiliary.AuxiliaryInterface.run_command",
             return_value=None,
         )
         TestUdsAuxiliary.uds_aux_instance_raw = UdsAuxiliary(ccpcan_inst)

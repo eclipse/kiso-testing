@@ -27,8 +27,8 @@ import queue
 from typing import Callable, Optional
 
 from pykiso import CChannel, Flasher, Message, message
-from pykiso.interfaces.dt_auxiliary import (
-    DTAuxiliaryInterface,
+from pykiso.auxiliary import (
+    AuxiliaryInterface,
     close_connector,
     flash_target,
     open_connector,
@@ -156,7 +156,7 @@ def restart_aux(func: Callable) -> Callable:
     return inner_start
 
 
-class DUTAuxiliary(DTAuxiliaryInterface):
+class DUTAuxiliary(AuxiliaryInterface):
     """Device Under Test(DUT) auxiliary implementation."""
 
     def __init__(

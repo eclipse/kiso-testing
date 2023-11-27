@@ -21,8 +21,8 @@ Auxiliary interface
 """
 from robot.api import logger
 
+from ...auxiliary import AuxiliaryInterface
 from ...connector import CChannel, Flasher
-from ...interfaces.thread_auxiliary import AuxiliaryInterface
 from ...test_setup.config_registry import ConfigRegistry
 
 

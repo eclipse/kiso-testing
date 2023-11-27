@@ -8,7 +8,6 @@
 ##########################################################################
 
 import logging
-import multiprocessing
 import threading
 
 import pytest
@@ -50,16 +49,6 @@ def test_channel_constructor_thread(channel_obj):
     assert isinstance(cc_inst._lock_tx, type(threading.RLock()))
     assert isinstance(cc_inst._lock_rx, type(threading.RLock()))
     assert isinstance(cc_inst._lock, type(threading.Lock()))
-
-
-def test_channel_constructor_mp(channel_obj):
-
-    cc_inst = channel_obj(processing=True, name="mp-channel")
-
-    assert cc_inst.name == "mp-channel"
-    assert isinstance(cc_inst._lock_tx, type(multiprocessing.RLock()))
-    assert isinstance(cc_inst._lock_rx, type(multiprocessing.RLock()))
-    assert isinstance(cc_inst._lock, type(multiprocessing.Lock()))
 
 
 def test_channel_context_manager(channel_obj):

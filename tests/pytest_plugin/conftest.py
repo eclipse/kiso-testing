@@ -99,9 +99,11 @@ def dummy_pytest_testmodule():
         return dedent(
             f"""
             import pytest
+            import logging
 
             @pytest.mark.tags(variant=["var1"])
             def test_mytest1(aux1):
+                logging.internal_info("Logged with INTERNAL_INFO")
                 assert aux1.is_instance == {False if add_failure else True}
 
             @pytest.mark.tags(variant="var2")

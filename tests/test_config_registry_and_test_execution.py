@@ -24,13 +24,11 @@ from pytest_mock import MockerFixture
 
 import pykiso
 import pykiso.test_coordinator.test_execution
-from pykiso import CChannel, DTAuxiliaryInterface
+from pykiso import CChannel, DTAuxiliaryInterface, AuxiliaryInterface
 from pykiso.cli import CommandWithOptionalFlagValues
 from pykiso.config_parser import parse_config
 from pykiso.exceptions import TestCollectionError
-from pykiso.lib.auxiliaries.mp_proxy_auxiliary import MpProxyAuxiliary
 from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
-from pykiso.lib.connectors.cc_mp_proxy import CCMpProxy
 from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_coordinator import test_execution
 from pykiso.test_coordinator.test_execution import filter_test_modules_by_suite
@@ -71,13 +69,13 @@ def test_config_registry(tmp_test):
 
     with ConfigRegistry.provide_auxiliaries(cfg):
 
-        assert isinstance(ConfigRegistry.get_aux_by_alias("aux3"), DTAuxiliaryInterface)
+        assert isinstance(ConfigRegistry.get_aux_by_alias("aux3"), AuxiliaryInterface)
 
-        auxes_by_type = ConfigRegistry.get_auxes_by_type(DTAuxiliaryInterface)
+        auxes_by_type = ConfigRegistry.get_auxes_by_type(AuxiliaryInterface)
         assert isinstance(auxes_by_type, dict)
 
         all_auxes = ConfigRegistry.get_all_auxes()
-        # all auxiliaries are subclasses of DTAuxiliaryInterface, thus the expected equality
+        # all auxiliaries are subclasses of AuxiliaryInterface, thus the expected equality
         assert all_auxes == auxes_by_type
 
         aux3_config = ConfigRegistry.get_aux_config("aux3")
@@ -908,8 +906,8 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
 
     if mp_enable:
         config["connectors"]["channel1"]["config"]["processing"] = True
-        cc_class = CCMpProxy
-        aux_class = MpProxyAuxiliary
+        cc_class = CCProxy
+        aux_class = ProxyAuxiliary
     else:
         cc_class = CCProxy
         aux_class = ProxyAuxiliary

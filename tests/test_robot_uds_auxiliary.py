@@ -25,9 +25,7 @@ from pykiso.test_setup.config_registry import ConfigRegistry
 
 @pytest.fixture
 def robot_uds_aux(mocker):
-    mocker.patch(
-        "pykiso.interfaces.thread_auxiliary.AuxiliaryInterface.run", return_value=None
-    )
+    mocker.patch("pykiso.auxiliary.AuxiliaryInterface.start", return_value=None)
     mocker.patch(
         "pykiso.test_setup.config_registry.ConfigRegistry.get_auxes_by_type",
         return_value={"uds_aux": UdsAux("", tp_layer={}, uds_layer={})},

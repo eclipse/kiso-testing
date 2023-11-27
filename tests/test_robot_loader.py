@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from pykiso.interfaces.thread_auxiliary import AuxiliaryInterface
+from pykiso.auxiliary import AuxiliaryInterface
 from pykiso.lib.robot_framework.loader import RobotLoader, parse_config
 
 

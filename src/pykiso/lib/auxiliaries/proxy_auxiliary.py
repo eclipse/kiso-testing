@@ -55,9 +55,9 @@ import time
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from pykiso import AuxiliaryInterface, CChannel
-from pykiso.interfaces.dt_auxiliary import (
-    DTAuxiliaryInterface,
+from pykiso import CChannel
+from pykiso.auxiliary import (
+    AuxiliaryInterface,
     close_connector,
     open_connector,
 )
@@ -68,7 +68,7 @@ from pykiso.test_setup.dynamic_loader import PACKAGE
 log = logging.getLogger(__name__)
 
 
-class ProxyAuxiliary(DTAuxiliaryInterface):
+class ProxyAuxiliary(AuxiliaryInterface):
     """Proxy auxiliary for multi auxiliaries communication handling."""
 
     def __init__(
@@ -212,7 +212,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         for aux in aux_list:
             # aux_list can contain a auxiliary instance just grab the
             # channel
-            if isinstance(aux, (AuxiliaryInterface, DTAuxiliaryInterface)):
+            if isinstance(aux, AuxiliaryInterface):
                 self._check_aux_compatibility(aux)
                 channel_inst.append(aux.channel)
                 continue
@@ -248,7 +248,7 @@ class ProxyAuxiliary(DTAuxiliaryInterface):
         return tuple(channel_inst)
 
     @staticmethod
-    def _check_aux_compatibility(aux: DTAuxiliaryInterface) -> None:
+    def _check_aux_compatibility(aux: AuxiliaryInterface) -> None:
         """Check if the given auxiliary is proxy compatible.
 
         :param aux: auxiliary instance to check
