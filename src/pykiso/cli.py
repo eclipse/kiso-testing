@@ -101,22 +101,17 @@ class CommandWithOptionalFlagValues(click.Command):
             and flag.is_flag
             and not isinstance(flag.flag_value, bool)
         ]
-        junit_prefixes = {
-            flag_str: flag
-            for flag in flags
-            for flag_str in flag.opts
-            if flag_str.startswith("--junit")
-        }
-
-        for index, arg in enumerate(args):
+        for arg_index, arg in enumerate(args):
             arg = arg.split("=")
             if len(arg) != 2:
                 continue
             arg_name, arg_value = arg
-            # set the flag value to the one provided 
-            junit_prefixes[arg_name].flag_value = arg_value
-            # remove the flag value from the provided argument: --junit=./ becomes --junit
-            args[index] = arg_name    
+            for flag in flags:
+                if arg_name in flag.opts:
+                    flag.flag_value = arg_value
+                    args[arg_index] = arg_name
+                    break
+
         result_args = super(CommandWithOptionalFlagValues, self).parse_args(ctx, args)
         return result_args
 
