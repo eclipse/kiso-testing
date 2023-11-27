@@ -24,7 +24,7 @@ from pytest_mock import MockerFixture
 
 import pykiso
 import pykiso.test_coordinator.test_execution
-from pykiso import CChannel, DTAuxiliaryInterface, AuxiliaryInterface
+from pykiso import AuxiliaryInterface, CChannel
 from pykiso.cli import CommandWithOptionalFlagValues
 from pykiso.config_parser import parse_config
 from pykiso.exceptions import TestCollectionError
