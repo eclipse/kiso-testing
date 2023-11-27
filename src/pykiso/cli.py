@@ -112,8 +112,11 @@ class CommandWithOptionalFlagValues(click.Command):
             arg = arg.split("=")
             if len(arg) != 2:
                 continue
-            junit_prefixes[arg[0]].flag_value = arg[1]
-            args[index] = arg[0]
+            arg_name, arg_value = arg
+            # set the flag value to the one provided 
+            junit_prefixes[arg_name].flag_value = arg_value
+            # remove the flag value from the provided argument: --junit=./ becomes --junit
+            args[index] = arg_name    
         result_args = super(CommandWithOptionalFlagValues, self).parse_args(ctx, args)
         return result_args
 
