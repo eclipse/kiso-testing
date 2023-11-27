@@ -110,7 +110,7 @@ class CommandWithOptionalFlagValues(click.Command):
 
         for index, arg in enumerate(args):
             arg = arg.split("=")
-            if len(arg) < 2:
+            if len(arg) != 2:
                 continue
             junit_prefixes[arg[0]].flag_value = arg[1]
             args[index] = arg[0]
