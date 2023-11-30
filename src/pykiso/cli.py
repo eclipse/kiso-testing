@@ -102,6 +102,7 @@ class CommandWithOptionalFlagValues(click.Command):
             and flag.is_flag
             and not isinstance(flag.flag_value, bool)
         ]
+        # iterate over all user provided arguments to match the flags with format '--flag=value'
         for arg_index, arg in enumerate(args):
             arg = arg.split("=")
             if len(arg) != 2:
