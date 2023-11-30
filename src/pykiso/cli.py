@@ -107,6 +107,7 @@ class CommandWithOptionalFlagValues(click.Command):
                 continue
             arg_name, arg_value = arg
             for flag in flags:
+                # if the argument is a flag with a value, rewrite the argument as a regular flag with the appropriate value
                 if arg_name in flag.opts:
                     flag.flag_value = arg_value
                     args[arg_index] = arg_name
