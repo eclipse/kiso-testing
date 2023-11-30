@@ -92,6 +92,7 @@ def check_file_extension(
 
 class CommandWithOptionalFlagValues(click.Command):
     """Custom command that allows specifying flags with a value, e.g. ``pykiso -c config.yaml --junit=./reports``."""
+
     def parse_args(self, ctx, args):
         """Translate any flag `--junit=value` as flag `--junit` with changed flag_value=value"""
         # filter out flags from all of the command parameters
