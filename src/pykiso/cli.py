@@ -93,7 +93,7 @@ def check_file_extension(
 class CommandWithOptionalFlagValues(click.Command):
     def parse_args(self, ctx, args):
         """Translate any flag `--junit=value` as flag `--junit` with changed flag_value=value"""
-        # filter flags
+        # filter out flags from all of the command parameters
         flags = [
             flag
             for flag in self.params
