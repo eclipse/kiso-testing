@@ -40,9 +40,9 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     arguments.
 
     :param click_context: click context
-    :raises click.NoSuchOption: if key doesnt start with "--" or has an invalid
+    :raises click.NoSuchOption: if key doesn't start with "--" or has an invalid
       character like "_"
-    :raises click.BadOptionUsage: no value specfied for user tag
+    :raises click.BadOptionUsage: no value specified for user tag
     :return: user tags with values
     """
     user_tags = {}
@@ -90,12 +90,43 @@ def check_file_extension(
     return paths
 
 
+class CommandWithOptionalFlagValues(click.Command):
+    """Custom command that allows specifying flags with a value, e.g. ``pykiso -c config.yaml --junit=./reports``."""
+
+    def parse_args(self, ctx, args):
+        """Translate any flag `--junit=value` as flag `--junit` with changed flag_value=value"""
+        # filter out flags from all of the command parameters
+        flags = [
+            flag
+            for flag in self.params
+            if isinstance(flag, click.Option)
+            and flag.is_flag
+            and not isinstance(flag.flag_value, bool)
+        ]
+        # iterate over all user provided arguments to match the flags with format '--flag=value'
+        for arg_index, arg in enumerate(args):
+            arg = arg.split("=")
+            if len(arg) != 2:
+                continue
+            arg_name, arg_value = arg
+            for flag in flags:
+                # if the argument is a flag with a value, rewrite the argument as a regular flag with the appropriate value
+                if arg_name in flag.opts:
+                    flag.flag_value = arg_value
+                    args[arg_index] = arg_name
+                    break
+
+        result_args = super(CommandWithOptionalFlagValues, self).parse_args(ctx, args)
+        return result_args
+
+
 @click.command(
     context_settings={
         "help_option_names": ["-h", "--help"],
         "ignore_unknown_options": True,
         "allow_extra_args": True,
-    }
+    },
+    cls=CommandWithOptionalFlagValues,
 )
 @click.option(
     "-c",
@@ -127,18 +158,9 @@ def check_file_extension(
 )
 @click.option(
     "--junit",
-    "report_type",
-    flag_value="junit",
-    required=False,
-    help="enables the generation of a junit report",
-)
-@click.option(
-    "--text",
-    "report_type",
-    flag_value="text",
-    required=False,
-    default=True,
-    help="default, test results are only displayed in the console",
+    is_flag=True,
+    flag_value="reports",
+    help="Enable junit reports, if you want to save report in specific dir relative to current or .xml file, use --junit=(name or dir). The default dir is './reports' and default name is '%Y-%m-%d_%H-%M-%S-{config_name}.xml'",
 )
 @click.option(
     "--step-report",
@@ -186,6 +208,7 @@ def main(
     failfast: bool = False,
     verbose: bool = False,
     logger: Optional[str] = None,
+    junit: Optional[str] = None,
 ):
     """Embedded Integration Test Framework - CLI Entry Point.
 
@@ -213,6 +236,9 @@ def main(
         raise click.UsageError(
             f"Mismatch: {len(log_path)} log files were provided for {len(test_configuration_file)} yaml configuration files"
         )
+
+    if junit is not None:
+        report_type = "junit"
 
     # parse provided tags (any unknown option)
     user_tags = eval_user_tags(click_context)
@@ -246,6 +272,7 @@ def main(
                 step_report,
                 pattern,
                 failfast,
+                junit,
             )
 
         for handler in logging.getLogger().handlers:

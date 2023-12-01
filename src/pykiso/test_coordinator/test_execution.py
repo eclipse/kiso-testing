@@ -432,6 +432,7 @@ def execute(
     step_report: Optional[Path] = None,
     pattern_inject: Optional[str] = None,
     failfast: bool = False,
+    junit_path: str = "reports",
 ) -> int:
     """Create test environment based on test configuration.
 
@@ -445,6 +446,7 @@ def execute(
         test_filter_pattern for all suites. Used in test development to
         run specific tests.
     :param failfast: stop the test run on the first error or failure.
+    :param junit_path: path (file or dir) to junit report
 
     :return: exit code corresponding to the result of the test execution
         (tests failed, unexpected exception, ...)
@@ -475,11 +477,17 @@ def execute(
         log_file_path = get_logging_options().log_path
         # TestRunner selection: generate or not a junit report. Start the tests and publish the results
         if report_type == "junit":
-            junit_report_name = time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml")
-            project_folder = Path.cwd()
-            reports_path = project_folder / "reports"
-            junit_report_path = reports_path / junit_report_name
-            reports_path.mkdir(exist_ok=True)
+            report_path = junit_path
+            full_report_path = Path.cwd() / report_path
+            if full_report_path.suffix == ".xml":
+                junit_report_path = str(full_report_path)
+                full_report_path.parent.mkdir(exist_ok=True)
+            else:
+                junit_report_path = str(
+                    full_report_path
+                    / Path(time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml"))
+                )
+                full_report_path.mkdir(exist_ok=True)
             with open(junit_report_path, "wb") as junit_output, ResultStream(
                 log_file_path
             ) as stream:
