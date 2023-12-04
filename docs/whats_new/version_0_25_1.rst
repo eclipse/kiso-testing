@@ -1,5 +1,5 @@
-Version ongoing
----------------
+Version 0.25.1
+--------------
 
 Trace file for CAN
 ^^^^^^^^^^^^^^^^^^
