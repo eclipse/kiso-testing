@@ -79,6 +79,7 @@ class MyTest1(pykiso.BasicTest):
     -> test_ids: [optional] store the requirements into the report
     -> tag: [optional] allows the run of subset of tests
     """
+    properties = {"testrail_attachment": "some/path/to/afile.txt"}
 
     @pykiso.retry_test_case(max_try=3)
     def setUp(self):
