@@ -43,6 +43,7 @@ from .exceptions import (
     PykisoError,
     TestCollectionError,
 )
+from .interfaces.dt_auxiliary import DTAuxiliaryInterface
 from .logging_initializer import disable_logging
 from .message import Message
 from .test_coordinator import test_case, test_message_handler, test_suite
