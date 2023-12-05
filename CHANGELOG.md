@@ -21,6 +21,8 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 - Initial addition
 - Extend communication_aux to support multi parameters in send
+- Junit report directory ([#413](https://github.com/eclipse/kiso-testing/issues/413))
+- Make release 0.26.0 ([#420](https://github.com/eclipse/kiso-testing/issues/420))
 
 ### Refactorings
 
