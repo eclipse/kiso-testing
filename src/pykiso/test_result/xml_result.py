@@ -86,7 +86,7 @@ class TestInfo(xmlrunner.result._TestInfo):
         if isinstance(test_case, unittest.suite._ErrorHolder):
             test_case._testMethodDoc = ""
             test_case.test_ids = {}
-        
+
         self._test = test_case
         # add attribute that will be used to format the errors
         self._testMethodDoc = test_case._testMethodDoc
@@ -136,20 +136,6 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
             infoclass=infoclass,
         )
 
-    # def startTest(self, test: TestCase) -> None:
-    #     """Set the test case properties that will be added to the JUnit report.
-
-    #     unittest-xml-reporting already does this via the runner, but only then 
-    #     running the main test suite created by pykiso that contains all test cases
-    #     to run.
-
-    #     :param test: the test case to run.
-    #     """
-    #     if hasattr(test, 'properties'):
-    #         # junit testsuite properties
-    #         self.properties: Dict[str, Any] = test.properties
-    #     return super().startTest(test)
-
     def addSuccess(self, test: TestCase) -> None:
         """Calls only _XMLTestResult's addSuccess as BannerTestResult's
         appends TestCase instances to the successes list, but _XMLTestResult
@@ -158,6 +144,21 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         :param test: current succeeded TestCase.
         """
         return xmlrunner.runner._XMLTestResult.addSuccess(self, test)
+
+    # save the original staticmethod that will be overwritten in order to call it
+    test_method_name = copy.deepcopy(xmlrunner.runner._XMLTestResult._report_testcase)
+
+    def _test_method_name(test_id):
+        """
+        Returns the test method name.
+        """
+        # Trick subtest referencing objects
+        subtest_parts = test_id.split(" ")
+        test_method_name = subtest_parts[0].split(".")[-1]
+        subtest_method_name = [test_method_name]
+        return " ".join(subtest_method_name)
+
+    xmlrunner.runner._XMLTestResult._test_method_name = staticmethod(_test_method_name)
 
     # save the original staticmethod that will be overwritten in order to call it
     report_testcase = copy.deepcopy(xmlrunner.runner._XMLTestResult._report_testcase)
@@ -175,17 +176,18 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         # call the original method
         XmlTestResult.report_testcase(test_result, xml_testsuite, xml_document)
 
+        # add user-defined properties to the test cases if any
         xml_testcases = xml_testsuite.getElementsByTagName("testcase")
         for xml_testcase in xml_testcases:
-            #####################
-            import inspect
-            test_method = getattr(test_result._test, test_result._test._testMethodName)
-            sourceline, lineno = inspect.getsourcelines(test_method)
-            #print(sourceline, lineno)
-            #####################
-
+            testcase_properties = getattr(test_result._test, "properties", None)
+            if not isinstance(testcase_properties, dict):
+                break
+            # avoid adding the same properties to the same testcase multiple times
+            if xml_testcase.getElementsByTagName("properties"):
+                continue
+            # add the properties to the testcase
             XmlTestResult._report_testsuite_properties(
-                xml_testcase, xml_document, getattr(test_result._test, "properties", None)
+                xml_testcase, xml_document, testcase_properties
             )
 
         # XmlTestResult._report_testsuite_properties(
