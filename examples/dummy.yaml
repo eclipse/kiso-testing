@@ -13,6 +13,10 @@ auxiliaries:
         com:   chan4
         flash: chan3
     type: pykiso.lib.auxiliaries.dut_auxiliary:DUTAuxiliary
+  aux4:
+    connectors:
+        com:   chan5
+    type: pykiso.lib.auxiliaries.can_auxiliary:CanAuxiliary
 connectors:
   chan1:
     config: null
