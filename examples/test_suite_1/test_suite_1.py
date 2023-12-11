@@ -21,7 +21,7 @@ import logging
 from itertools import cycle
 
 import pykiso
-from pykiso.auxiliaries import aux1, aux2, aux3
+from pykiso.auxiliaries import aux1, aux2, aux3, aux4
 
 # define an external iterator that can be used for retry_test_case demo
 side_effect = cycle([False, False, True])
@@ -117,7 +117,7 @@ class MyTest1(pykiso.BasicTest):
 @pykiso.define_test_parameters(
     suite_id=1,
     case_id=2,
-    aux_list=[aux2, aux3],
+    aux_list=[aux2, aux3, aux4],
     setup_timeout=1,
     run_timeout=2,
     teardown_timeout=1,
@@ -162,6 +162,7 @@ class MyTest2(pykiso.RemoteTest):
         logging.info(f"------------resume auxiliaries run--------------")
         aux3.resume()
         aux2.resume()
+        print(aux4.get_message("BHU", ["KeyExchange_Master_BHU", "BHU_NetworkStatus"]))
         super().test_run()
         logging.info("I HAVE RUN 0.1.2!")
 
