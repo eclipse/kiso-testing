@@ -103,7 +103,7 @@ class MyTest1(pykiso.BasicTest):
         )
         # define any additional key-value pair that will appear as property in the JUnit report
         properties = {"testrail_attachment": "some/path/to/afile.txt"}
-        
+
         self.assertTrue(next(side_effect))
         logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")
 
