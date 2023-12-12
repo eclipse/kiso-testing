@@ -146,21 +146,6 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         return xmlrunner.runner._XMLTestResult.addSuccess(self, test)
 
     # save the original staticmethod that will be overwritten in order to call it
-    test_method_name = copy.deepcopy(xmlrunner.runner._XMLTestResult._report_testcase)
-
-    def _test_method_name(test_id):
-        """
-        Returns the test method name.
-        """
-        # Trick subtest referencing objects
-        subtest_parts = test_id.split(" ")
-        test_method_name = subtest_parts[0].split(".")[-1]
-        subtest_method_name = [test_method_name]
-        return " ".join(subtest_method_name)
-
-    xmlrunner.runner._XMLTestResult._test_method_name = staticmethod(_test_method_name)
-
-    # save the original staticmethod that will be overwritten in order to call it
     report_testcase = copy.deepcopy(xmlrunner.runner._XMLTestResult._report_testcase)
 
     @staticmethod
@@ -189,10 +174,6 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
             XmlTestResult._report_testsuite_properties(
                 xml_testcase, xml_document, testcase_properties
             )
-
-        # XmlTestResult._report_testsuite_properties(
-        #     xml_testsuite, xml_document, getattr(test_result._test, "properties", None)
-        # )
 
         # here can be added additional tags that have to be stored into the xml test report
         xml_testsuite.setAttribute("test_ids", str(test_result.test_ids))

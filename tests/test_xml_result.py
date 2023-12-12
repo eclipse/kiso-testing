@@ -8,18 +8,33 @@
 ##########################################################################
 
 import unittest
+from unittest.mock import MagicMock
+
+import pytest
+from pytest_mock import MockerFixture
 
 import pykiso
 from pykiso.test_result import xml_result
 
 
+@pytest.fixture
+def mock_log_options(mocker):
+    return mocker.patch("pykiso.test_result.xml_result.get_logging_options")
+
+
+@pytest.fixture
+def mock_initialize_logging(mocker, mock_log_options):
+    return mocker.patch("pykiso.test_result.xml_result.initialize_logging")
+
+
 class MockTestResult:
-    def __init__(self, test_ids, doc="") -> None:
+    def __init__(self, test_ids=None, doc="") -> None:
         self.test_ids = test_ids
         self._testMethodDoc = doc
+        self._test = MagicMock(properties=None)
 
 
-def test_TestInfo_custom_constructor(mocker):
+def test_TestInfo_custom_constructor(mocker, mock_initialize_logging):
     test_method = MockTestResult(test_ids={"Component1": ["Req"]}, doc="DOCS")
     mock_test_info = mocker.patch.object(
         xml_result.xmlrunner.result._TestInfo, "__init__"
@@ -77,7 +92,7 @@ def test_CustomXmlResult_constructor(mocker):
     )
 
 
-def test_CustomXmlResult_constructor_ErrorHolder(mocker):
+def test_CustomXmlResult_constructor_ErrorHolder(mocker, mock_initialize_logging):
     mock_test_info = mocker.patch.object(
         xml_result.xmlrunner.result._TestInfo, "__init__"
     )
@@ -121,6 +136,7 @@ def test_report_testcase(mocker):
 
     test_result = MockTestResult(test_ids='{"Component1": ["Req"]}')
     xml_testsuite = mocker.Mock()
+    xml_testsuite.getElementsByTagName.return_value = []
     xml_document = mocker.Mock()
 
     custom_xml_result._report_testcase(test_result, xml_testsuite, xml_document)
@@ -129,3 +145,81 @@ def test_report_testcase(mocker):
         test_result, xml_testsuite, xml_document
     )
     xml_testsuite.setAttribute.assert_called_once_with("test_ids", test_result.test_ids)
+
+
+@pytest.fixture
+def result_with_properties():
+    mock_test_result = MockTestResult()
+    mock_test_result._test.properties = {"dummy": "property", "will": "appear"}
+    return mock_test_result
+
+
+def test_report_testcase_with_properties(result_with_properties, mocker: MagicMock):
+    mock_super_report_testcase = mocker.patch.object(
+        xml_result.XmlTestResult, "report_testcase"
+    )
+    mock_report_testsuite_props = mocker.patch.object(
+        xml_result.XmlTestResult, "_report_testsuite_properties"
+    )
+
+    mock_xml_testcase = mocker.MagicMock()
+    # verify that the properties won't be written if there are already properties written
+    mock_xml_testcase.getElementsByTagName.side_effect = [None, "some property"]
+
+    mock_xml_testsuite = mocker.MagicMock()
+    mock_xml_testsuite.getElementsByTagName.return_value = [
+        mock_xml_testcase,
+        mock_xml_testcase,
+    ]
+
+    mock_xml_document = mocker.MagicMock()
+
+    xml_result.XmlTestResult._report_testcase(
+        result_with_properties, mock_xml_testsuite, mock_xml_document
+    )
+
+    mock_super_report_testcase.assert_called_once_with(
+        result_with_properties, mock_xml_testsuite, mock_xml_document
+    )
+    mock_xml_testsuite.getElementsByTagName.assert_called_once_with("testcase")
+    mock_xml_testcase.getElementsByTagName.assert_called_with("properties")
+    assert mock_xml_testcase.getElementsByTagName.call_count == 2
+
+    mock_report_testsuite_props.assert_called_once_with(
+        mock_xml_testcase, mock_xml_document, result_with_properties._test.properties
+    )
+
+
+def test_report_testcase_with_properties_invalid_type(
+    result_with_properties, mocker: MagicMock
+):
+    mock_super_report_testcase = mocker.patch.object(
+        xml_result.XmlTestResult, "report_testcase"
+    )
+    mock_report_testsuite_props = mocker.patch.object(
+        xml_result.XmlTestResult, "_report_testsuite_properties"
+    )
+
+    mock_xml_testcase = mocker.MagicMock()
+    mock_xml_testcase.getElementsByTagName.return_value = "won't be called"
+
+    mock_xml_testsuite = mocker.MagicMock()
+    mock_xml_testsuite.getElementsByTagName.return_value = [
+        mock_xml_testcase,
+        mock_xml_testcase,
+    ]
+
+    mock_xml_document = mocker.MagicMock()
+
+    result_with_properties._test.properties = "INVALID TYPE"
+
+    xml_result.XmlTestResult._report_testcase(
+        result_with_properties, mock_xml_testsuite, mock_xml_document
+    )
+
+    mock_super_report_testcase.assert_called_once_with(
+        result_with_properties, mock_xml_testsuite, mock_xml_document
+    )
+    mock_xml_testsuite.getElementsByTagName.assert_called_once_with("testcase")
+    mock_xml_testcase.getElementsByTagName.assert_not_called()
+    mock_report_testsuite_props.assert_not_called()

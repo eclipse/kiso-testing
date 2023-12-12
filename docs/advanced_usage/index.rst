@@ -9,7 +9,7 @@ Advanced Usage
     access_config
     dynamic_conf
     remote_test
-    step_report
+    reporting
     how_to_auxiliary
     how_to_connector
     how_to_change_logger_class
