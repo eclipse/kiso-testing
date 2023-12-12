@@ -254,8 +254,7 @@ def determine_parent_test_function(test_name: str) -> str:
 
     :return: parent test function
     """
-    # the function respect the default test method pattern or in defualt test
-    # function
+    # the function respect the default test method pattern or in default test function
     if test_name.lower() in DEFAULT_TEST_METHOD or test_name.startswith("test_"):
         return test_name
 
@@ -346,7 +345,13 @@ def assert_decorator(assert_method: types.MethodType):
             received = assert_value if assert_name not in MUTE_CONTENT_ASSERTION else ""
 
             # 1.3. Get variable name
-            var_name = _get_variable_name(f_back, assert_name)
+            found = False
+            while not found:
+                try:
+                    var_name = _get_variable_name(f_back, assert_name)
+                    found = True
+                except IndexError:
+                    f_back = f_back.f_back
 
             # 1.4. Get Expected value
             expected = _get_expected(assert_name, arguments)
@@ -359,7 +364,7 @@ def assert_decorator(assert_method: types.MethodType):
             _add_step(test_class_name, test_name, message, var_name, expected, received)
 
         except Exception as e:
-            log.error(f"Unable to update Step due to exception: {e}")
+            log.exception(f"Unable to update Step due to exception: {e}")
 
         # Run the assert method and mark the test as failed if the AssertionError is raised
         try:
