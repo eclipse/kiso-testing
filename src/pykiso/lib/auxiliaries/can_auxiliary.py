@@ -39,29 +39,6 @@ from contextlib import ContextDecorator
 
 log = logging.getLogger(__name__)
 
-
-class _collect_messages(ContextDecorator):
-    """Context manager and decorator for the communication auxiliary
-    allowing messages collection (putting them in the queue).
-    """
-
-    def __init__(self, com_aux: CommunicationAuxiliary):
-        """Constructor used to inherit some of communication auxiliary
-        features.
-        """
-        self.com_aux = com_aux
-
-    def __enter__(self):
-        """Set the queue event to allow messages collection."""
-        log.internal_debug("Start queueing received messages.")
-        self.com_aux.queueing_event.set()
-
-    def __exit__(self, *exc):
-        """Clear queue event to stop messages collection."""
-        log.internal_debug("Stop queueing received messages.")
-        self.com_aux.queueing_event.clear()
-
-
 class CanAuxiliary(DTAuxiliaryInterface):
     """Auxiliary is used for reading and writing can messages defined in dbc file """
 
@@ -70,15 +47,13 @@ class CanAuxiliary(DTAuxiliaryInterface):
 
         :param com: CChannel that supports raw communication over CAN
         """
+        self.tx_task_on = False
         super().__init__(
             is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs
         )
-        self.tx_task_on = False
+        
         self.recv_can_messages = {}
         self.channel = com
-        self.queue_tx = queue.Queue()
-        self.queueing_event = threading.Event()
-        self.collect_messages = functools.partial(_collect_messages, com_aux=self)
         path_to_dbf_file = dbc_file
         self.parser = CanMessageParser(path_to_dbf_file)
         self.can_messages = {}
@@ -134,7 +109,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
         """
 
         return self.can_messages.get(message_name, None)
-    
+
 
     def get_last_signal(self, message_name: str, signal_name: str) -> Optional[Any]:
         """Get the last message which has been received on the bus.
@@ -194,17 +169,6 @@ class CanAuxiliary(DTAuxiliaryInterface):
         
         return None
 
-    @staticmethod
-    def _is_payload_valid(payload: Optional[bytes]) -> bool:
-        """Check that the payload is valid. The payload is valid if it is made up of
-            8 bytes and bytes 6, 7 and 8 are empty.
-
-        :param payload: payload to check validity
-
-        :return: True if the payload is valid, False if invalid.
-        """
-        return payload is not None and len(payload) == 8 and (payload[5] == payload[6] == payload[7] == 0)
-
     def send_message(self, message: str, signals: dict[str, Any]) -> bool:
         """Send one message, the message need to be defined in the dbc file.
 
@@ -223,57 +187,6 @@ class CanAuxiliary(DTAuxiliaryInterface):
             raise ValueError(f"{message} is not a message defined in the DBC file.")
         msg_to_send = self.parser.encode(message, signals)
         self.channel.cc_send(msg_to_send[0], remote_id=msg_to_send[1])
-
-    def run_command(
-        self,
-        cmd_message: Any,
-        cmd_data: Any = None,
-        blocking: bool = True,
-        timeout_in_s: int = 5,
-        timeout_result: Any = None,
-    ) -> Any:
-        """Send a request by transmitting it through queue_in and
-        waiting for a response using queue_out.
-
-        :param cmd_message: command request to the auxiliary
-        :param cmd_data: data you would like to populate the command
-            with
-        :param blocking: If you want the command request to be
-            blocking or not
-        :param timeout_in_s: Number of time (in s) you want to wait
-            for an answer
-        :param timeout_result: Value to return when the command times
-            out. Defaults to None.
-
-        :raises pykiso.exceptions.AuxiliaryNotStarted: if a command is
-            executed although the auxiliary was not started.
-        :return: True if the request is correctly executed otherwise
-            False
-        """
-        # avoid a deadlock in case run_command is called within a _receive_message implementation
-        # (for e.g. callback implementation) while delete_instance is being executed from the main thread
-        if self._stop_event.is_set():
-            return timeout_result
-
-        with self.lock:
-            if not self.is_instance:
-                raise AuxiliaryNotStarted(self.name)
-
-            log.internal_debug(
-                f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
-            )
-            response_received = timeout_result
-            self.queue_in.put((cmd_message, cmd_data))
-            try:
-                response_received = self.queue_out.get(blocking, timeout_in_s)
-                log.internal_debug(
-                    f"reply to command '{cmd_message}' received: '{response_received}' in {self.name}"
-                )
-            except queue.Empty:
-                log.error(
-                    f"no reply received within time for command {cmd_message} for payload {cmd_data} using {self.name} aux."
-                )
-        return response_received
 
     def _run_command(self, cmd_message: str, cmd_data: bytes = None) -> bool:
         """Run the corresponding command.
