@@ -22,7 +22,7 @@ The goal of this module is to be able to receive and send signals which are defi
 
 import functools
 import logging
-import queue
+from queue import Queue, Empty
 import threading
 import time
 from contextlib import ContextDecorator
@@ -101,20 +101,20 @@ class CanAuxiliary(DTAuxiliaryInterface):
                 message_timestamp = float(rcv_data.get("timestamp", 0))
                 old_can_message = self.can_messages.get(message_name, None)
                 if old_can_message is None:
-                    can_msg = CanMessage(
+                    self.can_messages[message_name] = Queue(maxsize=1)
+                if not self.can_messages[message_name].empty():
+                    self.can_messages[message_name].get(block=False)
+                can_msg = CanMessage(
                         message_name, message_signals, message_timestamp
                     )
-                    self.can_messages[message_name] = can_msg
-                else:
-                    self.can_messages[message_name].name = message_name
-                    self.can_messages[message_name].signals = message_signals
-                    self.can_messages[message_name].time_stamp = message_timestamp
+                self.can_messages[message_name].put(can_msg)
         except KeyError:
-            log.exception("Specific message signal is not found in message")
+            #log.exception("Specific message signal is not found in message")
+            pass
         except (Exception):
-            log.exception(
-                f"encountered error while receiving message via {self.channel}"
-            )
+            #log.exception(
+            #    f"encountered error while receiving message via {self.channel}"
+            #)
             pass
 
     def get_last_message(self, message_name: str) -> Optional[CanMessage]:
@@ -124,7 +124,13 @@ class CanAuxiliary(DTAuxiliaryInterface):
         :return: last can massage or return none if the message, or return none if message is not occur
         """
 
-        return self.can_messages.get(message_name, None)
+        can_msg_queue = self.can_messages.get(message_name, None)
+        if can_msg_queue is not None and not can_msg_queue.empty():
+            msg = can_msg_queue.get()
+            self.can_messages[message_name].put_nowait(msg)
+            return msg
+        return None
+        
 
     def get_last_signal(self, message_name: str, signal_name: str) -> Optional[Any]:
         """Get the last message which has been received on the bus.
@@ -132,11 +138,14 @@ class CanAuxiliary(DTAuxiliaryInterface):
 
         :return: last can massage or return none if the message or return none if message or signal is not occur
         """
-
-        last_can_message = self.can_messages.get(message_name, None)
-        if last_can_message is not None:
-            return last_can_message.signals.get(signal_name, None)
-
+        can_msg_queue = self.can_messages.get(message_name, None)
+        if can_msg_queue is not None and not can_msg_queue.empty():
+            last_can_message = can_msg_queue.get_nowait()
+            if last_can_message is not None:
+                self.can_messages[message_name].put_nowait(last_can_message)
+                return last_can_message.signals[signal_name]
+      
+        return None
     def wait_for_message(
         self, message_name: str, timeout: float = 0.2
     ) -> dict[str, any]:
@@ -146,13 +155,24 @@ class CanAuxiliary(DTAuxiliaryInterface):
 
         :return: list of last can messages or None if no messages for this component
         """
-        last_msg = self.can_messages.get(message_name, None)
-        time.sleep(timeout)
-        new_can_msg = self.can_messages.get(message_name, None)
-        if last_msg is None or last_msg.time_stamp != new_can_msg.time_stamp:
-            return new_can_msg
-        else:
+
+        can_msg_queue = self.can_messages.get(message_name, None)
+        old_value = None
+        if can_msg_queue is None:
+            self.can_messages[message_name] = Queue(maxsize=1)
+
+        if not self.can_messages[message_name].empty():
+            old_value = self.can_messages[message_name].get()
+
+        try:
+            new_msg = self.can_messages[message_name].get(timeout=timeout)
+            self.can_messages[message_name].put_nowait(new_msg)
+            return new_msg
+        except Empty:
+            if old_value is not None:
+                self.can_messages[message_name].put_nowait(old_value)
             return None
+
 
     def wait_for_signal(
         self, message_name: str, expected_signals: dict[str, any], timeout: float = 0.2
@@ -169,9 +189,10 @@ class CanAuxiliary(DTAuxiliaryInterface):
         t1 = time.perf_counter()
         while time.perf_counter() - t1 < timeout:
             expected_signals_names = expected_signals.keys()
-            last_can_msg = self.can_messages.get(message_name, None)
-            if last_can_msg is None:
+            last_msg_queue = self.can_messages.get(message_name, None)
+            if last_msg_queue is None or last_msg_queue.empty():
                 continue
+            last_can_msg = last_msg_queue.get_nowait()
             for signal_name in expected_signals_names:
                 if last_can_msg.signals[signal_name] != expected_signals[signal_name]:
                     continue
