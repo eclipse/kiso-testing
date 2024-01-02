@@ -22,10 +22,10 @@ The goal of this module is to be able to receive and send signals which are defi
 
 import functools
 import logging
-from queue import Queue, Empty
 import threading
 import time
 from contextlib import ContextDecorator
+from queue import Empty, Queue
 from typing import Any, Optional
 
 from pykiso import Message
@@ -104,17 +104,15 @@ class CanAuxiliary(DTAuxiliaryInterface):
                     self.can_messages[message_name] = Queue(maxsize=1)
                 if not self.can_messages[message_name].empty():
                     self.can_messages[message_name].get(block=False)
-                can_msg = CanMessage(
-                        message_name, message_signals, message_timestamp
-                    )
+                can_msg = CanMessage(message_name, message_signals, message_timestamp)
                 self.can_messages[message_name].put(can_msg)
         except KeyError:
-            #log.exception("Specific message signal is not found in message")
+            # log.exception("Specific message signal is not found in message")
             pass
         except (Exception):
-            #log.exception(
+            # log.exception(
             #    f"encountered error while receiving message via {self.channel}"
-            #)
+            # )
             pass
 
     def get_last_message(self, message_name: str) -> Optional[CanMessage]:
@@ -130,7 +128,6 @@ class CanAuxiliary(DTAuxiliaryInterface):
             self.can_messages[message_name].put_nowait(msg)
             return msg
         return None
-        
 
     def get_last_signal(self, message_name: str, signal_name: str) -> Optional[Any]:
         """Get the last message which has been received on the bus.
@@ -144,8 +141,9 @@ class CanAuxiliary(DTAuxiliaryInterface):
             if last_can_message is not None:
                 self.can_messages[message_name].put_nowait(last_can_message)
                 return last_can_message.signals[signal_name]
-      
+
         return None
+
     def wait_for_message(
         self, message_name: str, timeout: float = 0.2
     ) -> dict[str, any]:
@@ -172,7 +170,6 @@ class CanAuxiliary(DTAuxiliaryInterface):
             if old_value is not None:
                 self.can_messages[message_name].put_nowait(old_value)
             return None
-
 
     def wait_for_signal(
         self, message_name: str, expected_signals: dict[str, any], timeout: float = 0.2
