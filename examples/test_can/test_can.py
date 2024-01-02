@@ -18,14 +18,16 @@ Can Auxiliary example
 .. currentmodule:: test_can
 """
 import logging
-import pykiso
-from pykiso.auxiliaries import can_aux1, can_aux2
-from pykiso.lib.auxiliaries.can_auxiliary import CanAuxiliary
 import threading
 import time
 
+import pykiso
+from pykiso.auxiliaries import can_aux1, can_aux2
+from pykiso.lib.auxiliaries.can_auxiliary import CanAuxiliary
+
 can_aux1: CanAuxiliary
 can_aux2: CanAuxiliary
+
 
 @pykiso.define_test_parameters(suite_id=1, case_id=1, aux_list=[can_aux1, can_aux2])
 class CanAuxTest(pykiso.BasicTest):
@@ -41,7 +43,9 @@ class CanAuxTest(pykiso.BasicTest):
         )
 
         send_t = threading.Thread(target=self.send_message, args=[can_aux1])
-        recv_t = threading.Thread(target=self.wait_for_receive_message, args=[can_aux2, 0.2])
+        recv_t = threading.Thread(
+            target=self.wait_for_receive_message, args=[can_aux2, 0.2]
+        )
 
         recv_t.start()
         time.sleep(1)
@@ -49,12 +53,13 @@ class CanAuxTest(pykiso.BasicTest):
         send_t.join()
         recv_t.join()
 
-
     def tearDown(self):
         pass
 
     def send_message(self, can_aux):
-        can_aux.send_message(message="Message_1", signals={"signal_a": 1, "signal_b": 2})
+        can_aux.send_message(
+            message="Message_1", signals={"signal_a": 1, "signal_b": 2}
+        )
 
     def wait_for_receive_message(self, can_aux, timeout):
         recv_msg = can_aux.wait_for_message("Message_1", timeout)

@@ -20,27 +20,33 @@ The goal of this module is to be able to receive and send signals which are defi
 .. currentmodule:: can_auxiliary
 """
 
+import functools
 import logging
 import queue
-import time
 import threading
-import functools
+import time
+from contextlib import ContextDecorator
 from typing import Any, Optional
 
-from pykiso.connector import CChannel
-from pykiso.lib.auxiliaries.communication_auxiliary import CommunicationAuxiliary
-from pykiso.interfaces.dt_auxiliary import (DTAuxiliaryInterface, open_connector, close_connector)
 from pykiso import Message
 from pykiso.can_message import CanMessage
 from pykiso.can_parser import CanMessageParser
+from pykiso.connector import CChannel
 from pykiso.exceptions import AuxiliaryNotStarted
-
-from contextlib import ContextDecorator
+from pykiso.interfaces.dt_auxiliary import (
+    DTAuxiliaryInterface,
+    close_connector,
+    open_connector,
+)
+from pykiso.lib.auxiliaries.communication_auxiliary import (
+    CommunicationAuxiliary,
+)
 
 log = logging.getLogger(__name__)
 
+
 class CanAuxiliary(DTAuxiliaryInterface):
-    """Auxiliary is used for reading and writing can messages defined in dbc file """
+    """Auxiliary is used for reading and writing can messages defined in dbc file"""
 
     def __init__(self, com: CChannel, dbc_file: str, **kwargs):
         """Constructor.
@@ -51,7 +57,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
         super().__init__(
             is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs
         )
-        
+
         self.recv_can_messages = {}
         self.channel = com
         path_to_dbf_file = dbc_file
@@ -86,30 +92,39 @@ class CanAuxiliary(DTAuxiliaryInterface):
             rcv_data = self.channel.cc_receive(timeout=timeout_in_s)
             if rcv_data.get("msg") is not None:
                 log.internal_debug(f"received message '{rcv_data}' from {self.channel}")
-                message_name = self.parser.dbc.get_message_by_frame_id(rcv_data["remote_id"]).name
-                message_signals = self.parser.decode(rcv_data["msg"], rcv_data["remote_id"])
+                message_name = self.parser.dbc.get_message_by_frame_id(
+                    rcv_data["remote_id"]
+                ).name
+                message_signals = self.parser.decode(
+                    rcv_data["msg"], rcv_data["remote_id"]
+                )
                 message_timestamp = float(rcv_data.get("timestamp", 0))
                 old_can_message = self.can_messages.get(message_name, None)
                 if old_can_message is None:
-                    can_msg = CanMessage(message_name, message_signals, message_timestamp)
+                    can_msg = CanMessage(
+                        message_name, message_signals, message_timestamp
+                    )
                     self.can_messages[message_name] = can_msg
                 else:
                     self.can_messages[message_name].name = message_name
                     self.can_messages[message_name].signals = message_signals
                     self.can_messages[message_name].time_stamp = message_timestamp
-        except (Exception, KeyError):
-            log.exception(f"encountered error while receiving message via {self.channel}")
+        except KeyError:
+            log.exception("Specific message signal is not found in message")
+        except (Exception):
+            log.exception(
+                f"encountered error while receiving message via {self.channel}"
+            )
             pass
 
     def get_last_message(self, message_name: str) -> Optional[CanMessage]:
         """Get the last message which has been received on the bus.
         :param message_name: name of the message, you want to get
 
-        :return: last can massage or return none if the message, or return none if message is not occur 
+        :return: last can massage or return none if the message, or return none if message is not occur
         """
 
         return self.can_messages.get(message_name, None)
-
 
     def get_last_signal(self, message_name: str, signal_name: str) -> Optional[Any]:
         """Get the last message which has been received on the bus.
@@ -123,9 +138,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
             return last_can_message.signals.get(signal_name, None)
 
     def wait_for_message(
-        self,
-        message_name: str,
-        timeout: float = 0.2
+        self, message_name: str, timeout: float = 0.2
     ) -> dict[str, any]:
         """Get the last message with certain timeout in seconds.
         :param message_name: name of the message to receive
@@ -142,10 +155,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
             return None
 
     def wait_for_signal(
-        self,
-        message_name: str,
-        expected_signals: dict[str, any],
-        timeout: float = 0.2
+        self, message_name: str, expected_signals: dict[str, any], timeout: float = 0.2
     ) -> dict[str, any]:
         """Get the last signal of message with certain timeout in seconds.
 
@@ -155,7 +165,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
 
         :return: list of last can messages or None if no messages for this component
         """
-        
+
         t1 = time.perf_counter()
         while time.perf_counter() - t1 < timeout:
             expected_signals_names = expected_signals.keys()
@@ -166,7 +176,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
                 if last_can_msg.signals[signal_name] != expected_signals[signal_name]:
                     continue
             return last_can_msg
-        
+
         return None
 
     def send_message(self, message: str, signals: dict[str, Any]) -> bool:

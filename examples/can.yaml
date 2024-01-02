@@ -2,13 +2,13 @@ auxiliaries:
   can_aux1:
     connectors:
         com: can_channel
-    config: 
+    config:
         dbc_file: ./test_can/simple.dbc
     type: pykiso.lib.auxiliaries.can_auxiliary:CanAuxiliary
   can_aux2:
     connectors:
         com: can_channel
-    config: 
+    config:
         dbc_file: ./test_can/simple.dbc
     type: pykiso.lib.auxiliaries.can_auxiliary:CanAuxiliary
 connectors:

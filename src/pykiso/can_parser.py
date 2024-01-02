@@ -32,6 +32,7 @@ log = logging.getLogger(__name__)
 
 class CanMessageParser:
     """A message parser and builder"""
+
     def __init__(self, dbc_path: Path) -> None:
         """Can dbc file parser
 

@@ -21,7 +21,7 @@ pykiso Control Message Protocol
 from typing import Any
 
 
-class CanMessage():
+class CanMessage:
     def __init__(self, name: str, signals: dict[str, Any], time_stamp: float) -> None:
         self.name = name
         self.signals = signals

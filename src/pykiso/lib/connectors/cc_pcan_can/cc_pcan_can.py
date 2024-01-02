@@ -26,7 +26,6 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-
 try:
     import can
     import can.bus
