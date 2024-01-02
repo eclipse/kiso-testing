@@ -44,11 +44,11 @@ class CanAuxTest(pykiso.BasicTest):
 
         send_t = threading.Thread(target=self.send_message, args=[can_aux1])
         recv_t = threading.Thread(
-            target=self.wait_for_receive_message, args=[can_aux2, 0.2]
+            target=self.wait_for_receive_message, args=[can_aux2, 1]
         )
 
         recv_t.start()
-        time.sleep(1)
+        time.sleep(0.2)
         send_t.start()
         send_t.join()
         recv_t.join()
