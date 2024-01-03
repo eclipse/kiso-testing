@@ -20,11 +20,8 @@ The goal of this module is to be able to receive and send signals which are defi
 .. currentmodule:: can_auxiliary
 """
 
-import functools
 import logging
-import threading
 import time
-from contextlib import ContextDecorator
 from queue import Empty, Queue
 from typing import Any, Optional
 
@@ -32,14 +29,10 @@ from pykiso import Message
 from pykiso.can_message import CanMessage
 from pykiso.can_parser import CanMessageParser
 from pykiso.connector import CChannel
-from pykiso.exceptions import AuxiliaryNotStarted
 from pykiso.interfaces.dt_auxiliary import (
     DTAuxiliaryInterface,
     close_connector,
     open_connector,
-)
-from pykiso.lib.auxiliaries.communication_auxiliary import (
-    CommunicationAuxiliary,
 )
 
 log = logging.getLogger(__name__)
@@ -60,8 +53,8 @@ class CanAuxiliary(DTAuxiliaryInterface):
 
         self.recv_can_messages = {}
         self.channel = com
-        path_to_dbf_file = dbc_file
-        self.parser = CanMessageParser(path_to_dbf_file)
+        path_to_dbc_file = dbc_file
+        self.parser = CanMessageParser(path_to_dbc_file)
         self.can_messages = {}
 
     @open_connector
@@ -103,16 +96,16 @@ class CanAuxiliary(DTAuxiliaryInterface):
                 if old_can_message is None:
                     self.can_messages[message_name] = Queue(maxsize=1)
                 if not self.can_messages[message_name].empty():
-                    self.can_messages[message_name].get(block=False)
+                    self.can_messages[message_name].get_nowait()
                 can_msg = CanMessage(message_name, message_signals, message_timestamp)
                 self.can_messages[message_name].put(can_msg)
         except KeyError:
-            # log.exception("Specific message signal is not found in message")
+            log.exception("Specific message signal is not found in message")
             pass
         except (Exception):
-            # log.exception(
-            #    f"encountered error while receiving message via {self.channel}"
-            # )
+            log.exception(
+                f"encountered error while receiving message via {self.channel}"
+            )
             pass
 
     def get_last_message(self, message_name: str) -> Optional[CanMessage]:
