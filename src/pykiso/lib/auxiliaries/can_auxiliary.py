@@ -167,10 +167,11 @@ class CanAuxiliary(DTAuxiliaryInterface):
     def wait_to_match_message_with_signals(
         self, message_name: str, expected_signals: dict[str, any], timeout: float = 0.2
     ) -> dict[str, any]:
-        """Get the last signal of message with certain timeout in seconds.
+        """Get first message which matches the patter of signals
+        .
 
         :param message_name: name of the message to receive
-        :param signal_name: signal name in the message to receive
+        :param expected_signal: list of expected signals to match with message 
         :param timeout time to wait till a message receives in seconds
 
         :return: list of last can messages or None if no messages for this component
