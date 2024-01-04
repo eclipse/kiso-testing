@@ -171,7 +171,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
         .
 
         :param message_name: name of the message to receive
-        :param expected_signal: list of expected signals to match with message 
+        :param expected_signal: list of expected signals to match with message
         :param timeout time to wait till a message receives in seconds
 
         :return: list of last can messages or None if no messages for this component
