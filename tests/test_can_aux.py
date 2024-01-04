@@ -52,9 +52,9 @@ class TestCanAux:
 
         result = can_aux_instance.get_last_message("Simple_Msg")
 
-        assert result.name, "Simple_Msg"
-        assert result.signals, {"a": 5}
-        assert result.timestamp, 5
+        assert result.name == "Simple_Msg"
+        assert result.signals == {"a": 5}
+        assert result.timestamp == 5
         assert can_aux_instance.can_messages["Simple_Msg"].full()
 
     def test_get_last_signal(self, can_aux_instance):
@@ -63,7 +63,7 @@ class TestCanAux:
 
         result = can_aux_instance.get_last_signal("Simple_Msg", "a")
 
-        assert result, 5
+        assert result == 5
         assert can_aux_instance.can_messages["Simple_Msg"].full()
 
     def test_get_last_signal_with_wrong_signal_name(self, can_aux_instance):
@@ -90,9 +90,9 @@ class TestCanAux:
         send_t.join()
         recv_t.join()
 
-        assert result[0].name, msg_to_send.name
-        assert result[0].signals, msg_to_send.signals
-        assert result[0].timestamp, msg_to_send.timestamp
+        assert result[0].name == msg_to_send.name
+        assert result[0].signals == msg_to_send.signals
+        assert result[0].timestamp == msg_to_send.timestamp
         assert can_aux_instance.can_messages[msg_to_send.name].full()
 
 
@@ -102,22 +102,19 @@ class TestCanAux:
         old_msg = CanMessage("Message_1", {"signal_a": 5, "signal_b": 6}, 7)
         can_aux_instance.can_messages["Message_1"] = Queue(maxsize=1)
         can_aux_instance.can_messages[old_msg.name].put_nowait(old_msg)
-        send_t = threading.Thread(target=self.send_message, args=[can_aux_instance, msg_to_send])
         recv_t = threading.Thread(
             target=self.wait_for_receive_message, args=[can_aux_instance, 0.1, msg_to_send.name, result]
         )
 
         recv_t.start()
         time.sleep(0.5)
-        send_t.start()
-        send_t.join()
         recv_t.join()
 
         assert result[0] is None
         msg_in_the_queue = can_aux_instance.can_messages["Message_1"].get_nowait()
-        assert msg_in_the_queue.name, old_msg.name
-        assert msg_in_the_queue.signals, old_msg.signals
-        assert msg_in_the_queue.timestamp, old_msg.timestamp
+        assert msg_in_the_queue.name == old_msg.name
+        assert msg_in_the_queue.signals == old_msg.signals
+        assert msg_in_the_queue.timestamp == old_msg.timestamp
 
 
     def test_wait_for_match_signals(self, can_aux_instance):
@@ -140,9 +137,9 @@ class TestCanAux:
         send_t.join()
         recv_t.join()
 
-        assert result[0], "Message_1"
-        assert result[0].signals, {"signal_a": 7, "signal_b": 8}
-        assert result[0].timestamp, 9
+        assert result[0].name == "Message_1"
+        assert result[0].signals == {"signal_a": 7, "signal_b": 8}
+        assert result[0].timestamp == 9
 
     def test_wait_for_match_signal_with_wrong_signals(self, can_aux_instance):
         result = []
