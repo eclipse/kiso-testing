@@ -22,7 +22,7 @@ from typing import Any
 
 
 class CanMessage:
-    def __init__(self, name: str, signals: dict[str, Any], time_stamp: float) -> None:
+    def __init__(self, name: str, signals: dict[str, Any], timestamp: float) -> None:
         self.name = name
         self.signals = signals
-        self.time_stamp = time_stamp
+        self.timestamp = timestamp

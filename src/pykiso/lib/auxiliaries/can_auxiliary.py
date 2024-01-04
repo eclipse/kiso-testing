@@ -117,7 +117,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
 
         can_msg_queue = self.can_messages.get(message_name, None)
         if can_msg_queue is not None and not can_msg_queue.empty():
-            msg = can_msg_queue.get()
+            msg = can_msg_queue.get_nowait()
             self.can_messages[message_name].put_nowait(msg)
             return msg
         return None
@@ -133,7 +133,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
             last_can_message = can_msg_queue.get_nowait()
             if last_can_message is not None:
                 self.can_messages[message_name].put_nowait(last_can_message)
-                return last_can_message.signals[signal_name]
+                return last_can_message.signals.get(signal_name, None)
 
         return None
 
@@ -164,7 +164,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
                 self.can_messages[message_name].put_nowait(old_value)
             return None
 
-    def wait_for_signal(
+    def wait_to_match_message_with_signals(
         self, message_name: str, expected_signals: dict[str, any], timeout: float = 0.2
     ) -> dict[str, any]:
         """Get the last signal of message with certain timeout in seconds.
@@ -177,18 +177,28 @@ class CanAuxiliary(DTAuxiliaryInterface):
         """
 
         t1 = time.perf_counter()
-        while time.perf_counter() - t1 < timeout:
+        message_to_return = None
+        is_msg_matched = False
+        while time.perf_counter() - t1 < timeout and not is_msg_matched:
             expected_signals_names = expected_signals.keys()
             last_msg_queue = self.can_messages.get(message_name, None)
-            if last_msg_queue is None or last_msg_queue.empty():
+            if last_msg_queue is None:
                 continue
-            last_can_msg = last_msg_queue.get_nowait()
+            try:
+                last_can_msg = last_msg_queue.get_nowait()
+            except Empty:
+                continue
+            is_msg_matched = True
             for signal_name in expected_signals_names:
                 if last_can_msg.signals[signal_name] != expected_signals[signal_name]:
-                    continue
-            return last_can_msg
+                    is_msg_matched = False
+                    break
+            if is_msg_matched:
+                message_to_return = last_can_msg
+                self.can_messages[message_name].put_nowait(last_can_msg)
+                break
 
-        return None
+        return message_to_return
 
     def send_message(self, message: str, signals: dict[str, Any]) -> bool:
         """Send one message, the message need to be defined in the dbc file.
