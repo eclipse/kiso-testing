@@ -202,9 +202,9 @@ class TestCanAux:
         parser_decode_mock.assert_called_with(bytearray(b'\x01\x05\x00\x00'), 16)
         assert can_aux_instance.can_messages["Message_1"].full()
         msg_int_the_queue = can_aux_instance.can_messages["Message_1"].get_nowait()
-        assert msg_int_the_queue.name, "Message_1"
-        assert msg_int_the_queue.signals, {"signal_a": 1, "signal_b": 5}
-        assert msg_int_the_queue.timestamp, 9
+        assert msg_int_the_queue.name == "Message_1"
+        assert msg_int_the_queue.signals == {"signal_a": 1, "signal_b": 5}
+        assert msg_int_the_queue.timestamp == 2
 
     def test_receive_message_with_full_queue(self, can_aux_instance, mocker):
         simple_msg = {'msg': bytearray(b'\x01\x05\x00\x00'), 'remote_id': 16, 'timestamp': 2}
@@ -223,6 +223,6 @@ class TestCanAux:
         parser_decode_mock.assert_called_with(bytearray(b'\x01\x05\x00\x00'), 16)
         assert can_aux_instance.can_messages["Message_1"].full()
         msg_int_the_queue = can_aux_instance.can_messages["Message_1"].get_nowait()
-        assert msg_int_the_queue.name, "Message_1"
-        assert msg_int_the_queue.signals, {"signal_a": 1, "signal_b": 5}
-        assert msg_int_the_queue.timestamp, 9
+        assert msg_int_the_queue.name == "Message_1"
+        assert msg_int_the_queue.signals == {"signal_a": 1, "signal_b": 5}
+        assert msg_int_the_queue.timestamp == 2
