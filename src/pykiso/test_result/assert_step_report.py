@@ -254,7 +254,7 @@ def determine_parent_test_function(test_name: str) -> str:
 
     :return: parent test function
     """
-    # the function respect the default test method pattern or in defualt test
+    # the function respect the default test method pattern or in default test
     # function
     if test_name.lower() in DEFAULT_TEST_METHOD or test_name.startswith("test_"):
         return test_name
@@ -308,34 +308,39 @@ def assert_decorator(assert_method: types.MethodType):
         return: The assertion method output if it exists. Otherwise, None
         """
         global _FUNCTION_TO_APPLY
+
+        # Context
+        currentframe = inspect.currentframe()
+        f_back = currentframe.f_back
+
+        # Exit this decorator earlier when assert was not called from test script.
+        if "unittest/case.py" in f_back.f_code.co_filename.replace("\\", "/"):
+            return assert_method(*args, **kwargs)
+
+        test_name = determine_parent_test_function(f_back.f_code.co_name)
+        test_case_inst: TestCase = assert_method.__self__
+        test_class_name = type(test_case_inst).__name__
+        assert_name = assert_method.__name__
+
+        # filter parent call, only known function recorded
+        parent_method = re.findall(_FUNCTION_TO_APPLY, test_name.lower())
+        # get the decorated test fixture name (setUp, tearDown, ...)
+        if parent_method and parent_method[0] == "handle_interaction":
+            test_name = f_back.f_locals["func"].__name__
+
+        # Assign variables to signature
+        signature = inspect.signature(assert_method)
+        arguments = signature.bind(*args, **kwargs).arguments
+        test_name = test_case_inst.step_report.current_table or test_name
+        # 1. Gather message, var_name, expected, received
+        # 1.1 Get message. default value: ""
+        if test_case_inst.step_report.message:
+            message = test_case_inst.step_report.message
+            test_case_inst.step_report.message = ""
+        else:
+            message = arguments.get("msg", "")
+
         try:
-            # Context
-            currentframe = inspect.currentframe()
-            f_back = currentframe.f_back
-
-            test_name = determine_parent_test_function(f_back.f_code.co_name)
-            test_case_inst: TestCase = assert_method.__self__
-            test_class_name = type(test_case_inst).__name__
-            assert_name = assert_method.__name__
-
-            # filter parent call, only known function recorded
-            parent_method = re.findall(_FUNCTION_TO_APPLY, test_name.lower())
-            # get the decorated test fixture name (setUp, tearDown, ...)
-            if parent_method and parent_method[0] == "handle_interaction":
-                test_name = f_back.f_locals["func"].__name__
-
-            # Assign variables to signature
-            signature = inspect.signature(assert_method)
-            arguments = signature.bind(*args, **kwargs).arguments
-            test_name = test_case_inst.step_report.current_table or test_name
-            # 1. Gather message, var_name, expected, received
-            # 1.1 Get message. default value: ""
-            if test_case_inst.step_report.message:
-                message = test_case_inst.step_report.message
-                test_case_inst.step_report.message = ""
-            else:
-                message = arguments.get("msg", "")
-
             # ensure message is always present in the arguments
             # dictionary. (used in _get_expected)
             if not message and "msg" in signature.parameters:
