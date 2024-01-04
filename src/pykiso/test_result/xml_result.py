@@ -86,6 +86,8 @@ class TestInfo(xmlrunner.result._TestInfo):
         if isinstance(test_case, unittest.suite._ErrorHolder):
             test_case._testMethodDoc = ""
             test_case.test_ids = {}
+
+        self._test = test_case
         # add attribute that will be used to format the errors
         self._testMethodDoc = test_case._testMethodDoc
         # store extra tag
@@ -113,7 +115,7 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         verbosity: int = 0,
         elapsed_times: bool = True,
         properties: Optional[Dict[str, Any]] = None,
-        infoclass: xmlrunner.result._TestInfo = TestInfo,
+        infoclass: Type[TestInfo] = TestInfo,
     ):
         """Initialize both base classes with the appropriate parameters.
 
@@ -143,7 +145,7 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         """
         return xmlrunner.runner._XMLTestResult.addSuccess(self, test)
 
-    # save the original staticmethod that will be overwritten
+    # save the original staticmethod that will be overwritten in order to call it
     report_testcase = copy.deepcopy(xmlrunner.runner._XMLTestResult._report_testcase)
 
     @staticmethod
@@ -158,6 +160,20 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
         """
         # call the original method
         XmlTestResult.report_testcase(test_result, xml_testsuite, xml_document)
+
+        # add user-defined properties to the test cases if any
+        xml_testcases = xml_testsuite.getElementsByTagName("testcase")
+        for xml_testcase in xml_testcases:
+            testcase_properties = getattr(test_result._test, "properties", None)
+            if not isinstance(testcase_properties, dict):
+                break
+            # avoid adding the same properties to the same testcase multiple times
+            if xml_testcase.getElementsByTagName("properties"):
+                continue
+            # add the properties to the testcase
+            XmlTestResult._report_testsuite_properties(
+                xml_testcase, xml_document, testcase_properties
+            )
 
         # here can be added additional tags that have to be stored into the xml test report
         xml_testsuite.setAttribute("test_ids", str(test_result.test_ids))
