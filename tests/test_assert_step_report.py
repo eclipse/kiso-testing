@@ -180,6 +180,17 @@ def test_assert_decorator_no_var_name(mocker, test_case):
     )
 
 
+def test_assert_decorator_index_error(mocker, test_case):
+    step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
+    mocked_get_variable_name = mocker.patch(
+        "pykiso.test_result.assert_step_report._get_variable_name",
+        side_effect=[IndexError("mocked error"), "some_var_name"],
+    )
+    test_case.assertTrue(True)
+
+    step_result.assert_called_once()
+
+
 def test_assert_decorator_multi_input(mocker, test_case):
     step_result = mocker.patch("pykiso.test_result.assert_step_report._add_step")
 
