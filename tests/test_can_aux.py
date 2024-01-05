@@ -37,6 +37,21 @@ class TestCanAux:
         can_aux_instance.send_message(message_name, message_signals)
         cc_send_mock.assert_called_with(b"\x01\x05\x00\x00", remote_id=16)
 
+    def test_send_message_with_str_signal(self, can_aux_instance, mocker):
+        message_name = "Message_1"
+        message_signals = {"signal_a": "a", "signal_b": 5}
+        cc_send_mock = mocker.patch.object(can_aux_instance.channel, "cc_send")
+        can_aux_instance.send_message(message_name, message_signals)
+        cc_send_mock.assert_called_with(b"a\x05\x00\x00", remote_id=16)
+
+    def test_send_message_with_wrong_msg_name(self, can_aux_instance, mocker):
+        message_name = "Message_2"
+        message_signals = {"signal_a": 1, "signal_b": 5}
+        with pytest.raises(
+            ValueError, match=r"Message_2 is not a message defined in the DBC file."
+        ):
+            can_aux_instance.send_message(message_name, message_signals)
+
     def test_get_message_with_empty_queue(self, can_aux_instance):
         result = can_aux_instance.get_last_message("Simple_Msg")
         assert result is None
@@ -178,6 +193,20 @@ class TestCanAux:
         time.sleep(0.2)
         send_t.start()
         send_t.join()
+        recv_t.join()
+
+        assert result[0] is None
+
+    def test_wait_for_match_signal_without_send_messages(self, can_aux_instance):
+        result = []
+        can_aux_instance.can_messages["Message_1"] = Queue(maxsize=1)
+
+        recv_t = threading.Thread(
+            target=self.wait_for_match_msg,
+            args=[can_aux_instance, 3, "Message_1", {"signal_a": 12}, result],
+        )
+
+        recv_t.start()
         recv_t.join()
 
         assert result[0] is None
