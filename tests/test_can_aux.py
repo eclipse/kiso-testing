@@ -81,6 +81,10 @@ class TestCanAux:
         assert result is None
         assert can_aux_instance.can_messages["Simple_Msg"].full()
 
+    def test_get_last_signal_with_empty_queue(self, can_aux_instance):
+        result = can_aux_instance.get_last_signal("Simple_Msg", "b")
+        assert result is None
+
     def test_wait_for_message(self, can_aux_instance):
         result = []
         msg_to_send = CanMessage("Message_1", {"signal_a": 1, "signal_b": 2}, 5)
