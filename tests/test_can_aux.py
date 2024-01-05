@@ -199,8 +199,6 @@ class TestCanAux:
 
     def test_wait_for_match_signal_without_send_messages(self, can_aux_instance):
         result = []
-        can_aux_instance.can_messages["Message_1"] = Queue(maxsize=1)
-
         recv_t = threading.Thread(
             target=self.wait_for_match_msg,
             args=[can_aux_instance, 3, "Message_1", {"signal_a": 12}, result],
