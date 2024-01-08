@@ -306,3 +306,13 @@ class TestCanAux:
         assert msg_int_the_queue.name == "Message_1"
         assert msg_int_the_queue.signals == {"signal_a": 1, "signal_b": 5}
         assert msg_int_the_queue.timestamp == 2
+
+    def test_decode_msg(self, can_aux_instance, mocker):
+        parser_dbc_decode_mock = mocker.patch.object(
+            can_aux_instance.parser.dbc, "decode_message"
+        )
+
+        can_aux_instance.parser.decode(bytearray(b"\x01\x05\x00\x00"), 16)
+        parser_dbc_decode_mock.assert_called_with(
+            16, bytearray(b"\x01\x05\x00\x00"), decode_choices=False
+        )
