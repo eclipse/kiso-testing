@@ -398,3 +398,13 @@ class TestCanAux:
         )
         can_aux_instance._run_command(None, bytearray(b"\x01\x05\x00\x00"))
         log_mock.assert_called_once()
+
+    def test_create_auxiliary(self, can_aux_instance, mocker):
+        mocker.patch.object(can_aux_instance.channel, "open")
+        result = can_aux_instance._create_auxiliary_instance()
+        assert result
+
+    def test_delete_auxiliary(self, can_aux_instance, mocker):
+        mocker.patch.object(can_aux_instance.channel, "close")
+        result = can_aux_instance._delete_auxiliary_instance()
+        assert result
