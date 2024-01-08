@@ -139,7 +139,7 @@ class ConfigRegistry:
                     auto_start = config["auxiliaries"][auxiliary]["config"][
                         "auto_start"
                     ]
-                except KeyError:
+                except (KeyError, TypeError):
                     # default value for auto_start is True
                     auto_start = True
                     break
