@@ -6,6 +6,7 @@
 #
 # SPDX-License-Identifier: EPL-2.0
 ##########################################################################
+import logging
 import threading
 import time
 from queue import Queue
@@ -13,6 +14,7 @@ from queue import Queue
 import pytest
 from cantools.database.errors import DecodeError
 
+from pykiso import Message
 from pykiso.can_message import CanMessage
 from pykiso.lib.auxiliaries.can_auxiliary import CanAuxiliary
 from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import CCPCanCan
@@ -367,3 +369,32 @@ class TestCanAux:
         parser_dbc_decode_mock.assert_called_with(
             16, bytearray(b"\x01\x05\x00\x00"), decode_choices=False
         )
+
+    def test_run_command_with_send_msg(self, can_aux_instance, mocker):
+        cc_send_mock = mocker.patch.object(can_aux_instance.channel, "cc_send")
+        can_aux_instance._run_command("send", bytearray(b"\x01\x05\x00\x00"))
+        cc_send_mock.assert_called_with(msg=bytearray(b"\x01\x05\x00\x00"))
+
+    def test_run_command_with_send_invalid_msg(self, can_aux_instance, mocker):
+        cc_send_mock = mocker.patch.object(can_aux_instance.channel, "cc_send")
+        log_mock = mocker.patch.object(
+            logging.getLogger("pykiso.lib.auxiliaries.can_auxiliary"), "exception"
+        )
+        cc_send_mock.side_effect = Exception()
+        can_aux_instance._run_command("send", bytearray(b"\x01\x05\x00\x00"))
+        log_mock.assert_called_once()
+
+    def test_run_command_with_send_msg_obj(self, can_aux_instance, mocker):
+        log_mock = mocker.patch.object(
+            logging.getLogger("pykiso.lib.auxiliaries.can_auxiliary"), "internal_debug"
+        )
+        can_aux_instance._run_command(Message(), bytearray(b"\x01\x05\x00\x00"))
+        log_mock.assert_called_once()
+
+    def test_run_command_with_send_none(self, can_aux_instance, mocker):
+        log_mock = mocker.patch.object(
+            logging.getLogger("pykiso.lib.auxiliaries.can_auxiliary"),
+            "internal_warning",
+        )
+        can_aux_instance._run_command(None, bytearray(b"\x01\x05\x00\x00"))
+        log_mock.assert_called_once()
