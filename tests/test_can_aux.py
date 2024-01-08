@@ -11,6 +11,7 @@ import time
 from queue import Queue
 
 import pytest
+from cantools.database.errors import DecodeError
 
 from pykiso.can_message import CanMessage
 from pykiso.lib.auxiliaries.can_auxiliary import CanAuxiliary
@@ -269,6 +270,56 @@ class TestCanAux:
         assert msg_int_the_queue.name == "Message_1"
         assert msg_int_the_queue.signals == {"signal_a": 1, "signal_b": 5}
         assert msg_int_the_queue.timestamp == 2
+
+    def test_receive_message_with_invalid_message(self, can_aux_instance, mocker):
+        simple_msg = {
+            "msg": bytearray(b"\x01\x05\x00\x00"),
+            "remote_id": 16,
+            "timestamp": 2,
+        }
+        mocker.patch.object(
+            self.can_aux_instance.channel, "cc_receive", return_value=simple_msg
+        )
+        get_msg_by_frame_mock = mocker.patch.object(
+            can_aux_instance.parser.dbc,
+            "get_message_by_frame_id",
+        )
+        get_msg_by_frame_mock.side_effect = KeyError(
+            "Specific message signal is not found in message"
+        )
+        parser_decode_mock = mocker.patch.object(
+            can_aux_instance.parser,
+            "decode",
+            return_value={"signal_a": 1, "signal_b": 5},
+        )
+
+        can_aux_instance._receive_message(2)
+        parser_decode_mock.assert_not_called()
+
+    def test_receive_message_and_decode_fails(self, can_aux_instance, mocker):
+        simple_msg = {
+            "msg": bytearray(b"\x01\x05\x00\x00"),
+            "remote_id": 16,
+            "timestamp": 2,
+        }
+        mocker.patch.object(
+            self.can_aux_instance.channel, "cc_receive", return_value=simple_msg
+        )
+        msg_obj_magic_mock = mocker.MagicMock()
+        msg_obj_magic_mock.name = "Message_1"
+        mocker.patch.object(
+            can_aux_instance.parser.dbc,
+            "get_message_by_frame_id",
+            return_value=msg_obj_magic_mock,
+        )
+        parser_decode_mock = mocker.patch.object(
+            can_aux_instance.parser,
+            "decode",
+        )
+        parser_decode_mock.side_effect = DecodeError()
+
+        can_aux_instance._receive_message(2)
+        assert can_aux_instance.can_messages.get("Message_1", None) is None
 
     def test_receive_message_with_full_queue(self, can_aux_instance, mocker):
         simple_msg = {
