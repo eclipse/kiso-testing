@@ -121,6 +121,8 @@ Existing Auxiliarys
 
 :ref:`auxiliaries/ykush_auxiliary:ykush_auxiliary` - control Yepkit USB hub.
 
+:ref:`auxiliaries/can_auxiliary:can_auxiliary` - auxiliary enables you to read write can messages
+
 Detailed information about included auxiliarys can be found here :ref:`auxiliaries/index:Existing Auxiliaries`.
 
 Connector

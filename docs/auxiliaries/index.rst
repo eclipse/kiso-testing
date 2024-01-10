@@ -18,3 +18,4 @@ Existing Auxiliaries
     simulated_auxiliary
     uds_auxiliary
     ykush_auxiliary
+    can_auxiliary
