@@ -39,10 +39,18 @@ class CCVirtualCan(connector.CChannel):
 
     def __init__(
         self,
+        channel: UdpMulticastBus = UdpMulticastBus.DEFAULT_GROUP_IPv4,
+        interface: str = "udp_multicast",
+        receive_own_messages: bool = False,
         fd: bool = True,
         enable_brs:  bool = False,
         is_extended_id: bool = False,
+        **kwargs,
     ):
+        super().__init__(**kwargs)
+        self.channel = channel
+        self.interface = interface
+        self.receive_own_messages = receive_own_messages
         self.is_fd = fd
         self.enable_brs = enable_brs
         self.is_extended_id = is_extended_id
@@ -51,6 +59,8 @@ class CCVirtualCan(connector.CChannel):
     def _cc_open(self) -> None:
         """Open a can bus channel."""
         self.bus = UdpMulticastBus(
+            channel = self.channel,
+            receive_own_messages = self.receive_own_messages,
             fd = self.is_fd, 
         )
 
