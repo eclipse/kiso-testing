@@ -34,6 +34,13 @@ except ImportError as e:
 
 log = logging.getLogger(__name__)
 
+UDP_CONFIG = {
+    "interface": "udp_multicast",
+    "channel": UdpMulticastBus.DEFAULT_GROUP_IPv4,
+    "preserve_timestamps": False,
+    "receive_own_messages": False,
+    "fd": True,
+}
 
 class CCVirtualCan(connector.CChannel):
 
@@ -54,15 +61,18 @@ class CCVirtualCan(connector.CChannel):
         self.is_fd = fd
         self.enable_brs = enable_brs
         self.is_extended_id = is_extended_id
+        self._is_open = False
 
-
+    @property
+    def is_open(self):
+        return self._is_open
+    
     def _cc_open(self) -> None:
         """Open a can bus channel."""
-        self.bus = UdpMulticastBus(
-            channel = self.channel,
-            receive_own_messages = self.receive_own_messages,
-            fd = self.is_fd, 
-        )
+        if self.is_open:
+            log.info(f"{self} is already open")
+            return
+        self.bus = can.Bus(**UDP_CONFIG)
 
     def _cc_close(self) -> None:
         """Close the current can bus channel."""
@@ -84,9 +94,11 @@ class CCVirtualCan(connector.CChannel):
         can_msg = can.Message(
             arbitration_id=remote_id,
             data=msg,
-            is_extended_id=self.is_extended_id,
             is_fd=self.is_fd,
+            dlc=len(msg),
+            is_extended_id=self.is_extended_id,
             bitrate_switch=self.enable_brs,
+            check=True,
         )
         self.bus.send(can_msg)
 
@@ -101,7 +113,7 @@ class CCVirtualCan(connector.CChannel):
 
         :return: the received data and the source can id
         """
-        try:  # Catch bus errors & rcv.data errors when no messages where received
+        try:  
             received_msg = self.bus.recv(timeout=timeout or self.timeout)
 
             if received_msg is not None:
