@@ -31,16 +31,8 @@ except ImportError as e:
         f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
     )
 
-
 log = logging.getLogger(__name__)
 
-UDP_CONFIG = {
-    "interface": "udp_multicast",
-    "channel": UdpMulticastBus.DEFAULT_GROUP_IPv4,
-    "preserve_timestamps": False,
-    "receive_own_messages": False,
-    "fd": True,
-}
 
 class CCVirtualCan(connector.CChannel):
 
@@ -62,6 +54,13 @@ class CCVirtualCan(connector.CChannel):
         self.enable_brs = enable_brs
         self.is_extended_id = is_extended_id
         self._is_open = False
+        self.config = {
+            "interface": self.interface,
+            "channel": self.channel,
+            "preserve_timestamps": False,
+            "receive_own_messages": self.receive_own_messages,
+            "fd": self.is_fd,
+        }
 
     @property
     def is_open(self):
@@ -72,7 +71,7 @@ class CCVirtualCan(connector.CChannel):
         if self.is_open:
             log.info(f"{self} is already open")
             return
-        self.bus = can.Bus(**UDP_CONFIG)
+        self.bus = can.Bus(**self.config)
 
     def _cc_close(self) -> None:
         """Close the current can bus channel."""
