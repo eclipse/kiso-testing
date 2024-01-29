@@ -41,7 +41,7 @@ class CCVirtualCan(connector.CChannel):
         channel: UdpMulticastBus = UdpMulticastBus.DEFAULT_GROUP_IPv4,
         interface: str = "udp_multicast",
         receive_own_messages: bool = False,
-        fd: bool = True,
+        is_fd: bool = True,
         enable_brs:  bool = False,
         is_extended_id: bool = False,
         **kwargs,
@@ -50,7 +50,7 @@ class CCVirtualCan(connector.CChannel):
         self.channel = channel
         self.interface = interface
         self.receive_own_messages = receive_own_messages
-        self.is_fd = fd
+        self.is_fd = is_fd
         self.enable_brs = enable_brs
         self.is_extended_id = is_extended_id
         self._is_open = False
