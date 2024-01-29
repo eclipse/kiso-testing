@@ -1,0 +1,25 @@
+auxiliaries:
+  can_aux1:
+    connectors:
+        com: can_channel
+    config:
+        dbc_file: ./test_can/simple.dbc
+    type: pykiso.lib.auxiliaries.can_auxiliary:CanAuxiliary
+  can_aux2:
+    connectors:
+        com: can_channel
+    config:
+        dbc_file: ./test_can/simple.dbc
+    type: pykiso.lib.auxiliaries.can_auxiliary:CanAuxiliary
+connectors:
+  can_channel:
+    config:
+      interface: "pcan"
+      channel: "PCAN_USBBUS1"
+      state: "ACTIVE"
+    type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
+
+test_suite_list:
+- suite_dir: test_can
+  test_filter_pattern: '*.py'
+  test_suite_id: 1

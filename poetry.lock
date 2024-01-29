@@ -12,6 +12,17 @@ files = [
 ]
 
 [[package]]
+name = "argparse-addons"
+version = "0.12.0"
+description = "Additional argparse types and actions."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "argparse_addons-0.12.0-py3-none-any.whl", hash = "sha256:48b70ecd719054fcb0d7e6f25a1fecc13607aac61d446e83f47d211b4ead0d61"},
+    {file = "argparse_addons-0.12.0.tar.gz", hash = "sha256:6322a0dcd706887e76308d23136d5b86da0eab75a282dc6496701d1210b460af"},
+]
+
+[[package]]
 name = "astroid"
 version = "2.11.7"
 description = "An abstract syntax tree for Python with inference support."
@@ -67,6 +78,58 @@ setuptools = {version = "*", markers = "python_version >= \"3.12\""}
 
 [package.extras]
 dev = ["freezegun (>=1.0,<2.0)", "pytest (>=6.0)", "pytest-cov"]
+
+[[package]]
+name = "bitstruct"
+version = "8.19.0"
+description = "This module performs conversions between Python values and C bit field structs represented as Python byte strings."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "bitstruct-8.19.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:7d1f3eb18ddc33ba73f5cbb55c885584bcec51c421ac3551b79edc0ffeaecc3d"},
+    {file = "bitstruct-8.19.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a35e0b267d12438e6a7b28850a15d4cffe767db6fc443a406d0ead97fa1d7d5b"},
+    {file = "bitstruct-8.19.0-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:5732aff5c8eb3a572f7b20d09fc4c213215f9e60c0e66f2910b31eb65b457744"},
+    {file = "bitstruct-8.19.0-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:bc8f1871b42b705eb34b8722c3ec358fbf1b97fd37a62693564ee72648afb100"},
+    {file = "bitstruct-8.19.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:01bdfc3adbe15b05ba27ab6dce7959caa29a000f066201944b29c64bb8888f03"},
+    {file = "bitstruct-8.19.0-cp310-cp310-win32.whl", hash = "sha256:961845a29333119b70dd9aab54bc714bf9ba5efefc55cb4c747c35c1390b8842"},
+    {file = "bitstruct-8.19.0-cp310-cp310-win_amd64.whl", hash = "sha256:9fbe12d464db909f58d5e2a2485b3047a488fa1373e8f74b22d6759ee6b2437a"},
+    {file = "bitstruct-8.19.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:1300cd635814e40b1f4105aa4f404cb5d1b8cc54e06e267ba1616725f9c2beea"},
+    {file = "bitstruct-8.19.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0e2fb23b5973ce1e9f349c4dc90873eeff9800fe917ffd345f39b9b964f6d119"},
+    {file = "bitstruct-8.19.0-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:59e0c18d557474d8452c4f8b59320fd4d9efcf52eae2144bdf317d25c64dcf85"},
+    {file = "bitstruct-8.19.0-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:bba06607f956cc39ceee19fd11b542e8e66a43180d48fa36c4609443893c273e"},
+    {file = "bitstruct-8.19.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:f2fa607d111077145e6374d49be6098f33e7cee0967b42cfc117df53eee13332"},
+    {file = "bitstruct-8.19.0-cp311-cp311-win32.whl", hash = "sha256:abdb7bdb5b04c2f1bbda0eae828c627252243ddc042aea6b72af8fcc63696598"},
+    {file = "bitstruct-8.19.0-cp311-cp311-win_amd64.whl", hash = "sha256:464f102999402a2624ee3106dbfa1f3745810036814a33e6bc706b7d312c480f"},
+    {file = "bitstruct-8.19.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:55768b1f5e33594178f0b3e1596b89d831b006713a60caa09de61fd385bf22b1"},
+    {file = "bitstruct-8.19.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c026a7cf8d954ef53cf4d0ae5ee3dd1ac66e24e9a474c5afe55467ab7d609f2e"},
+    {file = "bitstruct-8.19.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7488fd4e2fde3d8111971e2040cd5b008be918381afc80387d3fdf047c801293"},
+    {file = "bitstruct-8.19.0-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:45b66e20633f1e083e37fa396c81761e0fc688ffa06ff5559e990e37234f9e18"},
+    {file = "bitstruct-8.19.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:9c1542d5ae888ebc31614775938bfd13454f0d897dc2515363a4607efadc990b"},
+    {file = "bitstruct-8.19.0-cp312-cp312-win32.whl", hash = "sha256:7ea57e4e793b595cd3e037920852f2c676b4f5f1734c41985db3f48783928e2c"},
+    {file = "bitstruct-8.19.0-cp312-cp312-win_amd64.whl", hash = "sha256:1c4d9b75248adee84e7e6c95bf95966f152b78363cb20a81920da2aeadc4375f"},
+    {file = "bitstruct-8.19.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:7b4745b099d3d85307495e25ff0f265deeea675621dcecb25ba059ee68ce88d5"},
+    {file = "bitstruct-8.19.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:645da560acd20dd73a1ef220e3ddc08e108866e30a708ef2f6193e0a3725113e"},
+    {file = "bitstruct-8.19.0-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:01402fbc3dba2286b3ac9b74d5936dd984736f928aacd371458a4b0cf95f0755"},
+    {file = "bitstruct-8.19.0-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:2c5eda42d55db67072c6cf7cc79b1df1074269004bad119b79e4ad38cfa61877"},
+    {file = "bitstruct-8.19.0-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:2ea093522b12ce714a3a95851a8c3dd97f620126bbe983eb261b3bf18ac945e7"},
+    {file = "bitstruct-8.19.0-cp37-cp37m-win32.whl", hash = "sha256:da00da004830800323554e7a83f1f32a1f49345f5379476de4b5f6ae227ee962"},
+    {file = "bitstruct-8.19.0-cp37-cp37m-win_amd64.whl", hash = "sha256:a0ca55fba25d6c631e17933f20cf87f553d7bceec7659e3de9ef48dc85ced2bf"},
+    {file = "bitstruct-8.19.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:d3f6e3aeb598215062c505a06135fbdfa3bb4eeb249b55f87e865a86b3fd9e99"},
+    {file = "bitstruct-8.19.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:df74c72feba80014b05ab6f1e1a0bb90be9f9e7eb60a9bab1e00728f7f46d79d"},
+    {file = "bitstruct-8.19.0-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:976c39ad771c6773d6fbd14d71e62242d5b3bca7b72428fd183e1f1085d5e858"},
+    {file = "bitstruct-8.19.0-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:d2c176ff6727206805760f45c2151468aed843256aa239c14f4730b9e1d84fc7"},
+    {file = "bitstruct-8.19.0-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:d7774e2a51e254ef1ba98a1ee38573c819d4ee7e396d5121c5ecae17df927501"},
+    {file = "bitstruct-8.19.0-cp38-cp38-win32.whl", hash = "sha256:b86d192d658eaf35f10efb2e1940ec755cc28e081f46de294a2e91a74ea298aa"},
+    {file = "bitstruct-8.19.0-cp38-cp38-win_amd64.whl", hash = "sha256:5e7f78aedec2881017026eb7f7ab79514aef09a24afd8acf5fa8c73b1cd0e9f4"},
+    {file = "bitstruct-8.19.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:2bb49acc2ccc6efd3c9613cae8f7e1316c92f832bff860a6fcb78a4275974e90"},
+    {file = "bitstruct-8.19.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7bed7b2761c18a515298145a4f67b6c71ce302453fe7d87ec6b7d2e77fd3c22b"},
+    {file = "bitstruct-8.19.0-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8d0cafd2e2974c4bbe349fb67951d43d221ea304218c2ee65f9fe4c62acabc2f"},
+    {file = "bitstruct-8.19.0-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:d9ba0299f624e7c8ea1eec926fc77741f82ffc5b3c3ba4f89303d33d5605f4d8"},
+    {file = "bitstruct-8.19.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:bfa0326057c9b02c4e65e74e45b9914a7f8c59590a8e718e20a899a02b41f2e6"},
+    {file = "bitstruct-8.19.0-cp39-cp39-win32.whl", hash = "sha256:14c3ebdec92c486142327d934cb451d96b411543ec6f72aeb2b4b4334e9408bf"},
+    {file = "bitstruct-8.19.0-cp39-cp39-win_amd64.whl", hash = "sha256:7836852d5c15444e87a2029f922b48717e6e199d2332d55e8738e92d8590987e"},
+    {file = "bitstruct-8.19.0.tar.gz", hash = "sha256:d75ba9dded85c17e885a209a00eb8e248ee40762149f2f2a79360ca857467dac"},
+]
 
 [[package]]
 name = "black"
@@ -136,6 +199,30 @@ files = [
     {file = "bump2version-1.0.1-py2.py3-none-any.whl", hash = "sha256:37f927ea17cde7ae2d7baf832f8e80ce3777624554a653006c9144f8017fe410"},
     {file = "bump2version-1.0.1.tar.gz", hash = "sha256:762cb2bfad61f4ec8e2bdf452c7c267416f8c70dd9ecb1653fd0bbb01fa936e6"},
 ]
+
+[[package]]
+name = "cantools"
+version = "39.4.2"
+description = "CAN BUS tools."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "cantools-39.4.2-py3-none-any.whl", hash = "sha256:7da899fdaf315c86229e7b0aedc4141aac7bcc662aa5f981bdb31958d52d6a67"},
+    {file = "cantools-39.4.2.tar.gz", hash = "sha256:8069a8f473bb1679990bea0903f3a22d58df5495aebbf09f58d49f627511b619"},
+]
+
+[package.dependencies]
+argparse-addons = "*"
+bitstruct = ">=8.16.1"
+crccheck = "*"
+diskcache = "*"
+python-can = ">=3.3.4"
+textparser = ">=0.21.1"
+
+[package.extras]
+dev = ["mypy", "pipx", "ruff", "tox"]
+plot = ["matplotlib"]
+windows-all = ["windows-curses"]
 
 [[package]]
 name = "certifi"
@@ -436,6 +523,17 @@ tomli = {version = "*", optional = true, markers = "python_full_version <= \"3.1
 toml = ["tomli"]
 
 [[package]]
+name = "crccheck"
+version = "1.3.0"
+description = "Calculation library for CRCs and checksums"
+optional = false
+python-versions = "*"
+files = [
+    {file = "crccheck-1.3.0-py3-none-any.whl", hash = "sha256:278ec53d6f417f197f7e0e29b485093d4879b0bc7a2d29b657ef8242e633b48d"},
+    {file = "crccheck-1.3.0.tar.gz", hash = "sha256:5384f437de610ade5c3d8689efc80ccd1267b8c452ade83411fd8500a1024f3e"},
+]
+
+[[package]]
 name = "defusedxml"
 version = "0.7.1"
 description = "XML bomb protection for Python stdlib modules"
@@ -459,6 +557,17 @@ files = [
 
 [package.extras]
 graph = ["objgraph (>=1.7.2)"]
+
+[[package]]
+name = "diskcache"
+version = "5.6.3"
+description = "Disk Cache -- Disk and file backed persistent cache."
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19"},
+    {file = "diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc"},
+]
 
 [[package]]
 name = "distlib"
@@ -613,6 +722,13 @@ files = [
     {file = "hidapi-0.14.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2906ad143ec40009c33348ab4b3f7a9bdaa87b65bdc55983399bed47ee90a818"},
     {file = "hidapi-0.14.0-cp311-cp311-win32.whl", hash = "sha256:651c2382e974e866d78334cdde3c290a04fcbab4cec940c0d3586d77d11b9566"},
     {file = "hidapi-0.14.0-cp311-cp311-win_amd64.whl", hash = "sha256:de293e7291b1ec813a97e42625c2c0a41b0d25d495b3dc5864bbb3dbbb5a719d"},
+    {file = "hidapi-0.14.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:fc9ec2321bf3b0b4953910aa87c0c8ab5f93b1f113a9d3d4f18845ce54708d13"},
+    {file = "hidapi-0.14.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a68820a5de54a54d145d88f31c74257965bd03ae454263eda054f02bf34dcc9c"},
+    {file = "hidapi-0.14.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:86752ca0db00e5a5e991ebc5854400ff16d3812d6d9a156fea4de7d5f10ba801"},
+    {file = "hidapi-0.14.0-cp312-cp312-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:4b65cc159fcf1839d078d3de196146626c1a865bd9136fda5fa490f689e904c9"},
+    {file = "hidapi-0.14.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9ab1b1dc8b915a0faa7b976ed8291142cf93c2acecf533db8c748fc64be1a004"},
+    {file = "hidapi-0.14.0-cp312-cp312-win32.whl", hash = "sha256:5e3318f0e66c4d46977fc8ba73a2ad33c2de367d133b70b243051283d0ecdaca"},
+    {file = "hidapi-0.14.0-cp312-cp312-win_amd64.whl", hash = "sha256:b4f3a4e41886a19dcb9ea872a6f75ef42baba124a150b5b0a03379da174e1f70"},
     {file = "hidapi-0.14.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:1370bc6a364fd292accd580a8d7bac4219932144d149f3a513bb472581eac421"},
     {file = "hidapi-0.14.0-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e6ef0bdc69310cfdff83faf96c75492ac3d8cf355af275904f1dd90a3c5f24a4"},
     {file = "hidapi-0.14.0-cp36-cp36m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:9e245719a5ede83c779dd99a4553002ae684d92d0f3e4274dcf06882b063f127"},
@@ -1038,7 +1154,7 @@ files = [
 name = "msgpack"
 version = "1.0.5"
 description = "MessagePack serializer"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "msgpack-1.0.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:525228efd79bb831cf6830a732e2e80bc1b05436b086d4264814b4b2955b2fa9"},
@@ -1467,7 +1583,7 @@ dev = ["pre-commit", "pytest-asyncio", "tox"]
 name = "python-can"
 version = "4.2.2"
 description = "Controller Area Network interface module for Python"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "python-can-4.2.2.tar.gz", hash = "sha256:6ad50f4613289f3c4d276b6d2ac8901d776dcb929994cce93f55a69e858c595f"},
@@ -1549,7 +1665,7 @@ usb = ["pyusb"]
 name = "pywin32"
 version = "306"
 description = "Python for Window Extensions"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "pywin32-306-cp310-cp310-win32.whl", hash = "sha256:06d3420a5155ba65f0b72f2699b5bacf3109f36acbe8923765c22938a69dfc8d"},
@@ -1921,6 +2037,17 @@ files = [
 widechars = ["wcwidth"]
 
 [[package]]
+name = "textparser"
+version = "0.24.0"
+description = "Text parser."
+optional = false
+python-versions = "*"
+files = [
+    {file = "textparser-0.24.0-py3-none-any.whl", hash = "sha256:379d25cdb21332f403bfa37b9ef11192b7796340d2602d88fc9246bfdba2a1cf"},
+    {file = "textparser-0.24.0.tar.gz", hash = "sha256:56f708e75aa9d002adb76d823ba6ef166d7ecec1e3e4ca4c1ca103f817568335"},
+]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -2161,7 +2288,7 @@ can = ["pykiso-python-uds", "python-can"]
 debugger = ["pylink-square"]
 grpc = ["grpcio", "protobuf"]
 instrument = ["PyVISA", "PyVISA-py"]
-plugins = ["PyVISA", "PyVISA-py", "grpcio", "protobuf", "pykiso-python-uds", "pylink-square", "pyserial", "python-can"]
+plugins = ["PyVISA", "PyVISA-py", "pykiso-python-uds", "pylink-square", "pyserial", "python-can"]
 pykitest = ["black", "isort"]
 serial = ["pyserial"]
 testrail = ["requests", "rich"]
@@ -2169,4 +2296,4 @@ testrail = ["requests", "rich"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "6573b95d7e0ddebf49b388a465114631f1d31b5bfe1ad80ed05d2c590de4e119"
+content-hash = "6e8171286621386b2072aa3fa97eb061d766eadd73467562fcf919ca9a604926"

@@ -1,0 +1,116 @@
+VERSION ""
+
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_:
+VAL_TABLE_ vt_BNRaccuracy 1 "DegradedAccuracy" 0 "NominalAccuracy" ;
+VAL_TABLE_ vt_BCDstatus_above_below 3 "Below" 2 "FT" 1 "NCD" 0 "Above" ;
+VAL_TABLE_ vt_BCDstatus_to_from 3 "From" 2 "FT" 1 "NCD" 0 "To" ;
+VAL_TABLE_ vt_BCDstatus_right_left 3 "Left" 2 "FT" 1 "NCD" 0 "Right" ;
+VAL_TABLE_ vt_BCDstatus_east_west 3 "West" 2 "FT" 1 "NCD" 0 "East" ;
+VAL_TABLE_ vt_BCDstatus_north_south 3 "South" 2 "FT" 1 "NCD" 0 "North" ;
+VAL_TABLE_ vt_BCDstatus_plus_minus 3 "Minus" 2 "FT" 1 "NCD" 0 "Plus" ;
+VAL_TABLE_ vt_DSCstatus 3 "FW" 2 "FT" 1 "NCD" 0 "NO" ;
+VAL_TABLE_ vt_BNRsign_above_below 1 "Below" 0 "Above" ;
+VAL_TABLE_ vt_BNRsign_to_from 1 "From" 0 "To" ;
+VAL_TABLE_ vt_BNRsign_right_left 1 "Left" 0 "Right" ;
+VAL_TABLE_ vt_BNRsign_east_west 1 "West" 0 "East" ;
+VAL_TABLE_ vt_BNRsign_north_south 1 "South" 0 "North" ;
+VAL_TABLE_ vt_BNRsign_plus_minus 1 "Minus" 0 "Plus" ;
+VAL_TABLE_ vt_BNRstatus 3 "NO" 2 "FT" 1 "NCD" 0 "FW" ;
+
+
+BO_ 16 Message_1: 4 Vector__XXX
+ SG_ signal_b : 8|8@1- (1,0) [0|0] "" Vector__XXX
+ SG_ signal_a : 0|8@1- (1,0) [0|0] "" Vector__XXX
+
+
+
+BA_DEF_ SG_  "GenSigStartValue" FLOAT 0 0;
+BA_DEF_  "TemplateVersion" STRING ;
+BA_DEF_  "ProtocolType" STRING ;
+BA_DEF_ BO_  "A429SpecSource" ENUM  "ARINC","GAMA","Private";
+BA_DEF_ BO_  "A429Protocol" ENUM  "BC","AIM","A619","WB1","WB2","WB3";
+BA_DEF_  "A429Parity" ENUM  "unknown","odd","even";
+BA_DEF_ BO_  "A429EquipmentId" HEX 0 4095;
+BA_DEF_ BO_  "A429TransportDelayMax" INT 0 0;
+BA_DEF_ BO_  "A429CycleMax" INT 0 0;
+BA_DEF_ BO_  "A429Cycle" INT 0 0;
+BA_DEF_ BO_  "A429CycleMin" INT 0 0;
+BA_DEF_ BU_  "A429Equipment" STRING ;
+BA_DEF_ BU_  "ILUsed" ENUM  "No","Yes";
+BA_DEF_ BU_  "CANoeDrift" INT 0 0;
+BA_DEF_ BU_  "CANoeJitterMax" INT 0 0;
+BA_DEF_ BU_  "CANoeJitterMin" INT 0 0;
+BA_DEF_ BU_  "CANoeStartDelay" INT 0 0;
+BA_DEF_ BU_  "NodeLayerModules" STRING ;
+BA_DEF_  "Baudrate" INT 10500 110000;
+BA_DEF_  "ToolName" STRING ;
+BA_DEF_  "ToolVersion" STRING ;
+BA_DEF_  "Manufacturer" STRING ;
+BA_DEF_  "VersionNumber" INT 0 0;
+BA_DEF_  "VersionDay" INT 0 31;
+BA_DEF_  "VersionMonth" INT 0 12;
+BA_DEF_  "VersionYear" INT 0 0;
+BA_DEF_  "VersionWeek" INT 0 0;
+BA_DEF_  "BusType" STRING ;
+BA_DEF_DEF_  "GenSigStartValue" 0;
+BA_DEF_DEF_  "TemplateVersion" "1.1.0.0";
+BA_DEF_DEF_  "ProtocolType" "Aerospace";
+BA_DEF_DEF_  "A429SpecSource" "ARINC";
+BA_DEF_DEF_  "A429Protocol" "BC";
+BA_DEF_DEF_  "A429Parity" "odd";
+BA_DEF_DEF_  "A429EquipmentId" 0;
+BA_DEF_DEF_  "A429TransportDelayMax" 0;
+BA_DEF_DEF_  "A429CycleMax" 0;
+BA_DEF_DEF_  "A429Cycle" 0;
+BA_DEF_DEF_  "A429CycleMin" 0;
+BA_DEF_DEF_  "A429Equipment" "<unknown>";
+BA_DEF_DEF_  "ILUsed" "No";
+BA_DEF_DEF_  "CANoeDrift" 0;
+BA_DEF_DEF_  "CANoeJitterMax" 0;
+BA_DEF_DEF_  "CANoeJitterMin" 0;
+BA_DEF_DEF_  "CANoeStartDelay" 0;
+BA_DEF_DEF_  "NodeLayerModules" "";
+BA_DEF_DEF_  "Baudrate" 100000;
+BA_DEF_DEF_  "ToolName" "manually";
+BA_DEF_DEF_  "ToolVersion" "x.y.z.n";
+BA_DEF_DEF_  "Manufacturer" "<unknown>";
+BA_DEF_DEF_  "VersionNumber" 0;
+BA_DEF_DEF_  "VersionDay" 1;
+BA_DEF_DEF_  "VersionMonth" 1;
+BA_DEF_DEF_  "VersionYear" 0;
+BA_DEF_DEF_  "VersionWeek" 1;
+BA_DEF_DEF_  "BusType" "ARINC429";
+BA_ "BusType" "ARINC429";
