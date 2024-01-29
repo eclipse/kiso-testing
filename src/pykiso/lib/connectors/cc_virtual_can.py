@@ -72,6 +72,7 @@ class CCVirtualCan(connector.CChannel):
             log.info(f"{self} is already open")
             return
         self.bus = can.Bus(**self.config)
+        self._is_open = True
 
     def _cc_close(self) -> None:
         """Close the current can bus channel."""

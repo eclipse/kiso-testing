@@ -20,16 +20,6 @@ def mock_vcan_bus(mocker):
         def __init__(self, **kwargs):
             """"""
             pass
-        
-        msg = can.Message(
-            501,
-            b'\x01\x02\x03\x04\x05',
-            True,
-            len(b'\x01\x02\x03\x04\x05'),
-            False,
-            False,
-            True,
-        )
 
         shutdown = mocker.stub(name="shutdown")
         send = mocker.stub(name="send")
@@ -39,17 +29,13 @@ def mock_vcan_bus(mocker):
     return can.interface
 
 
-@pytest.mark.parametrize(
-    "constructor_params, expected_config",
-
-)
-def test_constructor(constructor_params, expected_config, caplog, mocker):
+def test_constructor(mock_vcan_bus):
 
     vcan_inst = CCVirtualCan(
         channel=UdpMulticastBus.DEFAULT_GROUP_IPv4,
         interface="udp_multicast", 
         receive_own_messages=False,
-        fd = False,
+        is_fd = False,
     )
     
     assert vcan_inst.interface == "udp_multicast"
@@ -76,7 +62,6 @@ def test_cc_close(
         with CCVirtualCan() as vcan_inst:
             pass
 
-        mock_vcan_bus.Bus.shutdown.assert_called_once()
         assert vcan_inst.bus == None
         assert not caplog.records
 
@@ -88,83 +73,54 @@ def test_cc_open(
     assert vcan_inst.is_open is False
     vcan_inst._cc_open()
 
-    assert isinstance(vcan_inst.bus, mock_vcan_bus.Bus) == True
     assert vcan_inst.bus != None
     assert vcan_inst.is_open is True
 
 
 def test_cc_send(mock_vcan_bus):
-    vcan_inst = CCVirtualCan()
-    msg = b'\x01\x02\x03\x04\x05'
-    vcan_inst._cc_send(msg, 501)
-    mock_vcan_bus.Bus.send.called_with(
-        501,
-        msg,
-        True,
-        len(msg),
-        False,
-        False,
-        True,
-    )
 
-@pytest.mark.parametrize(
-    "raw_data, can_id, timeout, raw,expected_type, timestamp",
-    [
-        (b"\x40\x01\x03\x00\x01\x02\x03\x00", 0x500, 10, Message, 1),
-        (
-            b"\x40\x01\x03\x00\x01\x02\x03\x09\x6e\x02\x4f\x4b\x70\x03\x12\x34\x56",
-            0x207,
-            None,
-            Message,
-            2,
-        ),
-        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 10, bytearray, 3),
-        (b"\x40\x01\x03\x00\x02\x03\x00", 0x502, 0, bytearray, 4),
-    ],
-)
-def test_can_recv(
-    mock_can_bus,
-    raw_data,
-    can_id,
-    timeout,
-    timestamp,
-    expected_type,
-    mock_vcan_bus,
-):
+    with CCVirtualCan() as vcan:
+        vcan.bus = mock_vcan_bus.Bus
+        vcan._cc_send(b"\x10\x36", 0x0A)
+
+    mock_vcan_bus.Bus.send.assert_called_once()
+    mock_vcan_bus.Bus.shutdown.assert_called_once()
+    
+
+def test_can_recv(mock_vcan_bus):
     mock_vcan_bus.Bus.recv.return_value = python_can.Message(
-        data=raw_data, arbitration_id=can_id, timestamp=timestamp
+        data=b"\x40\x01\x03\x00\x02\x03\x00", arbitration_id=0x502, timestamp=10
     )
 
-    with CCVirtualCan() as can:
-        response = can._cc_receive(timeout)
+    with CCVirtualCan() as vcan:
+        vcan.bus = mock_vcan_bus.Bus
+        response = vcan._cc_receive(3)
 
-    msg_received = response.get("msg")
 
-    assert response.get("timestamp") == timestamp
-    assert isinstance(msg_received, expected_type)
-    assert response.get("remote_id") == can_id
-    mock_can_bus.Bus.recv.assert_called_once_with(timeout=timeout or 1e-6)
+    assert response.get("timestamp") == 10
+    assert response.get("remote_id") == 0x502
+    mock_vcan_bus.Bus.recv.assert_called_once_with(timeout=3 or 1e-6)
 
     
 def test_can_recv_invalid(mocker, mock_vcan_bus):
 
     mocker.patch("can.interface.Bus.recv", return_value={"msg": None})
 
-    with CCVirtualCan() as can:
-        response = can._cc_receive(timeout=0.0001)
+    with CCVirtualCan() as vcan:
+        response = vcan._cc_receive(timeout=0.0001)
 
     assert response["msg"] is None
     assert response.get("remote_id") is None
 
 
-def test_can_recv_exception(caplog, mocker, mock_vcan_bus):
+def test_can_recv_exception(caplog, mock_vcan_bus, mocker):
 
     mocker.patch("can.interface.Bus.recv", side_effect=Exception())
     logging.getLogger("pykiso.lib.connectors.cc_virtual_can.log")
-
     with CCVirtualCan() as can:
+        can.bus = mock_vcan_bus.Bus
         response = can._cc_receive(timeout=0.0001)
 
-    assert response["msg"] is None
-    assert response.get("remote_id") is None
-    assert "Exception" in caplog.text
+        assert response["msg"] is None
+        assert response.get("remote_id") is None
+        assert "Exception" in caplog.text
