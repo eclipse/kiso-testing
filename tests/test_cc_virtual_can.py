@@ -1,9 +1,12 @@
 import pytest
 import logging
+import sys
+import importlib
 from unittest import mock
 from pykiso import Message
 
 import can as python_can
+from pykiso.lib.connectors import cc_virtual_can
 from pykiso.lib.connectors.cc_virtual_can import CCVirtualCan
 from can.interfaces.udp_multicast.bus import UdpMulticastBus
 from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import can
@@ -27,6 +30,14 @@ def mock_vcan_bus(mocker):
 
     mocker.patch.object(can.interface, "Bus", new=MockUdp)
     return can.interface
+
+
+def test_import():
+    with pytest.raises(ImportError):
+        sys.modules["can"] = None
+        importlib.reload(cc_virtual_can)
+    sys.modules["can"] = can
+    importlib.reload(cc_virtual_can)
 
 
 def test_constructor(mock_vcan_bus):
