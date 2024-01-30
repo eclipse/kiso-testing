@@ -67,14 +67,22 @@ def test_cc_close(
 
 
 def test_cc_open(
-    mock_vcan_bus,
+    mock_vcan_bus, caplog
 ):
+    logging.getLogger("pykiso.lib.connectors.cc_virtual_can.log")
+
     vcan_inst = CCVirtualCan()
     assert vcan_inst.is_open is False
     vcan_inst._cc_open()
 
     assert vcan_inst.bus != None
     assert vcan_inst.is_open is True
+
+    vcan_inst._cc_open()
+
+    assert vcan_inst.bus != None
+    assert vcan_inst.is_open is True
+    assert "is already open" in caplog.text
 
 
 def test_cc_send(mock_vcan_bus):
@@ -124,3 +132,15 @@ def test_can_recv_exception(caplog, mock_vcan_bus, mocker):
         assert response["msg"] is None
         assert response.get("remote_id") is None
         assert "Exception" in caplog.text
+
+def test_can_recv_error(caplog, mock_vcan_bus, mocker):
+
+    mocker.patch("can.interface.Bus.recv", side_effect=python_can.CanError())
+    logging.getLogger("pykiso.lib.connectors.cc_virtual_can.log")
+    with CCVirtualCan() as can:
+        can.bus = mock_vcan_bus.Bus
+        response = can._cc_receive(timeout=0.0001)
+
+        assert response["msg"] is None
+        assert response.get("remote_id") is None
+        assert "encountered CAN error while receiving message" in caplog.text
