@@ -77,6 +77,7 @@ class CCVirtualCan(connector.CChannel):
         """Close the current can bus channel."""
         self.bus.shutdown()
         self.bus = None
+        self._is_open = False
 
     def _cc_send(self, msg: bytes, remote_id: Optional[int] = None, **kwargs) -> None:
         """Send a CAN message at the configured id.
