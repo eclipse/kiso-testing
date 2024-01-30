@@ -35,14 +35,13 @@ log = logging.getLogger(__name__)
 
 
 class CCVirtualCan(connector.CChannel):
-
     def __init__(
         self,
         channel: UdpMulticastBus = UdpMulticastBus.DEFAULT_GROUP_IPv4,
         interface: str = "udp_multicast",
         receive_own_messages: bool = False,
         is_fd: bool = True,
-        enable_brs:  bool = False,
+        enable_brs: bool = False,
         is_extended_id: bool = False,
         **kwargs,
     ):
@@ -65,7 +64,7 @@ class CCVirtualCan(connector.CChannel):
     @property
     def is_open(self):
         return self._is_open
-    
+
     def _cc_open(self) -> None:
         """Open a can bus channel."""
         if self.is_open:
@@ -113,7 +112,7 @@ class CCVirtualCan(connector.CChannel):
 
         :return: the received data and the source can id
         """
-        try:  
+        try:
             received_msg = self.bus.recv(timeout=timeout or self.timeout)
 
             if received_msg is not None:
@@ -135,4 +134,3 @@ class CCVirtualCan(connector.CChannel):
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
             return {"msg": None}
-        
