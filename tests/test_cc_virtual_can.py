@@ -11,6 +11,7 @@ from pykiso.lib.connectors.cc_virtual_can import CCVirtualCan
 from can.interfaces.udp_multicast.bus import UdpMulticastBus
 from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import can
 
+
 @pytest.fixture
 def mock_vcan_bus(mocker):
     """fixture used to create mocker relative to can object from
@@ -44,11 +45,11 @@ def test_constructor(mock_vcan_bus):
 
     vcan_inst = CCVirtualCan(
         channel=UdpMulticastBus.DEFAULT_GROUP_IPv4,
-        interface="udp_multicast", 
+        interface="udp_multicast",
         receive_own_messages=False,
-        is_fd = False,
+        is_fd=False,
     )
-    
+
     assert vcan_inst.interface == "udp_multicast"
     assert vcan_inst.channel == UdpMulticastBus.DEFAULT_GROUP_IPv4
     assert vcan_inst.receive_own_messages == False
@@ -58,11 +59,12 @@ def test_constructor(mock_vcan_bus):
     assert vcan_inst._is_open == False
     assert vcan_inst.config == {
         "interface": "udp_multicast",
-        "channel":  UdpMulticastBus.DEFAULT_GROUP_IPv4,
+        "channel": UdpMulticastBus.DEFAULT_GROUP_IPv4,
         "preserve_timestamps": False,
-        "receive_own_messages":False,
+        "receive_own_messages": False,
         "fd": False,
     }
+
 
 def test_cc_close(
     caplog,
@@ -77,9 +79,7 @@ def test_cc_close(
         assert not caplog.records
 
 
-def test_cc_open(
-    mock_vcan_bus, caplog
-):
+def test_cc_open(mock_vcan_bus, caplog):
     logging.getLogger("pykiso.lib.connectors.cc_virtual_can.log")
 
     vcan_inst = CCVirtualCan()
@@ -104,7 +104,7 @@ def test_cc_send(mock_vcan_bus):
 
     mock_vcan_bus.Bus.send.assert_called_once()
     mock_vcan_bus.Bus.shutdown.assert_called_once()
-    
+
 
 def test_can_recv(mock_vcan_bus):
     mock_vcan_bus.Bus.recv.return_value = python_can.Message(
@@ -115,12 +115,11 @@ def test_can_recv(mock_vcan_bus):
         vcan.bus = mock_vcan_bus.Bus
         response = vcan._cc_receive(3)
 
-
     assert response.get("timestamp") == 10
     assert response.get("remote_id") == 0x502
     mock_vcan_bus.Bus.recv.assert_called_once_with(timeout=3 or 1e-6)
 
-    
+
 def test_can_recv_invalid(mocker, mock_vcan_bus):
 
     mocker.patch("can.interface.Bus.recv", return_value={"msg": None})
@@ -143,6 +142,7 @@ def test_can_recv_exception(caplog, mock_vcan_bus, mocker):
         assert response["msg"] is None
         assert response.get("remote_id") is None
         assert "Exception" in caplog.text
+
 
 def test_can_recv_error(caplog, mock_vcan_bus, mocker):
 
