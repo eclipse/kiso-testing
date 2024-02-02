@@ -53,6 +53,7 @@ class CCVirtualCan(connector.CChannel):
         self.enable_brs = enable_brs
         self.is_extended_id = is_extended_id
         self._is_open = False
+        self.timeout = 1e-6
         self.config = {
             "interface": self.interface,
             "channel": self.channel,
