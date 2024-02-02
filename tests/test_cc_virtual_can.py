@@ -45,7 +45,6 @@ def test_constructor(mock_vcan_bus):
 
     vcan_inst = CCVirtualCan(
         channel=UdpMulticastBus.DEFAULT_GROUP_IPv4,
-        interface="udp_multicast",
         receive_own_messages=False,
         is_fd=False,
     )
