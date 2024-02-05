@@ -26,3 +26,4 @@ Included Connectors
     cc_visa
     cc_process
     cc_grpc_client
+    cc_virtual_can
