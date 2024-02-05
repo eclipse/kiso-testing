@@ -81,7 +81,7 @@ def pytest_sessionstart(session: Session):
         (
             hdlr
             for hdlr in root_logger.handlers
-            if isinstance(hdlr, logging.FileHandler)
+            if type(hdlr) == logging.FileHandler
         ),
         None,
     )
