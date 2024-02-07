@@ -75,7 +75,6 @@ class CCExample(connector.CChannel):
                 and msg.sub_type != message.MessageCommandType.PING
                 and msg.sub_type != message.MessageCommandType.ABORT
             ):
-
                 self.report_requested_message = msg.serialize()
 
     def _cc_receive(self, timeout: float = 0.1) -> Dict[str, Optional[bytes]]:
@@ -91,9 +90,7 @@ class CCExample(connector.CChannel):
             time.sleep(1e-3)
             if self.last_received_message is not None:
                 # Transform into ack
-                received_message = message.Message.parse_packet(
-                    self.last_received_message
-                )
+                received_message = message.Message.parse_packet(self.last_received_message)
                 received_message.msg_type = message.MessageType.ACK
                 received_message.sub_type = message.MessageAckType.ACK
                 # Delete the stored raw message
@@ -102,9 +99,7 @@ class CCExample(connector.CChannel):
                 log.internal_debug("Receive: {}".format(received_message))
             elif self.report_requested_message is not None:
                 # Transform message to ACK
-                received_message = message.Message.parse_packet(
-                    self.report_requested_message
-                )
+                received_message = message.Message.parse_packet(self.report_requested_message)
                 received_message.msg_type = message.MessageType.REPORT
                 received_message.sub_type = message.MessageReportType.TEST_PASS
                 # Delete the stored raw message

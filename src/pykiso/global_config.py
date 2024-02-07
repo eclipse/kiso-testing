@@ -149,10 +149,7 @@ class Grabber:
             """
             click_args = cli.eval_user_tags(click_context)
             # replace all dashes with underscore to make valid variable names out of the tag names
-            click_args = {
-                tag_name.replace("-", "_"): tag_value
-                for tag_name, tag_value in click_args.items()
-            }
+            click_args = {tag_name.replace("-", "_"): tag_value for tag_name, tag_value in click_args.items()}
             object_config = Grabber.create_config_object({**click_args, **kwargs})
             GlobalConfig().cli = object_config
             return func(click_context, *args, **kwargs)

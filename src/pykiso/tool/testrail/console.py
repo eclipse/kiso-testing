@@ -100,7 +100,8 @@ def print_runs(project_name: str, runs: list) -> None:
     :param runs: list of available runs information (id, title)
     """
     table = Table(
-        title=f"\n*** Available runs for project {project_name} ***", show_lines=True
+        title=f"\n*** Available runs for project {project_name} ***",
+        show_lines=True,
     )
     table.add_column("ID", style="yellow", justify="center")
     table.add_column("NAME", style="yellow", justify="center")

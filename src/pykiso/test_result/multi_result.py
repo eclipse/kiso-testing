@@ -48,8 +48,7 @@ class MultiTestResult:
     def __call__(self, *args, **kwargs) -> MultiTestResult:
         """Initialize the result classes with the parameters passed in arguments."""
         self.result_classes = [
-            result(*self._get_arguments_result_class(result, *args, **kwargs))
-            for result in self.result_classes
+            result(*self._get_arguments_result_class(result, *args, **kwargs)) for result in self.result_classes
         ]
         return self
 
@@ -63,9 +62,7 @@ class MultiTestResult:
         args = list(args)
         sign_class = signature(result_class)
         for name in sign_class.parameters.keys():
-            arg = kwargs.get(name) or (
-                args.pop(0) if args else sign_class.parameters[name].default
-            )
+            arg = kwargs.get(name) or (args.pop(0) if args else sign_class.parameters[name].default)
             list_arguments.append(arg)
 
         return list_arguments

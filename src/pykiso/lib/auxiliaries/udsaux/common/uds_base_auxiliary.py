@@ -28,11 +28,7 @@ from typing import Optional, Union
 
 from uds import Config, Uds
 
-from pykiso.auxiliary import (
-    AuxiliaryInterface,
-    close_connector,
-    open_connector,
-)
+from pykiso.auxiliary import AuxiliaryInterface, close_connector, open_connector
 from pykiso.connector import CChannel
 
 log = logging.getLogger(__name__)
@@ -75,9 +71,7 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
         :param request_id: optional CAN ID used for sending messages.
         :param response_id: optional CAN ID used for receiving messages.
         """
-        super().__init__(
-            is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs
-        )
+        super().__init__(is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs)
         self.channel = com
         self.odx_file_path = odx_file_path
         self.req_id = request_id
@@ -95,16 +89,10 @@ class UdsBaseAuxiliary(AuxiliaryInterface):
                 "The usage of ini file is deprecated, nothing will be read from it",
                 category=FutureWarning,
             )
-            log.warning(
-                f"apply following values for ISOTP layer configuration : {UdsBaseAuxiliary.DEFAULT_TP_CONFIG}"
-            )
-            log.warning(
-                f"apply following values for UDS layer configuration : {UdsBaseAuxiliary.DEFAULT_UDS_CONFIG}"
-            )
+            log.warning(f"apply following values for ISOTP layer configuration : {UdsBaseAuxiliary.DEFAULT_TP_CONFIG}")
+            log.warning(f"apply following values for UDS layer configuration : {UdsBaseAuxiliary.DEFAULT_UDS_CONFIG}")
 
-    def _init_com_layers(
-        self, tp_layer: Optional[dict] = None, uds_layer: Optional[dict] = None
-    ) -> None:
+    def _init_com_layers(self, tp_layer: Optional[dict] = None, uds_layer: Optional[dict] = None) -> None:
         """Initialize isotp and uds layer attributes.
 
         :param tp_layer: isotp configuration given at yaml level

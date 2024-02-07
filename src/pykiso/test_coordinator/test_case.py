@@ -82,12 +82,8 @@ class BasicTest(unittest.TestCase):
         self.test_ids = test_ids
         self.tag = tag
         self.start_time = self.stop_time = self.elapsed_time = 0
-        if any([setup_timeout, run_timeout, teardown_timeout]) and not isinstance(
-            self, RemoteTest
-        ):
-            log.warning(
-                "BasicTest does not support test timeouts, it will be discarded"
-            )
+        if any([setup_timeout, run_timeout, teardown_timeout]) and not isinstance(self, RemoteTest):
+            log.warning("BasicTest does not support test timeouts, it will be discarded")
 
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
@@ -163,22 +159,19 @@ class RemoteTest(BasicTest):
         self.run_timeout = run_timeout or RemoteTest.response_timeout
         self.teardown_timeout = teardown_timeout or RemoteTest.response_timeout
 
-    @test_app_interaction(
-        message_type=message.MessageCommandType.TEST_CASE_SETUP, timeout_cmd=5
-    )
+    @test_app_interaction(message_type=message.MessageCommandType.TEST_CASE_SETUP, timeout_cmd=5)
     def setUp(self) -> None:
         """Startup hook method to execute code before each test method."""
         pass
 
-    @test_app_interaction(
-        message_type=message.MessageCommandType.TEST_CASE_RUN, timeout_cmd=5
-    )
+    @test_app_interaction(message_type=message.MessageCommandType.TEST_CASE_RUN, timeout_cmd=5)
     def test_run(self) -> None:
         """Hook method from unittest in order to execute test case."""
         pass
 
     @test_app_interaction(
-        message_type=message.MessageCommandType.TEST_CASE_TEARDOWN, timeout_cmd=5
+        message_type=message.MessageCommandType.TEST_CASE_TEARDOWN,
+        timeout_cmd=5,
     )
     def tearDown(self) -> None:
         """Closure hook method to execute code after each test method."""
@@ -198,7 +191,7 @@ def define_test_parameters(
     """Decorator to fill out test parameters of the BasicTest and RemoteTest automatically."""
 
     def generate_modified_class(
-        DecoratedClass: Type[Union[BasicTest, BaseTestSuite]]
+        DecoratedClass: Type[Union[BasicTest, BaseTestSuite]],
     ) -> Type[Union[BasicTest, BaseTestSuite]]:
         """For basic test-case, generates the same class but with the test IDs
         already filled. It works as a partially filled-out call to the __init__ method.
@@ -305,28 +298,18 @@ def retry_test_case(
                         break
                     else:
                         # Clearly separate tests
-                        log.info(
-                            f">>>>>>>>>> Stability test {retry_nb}/{max_try} succeed <<<<<<<<<<"
-                        )
+                        log.info(f">>>>>>>>>> Stability test {retry_nb}/{max_try} succeed <<<<<<<<<<")
 
                 except Exception as e:
                     # log: test_name (class), method (setUp, test_run, tearDown) and the error.
-                    log.warning(
-                        f"{self.__class__.__name__}.{current_execution.__name__} failed with exception: {e}."
-                    )
+                    log.warning(f"{self.__class__.__name__}.{current_execution.__name__} failed with exception: {e}.")
 
                     # raise the exception that occurred during the latest attempt
                     if retry_nb == max_try or stability_test:
-                        log.error(
-                            f">>>>>>>>>> Test {retry_nb}/{max_try} failed <<<<<<<<<<"
-                        )
+                        log.error(f">>>>>>>>>> Test {retry_nb}/{max_try} failed <<<<<<<<<<")
                         raise e
-                    elif (
-                        getattr(self, "step_report", False) and self.step_report.header
-                    ):
-                        step_report.add_retry_information(
-                            self, result_test, retry_nb, max_try, e
-                        )
+                    elif getattr(self, "step_report", False) and self.step_report.header:
+                        step_report.add_retry_information(self, result_test, retry_nb, max_try, e)
 
                     # print counter only after failing test to avoid spamming the console
                     log.info(f">>>>>>>>>> Attempt: {retry_nb +1}/{max_try} <<<<<<<<<<")

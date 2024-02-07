@@ -53,9 +53,7 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
         try:
             key = user_args.pop(0)
             if not key.startswith("--") or "_" in key:
-                correct_key = (
-                    f'{"" if key.startswith("--") else "--" }{key.replace("_","-")}'
-                )
+                correct_key = f'{"" if key.startswith("--") else "--" }{key.replace("_","-")}'
                 raise click.NoSuchOption(option_name=key, possibilities=[correct_key])
 
             value = user_args.pop(0)
@@ -69,9 +67,7 @@ def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
     return user_tags
 
 
-def check_file_extension(
-    click_context: click.Context, param: click.Parameter, paths: Tuple[str]
-) -> Tuple[str]:
+def check_file_extension(click_context: click.Context, param: click.Parameter, paths: Tuple[str]) -> Tuple[str]:
     """Check the path strings of all given test configuration files for yaml file
     extension and raise an exception if the check fails
 
@@ -84,9 +80,7 @@ def check_file_extension(
     """
     for path in paths:
         if not path.endswith((".yaml", ".yml")):
-            raise click.BadParameter(
-                f"Configuration needs to be a .yaml file, but {path} was given"
-            )
+            raise click.BadParameter(f"Configuration needs to be a .yaml file, but {path} was given")
     return paths
 
 
@@ -99,9 +93,7 @@ class CommandWithOptionalFlagValues(click.Command):
         flags = [
             flag
             for flag in self.params
-            if isinstance(flag, click.Option)
-            and flag.is_flag
-            and not isinstance(flag.flag_value, bool)
+            if isinstance(flag, click.Option) and flag.is_flag and not isinstance(flag.flag_value, bool)
         ]
         # iterate over all user provided arguments to match the flags with format '--flag=value'
         for arg_index, arg in enumerate(args):

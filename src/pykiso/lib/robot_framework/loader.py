@@ -74,19 +74,13 @@ class RobotLoader:
             # import all auxiliaries except proxy ones
             for alias in auxes_alias:
                 if alias not in proxy_auxes:
-                    self.auxiliaries[alias] = importlib.import_module(
-                        f".{alias}", f"{PACKAGE}.auxiliaries"
-                    )
+                    self.auxiliaries[alias] = importlib.import_module(f".{alias}", f"{PACKAGE}.auxiliaries")
             # finally install proxy auxiliaries
             for alias in proxy_auxes:
-                self.auxiliaries[alias] = importlib.import_module(
-                    f".{alias}", f"{PACKAGE}.auxiliaries"
-                )
+                self.auxiliaries[alias] = importlib.import_module(f".{alias}", f"{PACKAGE}.auxiliaries")
             logger.info(f"auxiliaries {self.auxiliaries} installed")
         except Exception as error:
-            logger.error(
-                f"An error occurred during auxiliaries creation, reason : {error}"
-            )
+            logger.error(f"An error occurred during auxiliaries creation, reason : {error}")
             raise
 
     @keyword(name="uninstall")
@@ -101,7 +95,5 @@ class RobotLoader:
                 sys.modules.pop(f"{PACKAGE}.auxiliaries.{alias}")
             logger.info(f"auxiliaries {self.auxiliaries} uninstalled")
         except Exception as error:
-            logger.error(
-                f"An error occurred during auxiliaries deletion, reason : {error}"
-            )
+            logger.error(f"An error occurred during auxiliaries deletion, reason : {error}")
             raise

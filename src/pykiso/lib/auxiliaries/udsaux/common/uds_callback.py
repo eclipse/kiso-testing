@@ -83,13 +83,9 @@ class UdsCallback:
             self.response = list(self.int_to_bytes(self.response))
         elif self.response is None and not isinstance(self.request, dict):
             # create positive response based on request
-            self.response = [
-                self.request[0] + self.POSITIVE_RESPONSE_OFFSET
-            ] + self.request[1:]
+            self.response = [self.request[0] + self.POSITIVE_RESPONSE_OFFSET] + self.request[1:]
 
-        if self.response_data is not None and not (
-            isinstance(self.response, dict) or self.response is None
-        ):
+        if self.response_data is not None and not (isinstance(self.response, dict) or self.response is None):
             # convert response_data and append it to the response
             self.response_data = (
                 list(self.int_to_bytes(self.response_data))
@@ -100,9 +96,7 @@ class UdsCallback:
 
             if self.data_length is not None:
                 # pad with zeros to reach the expected length
-                self.response.extend(
-                    [0x00] * (self.data_length - len(self.response_data))
-                )
+                self.response.extend([0x00] * (self.data_length - len(self.response_data)))
 
     def __call__(self, received_request: List[int], aux: UdsServerAuxiliary) -> None:
         """Trigger the callback and increase the call count.
@@ -167,9 +161,7 @@ class UdsDownloadCallback(UdsCallback):
         data_size_start_index = addr_len_format_id_idx + nb_bytes_memory_address_param
         data_size_end_index = data_size_start_index + nb_bytes_memory_size_param
 
-        memory_size = download_request[
-            data_size_start_index + 1 : data_size_end_index + 1
-        ]
+        memory_size = download_request[data_size_start_index + 1 : data_size_end_index + 1]
         data_transfer_size = int.from_bytes(bytes(memory_size), byteorder="big") - 1
         return data_transfer_size
 
@@ -187,7 +179,8 @@ class UdsDownloadCallback(UdsCallback):
         if first_frame_data_len == 0:
             uds_data_start_index = 6
             first_frame_data_len = int.from_bytes(
-                bytes(first_frame[data_len_start_index:uds_data_start_index]), "big"
+                bytes(first_frame[data_len_start_index:uds_data_start_index]),
+                "big",
             )
         return first_frame_data_len, uds_data_start_index
 
@@ -209,9 +202,7 @@ class UdsDownloadCallback(UdsCallback):
         ]
         return request_download_positive_response
 
-    def handle_data_download(
-        self, download_request: List[int], aux: UdsServerAuxiliary
-    ) -> None:
+    def handle_data_download(self, download_request: List[int], aux: UdsServerAuxiliary) -> None:
         """Handle a download request from the client.
 
         This method handles the entire download functional unit composed of:
@@ -255,16 +246,12 @@ class UdsDownloadCallback(UdsCallback):
                 continue
 
             # decode PCI to extract the block data length
-            expected_data_len, pci_len = self.get_first_frame_data_length(
-                transfer_request
-            )
+            expected_data_len, pci_len = self.get_first_frame_data_length(transfer_request)
             uds_transfer_request = transfer_request[pci_len:]
             service_id, sequence_number, *block_data = uds_transfer_request
 
             if not service_id == IsoServices.TransferData:
-                log.error(
-                    f"Expected TransferData request from ECU, got: {bytes(transfer_request).hex()}"
-                )
+                log.error(f"Expected TransferData request from ECU, got: {bytes(transfer_request).hex()}")
                 return
 
             # send flow control with configured STmin
@@ -296,8 +283,7 @@ class UdsDownloadCallback(UdsCallback):
                 if data[0] != expected_pci:
                     block_data_len += len(data) - 1
                     log.internal_warning(
-                        "Consecutive frame missed: expected PCI "
-                        f"{hex(expected_pci)}, got {hex(data[0])}",
+                        "Consecutive frame missed: expected PCI " f"{hex(expected_pci)}, got {hex(data[0])}",
                     )
                 block_data_len += len(data) - 1
 

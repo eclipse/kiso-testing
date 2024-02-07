@@ -54,7 +54,7 @@ poetry shell
 To improve code-quality, a configuration of [pre-commit](https://pre-commit.com/) hooks are available.
 The following pre-commit hooks are used:
 
-- black
+- ruff-format
 - flake8
 - isort
 - trailing-whitespace

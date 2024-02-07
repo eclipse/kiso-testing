@@ -279,7 +279,9 @@ class TestScenario:
                 )
 
             @classmethod
-            def handle_lost_communication_during_teardown_report(cls) -> Scenario:
+            def handle_lost_communication_during_teardown_report(
+                cls,
+            ) -> Scenario:
                 """Return a scenario to handle a complete test case
                 with lost of communication during report to teardown Command.
 
@@ -374,7 +376,9 @@ class TestScenario:
                 return Scenario([None, None, ResponseTemplates.ack])
 
             @classmethod
-            def handle_lost_communication_during_teardown_report(cls) -> Scenario:
+            def handle_lost_communication_during_teardown_report(
+                cls,
+            ) -> Scenario:
                 """Return a scenario to handle a lost of communication
                 during report to teardown command.
 

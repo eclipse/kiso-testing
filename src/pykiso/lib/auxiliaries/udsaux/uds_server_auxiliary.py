@@ -103,13 +103,14 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :return: the padded message.
         """
-        padded_length = next(
-            size for size in CAN_FD_DATA_LENGTHS if size >= len(message)
-        )
+        padded_length = next(size for size in CAN_FD_DATA_LENGTHS if size >= len(message))
         return message + ([cls.CAN_FD_PADDING_PATTERN] * (padded_length - len(message)))
 
     def transmit(
-        self, data: List[int], req_id: Optional[int] = None, extended: bool = False
+        self,
+        data: List[int],
+        req_id: Optional[int] = None,
+        extended: bool = False,
     ) -> None:
         """Pad and transmit a message through ITF connector. This method
         is also used as a substitute to the transmit method present in
@@ -169,13 +170,10 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             return 0xF0 + int(stmin * 10)
         else:
             raise ValueError(
-                f"Invalid minimum Separation Time {stmin}ms. "
-                "Acceptable values are between 0.1ms and 127ms."
+                f"Invalid minimum Separation Time {stmin}ms. " "Acceptable values are between 0.1ms and 127ms."
             )
 
-    def send_flow_control(
-        self, flow_status: int = 0, block_size: int = 0, stmin: float = 0
-    ) -> None:
+    def send_flow_control(self, flow_status: int = 0, block_size: int = 0, stmin: float = 0) -> None:
         """Send an ISO TP flow control frame to the client.
 
         :param flow_status: status of the flow control, defaults to 0
@@ -221,9 +219,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         # handle odx based callbacks
         if isinstance(request, dict) or isinstance(response, dict):
             odx_param = self._get_odx_callback_param(request, response)
-            request = self._create_callback_from_odx(
-                request, response, response_data, data_length, callback
-            )
+            request = self._create_callback_from_odx(request, response, response_data, data_length, callback)
             odx_key = f"{IsoServices(request.request[0]).name}.{odx_param}"
             self.callbacks[odx_key] = request
         elif isinstance(request, UdsCallback) and (
@@ -277,9 +273,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                     if value == callback:
                         self._callbacks.pop(key)
             except KeyError as e:
-                log.error(
-                    f"Could not unregister callback {e}: no such callback registered."
-                )
+                log.error(f"Could not unregister callback {e}: no such callback registered.")
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """Reception method called by the auxiliary thread. This method received
@@ -291,9 +285,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         msg, arbitration_id = rcv_data.get("msg"), rcv_data.get("remote_id")
         if msg is not None and arbitration_id == self.res_id:
             try:
-                uds_data = self.uds_config.tp.decode_isotp(
-                    received_data=msg, use_external_snd_rcv_functions=True
-                )
+                uds_data = self.uds_config.tp.decode_isotp(received_data=msg, use_external_snd_rcv_functions=True)
                 if log.isEnabledFor(logging.getLogger().level):
                     log.internal_debug(
                         "Received ISO TP data: 0x%s || UDS data: %s",
@@ -319,9 +311,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
                 callback_to_execute = callback
                 break
         else:
-            log.internal_warning(
-                f"Unregistered request received: {self.format_data(received_uds_data)}"
-            )
+            log.internal_warning(f"Unregistered request received: {self.format_data(received_uds_data)}")
             return
 
         callback_to_execute(received_uds_data, self)
@@ -367,12 +357,8 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             )
             uds_request = self._format_uds_data(coded_values)
             if uds_request[0] != request["service"]:
-                log.error(
-                    f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
-                )
-                raise ValueError(
-                    f"Given SID {request['service']} does not match parsed SID {uds_request[0]}"
-                )
+                log.error(f"Given SID {request['service']} does not match parsed SID {uds_request[0]}")
+                raise ValueError(f"Given SID {request['service']} does not match parsed SID {uds_request[0]}")
         else:
             uds_request = request
 
@@ -389,7 +375,9 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             else:
                 # create positive response by parsing odx and adding data from dict
                 coded_response_values = self.odx_parser.get_coded_values(
-                    key, uds_request[0] + 0x40, self.odx_parser.RefType.POS_RESPONSE
+                    key,
+                    uds_request[0] + 0x40,
+                    self.odx_parser.RefType.POS_RESPONSE,
                 )
                 uds_response = self._format_uds_data(coded_response_values)
                 payload = list(data.encode())
@@ -398,7 +386,11 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
             full_uds_response = response
 
         callback = UdsCallback(
-            uds_request, full_uds_response, response_data, data_length, callback
+            uds_request,
+            full_uds_response,
+            response_data,
+            data_length,
+            callback,
         )
         log.internal_debug("Callback configured from odx: %s", callback)
         return callback

@@ -54,7 +54,13 @@ log = logging.getLogger(__name__)
 # Store the Result Step report
 ALL_STEP_REPORT = OrderedDict()
 # Step result keys used by Jinja for columns name
-REPORT_KEYS = ["message", "var_name", "expected_result", "actual_result", "succeed"]
+REPORT_KEYS = [
+    "message",
+    "var_name",
+    "expected_result",
+    "actual_result",
+    "succeed",
+]
 DEFAULT_TEST_METHOD = ["setup", "teardown", "handle_interaction"]
 # Parent method being reported ; Ignore sub call (assert in an assert)
 _FUNCTION_TO_APPLY = r"|".join(["test", *DEFAULT_TEST_METHOD])
@@ -361,7 +367,14 @@ def assert_decorator(assert_method: types.MethodType):
             _prepare_report(test_case_inst, test_name)
 
             # 2.2. Add new step
-            _add_step(test_class_name, test_name, message, var_name, expected, received)
+            _add_step(
+                test_class_name,
+                test_name,
+                message,
+                var_name,
+                expected,
+                received,
+            )
 
         except Exception as e:
             log.exception(f"Unable to update Step due to exception: {e}")
@@ -373,9 +386,7 @@ def assert_decorator(assert_method: types.MethodType):
             log.error(f"Assert step exception: {e}")
             test_case_inst.step_report.last_error_message = f"{e}"
             if parent_method:
-                ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1][
-                    -1
-                ]["succeed"] = False
+                ALL_STEP_REPORT[test_class_name]["test_list"][test_name]["steps"][-1][-1]["succeed"] = False
                 ALL_STEP_REPORT[test_class_name]["succeed"] = False
 
             test_case_inst.step_report.success = False
@@ -406,10 +417,7 @@ def is_test_success(test: dict) -> bool:
     :return: True if each step in a test was successful and no unexpected error
         was raised else False
     """
-    return (
-        all([step["succeed"] for step in test["steps"][-1]])
-        and not test.get("unexpected_errors")[-1]
-    )
+    return all([step["succeed"] for step in test["steps"][-1]]) and not test.get("unexpected_errors")[-1]
 
 
 jinja_template_functions = {
@@ -430,17 +438,13 @@ def generate_step_report(
     test_result.stream.writeln("Generating HTML reports...")
 
     succeeded_tests = test_result.successes + test_result.expectedFailures
-    failed_test = (
-        test_result.failures + test_result.errors + test_result.unexpectedSuccesses
-    )
+    failed_test = test_result.failures + test_result.errors + test_result.unexpectedSuccesses
     # Update info for each test
     for test_case in succeeded_tests + failed_test:
         if isinstance(test_case, (TestCase, TestInfo)):
             # Case of success
             test_info = test_case
-        elif isinstance(test_case, tuple) and isinstance(
-            test_case[0], (TestCase, TestInfo)
-        ):
+        elif isinstance(test_case, tuple) and isinstance(test_case[0], (TestCase, TestInfo)):
             # Case of non success
             test_info = test_case[0]
 
@@ -467,19 +471,13 @@ def generate_step_report(
         if class_name in ALL_STEP_REPORT:
             ALL_STEP_REPORT[class_name]["time_result"]["Start Time"] = start_time
             ALL_STEP_REPORT[class_name]["time_result"]["End Time"] = stop_time
-            ALL_STEP_REPORT[class_name]["time_result"]["Elapsed Time"] = round(
-                elapsed_time, 2
-            )
+            ALL_STEP_REPORT[class_name]["time_result"]["Elapsed Time"] = round(elapsed_time, 2)
             if test_case in test_result.errors:
-                ALL_STEP_REPORT[class_name]["test_list"][test_method_name][
-                    "unexpected_errors"
-                ][-1].append(test_case[1])
+                ALL_STEP_REPORT[class_name]["test_list"][test_method_name]["unexpected_errors"][-1].append(test_case[1])
                 ALL_STEP_REPORT[class_name]["succeed"] = False
 
     # Render the source template
-    render_environment = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(SCRIPT_PATH), autoescape=True
-    )
+    render_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(SCRIPT_PATH), autoescape=True)
     template = render_environment.get_template(REPORT_TEMPLATE)
     template.globals.update(jinja_template_functions)
     output_text = template.render({"ALL_STEP_REPORT": ALL_STEP_REPORT})
@@ -492,7 +490,11 @@ def generate_step_report(
 
 
 def add_retry_information(
-    test: BasicTest, result_test: bool, retry_nb: int, max_try: int, exc: Exception
+    test: BasicTest,
+    result_test: bool,
+    retry_nb: int,
+    max_try: int,
+    exc: Exception,
 ) -> None:
     """Add information in the step report if a test fails and is retried.
 
@@ -504,9 +506,7 @@ def add_retry_information(
     """
     global ALL_STEP_REPORT
     test_class_name = type(test).__name__
-    test_information = ALL_STEP_REPORT[test_class_name]["test_list"][
-        test._testMethodName
-    ]
+    test_information = ALL_STEP_REPORT[test_class_name]["test_list"][test._testMethodName]
     # Add information about the number of try
     test_information["number_try"] = retry_nb + 1
     test_information["max_try"] = max_try

@@ -85,9 +85,7 @@ class AcronameAuxiliary(AuxiliaryInterface):
             **kwargs,
         )
 
-        self.serial_number = (
-            int(serial_number, 16) if isinstance(serial_number, str) else serial_number
-        )
+        self.serial_number = int(serial_number, 16) if isinstance(serial_number, str) else serial_number
         self.stem = brainstem.stem.USBHub2x4()
 
     def _create_auxiliary_instance(self) -> bool:
@@ -98,14 +96,10 @@ class AcronameAuxiliary(AuxiliaryInterface):
 
         log.internal_info("Create auxiliary instance")
 
-        result = self.stem.discoverAndConnect(
-            brainstem.link.Spec.USB, self.serial_number
-        )
+        result = self.stem.discoverAndConnect(brainstem.link.Spec.USB, self.serial_number)
         if result == (Result.NO_ERROR):
             result = self.stem.system.getSerialNumber()
-            log.internal_info(
-                "Connected to USBStem with serial number: 0x%08X" % result.value
-            )
+            log.internal_info("Connected to USBStem with serial number: 0x%08X" % result.value)
         else:
             log.error("Could not connect to usb hub acroname")
             self.eval_result(result)
@@ -166,9 +160,7 @@ class AcronameAuxiliary(AuxiliaryInterface):
             port_current = port_current_ua.value * self.MICROAMP_TO_UNIT[unit]
 
         except KeyError:
-            log.error(
-                f"Unit '{unit}' is not supported. Current value will be set to None."
-            )
+            log.error(f"Unit '{unit}' is not supported. Current value will be set to None.")
             return None
 
         return port_current
@@ -186,9 +178,7 @@ class AcronameAuxiliary(AuxiliaryInterface):
             port_voltage = port_voltage_uv.value * self.MICROVOLT_TO_UNIT[unit]
 
         except KeyError:
-            log.error(
-                f"Unit '{unit}' is not supported. Voltage value will be set to None."
-            )
+            log.error(f"Unit '{unit}' is not supported. Voltage value will be set to None.")
             return None
 
         return port_voltage
@@ -205,9 +195,7 @@ class AcronameAuxiliary(AuxiliaryInterface):
         try:
             port_current_limit = result.value * self.MICROAMP_TO_UNIT[unit]
         except KeyError:
-            log.error(
-                f"Unit '{unit}' is not supported. Port current value will be set to None."
-            )
+            log.error(f"Unit '{unit}' is not supported. Port current value will be set to None.")
             return None
 
         return port_current_limit

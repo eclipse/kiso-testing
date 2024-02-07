@@ -27,9 +27,7 @@ try:
     from can.io.trc import TRCFileVersion, TRCReader, TRCWriter
     from can.util import channel2int, dlc2len, len2dlc
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'")
 
 
 log = logging.getLogger(__name__)
@@ -40,8 +38,8 @@ TRC_V2_FRAME_TYPES = {"DT", "FD", "FB", "FE", "BI", "RR", "EC", "ER", "ST"}
 
 
 class TypedMessage(Message):
-    """Message with type attribut added and that can handle empty arbitration id.
-    Necessary because python-can does not handle types from CAN FD and informations
+    """Message with type attribute added and that can handle empty arbitration id.
+    Necessary because python-can does not handle types from CAN FD and information
     contained in Message are not enough to deduce it.
     Some of those types (ex: ST) also have no arbitration id which cannot be handle by
     python-can Message object.
@@ -100,7 +98,7 @@ class TypedMessage(Message):
 
 
 class TRCReaderCanFD(TRCReader):
-    """Parse trc file to extract messages informations
+    """Parse trc file to extract messages information
     Unlike the base TRCReader class, also retrieve message type
     """
 
@@ -108,7 +106,7 @@ class TRCReaderCanFD(TRCReader):
         """Insert missing columns for specific messages (Hardware Status, Error Frames
         and Error Counter Changes) to avoid
 
-        :param cols: message informations with missing columns
+        :param cols: message information with missing columns
 
         :return: normalized message
         """
@@ -151,10 +149,7 @@ class TRCReaderCanFD(TRCReader):
         bus = self.columns.get("B", None)
 
         # For 2.0 ST / ER and EC messages dlc and length are not in the trace but length is fixed
-        if (
-            type_ in NO_ARBITRATION_ID_TYPES
-            and self.file_version == TRCFileVersion.V2_0
-        ):
+        if type_ in NO_ARBITRATION_ID_TYPES and self.file_version == TRCFileVersion.V2_0:
             if type_ == "ST":
                 length = 4
             elif type_ == "ER":
@@ -173,16 +168,11 @@ class TRCReaderCanFD(TRCReader):
                 raise ValueError("No length/dlc columns present.")
 
         if isinstance(self.start_time, datetime):
-            timestamp = (
-                self.start_time + timedelta(milliseconds=float(cols[self.columns["O"]]))
-            ).timestamp()
+            timestamp = (self.start_time + timedelta(milliseconds=float(cols[self.columns["O"]]))).timestamp()
         else:
             timestamp = float(cols[1]) / 1000
 
-        if (
-            type_ not in NO_ARBITRATION_ID_TYPES
-            or self.file_version == TRCFileVersion.V2_1
-        ):
+        if type_ not in NO_ARBITRATION_ID_TYPES or self.file_version == TRCFileVersion.V2_1:
             arbitration_id = int(cols[self.columns["I"]], 16)
             is_extended_id = len(cols[self.columns["I"]]) > 4
         # No arbitration id for ST / ER and EC messages
@@ -222,9 +212,7 @@ class TRCWriterCanFD(TRCWriter):
 
     # Type has been added to FORMAT_MESSAGE >= 2.0
     FORMAT_MESSAGE_V2_1 = "{msgnr:>7} {time:13.3f} {type:>2} {channel:>2} {id:>8} {dir:>2} - {dlc:<4} {data}"
-    FORMAT_MESSAGE_V2_0 = (
-        "{msgnr:>7} {time:13.3f} {type:>2} {id:>8} {dir:>2} {dlc:<2} {data}"
-    )
+    FORMAT_MESSAGE_V2_0 = "{msgnr:>7} {time:13.3f} {type:>2} {id:>8} {dir:>2} {dlc:<2} {data}"
     FILE_VERSION_TO_FORMAT = {
         TRCFileVersion.V1_0: TRCWriter.FORMAT_MESSAGE_V1_0,
         TRCFileVersion.V2_0: FORMAT_MESSAGE_V2_0,
@@ -234,7 +222,7 @@ class TRCWriterCanFD(TRCWriter):
     def _format_message_init(self, msg: TypedMessage, channel: int) -> str:
         """Pick message format from file version and format initial message
 
-        :return: message informations formated in a string
+        :return: message information formatted in a string
         """
         # Fix error from python can -> message number should start at one not zero
         self.msgnr = 1
@@ -250,7 +238,7 @@ class TRCWriterCanFD(TRCWriter):
     def _format_message_by_format(self, msg: TypedMessage, channel: int):
         """Format messages
 
-        :return: message informations formated in a string
+        :return: message information formatted in a string
         """
         if msg.type in NO_ARBITRATION_ID_TYPES:
             arb_id = f"{msg.arbitration_id}"
@@ -262,7 +250,7 @@ class TRCWriterCanFD(TRCWriter):
 
         data = [f"{byte:02X}" for byte in msg.data]
 
-        # For the time python-can was doing substraction with the first message timestamp
+        # For the time python-can was doing subtraction with the first message timestamp
         # which is incorrect. It should be with the start time of the trace otherwise the
         # first message will always have an offset of zero.
         if self.file_version == TRCFileVersion.V1_0:
@@ -310,7 +298,7 @@ class TRCWriterCanFD(TRCWriter):
         """Log a message in the trace. Handles CAN FD.
 
         In python can the reference is the timestamp of the first message (the first
-        message offset is always zero), to fix this we take the begining of the trace.
+        message offset is always zero), to fix this we take the beginning of the trace.
 
         :param msg: typed message to log
         :param trace_start_time: timestamp of the start of the trace

@@ -24,14 +24,7 @@ import sys
 
 import click
 
-from .console import (
-    print_cases,
-    print_milestones,
-    print_projects,
-    print_results,
-    print_runs,
-    print_suites,
-)
+from .console import print_cases, print_milestones, print_projects, print_results, print_runs, print_suites
 from .extraction import JunitReport
 from .testrail import (
     add_case_results,
@@ -72,9 +65,7 @@ def cli_testrail(ctx: dict, user: str, password: str, url: str) -> None:
     """TestRail interaction tool."""
     ctx.ensure_object(dict)
     ctx.obj["USER"] = user or input("Enter Client ID TestRail and Press enter:")
-    ctx.obj["PASSWORD"] = password or getpass.getpass(
-        "Enter your password and Press ENTER:"
-    )
+    ctx.obj["PASSWORD"] = password or getpass.getpass("Enter your password and Press ENTER:")
     ctx.obj["URL"] = url
 
 
@@ -83,7 +74,9 @@ def cli_testrail(ctx: dict, user: str, password: str, url: str) -> None:
 def cli_projects(ctx) -> None:
     """Returns the list of available projects."""
     projects = enumerate_all_projects(
-        base_url=ctx.obj["URL"], user=ctx.obj["USER"], password=ctx.obj["PASSWORD"]
+        base_url=ctx.obj["URL"],
+        user=ctx.obj["USER"],
+        password=ctx.obj["PASSWORD"],
     )
     print_projects(projects)
 

@@ -69,7 +69,14 @@ class TestInfo(xmlrunner.result._TestInfo):
         :param doc: additional documentation to store
         """
         super().__init__(
-            test_result, test_case, outcome, err, subTest, filename, lineno, doc
+            test_result,
+            test_case,
+            outcome,
+            err,
+            subTest,
+            filename,
+            lineno,
+            doc,
         )
 
         # reinitialize logging inside XmlTestRunner's run
@@ -149,9 +156,7 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
     report_testcase = copy.deepcopy(xmlrunner.runner._XMLTestResult._report_testcase)
 
     @staticmethod
-    def _report_testcase(
-        test_result: TestInfo, xml_testsuite: Element, xml_document: Document
-    ):
+    def _report_testcase(test_result: TestInfo, xml_testsuite: Element, xml_document: Document):
         """Callback function that create the test case section into the XML document.
 
         :param test_result: result of a test run
@@ -171,9 +176,7 @@ class XmlTestResult(xmlrunner.runner._XMLTestResult):
             if xml_testcase.getElementsByTagName("properties"):
                 continue
             # add the properties to the testcase
-            XmlTestResult._report_testsuite_properties(
-                xml_testcase, xml_document, testcase_properties
-            )
+            XmlTestResult._report_testsuite_properties(xml_testcase, xml_document, testcase_properties)
 
         # here can be added additional tags that have to be stored into the xml test report
         xml_testsuite.setAttribute("test_ids", str(test_result.test_ids))

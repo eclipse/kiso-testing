@@ -43,9 +43,7 @@ from .containers import (
 from .extraction import JunitReport, Status
 
 
-def extract_test_results(
-    results: str, cases: CaseContainer
-) -> List[Tuple[int, int, Status]]:
+def extract_test_results(results: str, cases: CaseContainer) -> List[Tuple[int, int, Status]]:
     """Extract each test case result from the given Junit reports.
 
     .. info:: based on the VTest Studio present in the Junit Report,
@@ -84,9 +82,7 @@ def create_projects_container(response: dict) -> ProjectContainer:
     container = ProjectContainer()
 
     for project in response["projects"]:
-        container.add_project(
-            ProjectInfo(project["id"], project["name"], project["announcement"])
-        )
+        container.add_project(ProjectInfo(project["id"], project["name"], project["announcement"]))
 
     return container
 
@@ -183,9 +179,7 @@ def create_milestone_container(response: dict) -> MilestoneContainer:
     return container
 
 
-def search_for_project(
-    base_url: str, user: str, password: str, project_name: str
-) -> int:
+def search_for_project(base_url: str, user: str, password: str, project_name: str) -> int:
     """Search for the project id in all available TestRail projects
     based on it name.
 
@@ -201,16 +195,18 @@ def search_for_project(
     project_id = projects.found_project_id_by_name(project_name)
 
     if project_id is None:
-        console.print(
-            f"Project named {project_name} doesn't exist!!!", style="bold red"
-        )
+        console.print(f"Project named {project_name} doesn't exist!!!", style="bold red")
         sys.exit(1)
 
     return project_id
 
 
 def search_for_milestone(
-    base_url: str, user: str, password: str, project_name: str, milestone_name: str
+    base_url: str,
+    user: str,
+    password: str,
+    project_name: str,
+    milestone_name: str,
 ) -> int:
     """Search for the milestone id in all available TestRail milestones
     based on it name.
@@ -229,7 +225,8 @@ def search_for_milestone(
 
     if milestone_id is None:
         console.print(
-            f"Milestone named {milestone_name} doesn't exist!!!", style="bold red"
+            f"Milestone named {milestone_name} doesn't exist!!!",
+            style="bold red",
         )
         sys.exit(1)
 
@@ -259,9 +256,7 @@ def search_for_suite(
     suite_id = suites.found_suite_id_by_name(suite_name)
 
     if suite_id is None:
-        console.print(
-            f"Milestone named {suite_name} doesn't exist!!!", style="bold red"
-        )
+        console.print(f"Milestone named {suite_name} doesn't exist!!!", style="bold red")
         sys.exit(1)
 
     return suite_id
@@ -280,9 +275,7 @@ def enumerate_all_projects(base_url: str, user: str, password: str) -> ProjectCo
     return create_projects_container(response)
 
 
-def enumerate_all_suites(
-    base_url: str, user: str, password: str, project_name: str
-) -> Tuple[int, SuiteContainer]:
+def enumerate_all_suites(base_url: str, user: str, password: str, project_name: str) -> Tuple[int, SuiteContainer]:
     """Retrieve all available suites from the given project.
 
     :param base_url: TestRail's base url
@@ -294,15 +287,17 @@ def enumerate_all_suites(
     """
     project_id = search_for_project(base_url, user, password, project_name)
 
-    response = TestRailApi.get_suites(
-        base_url=base_url, user=user, password=password, project_id=project_id
-    )
+    response = TestRailApi.get_suites(base_url=base_url, user=user, password=password, project_id=project_id)
     suites = create_suites_container(response)
     return project_id, suites
 
 
 def enumerate_all_cases(
-    base_url: str, user: str, password: str, project_name: str, custom_field: str
+    base_url: str,
+    user: str,
+    password: str,
+    project_name: str,
+    custom_field: str,
 ) -> Tuple[int, CaseContainer]:
     """Retrieve all available cases from the given project and all the
     available suites..
@@ -320,9 +315,7 @@ def enumerate_all_cases(
     suite_ids = [suite.id for suite in suites.iterate()]
 
     try:
-        responses = TestRailApi.async_get_cases(
-            base_url, user, password, project_id, suite_ids
-        )
+        responses = TestRailApi.async_get_cases(base_url, user, password, project_id, suite_ids)
     except concurrent.futures.TimeoutError:
         console.print("Request timeout reach!!!", style="bold red")
         sys.exit(1)
@@ -333,9 +326,7 @@ def enumerate_all_cases(
     return project_id, cases
 
 
-def enumerate_all_runs(
-    base_url: str, user: str, password: str, project_name: str
-) -> Tuple[int, RunContainer]:
+def enumerate_all_runs(base_url: str, user: str, password: str, project_name: str) -> Tuple[int, RunContainer]:
     """Retrieve all available runs from the given project.
 
     :param base_url: TestRail's base url
@@ -347,9 +338,7 @@ def enumerate_all_runs(
     """
     project_id = search_for_project(base_url, user, password, project_name)
 
-    response = TestRailApi.get_runs(
-        base_url=base_url, user=user, password=password, project_id=project_id
-    )
+    response = TestRailApi.get_runs(base_url=base_url, user=user, password=password, project_id=project_id)
 
     runs = create_run_container(response)
     return project_id, runs
@@ -369,9 +358,7 @@ def enumerate_all_milestones(
     """
     project_id = search_for_project(base_url, user, password, project_name)
 
-    response = TestRailApi.get_milestones(
-        base_url=base_url, user=user, password=password, project_id=project_id
-    )
+    response = TestRailApi.get_milestones(base_url=base_url, user=user, password=password, project_id=project_id)
 
     runs = create_milestone_container(response)
     return project_id, runs

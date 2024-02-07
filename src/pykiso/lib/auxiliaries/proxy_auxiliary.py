@@ -56,11 +56,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from pykiso import CChannel
-from pykiso.auxiliary import (
-    AuxiliaryInterface,
-    close_connector,
-    open_connector,
-)
+from pykiso.auxiliary import AuxiliaryInterface, close_connector, open_connector
 from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_setup.config_registry import ConfigRegistry
 from pykiso.test_setup.dynamic_loader import PACKAGE
@@ -89,9 +85,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
         :param trace_dir: where to place the trace
         :param trace_name: trace's file name
         """
-        super().__init__(
-            is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs
-        )
+        super().__init__(is_proxy_capable=True, tx_task_on=False, rx_task_on=True, **kwargs)
         self.channel = com
         self._open_count = 0
         self.logger = self._init_trace(activate_trace, trace_dir, trace_name)
@@ -102,13 +96,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
         Get the number of proxy channels connected to this auxiliary
         that are currently open.
         """
-        return len(
-            [
-                ccproxy
-                for ccproxy in self.proxy_channels
-                if isinstance(ccproxy.queue_out, queue.Queue)
-            ]
-        )
+        return len([ccproxy for ccproxy in self.proxy_channels if isinstance(ccproxy.queue_out, queue.Queue)])
 
     @property
     def _open_connections(self) -> int:
@@ -150,7 +138,9 @@ class ProxyAuxiliary(AuxiliaryInterface):
 
     @staticmethod
     def _init_trace(
-        activate: bool, t_dir: Optional[str] = None, t_name: Optional[str] = None
+        activate: bool,
+        t_dir: Optional[str] = None,
+        t_name: Optional[str] = None,
     ) -> logging.Logger:
         """Initialize the logging trace for proxy auxiliary received
         message recording.
@@ -171,9 +161,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
         t_dir = "" if t_dir is None else t_dir
         # if the given log path is not absolute add root path
         # (where pykiso is launched) otherwise take it as it is
-        dir_path = (
-            (Path() / t_dir).resolve() if not Path(t_dir).is_absolute() else Path(t_dir)
-        )
+        dir_path = (Path() / t_dir).resolve() if not Path(t_dir).is_absolute() else Path(t_dir)
         # if no specific logging file name is given take the default one
         t_name = (
             time.strftime(f"%Y-%m-%d_%H-%M-%S_{t_name}.log")
@@ -181,9 +169,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
             else time.strftime("%Y-%m-%d_%H-%M-%S_proxy_logging.log")
         )
         # if path doesn't exists take root path (where pykiso is launched)
-        log_path = (
-            dir_path / t_name if dir_path.exists() else (Path() / t_name).resolve()
-        )
+        log_path = dir_path / t_name if dir_path.exists() else (Path() / t_name).resolve()
 
         # configure the file handler and create the trace file
         log_format = logging.Formatter("%(asctime)s : %(message)s")
@@ -225,9 +211,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
             # check if the given aux_name is in the available aux
             # alias list
             elif aux in ConfigRegistry.get_auxes_alias():
-                log.internal_info(
-                    f"Auxiliary '{aux}' is not using import magic mechanism (pre-loaded)"
-                )
+                log.internal_info(f"Auxiliary '{aux}' is not using import magic mechanism (pre-loaded)")
                 # load it using ConfigRegistry _aux_cache
                 aux_inst = ConfigRegistry.get_aux_by_alias(aux)
                 self._check_aux_compatibility(aux_inst)
@@ -256,9 +240,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
         :raises NotImplementedError: if is_proxy_capable flag is False
         """
         if not aux.is_proxy_capable:
-            raise NotImplementedError(
-                f"Auxiliary {aux} is not compatible with a proxy auxiliary!"
-            )
+            raise NotImplementedError(f"Auxiliary {aux} is not compatible with a proxy auxiliary!")
 
     @staticmethod
     def _check_channels_compatibility(channels: List[CChannel]) -> None:
@@ -381,6 +363,4 @@ class ProxyAuxiliary(AuxiliaryInterface):
                     if conn.queue_out is not None:
                         conn.queue_out.put(recv_response)
         except Exception:
-            log.exception(
-                f"encountered error while receiving message via {self.channel}"
-            )
+            log.exception(f"encountered error while receiving message via {self.channel}")

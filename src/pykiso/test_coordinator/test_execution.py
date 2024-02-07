@@ -51,11 +51,7 @@ import pykiso
 
 from ..exceptions import AuxiliaryCreationError, TestCollectionError
 from ..logging_initializer import get_logging_options
-from ..test_result.assert_step_report import (
-    StepReportData,
-    assert_decorator,
-    generate_step_report,
-)
+from ..test_result.assert_step_report import StepReportData, assert_decorator, generate_step_report
 from ..test_result.text_result import BannerTestResult, ResultStream
 from ..test_result.xml_result import XmlTestResult
 from . import test_suite
@@ -77,7 +73,9 @@ class ExitCode(enum.IntEnum):
     BAD_CLI_USAGE = 5
 
 
-def create_test_suite(test_suite_dict: SuiteConfig) -> test_suite.BasicTestSuite:
+def create_test_suite(
+    test_suite_dict: SuiteConfig,
+) -> test_suite.BasicTestSuite:
     """create a test suite based on the config dict
 
     :param test_suite_dict: dict created from config with keys 'suite_dir',
@@ -90,9 +88,7 @@ def create_test_suite(test_suite_dict: SuiteConfig) -> test_suite.BasicTestSuite
     )
 
 
-def apply_tag_filter(
-    all_tests_to_run: unittest.TestSuite, usr_tags: Dict[str, List[str]]
-) -> None:
+def apply_tag_filter(all_tests_to_run: unittest.TestSuite, usr_tags: Dict[str, List[str]]) -> None:
     """Filter the test cases based on user tags provided via CLI.
 
     :param all_tests_to_run: a dict containing all testsuites and testcases
@@ -119,17 +115,11 @@ def apply_tag_filter(
         for cli_tag_id, cli_tag_value in usr_tags.items():
             # skip any test case that doesn't define a CLI-provided tag name
             if cli_tag_id not in test_case.tag.keys():
-                test_case._skip_msg = (
-                    f"provided tag {cli_tag_id!r} not present in test tags"
-                )
+                test_case._skip_msg = f"provided tag {cli_tag_id!r} not present in test tags"
                 return True
             # skip any test case that which tag value don't match the provided tag's value
-            cli_tag_values = (
-                cli_tag_value if isinstance(cli_tag_value, list) else [cli_tag_value]
-            )
-            if not any(
-                cli_val in test_case.tag[cli_tag_id] for cli_val in cli_tag_values
-            ):
+            cli_tag_values = cli_tag_value if isinstance(cli_tag_value, list) else [cli_tag_value]
+            if not any(cli_val in test_case.tag[cli_tag_id] for cli_val in cli_tag_values):
                 test_case._skip_msg = f"non-matching value for tag {cli_tag_id!r}"
                 return True
 
@@ -165,7 +155,8 @@ def apply_tag_filter(
     for tag_name in usr_tags:
         if tag_name not in all_test_tags:
             raise NameError(
-                f"Provided tag {tag_name!r} is not defined in any testcase.", tag_name
+                f"Provided tag {tag_name!r} is not defined in any testcase.",
+                tag_name,
             )
 
 
@@ -222,9 +213,7 @@ def failure_and_error_handling(result: unittest.TestResult) -> int:
     return exit_code
 
 
-def enable_step_report(
-    all_tests_to_run: unittest.suite.TestSuite, step_report: Path
-) -> None:
+def enable_step_report(all_tests_to_run: unittest.suite.TestSuite, step_report: Path) -> None:
     """Decorate all assert method from Test-Case.
 
     This will allow to save the assert inputs in
@@ -241,9 +230,7 @@ def enable_step_report(
             # for any test, show ITF version
             tc.step_report.header = OrderedDict({"ITF version": pykiso.__version__})
             # Decorate All assert method
-            assert_method_list = [
-                method for method in dir(tc) if method.startswith("assert")
-            ]
+            assert_method_list = [method for method in dir(tc) if method.startswith("assert")]
             for method_name in assert_method_list:
                 # Get method from name
                 method = getattr(tc, method_name)
@@ -305,9 +292,7 @@ def _is_valid_module(start_dir: str, pattern: str) -> bool:
     test_files_found = list(start_dir.glob(f"**/{pattern}"))
 
     # remove folders
-    test_files_found = [
-        test_file for test_file in test_files_found if test_file.is_file()
-    ]
+    test_files_found = [test_file for test_file in test_files_found if test_file.is_file()]
 
     # If found test files are in given test suite directory don't check for __init__.py
     if any(test_file.parent == start_dir for test_file in test_files_found):
@@ -315,9 +300,7 @@ def _is_valid_module(start_dir: str, pattern: str) -> bool:
 
     # No file matches the test filter pattern
     if not test_files_found:
-        log.critical(
-            f"Test filter {pattern=} doesn't match any files in folder {start_dir}"
-        )
+        log.critical(f"Test filter {pattern=} doesn't match any files in folder {start_dir}")
         return False
 
     # Check that all sub folders of a nested testsuite have an __init__.py file
@@ -340,7 +323,9 @@ def _is_valid_module(start_dir: str, pattern: str) -> bool:
     return all(VALID_MODULE_NAME.match(file.name) for file in test_files_found)
 
 
-def filter_test_modules_by_suite(test_modules: List[SuiteConfig]) -> List[SuiteConfig]:
+def filter_test_modules_by_suite(
+    test_modules: List[SuiteConfig],
+) -> List[SuiteConfig]:
     """Filter a list of test modules by their suite directory to avoid running duplicates.
 
     :param test_modules: List of test modules to filter.
@@ -387,19 +372,13 @@ def collect_test_suites(
             start_dir=test_suite_configuration["suite_dir"],
             pattern=test_suite_configuration["test_filter_pattern"],
         ):
-
             valid_test_modules.append(test_suite_configuration)
 
     if test_filter_pattern:
         valid_test_modules = filter_test_modules_by_suite(valid_test_modules)
 
     if not valid_test_modules:
-        raise TestCollectionError(
-            [
-                test_suite_config["suite_dir"]
-                for test_suite_config in config_test_suite_list
-            ]
-        )
+        raise TestCollectionError([test_suite_config["suite_dir"] for test_suite_config in config_test_suite_list])
 
     for test_suite_configuration in valid_test_modules:
         try:
@@ -418,9 +397,7 @@ def abort(reason: str = None) -> None:
     """
     if reason:
         log.critical(reason)
-    log.critical(
-        "Non recoverable error occurred during test execution, aborting test session."
-    )
+    log.critical("Non recoverable error occurred during test execution, aborting test session.")
     os.kill(os.getpid(), ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION)
 
 
@@ -454,9 +431,7 @@ def execute(
     try:
         test_file_pattern = parse_test_selection_pattern(pattern_inject)
 
-        test_suites = collect_test_suites(
-            config["test_suite_list"], test_file_pattern.test_file
-        )
+        test_suites = collect_test_suites(config["test_suite_list"], test_file_pattern.test_file)
         # Group all the collected test suites in one global test suite
         all_tests_to_run = unittest.TestSuite(test_suites)
 
@@ -483,14 +458,9 @@ def execute(
                 junit_report_path = str(full_report_path)
                 full_report_path.parent.mkdir(exist_ok=True)
             else:
-                junit_report_path = str(
-                    full_report_path
-                    / Path(time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml"))
-                )
+                junit_report_path = str(full_report_path / Path(time.strftime(f"%Y-%m-%d_%H-%M-%S-{report_name}.xml")))
                 full_report_path.mkdir(exist_ok=True)
-            with open(junit_report_path, "wb") as junit_output, ResultStream(
-                log_file_path
-            ) as stream:
+            with open(junit_report_path, "wb") as junit_output, ResultStream(log_file_path) as stream:
                 test_runner = xmlrunner.XMLTestRunner(
                     output=junit_output,
                     resultclass=MultiTestResult(XmlTestResult, BannerTestResult),

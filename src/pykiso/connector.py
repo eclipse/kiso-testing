@@ -96,7 +96,7 @@ class CChannel(Connector):
             self._cc_close()
 
     def shutdown(self) -> None:
-        """Unitialize channel. Will be called at the end of the test session."""
+        """Uninitialize channel. Will be called at the end of the test session."""
         pass
 
     def cc_send(self, msg: MsgType, *args, **kwargs) -> None:
@@ -106,15 +106,11 @@ class CChannel(Connector):
         :param kwargs: named arguments
         """
         if ("raw" in kwargs) or args:
-            log.internal_warning(
-                "Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_send'."
-            )
+            log.internal_warning("Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_send'.")
         with self._lock_tx:
             self._cc_send(msg=msg, **kwargs)
 
-    def cc_receive(
-        self, timeout: float = 0.1, *args, **kwargs
-    ) -> Dict[str, Optional[bytes]]:
+    def cc_receive(self, timeout: float = 0.1, *args, **kwargs) -> Dict[str, Optional[bytes]]:
         """Read a thread-safe message on the channel and send an acknowledgement.
 
         :param timeout: time in second to wait for reading a message
@@ -123,9 +119,7 @@ class CChannel(Connector):
         :return: the received message
         """
         if ("raw" in kwargs) or args:
-            log.internal_warning(
-                "Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_receive'."
-            )
+            log.internal_warning("Use of 'raw' keyword argument is deprecated. It won't be passed to '_cc_receive'.")
         with self._lock_rx:
             return self._cc_receive(timeout=timeout, **kwargs)
 
@@ -176,9 +170,7 @@ class Flasher(Connector):
             if binary.exists() and binary.is_file():
                 self.binary = binary
             else:
-                raise ValueError(
-                    f"'binary' must be a path-like object to an existing file (got {binary})"
-                )
+                raise ValueError(f"'binary' must be a path-like object to an existing file (got {binary})")
         else:
             raise TypeError("'binary' must be a path-like object, not None")
 

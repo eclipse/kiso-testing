@@ -27,9 +27,7 @@ import typing
 try:
     import pylink
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[debugger]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[debugger]'")
 
 
 from pykiso import Flasher
@@ -90,9 +88,7 @@ class JLinkFlasher(Flasher):
             if lib.exists():
                 lib = pylink.Library(dllpath=lib)
             else:
-                log.internal_warning(
-                    f"No library file found at {lib}, using system default"
-                )
+                log.internal_warning(f"No library file found at {lib}, using system default")
                 lib = None
 
         # Define SEGGER J-Link interface
@@ -127,8 +123,6 @@ class JLinkFlasher(Flasher):
             during flashing.
         """
         log.internal_debug("flashing device")
-        self.jlink.flash_file(
-            str(self.binary), addr=self.start_addr, power_on=self.power_on
-        )
+        self.jlink.flash_file(str(self.binary), addr=self.start_addr, power_on=self.power_on)
         self.jlink.reset()
         log.internal_debug("flashing device successful")

@@ -28,11 +28,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from pykiso import CChannel
-from pykiso.auxiliary import (
-    AuxiliaryInterface,
-    close_connector,
-    open_connector,
-)
+from pykiso.auxiliary import AuxiliaryInterface, close_connector, open_connector
 from pykiso.lib.connectors.cc_proxy import CCProxy
 
 log = logging.getLogger(__name__)
@@ -89,9 +85,7 @@ class RecordAuxiliary(AuxiliaryInterface):
         :param manual_start_record: flag to not start recording on
             auxiliary creation
         """
-        super().__init__(
-            is_proxy_capable=True, tx_task_on=False, rx_task_on=False, **kwargs
-        )
+        super().__init__(is_proxy_capable=True, tx_task_on=False, rx_task_on=False, **kwargs)
         self.channel = com
         self.is_active = is_active
         self.timeout = timeout
@@ -221,10 +215,7 @@ class RecordAuxiliary(AuxiliaryInterface):
 
     def stop_recording(self) -> None:
         """Stop recording."""
-        if (
-            self._receive_thread_or_process is not None
-            and self._receive_thread_or_process.is_alive()
-        ):
+        if self._receive_thread_or_process is not None and self._receive_thread_or_process.is_alive():
             self.stop_receive_event.set()
             self._receive_thread_or_process.join()
             log.internal_info(f"{self.name} Recording has stopped")
@@ -234,10 +225,7 @@ class RecordAuxiliary(AuxiliaryInterface):
     def start_recording(self) -> None:
         """Clear buffer and start recording."""
         # Ensure no record is on-going
-        if (
-            self._receive_thread_or_process is None
-            or not self._receive_thread_or_process.is_alive()
-        ):
+        if self._receive_thread_or_process is None or not self._receive_thread_or_process.is_alive():
             # define Thread variables
             self.stop_receive_event = threading.Event()
             self._receive_thread_or_process = threading.Thread(target=self.receive)
@@ -404,7 +392,9 @@ class RecordAuxiliary(AuxiliaryInterface):
         :return: True if a message is in log, False otherwise.
         """
         ret_logs = self._log_query(
-            from_cursor=from_cursor, set_cursor=set_cursor, display_log=display_log
+            from_cursor=from_cursor,
+            set_cursor=set_cursor,
+            display_log=display_log,
         )
 
         return message in ret_logs
@@ -462,13 +452,11 @@ class RecordAuxiliary(AuxiliaryInterface):
             if elapsed_time > timeout:
                 if exception_on_failure:
                     raise TimeoutError(
-                        f"Maximum wait time for message {message} "
-                        f"in log exceeded (waited {elapsed_time:.1f}s)."
+                        f"Maximum wait time for message {message} " f"in log exceeded (waited {elapsed_time:.1f}s)."
                     )
                 else:
                     logging.warning(
-                        f"Maximum wait time for message {message} "
-                        f"in log exceeded (waited {elapsed_time:.1f}s)."
+                        f"Maximum wait time for message {message} " f"in log exceeded (waited {elapsed_time:.1f}s)."
                     )
                     return False
             time.sleep(interval)

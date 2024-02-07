@@ -26,16 +26,13 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-
 try:
     import can
     import can.bus
     import can.interfaces.pcan.basic as PCANBasic
     from can import TRCFileVersion
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'")
 
 
 from pykiso import CChannel
@@ -161,9 +158,7 @@ class CCPCanCan(CChannel):
             logging.getLogger("can.pcan").addFilter(PcanFilter())
 
         if self.enable_brs and not self.is_fd:
-            log.internal_warning(
-                "Bitrate switch will have no effect because option is_fd is set to false."
-            )
+            log.internal_warning("Bitrate switch will have no effect because option is_fd is set to false.")
 
     def _initialize_trace(self) -> None:
         """Initialize the trace path and check its size
@@ -180,9 +175,7 @@ class CCPCanCan(CChannel):
             self.trace_path = Path.cwd()
             self.trace_name = None
         elif self.trace_path.suffix not in [".trc", ""]:
-            raise ValueError(
-                f"Trace name {self.trace_path.name} is incorrect, it should be a trc file"
-            )
+            raise ValueError(f"Trace name {self.trace_path.name} is incorrect, it should be a trc file")
 
         # Check trace size
         if not 0 < self.trace_size <= 100:
@@ -228,9 +221,7 @@ class CCPCanCan(CChannel):
         """
         pcan_channel = getattr(PCANBasic, self.channel)
         if self.trace_path is None:
-            log.internal_warning(
-                "No trace path specified, an existing trace will be overwritten."
-            )
+            log.internal_warning("No trace path specified, an existing trace will be overwritten.")
             pcan_path_argument = PCANBasic.TRACE_FILE_OVERWRITE
         else:
             pcan_path_argument = PCANBasic.TRACE_FILE_DATE | PCANBasic.TRACE_FILE_TIME
@@ -246,7 +237,8 @@ class CCPCanCan(CChannel):
                     bytes(self.trace_path),
                 )
                 log.internal_info(
-                    "Tracefile path in PCAN device configured to %s", self.trace_path
+                    "Tracefile path in PCAN device configured to %s",
+                    self.trace_path,
                 )
 
             if sys.platform != "darwin":
@@ -260,7 +252,9 @@ class CCPCanCan(CChannel):
                 if self.trace_size != 10:
                     log.internal_info("Trace size set to %d MB.", self.trace_size)
                     self._pcan_set_value(
-                        pcan_channel, PCANBasic.PCAN_TRACE_SIZE, self.trace_size
+                        pcan_channel,
+                        PCANBasic.PCAN_TRACE_SIZE,
+                        self.trace_size,
                     )
             else:
                 log.internal_warning("TRACE_FILE_SEGMENTED deactivated for macos!")
@@ -273,7 +267,9 @@ class CCPCanCan(CChannel):
             log.internal_info("Tracefile configured")
 
             self._pcan_set_value(
-                pcan_channel, PCANBasic.PCAN_TRACE_STATUS, PCANBasic.PCAN_PARAMETER_ON
+                pcan_channel,
+                PCANBasic.PCAN_TRACE_STATUS,
+                PCANBasic.PCAN_PARAMETER_ON,
             )
             log.internal_info("Trace activated")
             self.trc_count += 1
@@ -349,9 +345,7 @@ class CCPCanCan(CChannel):
 
         log.internal_debug("%s sent CAN Message: %s, data: %s", self, can_msg, msg)
 
-    def _cc_receive(
-        self, timeout: float = 0.0001
-    ) -> Dict[str, Union[bytes, int, None]]:
+    def _cc_receive(self, timeout: float = 0.0001) -> Dict[str, Union[bytes, int, None]]:
         """Receive a can message using configured filters.
 
         :param timeout: timeout applied on reception
@@ -367,15 +361,20 @@ class CCPCanCan(CChannel):
                 timestamp = received_msg.timestamp
 
                 log.internal_debug(
-                    "received CAN Message: %s, %s, %s", frame_id, payload, timestamp
+                    "received CAN Message: %s, %s, %s",
+                    frame_id,
+                    payload,
+                    timestamp,
                 )
-                return {"msg": payload, "remote_id": frame_id, "timestamp": timestamp}
+                return {
+                    "msg": payload,
+                    "remote_id": frame_id,
+                    "timestamp": timestamp,
+                }
             else:
                 return {"msg": None}
         except can.CanError as can_error:
-            log.internal_info(
-                "encountered CAN error while receiving message: %s", can_error
-            )
+            log.internal_info("encountered CAN error while receiving message: %s", can_error)
             return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")
@@ -405,10 +404,8 @@ class CCPCanCan(CChannel):
         if isinstance(self.trace_path, str):
             self.trace_path = Path(self.trace_path)
 
-        # Get the lastest trace files corresponding to the number of traces created
-        list_of_traces = sorted(self.trace_path.glob("*.trc"), key=os.path.getmtime)[
-            -self.trc_count :
-        ]
+        # Get the latest trace files corresponding to the number of traces created
+        list_of_traces = sorted(self.trace_path.glob("*.trc"), key=os.path.getmtime)[-self.trc_count :]
 
         try:
             if self.trace_name is None:
@@ -419,9 +416,7 @@ class CCPCanCan(CChannel):
                 result_trace = Path(self.trace_path / self.trace_name)
                 # replace the first trace with the result trace in the trace list
                 # to ensure that all traces except the merged trace are deleted in _read_trace_messages
-                list_of_traces[0] = Path(
-                    shutil.move(str(list_of_traces[0]), str(result_trace))
-                )
+                list_of_traces[0] = Path(shutil.move(str(list_of_traces[0]), str(result_trace)))
 
             # Extract header
             header_data = CCPCanCan._extract_header(list_of_traces[0])
@@ -446,9 +441,7 @@ class CCPCanCan(CChannel):
         except IndexError:
             log.internal_warning("No trace to merge")
 
-    def _read_trace_messages(
-        self, list_of_traces: List[Path], result_trace: Path
-    ) -> List[TypedMessage]:
+    def _read_trace_messages(self, list_of_traces: List[Path], result_trace: Path) -> List[TypedMessage]:
         """Get the list of messages for all traces with corrected offset
 
         :param list_of_traces: list of all traces
@@ -467,14 +460,10 @@ class CCPCanCan(CChannel):
                     self.trc_start_time = reader.start_time
                     self.trc_file_version = reader.file_version
                 else:
-                    # Get offset in miliseconds
+                    # Get offset in milliseconds
                     current_trc_start_time = reader.start_time
-                    offset = (
-                        current_trc_start_time - self.trc_start_time
-                    ).total_seconds()
-                    current_trc_messages = CCPCanCan._remove_offset(
-                        current_trc_messages, offset
-                    )
+                    offset = (current_trc_start_time - self.trc_start_time).total_seconds()
+                    current_trc_messages = CCPCanCan._remove_offset(current_trc_messages, offset)
                     os.remove(trc)
                 if self.trc_file_version in [
                     TRCFileVersion.V1_1,
@@ -490,9 +479,7 @@ class CCPCanCan(CChannel):
         return messages
 
     @staticmethod
-    def _remove_offset(
-        messages: List[TypedMessage], offset: float
-    ) -> List[TypedMessage]:
+    def _remove_offset(messages: List[TypedMessage], offset: float) -> List[TypedMessage]:
         """Remove offset to the timestamp of a list of messages
 
         :param messages: list of messages to adapt

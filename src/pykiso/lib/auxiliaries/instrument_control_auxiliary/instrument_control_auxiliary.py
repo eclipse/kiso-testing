@@ -56,7 +56,10 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
             currently in use (if more than one)
         """
         super().__init__(
-            is_proxy_capable=False, tx_task_on=False, rx_task_on=False, **kwargs
+            is_proxy_capable=False,
+            tx_task_on=False,
+            rx_task_on=False,
+            **kwargs,
         )
         self.channel = com
         self.instrument = instrument
@@ -65,7 +68,9 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
         self.helpers = LibSCPI(self, self.instrument)
 
     def write(
-        self, write_command: str, validation: Tuple[str, Union[str, List[str]]] = None
+        self,
+        write_command: str,
+        validation: Tuple[str, Union[str, List[str]]] = None,
     ) -> str:
         """Send a write request to the instrument.
 
@@ -77,7 +82,9 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
         return self.handle_write(write_command, validation)
 
     def handle_write(
-        self, write_command: str, validation: Tuple[str, Union[str, List[str]]] = None
+        self,
+        write_command: str,
+        validation: Tuple[str, Union[str, List[str]]] = None,
     ) -> str:
         """Send a write request to the instrument and then returns if
         the value was successfully written. A query is sent immediately
@@ -107,14 +114,9 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
             validation_query_response = self.handle_query(validation_query)
 
             # Check that the responses matches the expected response
-            if (
-                isinstance(validation_query_response, str)
-                and validation_query_response != ""
-            ):
+            if isinstance(validation_query_response, str) and validation_query_response != "":
                 # Check the tag VALUE{} in the expected output and adapt the validation process
-                match = re.compile(r"VALUE{([+-]?\d+[\.\d]*)}").findall(
-                    validation_expected_output[0]
-                )
+                match = re.compile(r"VALUE{([+-]?\d+[\.\d]*)}").findall(validation_expected_output[0])
                 if match:
                     # tag "VALUE{value}" detected. This tag can be used when we want to ensure that
                     # a numerical parameter was correctly set on the instrument
@@ -129,9 +131,7 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
                     else:
                         write_success = False
                 if write_success is True:
-                    log.internal_debug(
-                        f"Write request {write_command} successful after verification"
-                    )
+                    log.internal_debug(f"Write request {write_command} successful after verification")
                     return "SUCCESS"
                 else:
                     log.internal_warning(
@@ -144,9 +144,7 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
                 )
                 return "FAILURE"
         else:
-            log.internal_debug(
-                f"Write request {write_command} processed without validation"
-            )
+            log.internal_debug(f"Write request {write_command} processed without validation")
             return "NO_VALIDATION"
 
     def read(self) -> Union[str, bool]:
@@ -233,9 +231,7 @@ class InstrumentControlAuxiliary(AuxiliaryInterface):
                     cmd_type="write",
                     cmd_validation=f"{self.output_channel}",
                 )
-                self.handle_write(
-                    f"{command} {self.output_channel}".strip(), validation
-                )
+                self.handle_write(f"{command} {self.output_channel}".strip(), validation)
             else:
                 log.internal_info("Using default output channel.")
         except Exception:

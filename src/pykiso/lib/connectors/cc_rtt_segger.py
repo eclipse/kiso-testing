@@ -31,9 +31,7 @@ try:
     import pylink
     from pylink.errors import JLinkRTTException
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[debugger]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[debugger]'")
 
 
 from pykiso import connector
@@ -153,9 +151,7 @@ class CCRttSegger(connector.CChannel):
             self.rtt_log.setLevel(logging.DEBUG)
             self.rtt_log.addHandler(rtt_fh)
 
-    def read_target_memory(
-        self, addr: int, num_units: int, zone: str = None, nbits: int = 32
-    ) -> Optional[list]:
+    def read_target_memory(self, addr: int, num_units: int, zone: str = None, nbits: int = 32) -> Optional[list]:
         """Read the given target's memory units and the given address.
 
         .. note:: The optional ``zone`` specifies a memory zone to
@@ -190,9 +186,7 @@ class CCRttSegger(connector.CChannel):
         try:
             self._connect_jlink()
         except (JLinkRTTException, ValueError):
-            log.error(
-                "An error occurred while connecting to the Jlink, trying a second time"
-            )
+            log.error("An error occurred while connecting to the Jlink, trying a second time")
             self._cc_close()
             self._connect_jlink()
 
@@ -214,16 +208,12 @@ class CCRttSegger(connector.CChannel):
         # connect to J-Link debugger
         if not self.jlink.opened():
             self.jlink.open(self.serial_number)
-            log.internal_info(
-                f"connection made with J-Link debugger {self.serial_number}"
-            )
+            log.internal_info(f"connection made with J-Link debugger {self.serial_number}")
         else:
             log.internal_debug("connection to J-Link already started")
 
         if self.search_range:
-            self.jlink.exec_command(
-                f"SetRTTSearchRanges {hex(self.block_address)} {hex(self.search_range)}"
-            )
+            self.jlink.exec_command(f"SetRTTSearchRanges {hex(self.block_address)} {hex(self.search_range)}")
             log.internal_info(
                 f"RTT Search range has been set at the following address {hex(self.block_address)} and size {hex(self.search_range)}"
             )
@@ -231,39 +221,27 @@ class CCRttSegger(connector.CChannel):
         # set target interface to SWD
         self.jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
         # connect debugger to  the specified target
-        self.jlink.connect(
-            chip_name=self.chip_name, speed=self.speed, verbose=self.verbose
-        )
-        log.internal_debug(
-            f"connection to chip {self.chip_name} performed at speed {self.speed}Hz"
-        )
+        self.jlink.connect(chip_name=self.chip_name, speed=self.speed, verbose=self.verbose)
+        log.internal_debug(f"connection to chip {self.chip_name} performed at speed {self.speed}Hz")
         # reset debugger if halted
         if self.jlink.halted():
-            log.internal_info(
-                f"J-Link is halted, reset target and wait for {self.connection_timeout}s"
-            )
+            log.internal_info(f"J-Link is halted, reset target and wait for {self.connection_timeout}s")
             self.jlink.reset(halt=False)
             time.sleep(self.connection_timeout)
         # start rtt at the specified address
         self.jlink.rtt_start(self.block_address)
         if self.block_address:
-            log.internal_info(
-                f"RTT communication started at address {hex(self.block_address)}"
-            )
+            log.internal_info(f"RTT communication started at address {hex(self.block_address)}")
         t_start = time.perf_counter()
         while True:
             try:
                 num_up = self.jlink.rtt_get_num_up_buffers()
                 num_down = self.jlink.rtt_get_num_down_buffers()
-                log.internal_debug(
-                    f"RTT started. Found {num_up} up and {num_down} down channels."
-                )
+                log.internal_debug(f"RTT started. Found {num_up} up and {num_down} down channels.")
                 # get rx buffer size
                 rx_buffer = self.jlink.rtt_get_buf_descriptor(self.rx_buffer_idx, True)
                 self.rx_buffer_size = rx_buffer.SizeOfBuffer
-                log.internal_debug(
-                    f"Maximum size for a received message set to {self.rx_buffer_size}"
-                )
+                log.internal_debug(f"Maximum size for a received message set to {self.rx_buffer_size}")
                 self.rtt_configured = True
                 break
             except pylink.errors.JLinkRTTException:
@@ -275,15 +253,11 @@ class CCRttSegger(connector.CChannel):
         # start rtt logging thread on buffer index rtt_log_buffer_idx
         if self.rtt_log_path is not None:
             try:
-                rtt_log_buffer = self.jlink.rtt_get_buf_descriptor(
-                    self.rtt_log_buffer_idx, True
-                )
+                rtt_log_buffer = self.jlink.rtt_get_buf_descriptor(self.rtt_log_buffer_idx, True)
                 self.rtt_log_buffer_size = rtt_log_buffer.SizeOfBuffer
                 if self.rtt_log_buffer_size == 0:
                     raise ValueError
-                log.internal_debug(
-                    f"RTT log buffer size is {self.rtt_log_buffer_size} bytes"
-                )
+                log.internal_debug(f"RTT log buffer size is {self.rtt_log_buffer_size} bytes")
             except ValueError:
                 log.internal_debug("Read RTT log buffer size is 0, defaulting to 1kB")
                 self.rtt_log_buffer_size = 1024
@@ -325,13 +299,9 @@ class CCRttSegger(connector.CChannel):
                 bytes_written,
             )
         except Exception:
-            log.exception(
-                f"ERROR occurred while sending {len(msg)} bytes on buffer {self.tx_buffer_idx}"
-            )
+            log.exception(f"ERROR occurred while sending {len(msg)} bytes on buffer {self.tx_buffer_idx}")
 
-    def _cc_receive(
-        self, timeout: float = 0.1, size: int = None, **kwargs
-    ) -> Dict[str, Optional[bytes]]:
+    def _cc_receive(self, timeout: float = 0.1, size: int = None, **kwargs) -> Dict[str, Optional[bytes]]:
         """Read message from the corresponding RTT buffer.
 
         :param timeout: timeout applied on receive event
@@ -361,9 +331,7 @@ class CCRttSegger(connector.CChannel):
                     )
                     break
             except Exception:
-                log.exception(
-                    f"encountered error while receiving message via {self} on buffer {self.rx_buffer_idx}"
-                )
+                log.exception(f"encountered error while receiving message via {self} on buffer {self.rx_buffer_idx}")
                 return {"msg": None}
 
             # Exit the while loop once timeout is reached
@@ -378,13 +346,9 @@ class CCRttSegger(connector.CChannel):
         """Receive RTT log messages from the corresponding RTT buffer."""
         while self._log_thread_running:
             # receive at most rtt_log_buffer_size of RTT logs
-            log_msg = self.jlink.rtt_read(
-                self.rtt_log_buffer_idx, self.rtt_log_buffer_size
-            )
+            log_msg = self.jlink.rtt_read(self.rtt_log_buffer_idx, self.rtt_log_buffer_size)
             if log_msg:
-                self.rtt_log.debug(
-                    bytes(log_msg).decode("utf8", errors=self.rtt_decode_strategy)
-                )
+                self.rtt_log.debug(bytes(log_msg).decode("utf8", errors=self.rtt_decode_strategy))
             time.sleep(self.rtt_log_refresh_time)  # reduce resource consumption
 
     @_need_connection

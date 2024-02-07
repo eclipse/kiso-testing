@@ -66,9 +66,7 @@ class UdsAuxiliary(RobotAuxInterface):
         return list(msg) if not isinstance(msg, bool) else msg
 
     @keyword(name="Send uds config")
-    def send_uds_config(
-        self, msg_to_send: dict, aux_alias: str, timeout_in_s: float = 6
-    ) -> Union[dict, bool]:
+    def send_uds_config(self, msg_to_send: dict, aux_alias: str, timeout_in_s: float = 6) -> Union[dict, bool]:
         """Send UDS config to the target ECU.
 
         :param msg_to_send: uds config to be sent
@@ -84,9 +82,7 @@ class UdsAuxiliary(RobotAuxInterface):
         return aux.send_uds_config(msg_to_send, timeout_in_s)
 
     @keyword(name="Check raw response positive")
-    def check_raw_response_positive(
-        self, resp: UdsResponse, aux_alias: str
-    ) -> Optional[bool]:
+    def check_raw_response_positive(self, resp: UdsResponse, aux_alias: str) -> Optional[bool]:
         """Check if the response is positive, raise an error if not
 
         :param resp: raw response of uds request
@@ -99,9 +95,7 @@ class UdsAuxiliary(RobotAuxInterface):
         return aux.check_raw_response_positive(resp)
 
     @keyword(name="Check raw response negative")
-    def check_raw_response_negative(
-        self, resp: UdsResponse, aux_alias: str
-    ) -> Optional[bool]:
+    def check_raw_response_negative(self, resp: UdsResponse, aux_alias: str) -> Optional[bool]:
         """Check if the response is negative, raise an error if not
 
         :param resp: raw response of uds request
@@ -153,9 +147,7 @@ class UdsAuxiliary(RobotAuxInterface):
         return aux.read_data(parameter)
 
     @keyword(name="Write data")
-    def write_data(
-        self, parameter: str, value: Union[List[bytes], bytes], aux_alias: str
-    ) -> Union[dict, bool]:
+    def write_data(self, parameter: str, value: Union[List[bytes], bytes], aux_alias: str) -> Union[dict, bool]:
         """UDS config command that allow data reading
 
         :param parameter: data to be read
