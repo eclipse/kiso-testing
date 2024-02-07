@@ -10,6 +10,7 @@ Advanced Usage
     dynamic_conf
     remote_test
     reporting
+    incubation_features
     how_to_auxiliary
     how_to_connector
     how_to_change_logger_class
