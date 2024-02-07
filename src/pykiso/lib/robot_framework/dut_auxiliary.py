@@ -46,7 +46,10 @@ class DUTAuxiliary(RobotAuxInterface):
         """Initialize attributes."""
         super().__init__(aux_type=DutAux)
         self.test_entity_mapping = {
-            COMMAND_TYPE.TEST_SUITE_SETUP: (RemoteTestSuiteSetup, "test_suite_setUp"),
+            COMMAND_TYPE.TEST_SUITE_SETUP: (
+                RemoteTestSuiteSetup,
+                "test_suite_setUp",
+            ),
             COMMAND_TYPE.TEST_SUITE_TEARDOWN: (
                 RemoteTestSuiteTeardown,
                 "test_suite_tearDown",

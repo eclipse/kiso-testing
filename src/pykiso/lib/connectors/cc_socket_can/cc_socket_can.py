@@ -29,16 +29,11 @@ try:
     import can
     import can.bus
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'")
 
 
 from pykiso import CChannel, Message
-from pykiso.lib.connectors.cc_socket_can.socketcan_to_trc import (
-    SocketCan2Trc,
-    can,
-)
+from pykiso.lib.connectors.cc_socket_can.socketcan_to_trc import SocketCan2Trc, can
 
 MessageType = Union[Message, bytes]
 
@@ -106,9 +101,7 @@ class CCSocketCan(CChannel):
             # if the given log path is not absolute add root path
             # (where pykiso is launched) otherwise take it as it is
             dir_path = (
-                (Path() / self.log_path).resolve()
-                if not Path(self.log_path).is_absolute()
-                else Path(self.log_path)
+                (Path() / self.log_path).resolve() if not Path(self.log_path).is_absolute() else Path(self.log_path)
             )
             # if no specific logging file name is given take the default one
             self.log_name = (
@@ -117,16 +110,10 @@ class CCSocketCan(CChannel):
                 else time.strftime("%Y-%m-%d_%H-%M-%S_CanLog.trc")
             )
             # if path doesn't exists take root path (where pykiso is launched)
-            self.log_path = (
-                dir_path / self.log_name
-                if dir_path.exists()
-                else (Path() / self.log_name).resolve()
-            )
+            self.log_path = dir_path / self.log_name if dir_path.exists() else (Path() / self.log_name).resolve()
 
         if self.enable_brs and not self.is_fd:
-            log.internal_warning(
-                "Bitrate switch will have no effect because option is_fd is set to false."
-            )
+            log.internal_warning("Bitrate switch will have no effect because option is_fd is set to false.")
 
     def _cc_open(self) -> None:
         """Open a can bus channel, set filters for reception and activate"""
@@ -156,9 +143,7 @@ class CCSocketCan(CChannel):
             del self.logger
             self.logger = None
 
-    def _cc_send(
-        self, msg: MessageType, remote_id: Optional[int] = None, **kwargs
-    ) -> None:
+    def _cc_send(self, msg: MessageType, remote_id: Optional[int] = None, **kwargs) -> None:
         """Send a CAN message at the configured id.
         If remote_id parameter is not given take configured ones
 
@@ -193,11 +178,7 @@ class CCSocketCan(CChannel):
                 payload = received_msg.data
                 timestamp = received_msg.timestamp
 
-                log.internal_debug(
-                    "received CAN Message: {}, {}, {}".format(
-                        frame_id, payload, timestamp
-                    )
-                )
+                log.internal_debug("received CAN Message: {}, {}, {}".format(frame_id, payload, timestamp))
                 return {"msg": payload, "remote_id": frame_id}
             else:
                 return {"msg": None}

@@ -73,9 +73,7 @@ def pytest_addhooks(pluginmanager: PytestPluginManager):
     pluginmanager.add_hookspecs(hooks)
 
 
-def pytest_apply_tag_filter(
-    tests: list[TestCaseFunction], user_tags: dict[str, list[str]]
-):
+def pytest_apply_tag_filter(tests: list[TestCaseFunction], user_tags: dict[str, list[str]]):
     """Filter the test cases based on user tags provided via CLI.
 
     .. note::
@@ -100,26 +98,13 @@ def pytest_apply_tag_filter(
         for cli_tag_id, cli_tag_value in user_tags.items():
             # skip any test case that doesn't define a CLI-provided tag name
             if cli_tag_id not in test_case_tags.kwargs.keys():
-                test_case.add_marker(
-                    pytest.mark.skip(
-                        reason=f"provided tag {cli_tag_id!r} not present in test tags"
-                    )
-                )
+                test_case.add_marker(pytest.mark.skip(reason=f"provided tag {cli_tag_id!r} not present in test tags"))
                 continue
             # skip any test case that which tag value don't match the provided tag's value
-            cli_tag_values = (
-                cli_tag_value if isinstance(cli_tag_value, list) else [cli_tag_value]
-            )
+            cli_tag_values = cli_tag_value if isinstance(cli_tag_value, list) else [cli_tag_value]
             found_tags[cli_tag_id] = True
-            if not any(
-                cli_val in test_case_tags.kwargs[cli_tag_id]
-                for cli_val in cli_tag_values
-            ):
-                test_case.add_marker(
-                    pytest.mark.skip(
-                        reason=f"non-matching value for tag {cli_tag_id!r}"
-                    )
-                )
+            if not any(cli_val in test_case_tags.kwargs[cli_tag_id] for cli_val in cli_tag_values):
+                test_case.add_marker(pytest.mark.skip(reason=f"non-matching value for tag {cli_tag_id!r}"))
 
     # verify that each provided tag name is defined in at least one test case
     for cli_tag_name, tag_found in found_tags.items():
@@ -171,9 +156,7 @@ def sort_and_filter_items(
                     tag_not_found_count[tag_name] += 1
             # re-create the originally collected testcases with their skip status
             kiso_testcases = [
-                TestCaseFunction.from_parent(
-                    tc_func.parent, name=tc_func.name, callobj=kiso_tc
-                )
+                TestCaseFunction.from_parent(tc_func.parent, name=tc_func.name, callobj=kiso_tc)
                 for tc_func, kiso_tc in zip(kiso_testcases, kiso_base_testcases)
             ]
         # sort the kiso testcases based on their type (SuiteSetup1 -> TestCase1 -> SuiteTearDown1)
@@ -188,9 +171,7 @@ def sort_and_filter_items(
     # this takes into account both pykiso and pytest test suites, hence the x 2
     for tag_name, not_found_count in tag_not_found_count.items():
         if not_found_count == len(collected_suites) * 2:
-            raise pytest.UsageError(
-                f"Tag {tag_name!r} was not found in any of the collected test cases."
-            )
+            raise pytest.UsageError(f"Tag {tag_name!r} was not found in any of the collected test cases.")
 
     return collected_test_items
 
@@ -224,7 +205,8 @@ def create_auxiliary_fixture(session: Session, aux_alias: str):
     """
 
     def auxiliary_scope(
-        fixture_name: AuxiliaryAlias = aux_alias, config: Config = session.config
+        fixture_name: AuxiliaryAlias = aux_alias,
+        config: Config = session.config,
     ) -> str:
         """Return the scope for all auxiliary fixtures.
 
@@ -288,28 +270,20 @@ def pytest_collection(session: Session):
     collected_test_suites = []
     for test_suite in test_suites:
         # get each test module within the defined suite directory that matched the pattern
-        test_modules = Path(test_suite["suite_dir"]).glob(
-            f"**/{test_suite['test_filter_pattern']}"
-        )
+        test_modules = Path(test_suite["suite_dir"]).glob(f"**/{test_suite['test_filter_pattern']}")
         # sort the test items separately for each defined test suite
         collected_kiso_testcases, collected_pytest_testcases = list(), list()
         for test_module in test_modules:
-            module_collector: pytest.Module = pytest.Module.from_parent(
-                session, path=test_module
-            )
+            module_collector: pytest.Module = pytest.Module.from_parent(session, path=test_module)
             for tc in session.genitems(module_collector):
                 if is_kiso_testcase(tc):
                     collected_kiso_testcases.append(tc)
                 else:
                     collected_pytest_testcases.append(tc)
 
-        collected_test_suites.append(
-            [collected_kiso_testcases, collected_pytest_testcases]
-        )
+        collected_test_suites.append([collected_kiso_testcases, collected_pytest_testcases])
 
-    collected_test_items = sort_and_filter_items(
-        collected_test_suites, session.config.option.tags
-    )
+    collected_test_items = sort_and_filter_items(collected_test_suites, session.config.option.tags)
     # run modifyitems hook on the collected items (allow filtering based on -k option)
     session.config.hook.pytest_collection_modifyitems(
         session=session, config=session.config, items=collected_test_items

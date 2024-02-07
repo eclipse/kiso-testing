@@ -144,11 +144,7 @@ class TestRailApi:
 
         :return: request's url
         """
-        return (
-            f"{base_url}/{api_version}{uri}"
-            if not base_url.endswith("/")
-            else f"{base_url}{api_version}{uri}"
-        )
+        return f"{base_url}/{api_version}{uri}" if not base_url.endswith("/") else f"{base_url}{api_version}{uri}"
 
     @staticmethod
     def _construct_header(user: str, password: str, content_type: str) -> dict:
@@ -163,7 +159,8 @@ class TestRailApi:
         """
 
         auth = str(
-            base64.b64encode(bytes("%s:%s" % (user, password), "utf-8")), "ascii"
+            base64.b64encode(bytes("%s:%s" % (user, password), "utf-8")),
+            "ascii",
         ).strip()
 
         headers = {"Authorization": "Basic " + auth}
@@ -186,9 +183,7 @@ class TestRailApi:
         return json.loads(query_result.content)
 
     @classmethod
-    def get_suites(
-        cls, base_url: str, user: str, password: str, project_id: int
-    ) -> dict:
+    def get_suites(cls, base_url: str, user: str, password: str, project_id: int) -> dict:
         """Retrieve all available suite under the given project.
 
         :param base_url: TestRail's base url
@@ -198,16 +193,19 @@ class TestRailApi:
 
         :return: all available suites information
         """
-        url = cls._construct_url(
-            base_url, cls.API_VERSION, uri=f"get_suites/{project_id}"
-        )
+        url = cls._construct_url(base_url, cls.API_VERSION, uri=f"get_suites/{project_id}")
         headers = cls._construct_header(user, password, ContentType.JSON.value)
         query_result = HttpRequest.get(url=url, headers=headers)
         return json.loads(query_result.content)
 
     @classmethod
     def get_cases(
-        cls, base_url: str, user: str, password: str, project_id: int, suite_id: int
+        cls,
+        base_url: str,
+        user: str,
+        password: str,
+        project_id: int,
+        suite_id: int,
     ) -> dict:
         """Retrieve all available test cases under the given project and
         suite.
@@ -221,7 +219,9 @@ class TestRailApi:
         :return: all available runs information
         """
         url = cls._construct_url(
-            base_url, cls.API_VERSION, uri=f"get_cases/{project_id}&suite_id={suite_id}"
+            base_url,
+            cls.API_VERSION,
+            uri=f"get_cases/{project_id}&suite_id={suite_id}",
         )
         headers = cls._construct_header(user, password, ContentType.JSON.value)
         query_result = HttpRequest.get(url=url, headers=headers)
@@ -246,9 +246,7 @@ class TestRailApi:
 
         :return: all test case information
         """
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=len(suite_ids)
-        ) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(suite_ids)) as executor:
             future_pools = [
                 executor.submit(
                     TestRailApi.get_cases,
@@ -260,10 +258,7 @@ class TestRailApi:
                 )
                 for suite_id in suite_ids
             ]
-            return [
-                pool.result()
-                for pool in concurrent.futures.as_completed(future_pools, timeout=20)
-            ]
+            return [pool.result() for pool in concurrent.futures.as_completed(future_pools, timeout=20)]
 
     @classmethod
     def async_add_result_for_case(
@@ -286,9 +281,7 @@ class TestRailApi:
 
         :return: all new test results
         """
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=len(case_ids)
-        ) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(case_ids)) as executor:
             future_pools = [
                 executor.submit(
                     cls.add_result_for_case,
@@ -301,10 +294,7 @@ class TestRailApi:
                 )
                 for case_id, _data in zip(case_ids, data)
             ]
-        return [
-            pool.result()
-            for pool in concurrent.futures.as_completed(future_pools, timeout=20)
-        ]
+        return [pool.result() for pool in concurrent.futures.as_completed(future_pools, timeout=20)]
 
     @classmethod
     def get_runs(cls, base_url: str, user: str, password: str, project_id: int) -> dict:
@@ -317,17 +307,13 @@ class TestRailApi:
 
         :return: all available runs information
         """
-        url = cls._construct_url(
-            base_url, cls.API_VERSION, uri=f"get_runs/{project_id}"
-        )
+        url = cls._construct_url(base_url, cls.API_VERSION, uri=f"get_runs/{project_id}")
         headers = cls._construct_header(user, password, ContentType.JSON.value)
         query_result = HttpRequest.get(url=url, headers=headers)
         return json.loads(query_result.content)
 
     @classmethod
-    def get_milestones(
-        cls, base_url: str, user: str, password: str, project_id: int
-    ) -> dict:
+    def get_milestones(cls, base_url: str, user: str, password: str, project_id: int) -> dict:
         """Retrieve all available milestones under the given project.
 
         :param base_url: TestRail's base url
@@ -337,9 +323,7 @@ class TestRailApi:
 
         :return: all available milestones information
         """
-        url = cls._construct_url(
-            base_url, cls.API_VERSION, uri=f"get_milestones/{project_id}"
-        )
+        url = cls._construct_url(base_url, cls.API_VERSION, uri=f"get_milestones/{project_id}")
         headers = cls._construct_header(user, password, ContentType.JSON.value)
         query_result = HttpRequest.get(url=url, headers=headers)
         return json.loads(query_result.content)
@@ -367,7 +351,9 @@ class TestRailApi:
         :return: new test result
         """
         url = cls._construct_url(
-            base_url, cls.API_VERSION, uri=f"add_result_for_case/{run_id}/{case_id}"
+            base_url,
+            cls.API_VERSION,
+            uri=f"add_result_for_case/{run_id}/{case_id}",
         )
         headers = cls._construct_header(user, password, ContentType.JSON.value)
         query_result = HttpRequest.post(url=url, headers=headers, data=data)
@@ -375,7 +361,12 @@ class TestRailApi:
 
     @classmethod
     def add_run(
-        cls, base_url: str, user: str, password: str, project_id: int, data: dict
+        cls,
+        base_url: str,
+        user: str,
+        password: str,
+        project_id: int,
+        data: dict,
     ) -> dict:
         """Create a brand new TestRail run.
 

@@ -54,7 +54,7 @@ def _delete_files(
     :param file_name: file name as unix shell style wildcard.
       Examples: "../../Tools/*/*.gif"
     :param root_dir: root folder to start search from (optional)
-    :raise OsError: when file cant be removed
+    :raise OsError: when file can't be removed
     .. note:: Using the “**” pattern in large directory trees may consume an inordinate amount of time.
     """
 
@@ -79,7 +79,9 @@ def _delete_folders(folder_name: str, root_dir: str = None) -> None:
 
     if isinstance(folder_name, Path):
         folder_name = str(folder_name)
-    search_path = os.path.join(root_dir, folder_name) if root_dir else folder_name
+    search_path = (
+        os.path.join(root_dir, folder_name) if root_dir else folder_name
+    )
 
     for folder in glob.iglob(search_path, recursive=True):
         if Path(folder).is_dir():
@@ -91,7 +93,7 @@ def test(c):
     """
     Run tests
     """
-    pty = platform.system() == "Linux"
+    platform.system() == "Linux"
     c.run("pytest")
 
 

@@ -35,9 +35,7 @@ from pykiso import message
 log = logging.getLogger(__name__)
 
 
-def test_app_interaction(
-    message_type: message.MessageCommandType, timeout_cmd: int = 5
-) -> Callable:
+def test_app_interaction(message_type: message.MessageCommandType, timeout_cmd: int = 5) -> Callable:
     """Handle test app basic interaction depending on the decorated
     method.
 
@@ -70,29 +68,19 @@ def test_app_interaction(
             fixture = func.__name__.lower()
 
             if "setup" in fixture and "suite" in fixture:
-                log.info(
-                    f"--------------- SUITE SETUP: {self.test_suite_id} ---------------"
-                )
+                log.info(f"--------------- SUITE SETUP: {self.test_suite_id} ---------------")
                 timeout_resp = self.setup_timeout
             elif "setup" in fixture:
-                log.info(
-                    f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------"
-                )
+                log.info(f"--------------- SETUP: {self.test_suite_id}, {self.test_case_id} ---------------")
                 timeout_resp = self.setup_timeout
             elif "run" in fixture:
-                log.info(
-                    f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
-                )
+                log.info(f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------")
                 timeout_resp = self.run_timeout
             elif "teardown" in fixture and "suite" in fixture:
-                log.info(
-                    f"--------------- SUITE TEARDOWN: {self.test_suite_id} ---------------"
-                )
+                log.info(f"--------------- SUITE TEARDOWN: {self.test_suite_id} ---------------")
                 timeout_resp = self.teardown_timeout
             elif "teardown" in fixture:
-                log.info(
-                    f"--------------- TEARDOWN: {self.test_suite_id}, {self.test_case_id} ---------------"
-                )
+                log.info(f"--------------- TEARDOWN: {self.test_suite_id}, {self.test_case_id} ---------------")
                 timeout_resp = self.teardown_timeout
 
             # for all configured auxiliaries just send the associated
@@ -113,30 +101,22 @@ def test_app_interaction(
                     self.cleanup_and_skip(aux, info_to_print)
 
                 # wait until the DUT has run the required test fixture
-                report = aux.wait_and_get_report(
-                    blocking=True, timeout_in_s=timeout_resp
-                )
+                report = aux.wait_and_get_report(blocking=True, timeout_in_s=timeout_resp)
 
                 # no report was received during the defined time slot,
                 # just abort and try to create a brand new communication
                 # stream
                 if report is None:
-                    info_to_print = (
-                        f"No report received from DUT for auxiliairy : {aux} command :{cmd}!",
-                    )
+                    info_to_print = (f"No report received from DUT for auxiliairy : {aux} command :{cmd}!",)
                     self.cleanup_and_skip(aux, info_to_print)
 
-                is_test_on_dut_implemented = (
-                    report.sub_type != message.MessageReportType.TEST_NOT_IMPLEMENTED
-                )
+                is_test_on_dut_implemented = report.sub_type != message.MessageReportType.TEST_NOT_IMPLEMENTED
                 is_report = report.get_message_type() == message.MessageType.REPORT
 
                 # At least the test has to be implemented at embedded
                 # side and a report type command was received
                 if is_test_on_dut_implemented and is_report:
-                    self.assertEqual(
-                        report.sub_type, message.MessageReportType.TEST_PASS
-                    )
+                    self.assertEqual(report.sub_type, message.MessageReportType.TEST_PASS)
 
             return func(self, *args, **kwargs)
 

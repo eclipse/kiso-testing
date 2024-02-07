@@ -27,9 +27,7 @@ try:
     import can
     from can.interfaces.udp_multicast.bus import UdpMulticastBus
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'")
 
 log = logging.getLogger(__name__)
 
@@ -104,9 +102,7 @@ class CCVirtualCan(connector.CChannel):
 
         log.internal_debug("%s sent CAN Message: %s, data: %s", self, can_msg, msg)
 
-    def _cc_receive(
-        self, timeout: float = 0.0001
-    ) -> Dict[str, Union[bytes, int, None]]:
+    def _cc_receive(self, timeout: float = 0.0001) -> Dict[str, Union[bytes, int, None]]:
         """Receive a can message using configured filters.
 
         :param timeout: timeout applied on reception
@@ -122,15 +118,20 @@ class CCVirtualCan(connector.CChannel):
                 timestamp = received_msg.timestamp
 
                 log.internal_debug(
-                    "received CAN Message: %s, %s, %s", frame_id, payload, timestamp
+                    "received CAN Message: %s, %s, %s",
+                    frame_id,
+                    payload,
+                    timestamp,
                 )
-                return {"msg": payload, "remote_id": frame_id, "timestamp": timestamp}
+                return {
+                    "msg": payload,
+                    "remote_id": frame_id,
+                    "timestamp": timestamp,
+                }
             else:
                 return {"msg": None}
         except can.CanError as can_error:
-            log.internal_info(
-                "encountered CAN error while receiving message: %s", can_error
-            )
+            log.internal_info("encountered CAN error while receiving message: %s", can_error)
             return {"msg": None}
         except Exception:
             log.exception(f"encountered error while receiving message via {self}")

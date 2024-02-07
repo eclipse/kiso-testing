@@ -66,9 +66,7 @@ class SimulatedAuxiliary(AuxiliaryInterface):
         self.channel.close()
         return True
 
-    def _run_command(
-        self, cmd_message: message.Message, cmd_data: bytes = None
-    ) -> None:
+    def _run_command(self, cmd_message: message.Message, cmd_data: bytes = None) -> None:
         """Not used."""
         pass
 

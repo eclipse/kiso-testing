@@ -151,9 +151,7 @@ class BasicTestSuiteSetup(BaseTestSuite):
             **kwargs,
         )
         if any([setup_timeout, run_timeout, teardown_timeout]):
-            log.warning(
-                "BasicTestSuiteSetup does not support test timeouts, it will be discarded"
-            )
+            log.warning("BasicTestSuiteSetup does not support test timeouts, it will be discarded")
 
     def test_suite_setUp(self):
         """Test method for constructing the actual test suite."""
@@ -205,9 +203,7 @@ class BasicTestSuiteTeardown(BaseTestSuite):
             **kwargs,
         )
         if any([setup_timeout, run_timeout, teardown_timeout]):
-            log.warning(
-                "BasicTestSuiteTeardown does not support test timeouts, it will be discarded"
-            )
+            log.warning("BasicTestSuiteTeardown does not support test timeouts, it will be discarded")
 
     def test_suite_tearDown(self):
         """Test method for deconstructing the actual test suite after testing it."""
@@ -264,13 +260,9 @@ class RemoteTestSuiteSetup(BasicTestSuiteSetup):
         )
         self.setup_timeout = setup_timeout or RemoteTestSuiteSetup.response_timeout
         self.run_timeout = run_timeout or RemoteTestSuiteSetup.response_timeout
-        self.teardown_timeout = (
-            teardown_timeout or RemoteTestSuiteSetup.response_timeout
-        )
+        self.teardown_timeout = teardown_timeout or RemoteTestSuiteSetup.response_timeout
 
-    @test_app_interaction(
-        message_type=message.MessageCommandType.TEST_SUITE_SETUP, timeout_cmd=5
-    )
+    @test_app_interaction(message_type=message.MessageCommandType.TEST_SUITE_SETUP, timeout_cmd=5)
     def test_suite_setUp(self):
         """Test method for constructing the actual test suite."""
         pass
@@ -326,12 +318,11 @@ class RemoteTestSuiteTeardown(BasicTestSuiteTeardown):
         )
         self.setup_timeout = setup_timeout or RemoteTestSuiteTeardown.response_timeout
         self.run_timeout = run_timeout or RemoteTestSuiteTeardown.response_timeout
-        self.teardown_timeout = (
-            teardown_timeout or RemoteTestSuiteTeardown.response_timeout
-        )
+        self.teardown_timeout = teardown_timeout or RemoteTestSuiteTeardown.response_timeout
 
     @test_app_interaction(
-        message_type=message.MessageCommandType.TEST_SUITE_TEARDOWN, timeout_cmd=5
+        message_type=message.MessageCommandType.TEST_SUITE_TEARDOWN,
+        timeout_cmd=5,
     )
     def test_suite_tearDown(self):
         """Test method for deconstructing the actual test suite after testing it."""
@@ -372,9 +363,7 @@ class BasicTestSuite(unittest.TestSuite):
 
         self.failed_suite_setups = set()
 
-    def check_suite_setup_failed(
-        self, test: BasicTest, result: BannerTestResult
-    ) -> None:
+    def check_suite_setup_failed(self, test: BasicTest, result: BannerTestResult) -> None:
         """Check if the suite setup has failed and store failed suite id.
         Search in the global unittest result object, which save all the results
         of the tests performed up to that point, if the suite setup that ran

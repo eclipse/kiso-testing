@@ -13,7 +13,7 @@ Integration Test Framework
 
 :module: logging
 
-:synopsis: Handles initialization of the loggers and cutom logging levels.
+:synopsis: Handles initialization of the loggers and custom logging levels.
 
 .. currentmodule:: logging
 
@@ -110,9 +110,7 @@ def initialize_logging(
     # reset all previously added handlers to allow multiple calls
     root_logger.handlers = []
 
-    log_format = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(module)s:%(lineno)d: %(message)s"
-    )
+    log_format = logging.Formatter("%(asctime)s [%(levelname)s] %(module)s:%(lineno)d: %(message)s")
     # add internal kiso log levels
     add_internal_log_levels()
 
@@ -140,9 +138,7 @@ def initialize_logging(
     stream_handler = logging.StreamHandler(stream)
     stream_handler.setFormatter(log_format)
     # disable internal logs if no verbose is wanted
-    stream_handler.setLevel(
-        LEVELS[log_level] if not verbose else get_internal_level(log_level)
-    )
+    stream_handler.setLevel(LEVELS[log_level] if not verbose else get_internal_level(log_level))
     root_logger.addHandler(stream_handler)
 
     # set the root logger's level to the internal one if any of the provided options activates internal logging
@@ -209,26 +205,23 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
         loggers = list()
     # keyword 'all' should keep all loggers to the configured level
     if "all" in loggers:
-        logging.internal_warning(
-            "All loggers are activated, this could lead to performance issues."
-        )
+        logging.internal_warning("All loggers are activated, this could lead to performance issues.")
         active_loggers |= set(logging.root.manager.loggerDict.keys())
         return
     # keep package and auxiliary loggers, store all the others to deactivate them
     relevant_loggers = {
         name: logger
         for name, logger in logging.root.manager.loggerDict.items()
-        if not (name.startswith(PACKAGE) or name.endswith("auxiliary"))
-        and not isinstance(logger, logging.PlaceHolder)
+        if not (name.startswith(PACKAGE) or name.endswith("auxiliary")) and not isinstance(logger, logging.PlaceHolder)
     }
     # keep child loggers
-    childs = [
+    children = [
         logger
         for logger in relevant_loggers.keys()
         for parent in loggers
         if (logger.startswith(parent) or parent.startswith(logger))
     ]
-    loggers += childs
+    loggers += children
 
     # store previous loggers to keep active (union of previous and current loggers)
     active_loggers |= set(loggers)
@@ -290,9 +283,7 @@ def change_logger_class(log_level: str, verbose: bool, logger: str):
     if arg_match:
         logger_class = arg_match.group(1)
         arg_logger = arg_match.group(2).split(",")
-        kwargs_log = {
-            arg.split("=")[0]: literal_eval(arg.split("=")[1]) for arg in arg_logger
-        }
+        kwargs_log = {arg.split("=")[0]: literal_eval(arg.split("=")[1]) for arg in arg_logger}
     else:
         logger_class = logger
 

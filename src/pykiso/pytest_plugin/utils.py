@@ -56,6 +56,4 @@ def is_kiso_testcase(tc):
     Determine whether the provided test case is a pykiso test case
     wrapped by pytest.
     """
-    return isinstance(tc, TestCaseFunction) and isinstance(
-        get_base_testcase(tc), (BasicTest, BaseTestSuite)
-    )
+    return isinstance(tc, TestCaseFunction) and isinstance(get_base_testcase(tc), (BasicTest, BaseTestSuite))

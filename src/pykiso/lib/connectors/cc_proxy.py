@@ -58,7 +58,7 @@ class CCProxy(CChannel):
 
     def _bind_channel_info(self, proxy_aux: ProxyAuxiliary):
         """Bind a :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary`
-        instance that is instanciated in order to handle the connection of
+        instance that is instantiated in order to handle the connection of
         multiple auxiliaries to a single communication channel.
 
         This allows to access the real communication channel's attributes
@@ -83,9 +83,7 @@ class CCProxy(CChannel):
         if self._physical_channel is not None:
             with self._proxy.lock:
                 return getattr(self._physical_channel, name)
-        raise AttributeError(
-            f"{self.__class__.__name__} object has no attribute '{name}'"
-        )
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute '{name}'")
 
     def detach_tx_callback(self) -> None:
         """Detach the current callback."""

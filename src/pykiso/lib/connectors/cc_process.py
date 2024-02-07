@@ -108,7 +108,11 @@ class CCProcess(CChannel):
         # Buffer for messages that where read from the process but not yet returned by _cc_receive
         self._buffer: List[Union[ProcessMessage, ProcessExit]] = []
 
-    def start(self, executable: Optional[str] = None, args: Optional[List[str]] = None):
+    def start(
+        self,
+        executable: Optional[str] = None,
+        args: Optional[List[str]] = None,
+    ):
         """Start a process
 
         :param executable: The executable path. Default to path specified in yaml if not given.
@@ -134,16 +138,12 @@ class CCProcess(CChannel):
             encoding=self._encoding,
             cwd=self._cwd,
             env=self._env,
-        )  # nosec B602 Since we only provide an interface to the user to popen, we accept the risk of a vulnerablility to various shell injection attacks.
+        )  # nosec B602 Since we only provide an interface to the user to popen, we accept the risk of a vulnerability to various shell injection attacks.
 
         if self._pipe_stdout:
-            self._stdout_thread = self._start_read_thread(
-                self._process.stdout, "stdout"
-            )
+            self._stdout_thread = self._start_read_thread(self._process.stdout, "stdout")
         if self._pipe_stderr:
-            self._stderr_thread = self._start_read_thread(
-                self._process.stderr, "stderr"
-            )
+            self._stderr_thread = self._start_read_thread(self._process.stderr, "stderr")
 
     def _start_read_thread(self, stream: IO, name: str) -> threading.Thread:
         """Start a read thread
@@ -154,7 +154,9 @@ class CCProcess(CChannel):
         :return: The thread object
         """
         thread = threading.Thread(
-            name=f"cc_process_{name}", target=self._read_thread, args=(stream, name)
+            name=f"cc_process_{name}",
+            target=self._read_thread,
+            args=(stream, name),
         )
         thread.start()
         return thread
@@ -177,9 +179,7 @@ class CCProcess(CChannel):
         finally:
             with self._lock:
                 self._finished_threads_count += 1
-                if self._finished_threads_count == int(self._pipe_stdout) + int(
-                    self._pipe_stderr
-                ):
+                if self._finished_threads_count == int(self._pipe_stdout) + int(self._pipe_stderr):
                     # ProcessExit marks the termination of all read threads
                     self._queue_in.put(ProcessExit(self._process.wait()))
 
@@ -214,9 +214,7 @@ class CCProcess(CChannel):
             try:
                 self._process.wait(5)
             except subprocess.TimeoutExpired:
-                log.internal_warning(
-                    f"Process {self._executable} could not be terminated"
-                )
+                log.internal_warning(f"Process {self._executable} could not be terminated")
                 self._process.kill()
         # Wait for the threads to finish
         if self._stdout_thread is not None:

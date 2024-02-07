@@ -125,16 +125,12 @@ class AuxiliaryInterface(abc.ABC):
             if not self.is_instance:
                 raise AuxiliaryNotStarted(self.name)
 
-            log.internal_debug(
-                f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
-            )
+            log.internal_debug(f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux.")
             response_received = timeout_result
             self.queue_in.put((cmd_message, cmd_data))
             try:
                 response_received = self.queue_out.get(blocking, timeout_in_s)
-                log.internal_debug(
-                    f"reply to command '{cmd_message}' received: '{response_received}' in {self.name}"
-                )
+                log.internal_debug(f"reply to command '{cmd_message}' received: '{response_received}' in {self.name}")
             except queue.Empty:
                 log.error(
                     f"no reply received within time for command {cmd_message} for payload {cmd_data} using {self.name} aux."
@@ -190,9 +186,7 @@ class AuxiliaryInterface(abc.ABC):
             is_deleted = self._delete_auxiliary_instance()
 
             if not is_deleted:
-                log.error(
-                    f"Unexpected error occurred during deletion of auxiliary instance {self.name}"
-                )
+                log.error(f"Unexpected error occurred during deletion of auxiliary instance {self.name}")
 
             self.is_instance = False
             self._stop_event.clear()
@@ -300,9 +294,7 @@ class AuxiliaryInterface(abc.ABC):
         while not self.stop_rx.is_set():
             self._receive_message(timeout_in_s=self.recv_timeout)
 
-    def wait_for_queue_out(
-        self, blocking: bool = False, timeout_in_s: int = 0
-    ) -> Optional[Any]:
+    def wait_for_queue_out(self, blocking: bool = False, timeout_in_s: int = 0) -> Optional[Any]:
         """Wait for data from the queue out.
 
         :param blocking: True: wait for timeout to expire, False: return
@@ -375,9 +367,7 @@ def open_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.internal_info(
-            f"Open {self.channel.__class__.__name__} channel {self.channel.name!r}"
-        )
+        log.internal_info(f"Open {self.channel.__class__.__name__} channel {self.channel.name!r}")
         try:
             self.channel.open()
             return func(self, *arg, **kwargs)
@@ -407,9 +397,7 @@ def close_connector(func: Callable) -> Callable:
 
         :return: True if everything was successful otherwise False
         """
-        log.internal_info(
-            f"Close {self.channel.__class__.__name__} channel {self.channel.name!r}"
-        )
+        log.internal_info(f"Close {self.channel.__class__.__name__} channel {self.channel.name!r}")
         try:
             ret = func(self, *arg, **kwargs)
             self.channel.close()

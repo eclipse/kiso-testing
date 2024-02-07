@@ -29,13 +29,7 @@ from .dynamic_loader import DynamicImportLinker
 
 if TYPE_CHECKING:
     from pykiso import AuxiliaryInterface
-    from pykiso.types import (
-        AuxiliaryAlias,
-        AuxiliaryConfig,
-        ConfigDict,
-        ConnectorAlias,
-        ConnectorConfig,
-    )
+    from pykiso.types import AuxiliaryAlias, AuxiliaryConfig, ConfigDict, ConnectorAlias, ConnectorConfig
 
 
 class ConfigRegistry:
@@ -136,18 +130,14 @@ class ConfigRegistry:
             # automatically start proxy if at least one auxiliary has the auto_start flag set
             for auxiliary in auxiliaries:
                 try:
-                    auto_start = config["auxiliaries"][auxiliary]["config"][
-                        "auto_start"
-                    ]
+                    auto_start = config["auxiliaries"][auxiliary]["config"]["auto_start"]
                 except (KeyError, TypeError):
                     # default value for auto_start is True
                     auto_start = True
                     break
 
             # create a proxy auxiliary config for this shared channel
-            proxy_aux_name, proxy_aux_cfg = cls._make_proxy_aux_config(
-                channel_name, auxiliaries, auto_start
-            )
+            proxy_aux_name, proxy_aux_cfg = cls._make_proxy_aux_config(channel_name, auxiliaries, auto_start)
             config["auxiliaries"][proxy_aux_name] = proxy_aux_cfg
             proxies.append(proxy_aux_name)
 
@@ -218,9 +208,7 @@ class ConfigRegistry:
         return cls._linker._aux_cache.instances
 
     @classmethod
-    def get_auxes_by_type(
-        cls, aux_type: Type[AuxiliaryInterface]
-    ) -> Dict[str, AuxiliaryInterface]:
+    def get_auxes_by_type(cls, aux_type: Type[AuxiliaryInterface]) -> Dict[str, AuxiliaryInterface]:
         """Return all auxiliaries who match a specific type.
 
         :param aux_type: auxiliary class type (DUTAuxiliary,
@@ -229,11 +217,7 @@ class ConfigRegistry:
         :return: dictionary with alias as keys and instances as values
         """
         all_auxes = cls._linker._aux_cache.instances
-        return {
-            alias: inst
-            for alias, inst in all_auxes.items()
-            if isinstance(inst, aux_type)
-        }
+        return {alias: inst for alias, inst in all_auxes.items() if isinstance(inst, aux_type)}
 
     @classmethod
     def get_aux_by_alias(cls, alias: AuxiliaryAlias) -> AuxiliaryInterface:

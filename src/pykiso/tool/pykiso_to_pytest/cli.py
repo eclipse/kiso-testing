@@ -37,9 +37,7 @@ def format_value(value: Any) -> Union[Any, str]:
     return value
 
 
-def find_string_in(
-    nested_dict: dict, search_value: str, prepath: Tuple[str, ...] = ()
-) -> Optional[Tuple[str, ...]]:
+def find_string_in(nested_dict: dict, search_value: str, prepath: Tuple[str, ...] = ()) -> Optional[Tuple[str, ...]]:
     """Find if string is part of a value in a nested dictionary.
 
     :param nested_dict: dictionary to search in

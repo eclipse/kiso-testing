@@ -41,15 +41,15 @@ pipeline
             {
                 script
                 {
-                    sh "poetry run black --diff . > ${env.WORKSPACE}/black.patch"
+                    sh "poetry run ruff format --diff  . > ${env.WORKSPACE}/ruff_format.patch"
 
-                    final def patch = readFile("${env.WORKSPACE}/black.patch")
+                    final def patch = readFile("${env.WORKSPACE}/ruff_format.patch")
 
                     if (patch != "") {
                         echo patch
-                        error("Changes in commit do not follow black rules. Consider applying black.patch.")
+                        error("Changes in commit do not follow format rules. Consider applying ruff_format.patch.")
                     } else {
-                        sh "rm ${env.WORKSPACE}/black.patch"
+                        sh "rm ${env.WORKSPACE}/ruff_format.patch"
                     }
                 }
             }

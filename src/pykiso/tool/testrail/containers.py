@@ -169,11 +169,7 @@ class CaseContainer:
 
         :return: all related TestRail case ids
         """
-        return [
-            case.id
-            for case in self.iterate()
-            if case.custom_id is not None and case.custom_id in custom_ids
-        ]
+        return [case.id for case in self.iterate() if case.custom_id is not None and case.custom_id in custom_ids]
 
     def iterate(self) -> Generator[CaseInfo, None, None]:
         """Yield all cases contained in the container.
@@ -256,11 +252,7 @@ class MilestoneContainer:
 
         :return: first founded milestone id otherwise None
         """
-        ids = [
-            milestone.id
-            for milestone in self.iterate()
-            if milestone.name == milestone_name
-        ]
+        ids = [milestone.id for milestone in self.iterate() if milestone.name == milestone_name]
 
         if ids:
             return ids.pop()

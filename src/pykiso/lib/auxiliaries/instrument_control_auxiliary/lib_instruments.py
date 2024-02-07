@@ -36,7 +36,10 @@ SCPI_COMMANDS_DICT = {
         "write": {"DEFAULT": "NOT_AVAILABLE"},
     },
     "ALL_ERRORS": {
-        "query": {"DEFAULT": "SYST:ERR:ALL?", "Rohde&Schwarz": "NOT_AVAILABLE"},
+        "query": {
+            "DEFAULT": "SYST:ERR:ALL?",
+            "Rohde&Schwarz": "NOT_AVAILABLE",
+        },
         "write": {"DEFAULT": "NOT_AVAILABLE"},
     },
     "SELF_TEST": {
@@ -45,7 +48,10 @@ SCPI_COMMANDS_DICT = {
     },
     # Remote control
     "REMOTE_CONTROL": {
-        "query": {"DEFAULT": "SYST:LOCK:OWN?", "Rohde&Schwarz": "NOT_AVAILABLE"},
+        "query": {
+            "DEFAULT": "SYST:LOCK:OWN?",
+            "Rohde&Schwarz": "NOT_AVAILABLE",
+        },
         "write": {"DEFAULT": "SYST:LOCK", "Rohde&Schwarz": "NOT_AVAILABLE"},
     },
     # Output selection and enable
@@ -69,18 +75,30 @@ SCPI_COMMANDS_DICT = {
             "DEFAULT": "SYSTem:NOMinal:VOLTage?",
             "Rohde&Schwarz": "NOT_AVAILABLE",
         },
-        "write": {"DEFAULT": "NOT_AVAILABLE?", "Rohde&Schwarz": "NOT_AVAILABLE"},
+        "write": {
+            "DEFAULT": "NOT_AVAILABLE?",
+            "Rohde&Schwarz": "NOT_AVAILABLE",
+        },
     },
     "NOMINAL_CURRENT": {
         "query": {
             "DEFAULT": "SYSTem:NOMinal:CURRent?",
             "Rohde&Schwarz": "NOT_AVAILABLE",
         },
-        "write": {"DEFAULT": "NOT_AVAILABLE?", "Rohde&Schwarz": "NOT_AVAILABLE"},
+        "write": {
+            "DEFAULT": "NOT_AVAILABLE?",
+            "Rohde&Schwarz": "NOT_AVAILABLE",
+        },
     },
     "NOMINAL_POWER": {
-        "query": {"DEFAULT": "SYSTem:NOMinal:POWer?", "Rohde&Schwarz": "NOT_AVAILABLE"},
-        "write": {"DEFAULT": "NOT_AVAILABLE", "Rohde&Schwarz": "NOT_AVAILABLE"},
+        "query": {
+            "DEFAULT": "SYSTem:NOMinal:POWer?",
+            "Rohde&Schwarz": "NOT_AVAILABLE",
+        },
+        "write": {
+            "DEFAULT": "NOT_AVAILABLE",
+            "Rohde&Schwarz": "NOT_AVAILABLE",
+        },
     },
     # Output measurement
     "MEASURE_VOLTAGE": {
@@ -115,7 +133,10 @@ SCPI_COMMANDS_DICT = {
         "write": {"DEFAULT": "SOURce:CURRent"},
     },
     "POWER": {
-        "query": {"DEFAULT": "SOURce:POWer?", "Rohde&Schwarz": "NOT_AVAILABLE"},
+        "query": {
+            "DEFAULT": "SOURce:POWer?",
+            "Rohde&Schwarz": "NOT_AVAILABLE",
+        },
         "write": {"DEFAULT": "SOURce:POWer", "Rohde&Schwarz": "NOT_AVAILABLE"},
     },
     "VOLTAGE_LIMIT_LOW": {

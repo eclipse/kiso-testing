@@ -77,7 +77,8 @@ class CCGrpcClient(connector.CChannel):
         # Import the generated grpc protobuf file
         # Import the module
         spec = importlib.util.spec_from_file_location(
-            Path(generated_protobuf_grpc_file).stem, Path(generated_protobuf_grpc_file)
+            Path(generated_protobuf_grpc_file).stem,
+            Path(generated_protobuf_grpc_file),
         )
         self.grpc_stub_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.grpc_stub_module)
@@ -101,16 +102,12 @@ class CCGrpcClient(connector.CChannel):
         """Open the grpc connection to server."""
         self.channel = grpc.insecure_channel(self.dest_ip + ":" + str(self.dest_port))
         # Bind stubs to new channel
-        self.stubs = dict(
-            [(stub.__name__[:-4], stub(self.channel)) for stub in self.grpc_stub]
-        )
+        self.stubs = dict([(stub.__name__[:-4], stub(self.channel)) for stub in self.grpc_stub])
         # Validate at least that most of the default parameters are valid
         try:
             if self.default_service_name not in self.stubs:
                 raise ValueError(f"{self.default_service_name=} was not found!")
-            if not hasattr(
-                self.stubs[self.default_service_name], self.default_rpc_name
-            ):
+            if not hasattr(self.stubs[self.default_service_name], self.default_rpc_name):
                 raise ValueError(f"{self.default_rpc_name=} was not found!")
             if not hasattr(self.grpc_datamodel, self.default_message_name):
                 raise ValueError(f"{self.default_message_name=} was not found!")
@@ -149,28 +146,20 @@ class CCGrpcClient(connector.CChannel):
         # * msg is populated OR
         # * message_fields is populated OR
         # * the default message attributes are used
-        message_fields = (
-            msg if msg else kwargs.get("message_fields", self.default_message_fields)
-        )
+        message_fields = msg if msg else kwargs.get("message_fields", self.default_message_fields)
 
         # Now, the validity of the parameters need to be checked
         # First we check that the service_name exist
         if service_name not in self.stubs:
-            log.warning(
-                f"{service_name=} was not found! Fallback to {self.default_service_name=}"
-            )
+            log.warning(f"{service_name=} was not found! Fallback to {self.default_service_name=}")
             service_name = self.default_service_name
         # Then we check that the rpc_name exist
         if not hasattr(self.stubs[service_name], rpc_name):
-            log.warning(
-                f"{rpc_name=} was not found! Fallback to {self.default_rpc_name=}"
-            )
+            log.warning(f"{rpc_name=} was not found! Fallback to {self.default_rpc_name=}")
             rpc_name = self.default_rpc_name
         # Then we check that the message_name exist
         if not hasattr(self.grpc_datamodel, message_name):
-            log.warning(
-                f"{message_name=} was not found! Fallback to {self.default_message_name=}"
-            )
+            log.warning(f"{message_name=} was not found! Fallback to {self.default_message_name=}")
             message_name = self.default_message_name
         # The message constitution will be checked later on, when the message will be sent
 
@@ -182,9 +171,7 @@ class CCGrpcClient(connector.CChannel):
         # Store the result
         self.list_of_received_messages.append(result)
 
-    def _rpc_trigger(
-        self, rpc_method: str, message_class: str, message_fields: dict = None
-    ) -> None:
+    def _rpc_trigger(self, rpc_method: str, message_class: str, message_fields: dict = None) -> None:
         """Trigger the rpc.
 
         :param rpc_method: rpc method to trigger

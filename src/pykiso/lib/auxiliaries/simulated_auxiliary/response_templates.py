@@ -52,7 +52,6 @@ class ResponseTemplates:
             and msg.sub_type != message.MessageCommandType.PING
             and msg.sub_type != message.MessageCommandType.ABORT
         ):
-
             return cls.ack_with_report_ok(msg)
         else:
             return cls.ack(msg)
@@ -177,11 +176,7 @@ class ResponseTemplates:
 
         :return: tlv dictionary with failure reason
         """
-        return {
-            message.TlvKnownTags.FAILURE_REASON: random.choice(
-                ResponseTemplates.reasons_list
-            )
-        }
+        return {message.TlvKnownTags.FAILURE_REASON: random.choice(ResponseTemplates.reasons_list)}
 
     @classmethod
     def nack_with_reason(cls, msg: Message) -> List[Message]:

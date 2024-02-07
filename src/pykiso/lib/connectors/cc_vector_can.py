@@ -28,9 +28,7 @@ try:
     import can.interfaces.vector
     from can.interfaces.vector.canlib import get_channel_configs
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'")
 
 
 from pykiso import CChannel, Message
@@ -101,9 +99,7 @@ class CCVectorCan(CChannel):
         self.timeout = 1e-6
 
         if self.enable_brs and not self.fd:
-            log.internal_warning(
-                "Bitrate switch will have no effect because option is_fd is set to false."
-            )
+            log.internal_warning("Bitrate switch will have no effect because option is_fd is set to false.")
 
     def _cc_open(self) -> None:
         """Open a can bus channel and set filters for reception."""
@@ -168,7 +164,11 @@ class CCVectorCan(CChannel):
 
                 log.internal_debug(f"received CAN Message: {frame_id}, {payload}")
 
-                return {"msg": payload, "remote_id": frame_id, "timestamp": timestamp}
+                return {
+                    "msg": payload,
+                    "remote_id": frame_id,
+                    "timestamp": timestamp,
+                }
             else:
                 return {"msg": None}
         except BaseException:

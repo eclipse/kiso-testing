@@ -109,18 +109,14 @@ class LauterbachFlasher(connector.Flasher):
         if self.t32_api.T32_Init() == 0:
             # Quit properly the previous T32 instance
             cmd_status = self.t32_api.T32_Cmd("QUIT".encode("latin-1"))
-            log.internal_debug(
-                f"Previous process Trace32 closed with exit code:{cmd_status}"
-            )
+            log.internal_debug(f"Previous process Trace32 closed with exit code:{cmd_status}")
             # Properly exit t32 api. Otherwise subsequential commands will fail
             self.t32_api.T32_Exit()
 
         # open a new Trace32 process
         try:
             self.t32_process = subprocess.Popen(self.t32_start_args)
-            log.internal_debug(
-                f"Trace32 process open with arguments {self.t32_start_args}"
-            )
+            log.internal_debug(f"Trace32 process open with arguments {self.t32_start_args}")
         except Exception as e:
             log.exception("Unable to open Trace32")
             raise e
@@ -172,9 +168,7 @@ class LauterbachFlasher(connector.Flasher):
             request_state = 0
             error_count = 0
             while not script_state.value == ScriptState.NOT_RUNNING:
-                request_state = self.t32_api.T32_GetPracticeState(
-                    ctypes.byref(script_state)
-                )
+                request_state = self.t32_api.T32_GetPracticeState(ctypes.byref(script_state))
                 log.internal_debug(
                     f"Called T32_GetPracticeState. request_state: {request_state} "
                     f"script_state: {script_state.value} request error: {error_count}"
@@ -196,9 +190,7 @@ class LauterbachFlasher(connector.Flasher):
         # get script execution verdict
         script_state = ctypes.c_uint16(-1)
         message = ctypes.create_string_buffer(256)
-        request_state = self.t32_api.T32_GetMessage(
-            ctypes.byref(message), ctypes.byref(script_state)
-        )
+        request_state = self.t32_api.T32_GetMessage(ctypes.byref(message), ctypes.byref(script_state))
 
         msg = message.value.decode("utf-8")
         if (
@@ -208,12 +200,8 @@ class LauterbachFlasher(connector.Flasher):
         ):
             log.internal_info("flash procedure successful")
         else:
-            log.fatal(
-                f"An error occurred during flash,state : {script_state.value} -> {msg}"
-            )
-            raise Exception(
-                f"An error occurred during flash,state : {script_state.value} -> {msg}"
-            )
+            log.fatal(f"An error occurred during flash,state : {script_state.value} -> {msg}")
+            raise Exception(f"An error occurred during flash,state : {script_state.value} -> {msg}")
 
     def close(self) -> None:
         """Close UDP socket and shut down Trace32 App."""

@@ -64,16 +64,12 @@ class OdxParser:
         :return: the parent diag service odx element of the sd element with given name
         """
         # xpath to diag service for given sd instance name
-        diag_services = self.odx_tree.findall(
-            f".//SD[@SI][.='{sd_instance_name}']../../.."
-        )
+        diag_services = self.odx_tree.findall(f".//SD[@SI][.='{sd_instance_name}']../../..")
         if not diag_services:
             raise ValueError(f"No DIAG-SERVICE has a SD containing {sd_instance_name}")
         return diag_services
 
-    def get_coded_values(
-        self, sd: str, sid: int, ref_type: RefType = RefType.REQUEST
-    ) -> List[int]:
+    def get_coded_values(self, sd: str, sid: int, ref_type: RefType = RefType.REQUEST) -> List[int]:
         """Get the list of coded values for a ODX request element to construct a UDS request from
 
         :param sd: sd instance name
@@ -86,16 +82,10 @@ class OdxParser:
             request_id = diag_service.find(f".//{ref_type.value}").attrib["ID-REF"]
             request_element = self._find_element_by_odx_id(request_id)
             # compare SIDs to differentiate between e.g. read and write request with same sd name
-            request_sid = int(
-                request_element.find(
-                    ".//PARAM[@SEMANTIC='SERVICE-ID']/CODED-VALUE"
-                ).text
-            )
+            request_sid = int(request_element.find(".//PARAM[@SEMANTIC='SERVICE-ID']/CODED-VALUE").text)
             if request_sid == sid:
                 coded_value_elements = request_element.findall(".//CODED-VALUE")
-                coded_values = [
-                    int(coded_value.text) for coded_value in coded_value_elements
-                ]
+                coded_values = [int(coded_value.text) for coded_value in coded_value_elements]
                 return coded_values
         log.error(f"Could not create request for service={sid} and sd={sd}")
         raise ValueError(f"Could not create request for service={sid} and sd={sd}")

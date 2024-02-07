@@ -26,9 +26,7 @@ from typing import Dict, Optional
 try:
     import pyvisa
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[instrument]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[instrument]'")
 
 
 from pykiso import CChannel
@@ -46,9 +44,7 @@ class VISAChannel(CChannel):
         self.ResourceManager = pyvisa.ResourceManager("@py")
         # Instantiate message-based resource:
         self.resource_name = "messagebased_resource"
-        self.resource = pyvisa.resources.messagebased.MessageBasedResource(
-            self.ResourceManager, self.resource_name
-        )
+        self.resource = pyvisa.resources.messagebased.MessageBasedResource(self.ResourceManager, self.resource_name)
         super().__init__(**kwargs)
 
     @abc.abstractmethod
@@ -82,13 +78,9 @@ class VISAChannel(CChannel):
                 log.internal_warning(f"Unknown request '{request}'!")
 
         except pyvisa.errors.InvalidSession:
-            log.exception(
-                f"Request {request}:{request_data} failed! Invalid session (resource might be closed)."
-            )
+            log.exception(f"Request {request}:{request_data} failed! Invalid session (resource might be closed).")
         except pyvisa.errors.VisaIOError:
-            log.exception(
-                f"Request {request}:{request_data} failed! Timeout expired before operation completed."
-            )
+            log.exception(f"Request {request}:{request_data} failed! Timeout expired before operation completed.")
         except Exception as e:
             log.exception(f"Request {request}: {request_data} failed!\n{e}")
         else:
@@ -143,9 +135,7 @@ class VISASerial(VISAChannel):
         # Redefining resource name and type for serial communication
         self.resource_name = f"ASRL{serial_port}::INSTR"
         self.baud_rate = baud_rate
-        self.resource = pyvisa.resources.serial.SerialInstrument(
-            self.ResourceManager, self.resource_name
-        )
+        self.resource = pyvisa.resources.serial.SerialInstrument(self.ResourceManager, self.resource_name)
 
     def _cc_open(self) -> None:
         """Open an instrument via serial"""
@@ -155,16 +145,12 @@ class VISASerial(VISAChannel):
             raise ConnectionRefusedError(
                 f"The resource named {self.resource_name} is unavailable and cannot be opened."
             )
-        elif self.resource_name in [
-            res.resource_name for res in self.ResourceManager.list_opened_resources()
-        ]:
+        elif self.resource_name in [res.resource_name for res in self.ResourceManager.list_opened_resources()]:
             raise ConnectionRefusedError(
                 f"The resource named {self.resource_name} is opened and cannot be opened again."
             )
         else:
-            self.resource = self.ResourceManager.open_resource(
-                self.resource_name, baud_rate=self.baud_rate
-            )
+            self.resource = self.ResourceManager.open_resource(self.resource_name, baud_rate=self.baud_rate)
 
 
 class VISATcpip(VISAChannel):
@@ -181,9 +167,7 @@ class VISATcpip(VISAChannel):
         # Redefining resource name and type for TCPIP communication
         self.ip_address = ip_address
         self.resource_name = f"TCPIP::{ip_address}::{protocol}"
-        self.resource = pyvisa.resources.tcpip.TCPIPInstrument(
-            self.ResourceManager, self.resource_name
-        )
+        self.resource = pyvisa.resources.tcpip.TCPIPInstrument(self.ResourceManager, self.resource_name)
         self.protocol = protocol
 
     def _cc_open(self) -> None:

@@ -117,9 +117,7 @@ class AuxLinkLoader(importlib.abc.Loader):
             # myapp.virtual
             return self._COMMON_PREFIX.startswith(fullname)
 
-    def create_module(
-        self, spec: importlib.machinery.ModuleSpec
-    ) -> Union[types.ModuleType, AuxiliaryInterface]:
+    def create_module(self, spec: importlib.machinery.ModuleSpec) -> Union[types.ModuleType, AuxiliaryInterface]:
         """Create the given module from the supplied module spec.
 
         Under the hood, this module returns a service or a dummy module,
@@ -190,9 +188,7 @@ class ModuleCache:
         except KeyError:
             raise ValueError(f"Could not find {name!r} in provided configuration")
         except ValueError:
-            raise ValueError(
-                f"Specified type for {name!r} must be 'path:Class' or 'module:Class', got {import_path!r}"
-            )
+            raise ValueError(f"Specified type for {name!r} must be 'path:Class' or 'module:Class', got {import_path!r}")
         if ".py" in location:
             path_loc = pathlib.Path(location)
             if path_loc.exists() and path_loc.is_file():
@@ -201,9 +197,7 @@ class ModuleCache:
                 spec.loader.exec_module(module)
                 log.internal_debug(f"loading {_class} as {name} from {path_loc}")
             else:
-                raise ImportError(
-                    f"no python module found at {path_loc!r}", name=_class
-                )
+                raise ImportError(f"no python module found at {path_loc!r}", name=_class)
         else:
             module = importlib.import_module(location)
         cls = getattr(module, _class)
@@ -218,9 +212,7 @@ class ModuleCache:
         if name not in self.modules:
             log.internal_debug(f"module for {name} not found, loading...")
             self.modules[name] = self._import(name)
-        log.internal_debug(
-            f"instantiating {name}: {self.modules[name]}({self.configs[name]})"
-        )
+        log.internal_debug(f"instantiating {name}: {self.modules[name]}({self.configs[name]})")
         inst = self.modules[name](name=name, **self.configs[name])
         self.instances[name] = inst
         log.internal_debug(f"instantiated {name}")
@@ -267,9 +259,7 @@ class AuxiliaryCache(ModuleCache):
             self.configs[name][cn] = self.con_cache.get_instance(con)
         inst = super().get_instance(name)
 
-        if getattr(inst, "connector_required", True) and not getattr(
-            inst, "channel", False
-        ):
+        if getattr(inst, "connector_required", True) and not getattr(inst, "channel", False):
             self.instances.pop(name)
             raise ConnectorRequiredError(name)
         # if auto start is needed start the auxiliary otherwise store

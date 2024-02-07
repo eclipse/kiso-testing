@@ -110,7 +110,7 @@ class YkushAuxiliary(AuxiliaryInterface):
 
     def _create_auxiliary_instance(self) -> bool:
         """Power on all port at the start.
-        :return: True if succesful
+        :return: True if successful
         """
         log.internal_info("Create auxiliary instance")
         self.set_all_ports_on()
@@ -136,10 +136,7 @@ class YkushAuxiliary(AuxiliaryInterface):
         self._path = None
         # try to locate a device
         for device in hid.enumerate(0, 0):
-            if (
-                device["vendor_id"] == YKUSH_USB_VID
-                and device["product_id"] in YKUSH_USB_PID_LIST
-            ):
+            if device["vendor_id"] == YKUSH_USB_VID and device["product_id"] in YKUSH_USB_PID_LIST:
                 list_ykush_device.append(device["serial_number"])
                 if serial is None or serial == device["serial_number"]:
                     self._product_id = device["product_id"]
@@ -150,9 +147,7 @@ class YkushAuxiliary(AuxiliaryInterface):
             self._ykush_device.open_path(self._path)
         else:
             if list_ykush_device == []:
-                raise YkushDeviceNotFound(
-                    "Could not connect to a ykush hub, no device was found."
-                )
+                raise YkushDeviceNotFound("Could not connect to a ykush hub, no device was found.")
             else:
                 raise YkushDeviceNotFound(
                     f"The serial numbers available are : {list_ykush_device}\n"
@@ -226,26 +221,18 @@ class YkushAuxiliary(AuxiliaryInterface):
         if self.get_firmware_version()[0] >= 1:
             recvbytes = self._raw_sendreceive([0x2A])[: self.number_of_port + 1]
             if recvbytes[0] == YKUSH_PROTO_OK_STATUS:
-                return [
-                    PortState.ON if p > 0x10 else PortState.OFF for p in recvbytes[1:]
-                ]
+                return [PortState.ON if p > 0x10 else PortState.OFF for p in recvbytes[1:]]
             else:
-                raise YkushStatePortNotRetrieved(
-                    "The states of the ports couldn't be retrieved"
-                )
+                raise YkushStatePortNotRetrieved("The states of the ports couldn't be retrieved")
         else:
             # firmware glitch workaround
             list_state = []
             for port_number in range(1, self.number_of_port + 1):
                 status, port_state = self._raw_sendreceive([0x20 | port_number])[:2]
                 if status == YKUSH_PROTO_OK_STATUS:
-                    list_state.append(
-                        PortState.ON if port_state > 0x10 else PortState.OFF
-                    )
+                    list_state.append(PortState.ON if port_state > 0x10 else PortState.OFF)
                 else:
-                    raise YkushStatePortNotRetrieved(
-                        f"The state of the port {port_number} couldn't be retrieved"
-                    )
+                    raise YkushStatePortNotRetrieved(f"The state of the port {port_number} couldn't be retrieved")
             return list_state
 
     def get_firmware_version(self) -> Tuple[int, int]:
@@ -277,9 +264,7 @@ class YkushAuxiliary(AuxiliaryInterface):
         """
         str_state = self.get_str_state(state)
         self.check_port_number(port_number)
-        self._raw_sendreceive(
-            [(0x10 if state == YKUSH_PORT_STATE_ON else 0x0) | port_number]
-        )
+        self._raw_sendreceive([(0x10 if state == YKUSH_PORT_STATE_ON else 0x0) | port_number])
 
         try:
             state_port = self.get_port_state(port_number)
@@ -367,12 +352,11 @@ class YkushAuxiliary(AuxiliaryInterface):
         :return: response to the message send
         """
         with self._open_and_close_device():
-            packetarray = packetarray * 2 + [0x00] * (
-                YKUSH_USB_PACKET_SIZE - len(packetarray)
-            )
+            packetarray = packetarray * 2 + [0x00] * (YKUSH_USB_PACKET_SIZE - len(packetarray))
             self._ykush_device.write(packetarray)
             recvpacket = self._ykush_device.read(
-                max_length=YKUSH_USB_PACKET_SIZE + 1, timeout_ms=YKUSH_USB_TIMEOUT
+                max_length=YKUSH_USB_PACKET_SIZE + 1,
+                timeout_ms=YKUSH_USB_TIMEOUT,
             )
 
             # if not None return the bytes we actually need

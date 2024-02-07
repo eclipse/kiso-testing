@@ -68,26 +68,16 @@ class YamlLoader(yaml.SafeLoader):
         # load paths to sub-yamls on include tag
         YamlLoader.add_constructor("!include", YamlLoader.include)
         # parse quoted environment variables
-        YamlLoader.add_constructor(
-            YamlLoader.DEFAULT_SCALAR_TAG, YamlLoader.parse_env_var
-        )
+        YamlLoader.add_constructor(YamlLoader.DEFAULT_SCALAR_TAG, YamlLoader.parse_env_var)
         # parse unquoted environment variables
-        YamlLoader.add_implicit_constructor(
-            "!env", YamlLoader.env_var_pattern, YamlLoader.parse_env_var
-        )
+        YamlLoader.add_implicit_constructor("!env", YamlLoader.env_var_pattern, YamlLoader.parse_env_var)
         # parse auxiliary and connector types
-        YamlLoader.add_implicit_constructor(
-            "!type", YamlLoader.type_pattern, YamlLoader.fix_types_loc
-        )
+        YamlLoader.add_implicit_constructor("!type", YamlLoader.type_pattern, YamlLoader.fix_types_loc)
         # parse relative paths
-        YamlLoader.add_implicit_constructor(
-            "!resolve", YamlLoader.rel_path_pattern, YamlLoader.resolve_path
-        )
+        YamlLoader.add_implicit_constructor("!resolve", YamlLoader.rel_path_pattern, YamlLoader.resolve_path)
 
     @staticmethod
-    def add_implicit_constructor(
-        tag: str, pattern: re.Pattern, constructor: Callable
-    ) -> None:
+    def add_implicit_constructor(tag: str, pattern: re.Pattern, constructor: Callable) -> None:
         """Combination of add_implicit_resolver and add_constructor.
 
         This allows setting a tag on each value matching the pattern and
@@ -121,9 +111,7 @@ class YamlLoader(yaml.SafeLoader):
         :return: included yaml file's content
         """
         nested_yaml = (self._base_dir / Path(node.value)).resolve()
-        nested_cfg = yaml.load(
-            nested_yaml, Loader=YamlLoader
-        )  # nosec B506 YamlLoader inherits from yaml.SafeLoader.
+        nested_cfg = yaml.load(nested_yaml, Loader=YamlLoader)  # nosec B506 YamlLoader inherits from yaml.SafeLoader.
         return nested_cfg
 
     def resolve_path(self, node: yaml.nodes.ScalarNode) -> str:
@@ -146,9 +134,7 @@ class YamlLoader(yaml.SafeLoader):
                 return str(value)
             if config_path.exists():
                 value = config_path
-                logging.debug(
-                    f"Resolved relative path {config_path_unresolved} to {value}"
-                )
+                logging.debug(f"Resolved relative path {config_path_unresolved} to {value}")
         return str(value)
 
     def fix_types_loc(self, node: yaml.nodes.ScalarNode) -> str:
@@ -208,9 +194,7 @@ class YamlLoader(yaml.SafeLoader):
                 node.value = env
                 env = self.resolve_path(node)
         else:
-            raise ValueError(
-                f"Environment variable {env_name} not found and no default value specified"
-            )
+            raise ValueError(f"Environment variable {env_name} not found and no default value specified")
         is_numeric = re.fullmatch(r"\d+", env)
         is_hex = re.fullmatch(r"0x[0-9a-fA-F]+", env)
         is_bool = env.lower() in ["true", "false"]
@@ -274,7 +258,8 @@ def check_requirements(requirements: List[dict]):
                 try:
                     compare_operation = conditionals[condition]
                     check = compare_operation(
-                        version.parse(current_version), version.parse(required_version)
+                        version.parse(current_version),
+                        version.parse(required_version),
                     )
                     if check is False:
                         # Version not satisfied
@@ -284,9 +269,7 @@ def check_requirements(requirements: List[dict]):
                         )
                 except KeyError as e:
                     # comparator invalid
-                    logging.error(
-                        f"Requirement issue: comparator {e} not among {list(conditionals.keys())}"
-                    )
+                    logging.error(f"Requirement issue: comparator {e} not among {list(conditionals.keys())}")
                     check = False
 
                 requirement_satisfied &= check
@@ -318,9 +301,7 @@ def parse_config(file_name: PathType) -> Dict:
     :return: config dict with resolved paths where needed
     """
     with open(file_name, "r") as f:
-        cfg = yaml.load(
-            f, Loader=YamlLoader
-        )  # nosec B506 YamlLoader inherits from yaml.SafeLoader.
+        cfg = yaml.load(f, Loader=YamlLoader)  # nosec B506 YamlLoader inherits from yaml.SafeLoader.
 
     # Check requirements
     requirements = cfg.get("requirements")

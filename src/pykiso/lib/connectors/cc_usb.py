@@ -24,9 +24,7 @@ Communication Channel Via Usb
 try:
     import serial
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'")
 
 from pykiso.lib.connectors import cc_uart
 
@@ -36,7 +34,6 @@ class CCUsb(cc_uart.CCUart):
         super().__init__(serial_port, baudrate=9600)
 
     def _cc_send(self, msg):
-
         raw_packet = msg.serialize()
         crc = self._calculate_crc32(raw_packet)
 
@@ -72,10 +69,10 @@ class CCUsb(cc_uart.CCUart):
                 time.sleep(reboot_time)
                 self.CCopen()
                 break
-            except (serial.SerialException, serial.serialutil.SerialTimeoutException):
+            except (
+                serial.SerialException,
+                serial.serialutil.SerialTimeoutException,
+            ):
                 self.logger.debug(
-                    "Unable to connect to USB port after reboot."
-                    + "Retrying after "
-                    + reboot_time
-                    + " seconds"
+                    "Unable to connect to USB port after reboot." + "Retrying after " + reboot_time + " seconds"
                 )

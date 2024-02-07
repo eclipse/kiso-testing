@@ -27,12 +27,7 @@ import queue
 from typing import Callable, Optional
 
 from pykiso import CChannel, Flasher, Message, message
-from pykiso.auxiliary import (
-    AuxiliaryInterface,
-    close_connector,
-    flash_target,
-    open_connector,
-)
+from pykiso.auxiliary import AuxiliaryInterface, close_connector, flash_target, open_connector
 
 log = logging.getLogger(__name__)
 
@@ -112,9 +107,7 @@ def check_acknowledgement(func: Callable) -> Callable:
 
         # invalid token or received message not type of ACK
         if is_ack is False:
-            log.internal_warning(
-                f"Received {response} not matching {self.current_cmd}!"
-            )
+            log.internal_warning(f"Received {response} not matching {self.current_cmd}!")
             return False
 
         log.internal_info("Command was acknowledged by the DUT!")
@@ -171,9 +164,7 @@ class DUTAuxiliary(AuxiliaryInterface):
         :param com: Communication connector
         :param flash: flash connector
         """
-        super().__init__(
-            is_proxy_capable=False, tx_task_on=True, rx_task_on=True, **kwargs
-        )
+        super().__init__(is_proxy_capable=False, tx_task_on=True, rx_task_on=True, **kwargs)
         self.channel = com
         self.flash = flash
         self.current_cmd = None
@@ -305,9 +296,7 @@ class DUTAuxiliary(AuxiliaryInterface):
             log.internal_warning(f"ACK message received from {self.name}: {response}")
             return False
 
-        log.internal_warning(
-            f"Message type unknown received from {self.name}: {response}"
-        )
+        log.internal_warning(f"Message type unknown received from {self.name}: {response}")
         return False
 
     def evaluate_report(self, report_msg: message.Message) -> None:
@@ -316,24 +305,16 @@ class DUTAuxiliary(AuxiliaryInterface):
         :param report_msg: reeceived report message
         """
         if report_msg.get_message_sub_type() == REPORT_TYPE.TEST_FAILED:
-            log.error(
-                f"Report with verdict FAILED received from {self.name} : {report_msg}"
-            )
+            log.error(f"Report with verdict FAILED received from {self.name} : {report_msg}")
         elif report_msg.get_message_sub_type() == REPORT_TYPE.TEST_PASS:
-            log.internal_info(
-                f"Report with verdict PASS received from {self.name} : {report_msg}"
-            )
+            log.internal_info(f"Report with verdict PASS received from {self.name} : {report_msg}")
 
         elif report_msg.get_message_sub_type() == REPORT_TYPE.TEST_NOT_IMPLEMENTED:
-            log.internal_warning(
-                f"Report with verdict NOT IMPLEMENTED from {self.name} : {report_msg}"
-            )
+            log.internal_warning(f"Report with verdict NOT IMPLEMENTED from {self.name} : {report_msg}")
         else:
             log.error(f"Report type unknown received from {self.name} : {report_msg}")
 
-    def wait_and_get_report(
-        self, blocking: bool = False, timeout_in_s: int = 0
-    ) -> Optional[Message]:
+    def wait_and_get_report(self, blocking: bool = False, timeout_in_s: int = 0) -> Optional[Message]:
         """Wait for the report coming from the DUT.
 
         :param blocking: True: wait for timeout to expire, False: return
@@ -366,9 +347,7 @@ class DUTAuxiliary(AuxiliaryInterface):
             # Serialize and send the message
             self.channel.cc_send(msg=cmd_message.serialize())
         except Exception:
-            log.exception(
-                f"encountered error while sending message '{cmd_message}' to {self.channel}"
-            )
+            log.exception(f"encountered error while sending message '{cmd_message}' to {self.channel}")
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """Get message from the device under test.
@@ -392,7 +371,5 @@ class DUTAuxiliary(AuxiliaryInterface):
             try:
                 self.channel.cc_send(msg=ack_cmd.serialize())
             except Exception:
-                log.exception(
-                    f"encountered error while sending acknowledge message for {response}!"
-                )
+                log.exception(f"encountered error while sending acknowledge message for {response}!")
         self.queue_out.put(response)

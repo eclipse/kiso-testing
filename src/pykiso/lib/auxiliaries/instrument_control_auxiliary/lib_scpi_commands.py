@@ -46,14 +46,10 @@ class LibSCPI:
         # Check if the instrument in use is registered
         if instrument in REGISTERED_INSTRUMENTS:
             self.instrument = instrument
-            log.internal_info(
-                f"{instrument} is a registered instrument: using registered commands"
-            )
+            log.internal_info(f"{instrument} is a registered instrument: using registered commands")
         else:
             self.instrument = "DEFAULT"
-            log.internal_info(
-                "Working with unknown instrument: using default commands."
-            )
+            log.internal_info("Working with unknown instrument: using default commands.")
 
     def _send_scpi_command(
         self,
@@ -94,9 +90,7 @@ class LibSCPI:
 
         return self.visa_object.write(f"{command} {cmd_payload}".strip(), validation)
 
-    def get_command(
-        self, cmd_tag: str, cmd_type: str, cmd_validation: tuple = None
-    ) -> Tuple:
+    def get_command(self, cmd_tag: str, cmd_type: str, cmd_validation: tuple = None) -> Tuple:
         """Return the pre-defined command.
 
         :param cmd_tag: command tag corresponding to the command to

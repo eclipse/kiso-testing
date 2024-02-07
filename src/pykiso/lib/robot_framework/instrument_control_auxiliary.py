@@ -22,9 +22,7 @@ Instrument control auxiliary plugin
 
 from robot.api.deco import keyword, library
 
-from ..auxiliaries.instrument_control_auxiliary import (
-    InstrumentControlAuxiliary as InstAux,
-)
+from ..auxiliaries.instrument_control_auxiliary import InstrumentControlAuxiliary as InstAux
 from .aux_interface import RobotAuxInterface
 
 
@@ -39,9 +37,7 @@ class InstrumentControlAuxiliary(RobotAuxInterface):
         super().__init__(aux_type=InstAux)
 
     @keyword(name="Write")
-    def write(
-        self, write_command: str, aux_alias: str, validation: tuple = None
-    ) -> str:
+    def write(self, write_command: str, aux_alias: str, validation: tuple = None) -> str:
         """Send a write request to the instrument and then returns if
         the value was successfully written. A query is sent immediately
         after the writing and the answer is compared to the expected

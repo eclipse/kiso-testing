@@ -54,10 +54,7 @@ def get_yaml_files(config_path: PathType, recursive: bool) -> List[Path]:
     pattern = "**/*.yaml" if recursive else "*.yaml"
     if config.is_dir():
         # search for all yaml files contained in it
-        config_files = [
-            config_file_path.resolve()
-            for config_file_path in Path(config).glob(pattern)
-        ]
+        config_files = [config_file_path.resolve() for config_file_path in Path(config).glob(pattern)]
         if not config_files:
             raise FileNotFoundError(f"No YAML configuration files found at {config}")
     else:
@@ -131,17 +128,10 @@ def build_result_dict(
     }
     if show_test_cases:
         config_result_dict.update(
-            {
-                "Test cases": "\n".join(
-                    f"{test.__module__}.{test.__class__.__qualname__}"
-                    for test in test_case_list
-                )
-            }
+            {"Test cases": "\n".join(f"{test.__module__}.{test.__class__.__qualname__}" for test in test_case_list)}
         )
     if test_tags:
-        tag_dict = {
-            tag_name: "\n".join(tag_list) for tag_name, tag_list in test_tags.items()
-        }
+        tag_dict = {tag_name: "\n".join(tag_list) for tag_name, tag_list in test_tags.items()}
         config_result_dict = {**config_result_dict, **tag_dict}
     return config_result_dict
 
@@ -265,21 +255,15 @@ def main(
                 # get all test cases meant to be loaded by the config file
                 test_cases = get_test_cases(cfg_dict)
             except ValueError as e:
-                click.echo(
-                    f"Failed to load test cases from config file {config_file.name}: {e.args[0]}"
-                )
+                click.echo(f"Failed to load test cases from config file {config_file.name}: {e.args[0]}")
                 continue
             except TestCollectionError as e:
-                click.echo(
-                    f"Failed to load test cases from config file {config_file.name}: {e}"
-                )
+                click.echo(f"Failed to load test cases from config file {config_file.name}: {e}")
                 continue
 
             tags = get_test_tags(test_cases)
 
-            single_config_result = build_result_dict(
-                config_file.name, test_cases, tags, show_test_cases=show_tests
-            )
+            single_config_result = build_result_dict(config_file.name, test_cases, tags, show_test_cases=show_tests)
             all_results.append(single_config_result)
 
     table_header, table_data = tabulate_test_information(all_results)

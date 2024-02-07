@@ -26,9 +26,7 @@ from typing import Optional
 try:
     import serial
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'")
 
 from pykiso import connector, message
 
@@ -83,7 +81,6 @@ class CCUart(connector.CChannel):
         self._send_using_slip(rawPacket)
 
     def _cc_receive(self, timeout=0.00001):
-
         self.serial.timeout = timeout or self.timeout
 
         receivingState = self.WAITING_FOR_START
@@ -129,7 +126,6 @@ class CCUart(connector.CChannel):
                         receivingState = self.RECEIVED_DONE
 
             if receivingState == self.RECEIVED_DONE:
-
                 expectedCRC = ((rawPacket[0] & 0xFF) << 8) + (rawPacket[1] & 0xFF)
                 rawPacket = rawPacket[2 : len(rawPacket)]
                 calculatedCRC = self._calculate_crc32(rawPacket)

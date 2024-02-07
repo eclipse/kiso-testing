@@ -25,9 +25,7 @@ import sys
 import click
 
 from pykiso import __version__
-from pykiso.lib.auxiliaries.instrument_control_auxiliary import (
-    InstrumentControlAuxiliary,
-)
+from pykiso.lib.auxiliaries.instrument_control_auxiliary import InstrumentControlAuxiliary
 from pykiso.lib.connectors.cc_tcp_ip import CCTcpip
 from pykiso.lib.connectors.cc_visa import VISASerial, VISATcpip
 
@@ -189,42 +187,27 @@ def perform_actions(instr_aux: InstrumentControlAuxiliary, actions: dict) -> Non
                 # and in interactive mode
                 float(value)
                 # if successful, see if the command needs an float (default) or an int
-                if (
-                    "payload_type" in actions_dict[arg]
-                    and actions_dict[arg]["payload_type"] == "INT"
-                ):
-                    logging.info(
-                        f"{actions_dict[arg]['text']}: {actions_dict[arg]['set'](int(value))}"
-                    )
+                if "payload_type" in actions_dict[arg] and actions_dict[arg]["payload_type"] == "INT":
+                    logging.info(f"{actions_dict[arg]['text']}: {actions_dict[arg]['set'](int(value))}")
                 else:
-                    logging.info(
-                        f"{actions_dict[arg]['text']}: {actions_dict[arg]['set'](float(value))}"
-                    )
+                    logging.info(f"{actions_dict[arg]['text']}: {actions_dict[arg]['set'](float(value))}")
             except TypeError:
                 # occurs when value is None
                 pass
             except ValueError:
                 # provided value is a tag
                 if str(value).upper() == "GET":
-                    logging.info(
-                        f"{actions_dict[arg]['text']}: {actions_dict[arg]['get']()}"
-                    )
+                    logging.info(f"{actions_dict[arg]['text']}: {actions_dict[arg]['get']()}")
                 elif str(value).upper() in "SET ON ENABLE".split():
-                    logging.info(
-                        f"{actions_dict[arg]['text']}: {actions_dict[arg]['set']()}"
-                    )
+                    logging.info(f"{actions_dict[arg]['text']}: {actions_dict[arg]['set']()}")
                 elif str(value).upper() in "UNSET OFF DISABLE".split():
-                    logging.info(
-                        f"{actions_dict[arg]['text']}: {actions_dict[arg]['unset']()}"
-                    )
+                    logging.info(f"{actions_dict[arg]['text']}: {actions_dict[arg]['unset']()}")
                 elif value is None:
                     # no value was provided
                     pass
                 else:
                     # provided value is not valid
-                    logging.warning(
-                        f"{value} is not a valid parameter for {arg}, please try again."
-                    )
+                    logging.warning(f"{value} is not a valid parameter for {arg}, please try again.")
         else:
             logging.warning("Command not found, please try again.")
 
@@ -332,7 +315,8 @@ def parse_user_command(user_cmd: str) -> dict:
     "--interface",
     required=True,
     type=click.Choice(
-        choices=["VISA_SERIAL", "VISA_TCPIP", "SOCKET_TCPIP"], case_sensitive=False
+        choices=["VISA_SERIAL", "VISA_TCPIP", "SOCKET_TCPIP"],
+        case_sensitive=False,
     ),
     help="""The interface to use for the connection. Available interfaces are:
         - VISA_SERIAL - serial communication with pyvisa
@@ -608,9 +592,7 @@ def main(
                 click.echo("Exiting interactive session")
                 break
             else:
-                perform_actions(
-                    instr_aux=instr_aux, actions=parse_user_command(command)
-                )
+                perform_actions(instr_aux=instr_aux, actions=parse_user_command(command))
 
     # Close the VISA interface and exit
     instr_aux.delete_instance()

@@ -29,9 +29,7 @@ try:
     import can
     from uds import IsoServices
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'")
 
 from pykiso.connector import CChannel
 
@@ -210,9 +208,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             return req_resp_data
         except AttributeError:
             # Service not found, raised by getattr()
-            log.exception(
-                f"Could not send UDS config request: unknown service {uds_service_name}"
-            )
+            log.exception(f"Could not send UDS config request: unknown service {uds_service_name}")
             return False
         except Exception:
             # Data send failed
@@ -273,9 +269,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             log.error("No uds config found")
             return
 
-    def write_data(
-        self, parameter: str, value: Union[List[bytes], bytes]
-    ) -> Optional[Union[dict, bool]]:
+    def write_data(self, parameter: str, value: Union[List[bytes], bytes]) -> Optional[Union[dict, bool]]:
         """UDS config command that allow data writing
 
         :param parameter: data to be set
@@ -336,9 +330,7 @@ class UdsAuxiliary(UdsBaseAuxiliary):
             self.is_tester_present.__exit__(None, None, None)
             self.is_tester_present = None
         else:
-            log.internal_warning(
-                "Tester present sender should be started before it can be stopped"
-            )
+            log.internal_warning("Tester present sender should be started before it can be stopped")
 
     def _receive_message(self, timeout_in_s: float) -> None:
         """This method is only used to populate the python-uds reception
@@ -354,7 +346,9 @@ class UdsAuxiliary(UdsBaseAuxiliary):
 
         if received_data is not None and arbitration_id == self.res_id:
             can_msg = can.Message(
-                data=received_data, arbitration_id=arbitration_id, is_extended_id=False
+                data=received_data,
+                arbitration_id=arbitration_id,
+                is_extended_id=False,
             )
             self.uds_config.tp.callback_onReceive(can_msg)
 

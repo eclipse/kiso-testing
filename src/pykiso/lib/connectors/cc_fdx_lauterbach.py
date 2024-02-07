@@ -118,9 +118,7 @@ class CCFdxLauterbach(connector.CChannel):
             if err != 0:
                 error_count += 1
             if error_count >= self.allowed_t32_errors:
-                log.error(
-                    f"Abort execution because lauterbach was unresponsive for {error_count} times"
-                )
+                log.error(f"Abort execution because lauterbach was unresponsive for {error_count} times")
                 break
             time.sleep(0.05)  # 50 ms pause in each loop
 
@@ -153,9 +151,7 @@ class CCFdxLauterbach(connector.CChannel):
         # Open a new Trace32 process
         try:
             self.t32_process = subprocess.Popen(self.t32_start_args)
-            log.internal_debug(
-                f"Trace32 process open with arguments {self.t32_start_args}"
-            )
+            log.internal_debug(f"Trace32 process open with arguments {self.t32_start_args}")
         except Exception:
             log.exception("Unable to open Trace32")
             return lauterbach_open_state
@@ -215,15 +211,11 @@ class CCFdxLauterbach(connector.CChannel):
 
         # Close FDX receiver communication
         fdxin_state = self.t32_api.T32_Fdx_Close(self.fdxin)
-        log.internal_debug(
-            f"Disconnected from FDX {self.fdxin} with state {fdxin_state}"
-        )
+        log.internal_debug(f"Disconnected from FDX {self.fdxin} with state {fdxin_state}")
 
         # Close FDX sender communication
         fdxout_state = self.t32_api.T32_Fdx_Close(self.fdxout)
-        log.internal_debug(
-            f"Disconnected from FDX {self.fdxout} with state {fdxout_state}"
-        )
+        log.internal_debug(f"Disconnected from FDX {self.fdxout} with state {fdxout_state}")
 
         # Reset Target
         reset_cpu_state = self.t32_api.T32_ResetCPU()
@@ -254,9 +246,7 @@ class CCFdxLauterbach(connector.CChannel):
         # Send the message
         poll_len = self.t32_api.T32_Fdx_SendPoll(self.fdxout, buffer, 1, len(msg))
         if poll_len <= 0:
-            log.exception(
-                f"ERROR occurred while sending {len(msg)} bytes on {self.fdxout}"
-            )
+            log.exception(f"ERROR occurred while sending {len(msg)} bytes on {self.fdxout}")
         return poll_len
 
     def _cc_receive(self, timeout: float = 0.1) -> Dict[str, Union[bytes, str, None]]:
@@ -281,9 +271,7 @@ class CCFdxLauterbach(connector.CChannel):
         # Check if a message has been received within the timeout
         while not is_timeout:
             # Create the buffer
-            buffer = ctypes.pointer(
-                ctypes.create_string_buffer(4096)
-            )  # MaxSize = [0 ; 4096]
+            buffer = ctypes.pointer(ctypes.create_string_buffer(4096))  # MaxSize = [0 ; 4096]
 
             # Check if msg available
             poll_len = self.t32_api.T32_Fdx_ReceivePoll(
@@ -295,17 +283,13 @@ class CCFdxLauterbach(connector.CChannel):
 
             # Check if T32 api got an error
             if poll_len < 0:
-                log.error(
-                    f"ERROR occurred while listening channel {self.fdxin} with buffer: {buffer.contents.value}"
-                )
+                log.error(f"ERROR occurred while listening channel {self.fdxin} with buffer: {buffer.contents.value}")
                 break
 
             # Check if a message has been received
             elif poll_len > 0:
                 log.internal_info(f"Message size: {poll_len}")
-                log.internal_info(
-                    f"<=== {Message.parse_packet(buffer.contents.raw[:poll_len])}"
-                )
+                log.internal_info(f"<=== {Message.parse_packet(buffer.contents.raw[:poll_len])}")
                 log.internal_debug(f"Received on channel {self.fdxin}")
                 received_msg = Message.parse_packet(buffer.contents.raw[:poll_len])
                 break
@@ -343,15 +327,11 @@ class CCFdxLauterbach(connector.CChannel):
 
         # Close FDX receiver communication
         fdxin_state = self.t32_api.T32_Fdx_Close(self.fdxin)
-        log.internal_debug(
-            f"Disconnected from FDX {self.fdxin} with state {fdxin_state}"
-        )
+        log.internal_debug(f"Disconnected from FDX {self.fdxin} with state {fdxin_state}")
 
         # Close FDX sender communication
         fdxout_state = self.t32_api.T32_Fdx_Close(self.fdxout)
-        log.internal_debug(
-            f"Disconnected from FDX {self.fdxout} with state {fdxout_state}"
-        )
+        log.internal_debug(f"Disconnected from FDX {self.fdxout} with state {fdxout_state}")
 
         # Reset Target
         reset_cpu_state = self.t32_api.T32_ResetCPU()

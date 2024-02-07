@@ -29,11 +29,7 @@ from pykiso import Message
 from pykiso.can_message import CanMessage
 from pykiso.can_parser import CanMessageParser
 from pykiso.connector import CChannel
-from pykiso.interfaces.dt_auxiliary import (
-    DTAuxiliaryInterface,
-    close_connector,
-    open_connector,
-)
+from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface, close_connector, open_connector
 
 log = logging.getLogger(__name__)
 
@@ -47,9 +43,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
         :param com: CChannel that supports raw communication over CAN
         """
         self.tx_task_on = False
-        super().__init__(
-            is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs
-        )
+        super().__init__(is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs)
 
         self.recv_can_messages = {}
         self.channel = com
@@ -85,12 +79,8 @@ class CanAuxiliary(DTAuxiliaryInterface):
             rcv_data = self.channel.cc_receive(timeout=timeout_in_s)
             if rcv_data.get("msg") is not None:
                 log.internal_debug(f"received message '{rcv_data}' from {self.channel}")
-                message_name = self.parser.dbc.get_message_by_frame_id(
-                    rcv_data["remote_id"]
-                ).name
-                message_signals = self.parser.decode(
-                    rcv_data["msg"], rcv_data["remote_id"]
-                )
+                message_name = self.parser.dbc.get_message_by_frame_id(rcv_data["remote_id"]).name
+                message_signals = self.parser.decode(rcv_data["msg"], rcv_data["remote_id"])
                 message_timestamp = float(rcv_data.get("timestamp", 0))
                 old_can_message = self.can_messages.get(message_name, None)
                 if old_can_message is None:
@@ -102,10 +92,8 @@ class CanAuxiliary(DTAuxiliaryInterface):
         except KeyError:
             log.exception("Specific message signal is not found in message")
             pass
-        except (Exception):
-            log.exception(
-                f"encountered error while receiving message via {self.channel}"
-            )
+        except Exception:
+            log.exception(f"encountered error while receiving message via {self.channel}")
             pass
 
     def get_last_message(self, message_name: str) -> Optional[CanMessage]:
@@ -137,9 +125,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
 
         return None
 
-    def wait_for_message(
-        self, message_name: str, timeout: float = 0.2
-    ) -> dict[str, any]:
+    def wait_for_message(self, message_name: str, timeout: float = 0.2) -> dict[str, any]:
         """Get the last message with certain timeout in seconds.
         :param message_name: name of the message to receive
         :param timeout time to wait till a message receives in seconds
@@ -165,7 +151,10 @@ class CanAuxiliary(DTAuxiliaryInterface):
             return None
 
     def wait_to_match_message_with_signals(
-        self, message_name: str, expected_signals: dict[str, any], timeout: float = 0.2
+        self,
+        message_name: str,
+        expected_signals: dict[str, any],
+        timeout: float = 0.2,
     ) -> dict[str, any]:
         """Get first message which matches the patter of signals
         .
@@ -232,9 +221,7 @@ class CanAuxiliary(DTAuxiliaryInterface):
             try:
                 self.channel.cc_send(msg=cmd_data)
             except Exception:
-                log.exception(
-                    f"encountered error while sending message '{cmd_data}' to {self.channel}"
-                )
+                log.exception(f"encountered error while sending message '{cmd_data}' to {self.channel}")
         elif isinstance(cmd_message, Message):
             log.internal_debug(f"ignored command '{cmd_message} in {self}'")
         else:

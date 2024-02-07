@@ -29,9 +29,7 @@ try:
     import serial
     import serial.tools.list_ports
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[serial]'")
 
 log = logging.getLogger(__name__)
 
@@ -129,9 +127,7 @@ class CCSerial(connector.CChannel):
         )
 
         self.current_write_timeout = write_timeout
-        self.serial.port = self._get_port(
-            port=port, vid=vid, pid=pid, serial_number=serial_number
-        )
+        self.serial.port = self._get_port(port=port, vid=vid, pid=pid, serial_number=serial_number)
 
     @staticmethod
     def _find_device(vid: int, pid: int, serial_number: str) -> str:
@@ -147,32 +143,17 @@ class CCSerial(connector.CChannel):
         attached_com_devices = serial.tools.list_ports.comports()
         found_devices = []
         if pid and vid:
-            found_devices.extend(
-                [
-                    port
-                    for port in attached_com_devices
-                    if port.pid == pid and port.vid == vid
-                ]
-            )
+            found_devices.extend([port for port in attached_com_devices if port.pid == pid and port.vid == vid])
 
         if serial_number:
-            found_devices.extend(
-                [
-                    port
-                    for port in attached_com_devices
-                    if port.serial_number == serial_number
-                ]
-            )
+            found_devices.extend([port for port in attached_com_devices if port.serial_number == serial_number])
 
         if not found_devices:
             raise ConnectionError(
                 f"Failed to detect connected USB device with IDs {vid:04X}:{pid:04x} or serial_number {serial_number}."
             )
 
-        found_devices = [
-            port.name if not sys.platform.startswith("win") else port.device
-            for port in found_devices
-        ]
+        found_devices = [port.name if not sys.platform.startswith("win") else port.device for port in found_devices]
         if len(found_devices) > 1:
             log.internal_warning(
                 f"Found multiple devices, {found_devices}, with matching IDs {vid:04X}:{pid:04X} or serial_number {serial_number}. Select first device {found_devices[0]}."

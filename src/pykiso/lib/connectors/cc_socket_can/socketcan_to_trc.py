@@ -28,9 +28,7 @@ from textwrap import dedent
 try:
     import can
 except ImportError as e:
-    raise ImportError(
-        f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'"
-    )
+    raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'")
 
 
 log = logging.getLogger(__name__)
@@ -136,9 +134,7 @@ class SocketCan2Trc(can.Listener):
         """:return:  the days in double since 30.12.1899"""
         return time.time() / 60 / 60 / 24 + 25569
 
-    def log_trc_header(
-        self, starttime_days: float, starttime_str: str, ip_link_show: str
-    ):
+    def log_trc_header(self, starttime_days: float, starttime_str: str, ip_link_show: str):
         """Write the header of the TRC file
 
         :param starttime_days: number of days since 30.12.1899
@@ -227,12 +223,12 @@ class SocketCan2Trc(can.Listener):
     def get_ip_link_show(self):
         ''':return: the formatted output of "ip -d link show"'''
         complete_process = subprocess.run(
-            ["ip", "-d", "link", "show", self.can_name], capture_output=True, check=True
+            ["ip", "-d", "link", "show", self.can_name],
+            capture_output=True,
+            check=True,
         )
         if complete_process.returncode != 0:
-            raise RuntimeError(
-                "ip -d link show failed: " + complete_process.stdout.decode("ascii")
-            )
+            raise RuntimeError("ip -d link show failed: " + complete_process.stdout.decode("ascii"))
         txt = complete_process.stdout.decode("ascii")
         lines = txt.splitlines(keepends=True)
         for i in range(1, len(lines), 1):

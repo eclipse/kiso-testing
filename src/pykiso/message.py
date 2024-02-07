@@ -27,9 +27,7 @@ import logging
 import struct
 from typing import Dict, Optional, Union
 
-msg_cnt = itertools.cycle(
-    range(256)
-)  # Will be used as token. It increases each time a Message is created
+msg_cnt = itertools.cycle(range(256))  # Will be used as token. It increases each time a Message is created
 
 log = logging.getLogger(__name__)
 
@@ -174,9 +172,7 @@ class Message:
         )
         if self.tlv_dict is not None:
             # Convert dec to ascii
-            tlv = {
-                key: "".join(chr(i) for i in val) for key, val in self.tlv_dict.items()
-            }
+            tlv = {key: "".join(chr(i) for i in val) for key, val in self.tlv_dict.items()}
             string += f", tlv_dict:{tlv}"
         return string
 
@@ -214,13 +210,9 @@ class Message:
                     log.internal_warning("{} is not a supported format".format(key))
                 parsed_value = b""
                 if isinstance(value, str):  # If string given
-                    parsed_value = parsed_value.join(
-                        [struct.pack("B", ord(val)) for val in value]
-                    )
+                    parsed_value = parsed_value.join([struct.pack("B", ord(val)) for val in value])
                 elif isinstance(value, int):
-                    parsed_value = struct.pack(
-                        "H", value
-                    )  # TODO check endianness later on
+                    parsed_value = struct.pack("H", value)  # TODO check endianness later on
                 elif isinstance(value, bytes):
                     parsed_value = value
                 else:
@@ -250,17 +242,13 @@ class Message:
         :return: itself
         """
         msg = cls()
-        if (not isinstance(raw_packet, bytes)) and (
-            len(raw_packet) < (msg.header_size + msg.crc_byte_size)
-        ):
+        if (not isinstance(raw_packet, bytes)) and (len(raw_packet) < (msg.header_size + msg.crc_byte_size)):
             log.error("Packet is not understandable")
 
         # Check the CRC
         crc = cls.get_crc(raw_packet[: -msg.crc_byte_size], msg.crc_byte_size)
         if crc != struct.unpack("H", raw_packet[-msg.crc_byte_size :])[0]:
-            log.error(
-                f"CRC check failed {crc} != {struct.unpack('H', raw_packet[-msg.crc_byte_size:])[0]}"
-            )
+            log.error(f"CRC check failed {crc} != {struct.unpack('H', raw_packet[-msg.crc_byte_size:])[0]}")
 
         unpack_header = struct.unpack("BBBBBBB", raw_packet[:7])
 
@@ -276,9 +264,7 @@ class Message:
         # Create payload based on known tlvs
         if payload_length != 0:
             msg.tlv_dict = {}
-            for tag, value in cls._parse_tlv(
-                raw_packet[msg.header_size : -msg.crc_byte_size]
-            ):
+            for tag, value in cls._parse_tlv(raw_packet[msg.header_size : -msg.crc_byte_size]):
                 msg.tlv_dict[TlvKnownTags(tag)] = value
 
         return msg
@@ -331,17 +317,10 @@ class Message:
         :return: True if message type and token are valid otherwise
             False
         """
-        if (
-            ack_message.msg_type == MessageType.ACK
-            and ack_message.msg_token == self.msg_token
-        ):
+        if ack_message.msg_type == MessageType.ACK and ack_message.msg_token == self.msg_token:
             return True
         else:
-            log.internal_info(
-                "ack_message: {} \ndifferent of \nthis message: {}".format(
-                    str(ack_message), str(self)
-                )
-            )
+            log.internal_info("ack_message: {} \ndifferent of \nthis message: {}".format(str(ack_message), str(self)))
             return False
 
     def get_message_type(self) -> Union[int, MessageType]:

@@ -61,9 +61,7 @@ class AcronameAuxiliary(RobotAuxInterface):
         return aux.set_port_disable(port)
 
     @keyword(name="Get port current")
-    def get_port_current(
-        self, aux_alias: str, port: int, unit: str = "A"
-    ) -> Optional[float]:
+    def get_port_current(self, aux_alias: str, port: int, unit: str = "A") -> Optional[float]:
         """Get the current through the power line for selected usb port.
 
         :param aux_alias: auxiliary's alias
@@ -75,9 +73,7 @@ class AcronameAuxiliary(RobotAuxInterface):
         return aux.get_port_current(port, unit)
 
     @keyword(name="Get port voltage")
-    def get_port_voltage(
-        self, aux_alias: str, port: int, unit: str = "V"
-    ) -> Optional[float]:
+    def get_port_voltage(self, aux_alias: str, port: int, unit: str = "V") -> Optional[float]:
         """Get the voltage of the selected usb port.
 
         :param aux_alias: auxiliary's alias
@@ -89,9 +85,7 @@ class AcronameAuxiliary(RobotAuxInterface):
         return aux.get_port_voltage(port, unit)
 
     @keyword(name="Get port current limit")
-    def get_port_current_limit(
-        self, aux_alias: str, port: int, unit: str = "A"
-    ) -> Optional[float]:
+    def get_port_current_limit(self, aux_alias: str, port: int, unit: str = "A") -> Optional[float]:
         """Get the current limit for the port.
 
         :param aux_alias: auxiliary's alias
@@ -103,9 +97,7 @@ class AcronameAuxiliary(RobotAuxInterface):
         return aux.get_port_current_limit(port, unit)
 
     @keyword(name="Set port current limit")
-    def set_port_current_limit(
-        self, aux_alias: str, port: int, amps: float, unit: str = "A"
-    ) -> None:
+    def set_port_current_limit(self, aux_alias: str, port: int, amps: float, unit: str = "A") -> None:
         """Set the current limit for the port. If the set limit is not achievable,
         devices will round down to the nearest available current limit setting.
 

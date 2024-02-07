@@ -30,11 +30,7 @@ from contextlib import ContextDecorator
 from typing import Any, Optional
 
 from pykiso import CChannel, Message
-from pykiso.auxiliary import (
-    AuxiliaryInterface,
-    close_connector,
-    open_connector,
-)
+from pykiso.auxiliary import AuxiliaryInterface, close_connector, open_connector
 
 log = logging.getLogger(__name__)
 
@@ -69,9 +65,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
 
         :param com: CChannel that supports raw communication
         """
-        super().__init__(
-            is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs
-        )
+        super().__init__(is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs)
         self.channel = com
         self.queue_tx = queue.Queue()
         self.queueing_event = threading.Event()
@@ -128,20 +122,14 @@ class CommunicationAuxiliary(AuxiliaryInterface):
             False
         """
         with self.lock:
-            log.internal_debug(
-                f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux."
-            )
+            log.internal_debug(f"sending command '{cmd_message}' with payload {cmd_data} using {self.name} aux.")
             state = None
             self.queue_in.put((cmd_message, cmd_data))
             try:
                 state = self.queue_tx.get(blocking, timeout_in_s)
-                log.internal_debug(
-                    f"command '{cmd_message}' successfully sent for {self.name} aux"
-                )
+                log.internal_debug(f"command '{cmd_message}' successfully sent for {self.name} aux")
             except queue.Empty:
-                log.error(
-                    f"no feedback received regarding request {cmd_message} for {self.name} aux."
-                )
+                log.error(f"no feedback received regarding request {cmd_message} for {self.name} aux.")
         return state
 
     def receive_message(
@@ -162,9 +150,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         if self.queueing_event.is_set():
             in_ctx_manager = True
 
-        log.internal_debug(
-            f"retrieving message in {self} (blocking={blocking}, timeout={timeout_in_s})"
-        )
+        log.internal_debug(f"retrieving message in {self} (blocking={blocking}, timeout={timeout_in_s})")
         # In case we are not in the context manager, we have a enable the receiver thread (and afterwards disable it)
         if not in_ctx_manager:
             self.queueing_event.set()
@@ -207,9 +193,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
                 self.channel.cc_send(**cmd_data)
                 state = True
             except Exception:
-                log.exception(
-                    f"encountered error while sending message '{cmd_data}' to {self.channel}"
-                )
+                log.exception(f"encountered error while sending message '{cmd_data}' to {self.channel}")
         elif isinstance(cmd_message, Message):
             log.internal_debug(f"ignored command '{cmd_message} in {self}'")
         else:
@@ -231,6 +215,4 @@ class CommunicationAuxiliary(AuxiliaryInterface):
             if msg is not None and self.queueing_event.is_set():
                 self.queue_out.put(rcv_data)
         except Exception:
-            log.exception(
-                f"encountered error while receiving message via {self.channel}"
-            )
+            log.exception(f"encountered error while receiving message via {self.channel}")

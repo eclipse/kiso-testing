@@ -57,7 +57,7 @@ class ResultStream:
         :param file: the file to write stderr to.
         :return: an instance of this class or ``sys.stderr``.
         """
-        # don't bother instanciating and simply return stderr as context manager
+        # don't bother instantiating and simply return stderr as context manager
         if file is None:
             return nullcontext(sys.stderr)
         # otherwise return a real instance
@@ -132,7 +132,10 @@ class BannerTestResult(TextTestResult):
         return self._error_occurred
 
     def _banner(
-        self, text: Union[List, str], width: Optional[int] = None, sym: str = "#"
+        self,
+        text: Union[List, str],
+        width: Optional[int] = None,
+        sym: str = "#",
     ) -> str:
         """Format the provided text within a frame composed of the provided
         symbol.
@@ -150,9 +153,7 @@ class BannerTestResult(TextTestResult):
         if isinstance(text, str):
             text = text.split("\n")
         if isinstance(text, list):
-            text = "\n".join(
-                f"{sym} {line: <{width-self.BANNER_CHAR_WIDTH}} {sym}" for line in text
-            )
+            text = "\n".join(f"{sym} {line: <{width-self.BANNER_CHAR_WIDTH}} {sym}" for line in text)
         banner = f"{line}\n{text}\n{line}\n"
         return banner
 
@@ -165,9 +166,7 @@ class BannerTestResult(TextTestResult):
         doc = ""
         if getattr(test, "_testMethodDoc", None) is not None:
             for line in test._testMethodDoc.splitlines():
-                doc += "\n" + textwrap.fill(
-                    line.strip(), width=self.width - self.BANNER_CHAR_WIDTH
-                )
+                doc += "\n" + textwrap.fill(line.strip(), width=self.width - self.BANNER_CHAR_WIDTH)
         return doc
 
     def startTest(self, test: Union[BasicTest, BaseTestSuite]) -> None:
@@ -228,9 +227,7 @@ class BannerTestResult(TextTestResult):
         self.stream.flush()
         super().stopTest(test)
 
-    def addFailure(
-        self, test: Union[BasicTest, BaseTestSuite], err: ExcInfoType
-    ) -> None:
+    def addFailure(self, test: Union[BasicTest, BaseTestSuite], err: ExcInfoType) -> None:
         """Set the error flag when a failure occurs in order to get the
         individual test case result.
 
@@ -266,7 +263,7 @@ class BannerTestResult(TextTestResult):
         """Set the error flag when an error occurs in a subtest.
 
         :param test: running testcase
-        :param subtest: subtest runned
+        :param subtest: subtest ran
         :param err: tuple returned by sys.exc_info
         """
         super().addSubTest(test, subtest, err)
