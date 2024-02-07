@@ -65,16 +65,15 @@ def pytest_sessionstart(session: Session):
         log_level=logging.getLevelName(pytest_logger.log_cli_level),
         report_type="text",
         # display internal logs at least -vv is provided
-        verbose=(session.config.getoption("verbose") > 1),
+        verbose=(session.config.getoption("verbose") > 2),
     )
     root_logger = logging.getLogger()
-
     # get all handlers that were configured by pykiso to retrieve their level
     stream_handler = next(
         (
             hdlr
             for hdlr in root_logger.handlers
-            if isinstance(hdlr, logging.StreamHandler)
+            if type(hdlr) == logging.StreamHandler
         ),
         None,
     )
@@ -82,11 +81,10 @@ def pytest_sessionstart(session: Session):
         (
             hdlr
             for hdlr in root_logger.handlers
-            if isinstance(hdlr, logging.FileHandler)
+            if type(hdlr) == logging.FileHandler
         ),
         None,
     )
-
     if (
         pytest_logger.log_cli_handler.level != logging.NOTSET
         and stream_handler is not None
