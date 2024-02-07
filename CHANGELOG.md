@@ -9,12 +9,18 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Bug Fixes
 
 - Two auxiliaries with the same connector and the config is None ([#438](https://github.com/eclipse/kiso-testing/issues/438))
+- Fix log level level with pytest ([#444](https://github.com/eclipse/kiso-testing/issues/444))
 
 ### Miscellaneous Tasks
 
 - Bump sphinxcontrib-qthelp from 1.0.3 to 1.0.6
 - Bump sphinx-rtd-theme from 1.2.0 to 2.0.0
 - Bump sphinxcontrib-htmlhelp from 2.0.0 to 2.0.4
+- Bump grpcio from 1.59.3 to 1.60.0
+
+### Build
+
+- Use ruff format ([#445](https://github.com/eclipse/kiso-testing/issues/445))
 
 ## Version 0.26.0 (2023-12-05)
 
