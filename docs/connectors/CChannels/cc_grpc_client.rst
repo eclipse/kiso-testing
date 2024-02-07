@@ -1,6 +1,9 @@
 cc_grpc_client
 ==============
 
-.. automodule:: pykiso.lib.connectors.cc_grpc_client
+.. warning::
+    In incubation state.
+
+.. automodule:: pykiso.lib.incubation.connectors.cc_grpc_client
     :members:
     :private-members:

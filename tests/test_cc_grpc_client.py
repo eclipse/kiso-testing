@@ -18,7 +18,7 @@ import pytest
 # Import the generated protobuf files
 from grpc_test_files import helloworld_pb2, helloworld_pb2_grpc
 
-from pykiso.lib.connectors.cc_grpc_client import CCGrpcClient
+from pykiso.lib.incubation.connectors.cc_grpc_client import CCGrpcClient
 
 
 class Greeter(helloworld_pb2_grpc.GreeterServicer):
