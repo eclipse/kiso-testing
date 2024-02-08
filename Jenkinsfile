@@ -41,7 +41,11 @@ pipeline
             {
                 script
                 {
-                    sh "poetry run ruff format --diff  . > ${env.WORKSPACE}/ruff_format.patch"
+                    sh(label: 'Run ruff', script: '''#!/bin/bash
+                                set -exuo pipefail
+                                poetry run ruff format . &&
+                                git diff > ruff_format.patch
+                                ''')
 
                     final def patch = readFile("${env.WORKSPACE}/ruff_format.patch")
 

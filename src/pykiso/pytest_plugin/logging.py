@@ -48,9 +48,7 @@ def pytest_sessionstart(session: Session):
     :param session: the current test session.
     """
     # get pytest's logger as plugin
-    pytest_logger: LoggingPlugin = session.config.pluginmanager.get_plugin(
-        "logging-plugin"
-    )
+    pytest_logger: LoggingPlugin = session.config.pluginmanager.get_plugin("logging-plugin")
     if pytest_logger.log_cli_level is None:
         pytest_logger.log_cli_level = logging.INFO
 
@@ -70,42 +68,22 @@ def pytest_sessionstart(session: Session):
     root_logger = logging.getLogger()
     # get all handlers that were configured by pykiso to retrieve their level
     stream_handler = next(
-        (
-            hdlr
-            for hdlr in root_logger.handlers
-            if type(hdlr) == logging.StreamHandler
-        ),
+        (hdlr for hdlr in root_logger.handlers if type(hdlr) == logging.StreamHandler),
         None,
     )
     file_handler = next(
-        (
-            hdlr
-            for hdlr in root_logger.handlers
-            if type(hdlr) == logging.FileHandler
-        ),
+        (hdlr for hdlr in root_logger.handlers if type(hdlr) == logging.FileHandler),
         None,
     )
-    if (
-        pytest_logger.log_cli_handler.level != logging.NOTSET
-        and stream_handler is not None
-    ):
+    if pytest_logger.log_cli_handler.level != logging.NOTSET and stream_handler is not None:
         pytest_logger.log_cli_level = stream_handler.level
         pytest_logger.log_cli_handler.level = stream_handler.level
         if isinstance(pytest_logger.log_cli_handler.formatter, ColoredLevelFormatter):
-            pytest_logger.log_cli_handler.formatter.add_color_level(
-                logging.INTERNAL_WARNING, "yellow", "light"
-            )
-            pytest_logger.log_cli_handler.formatter.add_color_level(
-                logging.INTERNAL_INFO, "green", "light"
-            )
-            pytest_logger.log_cli_handler.formatter.add_color_level(
-                logging.INTERNAL_DEBUG, "purple", "light"
-            )
+            pytest_logger.log_cli_handler.formatter.add_color_level(logging.INTERNAL_WARNING, "yellow", "light")
+            pytest_logger.log_cli_handler.formatter.add_color_level(logging.INTERNAL_INFO, "green", "light")
+            pytest_logger.log_cli_handler.formatter.add_color_level(logging.INTERNAL_DEBUG, "purple", "light")
 
-    if (
-        pytest_logger.log_file_handler.level != logging.NOTSET
-        and file_handler is not None
-    ):
+    if pytest_logger.log_file_handler.level != logging.NOTSET and file_handler is not None:
         pytest_logger.log_file_handler.level = file_handler.level
         pytest_logger.log_file_level = file_handler.level
 
