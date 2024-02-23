@@ -63,7 +63,7 @@ def pytest_sessionstart(session: Session):
         log_level=logging.getLevelName(pytest_logger.log_cli_level),
         report_type="text",
         # display internal logs at least -vv is provided
-        verbose=(session.config.getoption("verbose") > 2),
+        verbose=(session.config.getoption("verbose") > 1),
     )
     root_logger = logging.getLogger()
     # get all handlers that were configured by pykiso to retrieve their level
