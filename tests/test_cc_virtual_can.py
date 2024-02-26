@@ -1,15 +1,18 @@
-import pytest
+import importlib
 import logging
 import sys
-import importlib
 from unittest import mock
-from pykiso import Message
 
 import can as python_can
-from pykiso.lib.connectors import cc_virtual_can
-from pykiso.lib.connectors.cc_virtual_can import CCVirtualCan
+import pytest
 from can.interfaces.udp_multicast.bus import UdpMulticastBus
+
+from pykiso import Message
+from pykiso.lib.connectors import cc_virtual_can
 from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import can
+from pykiso.lib.connectors.cc_virtual_can import CCVirtualCan
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="virtual can not supported on windows")
 
 
 @pytest.fixture
@@ -42,7 +45,6 @@ def test_import():
 
 
 def test_constructor(mock_vcan_bus):
-
     vcan_inst = CCVirtualCan(
         channel=UdpMulticastBus.DEFAULT_GROUP_IPv4,
         receive_own_messages=False,
@@ -69,7 +71,6 @@ def test_cc_close(
     caplog,
     mock_vcan_bus,
 ):
-
     with caplog.at_level(logging.ERROR, logger="pykiso.lib.connectors.cc_pcan_can.log"):
         with CCVirtualCan() as vcan_inst:
             pass
@@ -96,7 +97,6 @@ def test_cc_open(mock_vcan_bus, caplog):
 
 
 def test_cc_send(mock_vcan_bus):
-
     with CCVirtualCan() as vcan:
         vcan.bus = mock_vcan_bus.Bus
         vcan._cc_send(b"\x10\x36", 0x0A)
@@ -120,7 +120,6 @@ def test_can_recv(mock_vcan_bus):
 
 
 def test_can_recv_invalid(mocker, mock_vcan_bus):
-
     mocker.patch("can.interface.Bus.recv", return_value={"msg": None})
 
     with CCVirtualCan() as vcan:
@@ -131,7 +130,6 @@ def test_can_recv_invalid(mocker, mock_vcan_bus):
 
 
 def test_can_recv_exception(caplog, mock_vcan_bus, mocker):
-
     mocker.patch("can.interface.Bus.recv", side_effect=Exception())
     logging.getLogger("pykiso.lib.connectors.cc_virtual_can.log")
     with CCVirtualCan() as can:
@@ -144,7 +142,6 @@ def test_can_recv_exception(caplog, mock_vcan_bus, mocker):
 
 
 def test_can_recv_error(caplog, mock_vcan_bus, mocker):
-
     mocker.patch("can.interface.Bus.recv", side_effect=python_can.CanError())
     logging.getLogger("pykiso.lib.connectors.cc_virtual_can.log")
     with CCVirtualCan() as can:
