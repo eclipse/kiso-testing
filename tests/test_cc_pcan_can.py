@@ -22,18 +22,9 @@ import pytest
 
 from pykiso import Message
 from pykiso.lib.connectors.cc_pcan_can import cc_pcan_can
-from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import (
-    CCPCanCan,
-    PCANBasic,
-    can,
-)
+from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import CCPCanCan, PCANBasic, can
 from pykiso.lib.connectors.cc_pcan_can.trc_handler import TRCReaderCanFD
-from pykiso.message import (
-    MessageAckType,
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.message import MessageAckType, MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",
@@ -902,6 +893,21 @@ def test_remove_offset():
     assert list_msg[0].timestamp == 20
     assert list_msg[1].timestamp == 25
     assert list_msg[2].timestamp == 30
+
+
+def test_disable_auto_merge(mocker, mock_can_bus, mock_PCANBasic):
+    mock_merge = mocker.patch.object(CCPCanCan, "_merge_trc")
+
+    cc_pcan = CCPCanCan(logging_activated=True, auto_merge=True)
+    cc_pcan.shutdown()
+    mock_merge.assert_called_once()
+
+    mock_merge = mocker.patch.object(CCPCanCan, "_merge_trc")
+
+    cc_pcan = CCPCanCan(logging_activated=True, auto_merge=False)
+    cc_pcan.shutdown()
+    mock_merge.assert_not_called()
+
 
 
 def test_shutdown(mocker, mock_can_bus, mock_PCANBasic):

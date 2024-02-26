@@ -83,6 +83,7 @@ class CCPCanCan(CChannel):
         can_filters: list = None,
         logging_activated: bool = True,
         bus_error_warning_filter: bool = False,
+        auto_merge: bool = True,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -123,6 +124,7 @@ class CCPCanCan(CChannel):
         :param logging_activated: boolean used to disable logfile creation
         :param bus_error_warning_filter: if True filter the PCAN driver warnings
             'Bus error: an error counter' from the logs.
+        :param auto_merge: if True, merge all traces in one file at the end of the program
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -153,6 +155,8 @@ class CCPCanCan(CChannel):
         self.timeout = 1e-6
         self.trc_count = 0
         self._initialize_trace()
+        self.auto_merge = auto_merge
+        self.trace_running = False
 
         if bus_error_warning_filter:
             logging.getLogger("can.pcan").addFilter(PcanFilter())
@@ -209,6 +213,37 @@ class CCPCanCan(CChannel):
             self.raw_pcan_interface = PCANBasic.PCANBasic()
             self._pcan_configure_trace()
 
+    def stop_pcan_trace(self):
+        """
+        Stops the PCAN trace if it is currently running.
+
+        :return: None
+        """
+
+        if not self.trace_running:
+            return
+
+        pcan_channel = getattr(PCANBasic, "PCAN_USBBUS1")
+        self._(
+            pcan_channel,
+            PCANBasic.PCAN_TRACE_STATUS,
+            PCANBasic.PCAN_PARAMETER_OFF,
+        )
+        self.trace_running = False
+
+    def start_pcan_trace(self, trace_file: str | None) -> None:
+        """
+        Start the PCAN trace.
+
+        :param trace_file: The file path to save the trace data. If None, the trace data will not be saved.
+        :type trace_file: str or None
+        """
+        if self.trace_running:
+            return
+        self.trace_path = Path(trace_file) if trace_file else None
+        self._pcan_configure_trace()
+        self.trace_running = True
+
     def _pcan_configure_trace(self) -> None:
         """Configure PCAN dongle to create a trace file.
 
@@ -231,7 +266,7 @@ class CCPCanCan(CChannel):
                 if not Path(self.trace_path).exists():
                     Path(self.trace_path).mkdir(parents=True, exist_ok=True)
                     log.internal_info("Path %s created", self.trace_path)
-                self._pcan_set_value(
+                self._(
                     pcan_channel,
                     PCANBasic.PCAN_TRACE_LOCATION,
                     bytes(self.trace_path),
@@ -243,7 +278,7 @@ class CCPCanCan(CChannel):
 
             if sys.platform != "darwin":
                 log.internal_info("Segmented option of trace file activated.")
-                self._pcan_set_value(
+                self._(
                     pcan_channel,
                     PCANBasic.TRACE_FILE_SEGMENTED,
                     PCANBasic.PCAN_PARAMETER_ON,
@@ -251,7 +286,7 @@ class CCPCanCan(CChannel):
 
                 if self.trace_size != 10:
                     log.internal_info("Trace size set to %d MB.", self.trace_size)
-                    self._pcan_set_value(
+                    self._(
                         pcan_channel,
                         PCANBasic.PCAN_TRACE_SIZE,
                         self.trace_size,
@@ -259,19 +294,20 @@ class CCPCanCan(CChannel):
             else:
                 log.internal_warning("TRACE_FILE_SEGMENTED deactivated for macos!")
 
-            self._pcan_set_value(
+            self._(
                 pcan_channel,
                 PCANBasic.PCAN_TRACE_CONFIGURE,
                 pcan_path_argument,
             )
             log.internal_info("Tracefile configured")
 
-            self._pcan_set_value(
+            self._(
                 pcan_channel,
                 PCANBasic.PCAN_TRACE_STATUS,
                 PCANBasic.PCAN_PARAMETER_ON,
             )
             log.internal_info("Trace activated")
+            self.trace_running = True
             self.trc_count += 1
         except RuntimeError:
             log.error(f"Logging for {self.channel} not activated")
@@ -279,7 +315,7 @@ class CCPCanCan(CChannel):
             log.error(f"Can not create log folder for PCAN logs: {e}")
             log.error(f"Logging for {self.channel} not activated")
 
-    def _pcan_set_value(self, channel, parameter, buffer) -> None:
+    def _(self, channel, parameter, buffer) -> None:
         """Set a value in the PCAN api.
 
         If this is not successful, a RuntimeError is returned, as well as the
@@ -313,6 +349,7 @@ class CCPCanCan(CChannel):
         if self.logging_activated:
             try:
                 result = self.raw_pcan_interface.Uninitialize(PCANBasic.PCAN_NONEBUS)
+                self.trace_running = False
             except Exception as e:
                 log.exception(f"Error in call to Uninitialize: {e}")
             else:
@@ -493,5 +530,5 @@ class CCPCanCan(CChannel):
 
     def shutdown(self) -> None:
         """Destructor method."""
-        if self.logging_activated:
+        if self.logging_activated and self.auto_merge:
             self._merge_trc()
