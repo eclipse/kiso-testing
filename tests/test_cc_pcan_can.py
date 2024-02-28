@@ -22,18 +22,9 @@ import pytest
 
 from pykiso import Message
 from pykiso.lib.connectors.cc_pcan_can import cc_pcan_can
-from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import (
-    CCPCanCan,
-    PCANBasic,
-    can,
-)
+from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import CCPCanCan, PCANBasic, can
 from pykiso.lib.connectors.cc_pcan_can.trc_handler import TRCReaderCanFD
-from pykiso.message import (
-    MessageAckType,
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.message import MessageAckType, MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",
@@ -272,6 +263,12 @@ def test_import():
         importlib.reload(cc_pcan_can)
     sys.modules["can"] = can
     importlib.reload(cc_pcan_can)
+
+
+def test_import_uptime():
+    sys.modules["uptime"] = None
+    importlib.reload(cc_pcan_can)
+    assert cc_pcan_can.boottime_epoch == 0
 
 
 @pytest.mark.parametrize(
