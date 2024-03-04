@@ -238,7 +238,7 @@ def create_auxiliary_fixture(session: Session, aux_alias: str):
     # register the fixture
     aux_func = partial(auxiliary_fixture, aux=aux_alias)
     aux_func.__name__ = aux_alias
-    if pytest.__version__.split(".") < (8, 1, 0):
+    if tuple(pytest.__version__.split(".")) < (8, 1, 0):
         session._fixturemanager._arg2fixturedefs[aux_alias] = [
             FixtureDef(
                 fixturemanager=session._fixturemanager,
