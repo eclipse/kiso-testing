@@ -238,16 +238,28 @@ def create_auxiliary_fixture(session: Session, aux_alias: str):
     # register the fixture
     aux_func = partial(auxiliary_fixture, aux=aux_alias)
     aux_func.__name__ = aux_alias
-    session._fixturemanager._arg2fixturedefs[aux_alias] = [
-        FixtureDef(
-            argname=aux_alias,
-            func=aux_func,
-            scope=auxiliary_scope,
-            fixturemanager=session._fixturemanager,
-            baseid=None,
-            params=None,
-        ),
-    ]
+    if pytest.__version__.split(".") < (8, 1, 0):
+        session._fixturemanager._arg2fixturedefs[aux_alias] = [
+            FixtureDef(
+                fixturemanager=session._fixturemanager,
+                argname=aux_alias,
+                func=aux_func,
+                scope=auxiliary_scope,
+                baseid=None,
+                params=None,
+            ),
+        ]
+    else:
+        session._fixturemanager._arg2fixturedefs[aux_alias] = [
+            FixtureDef(
+                config=session.config,
+                argname=aux_alias,
+                func=aux_func,
+                scope=auxiliary_scope,
+                baseid=None,
+                params=None,
+            ),
+        ]
 
 
 @export
