@@ -34,6 +34,16 @@ try:
 except ImportError as e:
     raise ImportError(f"{e.name} dependency missing, consider installing pykiso with 'pip install pykiso[can]'")
 
+try:
+    # use to avoid timestamp inconsistances between pykiso and python can
+    import uptime
+
+    if uptime.boottime() is None:
+        boottime_epoch = 0
+    else:
+        boottime_epoch = uptime.boottime().timestamp()
+except ImportError:
+    boottime_epoch = 0
 
 from pykiso import CChannel
 
@@ -152,6 +162,7 @@ class CCPCanCan(CChannel):
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
         self.trc_count = 0
+        self.boottime_epoch = boottime_epoch
         self._initialize_trace()
 
         if bus_error_warning_filter:
@@ -358,7 +369,7 @@ class CCPCanCan(CChannel):
             if received_msg is not None:
                 frame_id = received_msg.arbitration_id
                 payload = received_msg.data
-                timestamp = received_msg.timestamp
+                timestamp = received_msg.timestamp - self.boottime_epoch
 
                 log.internal_debug(
                     "received CAN Message: %s, %s, %s",
