@@ -93,6 +93,7 @@ class CCPCanCan(CChannel):
         can_filters: list = None,
         logging_activated: bool = True,
         bus_error_warning_filter: bool = False,
+        merge_trc_logs: bool = True,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -133,6 +134,7 @@ class CCPCanCan(CChannel):
         :param logging_activated: boolean used to disable logfile creation
         :param bus_error_warning_filter: if True filter the PCAN driver warnings
             'Bus error: an error counter' from the logs.
+        :param merge_trc_logs: if True, merge all traces in one file at the end of the program
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -164,6 +166,7 @@ class CCPCanCan(CChannel):
         self.trc_count = 0
         self.boottime_epoch = boottime_epoch
         self._initialize_trace()
+        self.merge_trc_logs = merge_trc_logs
 
         if bus_error_warning_filter:
             logging.getLogger("can.pcan").addFilter(PcanFilter())
@@ -504,5 +507,5 @@ class CCPCanCan(CChannel):
 
     def shutdown(self) -> None:
         """Destructor method."""
-        if self.logging_activated:
+        if self.logging_activated and self.merge_trc_logs:
             self._merge_trc()

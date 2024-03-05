@@ -887,7 +887,18 @@ def test_read_trace_messages_with_old_file_version(mocker, trc_files_v1_1, caplo
                 "Trace merging is not available for trc file version TRCFileVersion.V1_1"
                 in caplog.text
             )
+def test_disable_auto_merge(mocker, mock_can_bus, mock_PCANBasic):
+    mock_merge = mocker.patch.object(CCPCanCan, "_merge_trc")
 
+    cc_pcan = CCPCanCan(logging_activated=True, merge_trc_logs=True)
+    cc_pcan.shutdown()
+    mock_merge.assert_called_once()
+
+    mock_merge = mocker.patch.object(CCPCanCan, "_merge_trc")
+
+    cc_pcan = CCPCanCan(logging_activated=True, merge_trc_logs=False)
+    cc_pcan.shutdown()
+    mock_merge.assert_not_called()
 
 def test_remove_offset():
     class Msg:
