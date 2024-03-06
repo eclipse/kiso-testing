@@ -8,6 +8,22 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Fix pytest verbosity ([#457](https://github.com/eclipse/kiso-testing/issues/457))
+- Fix timestamp inconsistencies between Windows and Linux ([#459](https://github.com/eclipse/kiso-testing/issues/459))
+- Add compatibility with pytest>=8.1 ([#462](https://github.com/eclipse/kiso-testing/issues/462))
+
+### Miscellaneous Tasks
+
+- Bump version and update what's new ([#463](https://github.com/eclipse/kiso-testing/issues/463))
+
+### New Features
+
+- Merge trc into one file can be disabled ([#458](https://github.com/eclipse/kiso-testing/issues/458))
+
+## Version 0.27.0 (2024-02-08)
+
+### Bug Fixes
+
 - Two auxiliaries with the same connector and the config is None ([#438](https://github.com/eclipse/kiso-testing/issues/438))
 - Fix log level level with pytest ([#444](https://github.com/eclipse/kiso-testing/issues/444))
 
