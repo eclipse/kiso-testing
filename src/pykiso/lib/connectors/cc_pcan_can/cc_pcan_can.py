@@ -420,13 +420,14 @@ class CCPCanCan(CChannel):
 
     def _merge_trc(self) -> None:
         """Merge all traces file in one and fix potential inconsistencies."""
-        if isinstance(self.trace_path, str):
-            self.trace_path = Path(self.trace_path)
+
         list_of_traces = []
         first_trace_name = None
         first_trace_path = None
 
         for trace_path, trace_file_names in self.trc_file_names.items():
+            if isinstance(self.trace_path, str):
+                trace_path = Path(trace_path)
             if first_trace_path is None:
                 first_trace_name = trace_file_names[0]
                 first_trace_path = trace_path
