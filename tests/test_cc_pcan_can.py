@@ -818,12 +818,12 @@ def test_extract_header(trc_files):
 def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):
 
     path = trc_files[0].parent
-    cc_pcan = CCPCanCan(trace_path=path)
-    cc_pcan.trc_file_names[path] = []
-    for file in trc_files:
-        cc_pcan.trc_file_names[file.parent].append(file.name)
-
     result_path = trc_files[0].parent / "trc_1.trc"
+    cc_pcan = CCPCanCan(trace_path=path)
+    cc_pcan.trc_file_names[str(path)] = []
+    for file in trc_files:
+        cc_pcan.trc_file_names[str(file.parent)].append(None)
+
     cc_pcan._merge_trc()
 
     with open(result_path, "r") as trc:

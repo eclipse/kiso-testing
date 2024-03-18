@@ -426,7 +426,7 @@ class CCPCanCan(CChannel):
         first_trace_path = None
 
         for trace_path, trace_file_names in self.trc_file_names.items():
-            if isinstance(self.trace_path, str):
+            if isinstance(trace_path, str):
                 trace_path = Path(trace_path)
             if first_trace_path is None:
                 first_trace_name = trace_file_names[0]
