@@ -552,7 +552,7 @@ class CCPCanCan(CChannel):
         )
         self.trace_running = False
 
-    def start_pcan_trace(self, trace_path: str | None = None, trace_size: int = 10) -> None:
+    def start_pcan_trace(self, trace_path: Optional[str] = None, trace_size: int = 10) -> None:
         """Start the PCAN trace, the trace file will be renamed after the pcan trace will be stopped.
 
         :param trace_path: Trace path where the trace should be written if None is given it will use
