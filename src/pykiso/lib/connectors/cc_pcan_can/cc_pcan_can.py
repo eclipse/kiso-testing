@@ -166,7 +166,7 @@ class CCPCanCan(CChannel):
         self.boottime_epoch = boottime_epoch
         self._initialize_trace()
         self.merge_trc_logs = merge_trc_logs
-        self.trc_file_names: dict[Path, str | None] = {}
+        self._trc_file_names: dict[Path, str | None] = {}
         self.trace_running = False
         if bus_error_warning_filter:
             logging.getLogger("can.pcan").addFilter(PcanFilter())
@@ -288,9 +288,9 @@ class CCPCanCan(CChannel):
             self.trace_running = True
             log.internal_info("Trace activated")
             # Add the file name and trace path to rename them later
-            if self.trc_file_names.get(self.trace_path, None) is None:
-                self.trc_file_names[self.trace_path] = []
-            self.trc_file_names[self.trace_path].append(self.trace_name)
+            if self._trc_file_names.get(self.trace_path, None) is None:
+                self._trc_file_names[self.trace_path] = []
+            self._trc_file_names[self.trace_path].append(self.trace_name)
             self.trc_count += 1
         except RuntimeError:
             log.error(f"Logging for {self.channel} not activated")
@@ -425,7 +425,7 @@ class CCPCanCan(CChannel):
         first_trace_name = None
         first_trace_path = None
 
-        for trace_path, trace_file_names in self.trc_file_names.items():
+        for trace_path, trace_file_names in self._trc_file_names.items():
             if isinstance(trace_path, str):
                 trace_path = Path(trace_path)
             if first_trace_path is None:
@@ -520,7 +520,7 @@ class CCPCanCan(CChannel):
 
     def _rename_trc(self):
         """Rename the trace file created if a name has been specified"""
-        for trace_path, trace_file_names in self.trc_file_names.items():
+        for trace_path, trace_file_names in self._trc_file_names.items():
             list_of_traces = sorted(trace_path.glob("*.trc"), key=os.path.getmtime)[-len(trace_file_names) :]
             for index, file_name in enumerate(trace_file_names):
                 if file_name is not None:

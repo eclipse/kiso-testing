@@ -820,9 +820,9 @@ def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):
     path = trc_files[0].parent
     result_path = trc_files[0].parent / "trc_1.trc"
     cc_pcan = CCPCanCan(trace_path=path)
-    cc_pcan.trc_file_names[str(path)] = []
+    cc_pcan._trc_file_names[str(path)] = []
     for file in trc_files:
-        cc_pcan.trc_file_names[str(file.parent)].append(None)
+        cc_pcan._trc_file_names[str(file.parent)].append(None)
 
     cc_pcan._merge_trc()
 
@@ -836,9 +836,9 @@ def test_merge_trc_with_file_name(trc_files, mock_can_bus, mock_PCANBasic):
     trc_files[0] = trc_files[0].parent / "result_file.trc"
 
     cc_pcan = CCPCanCan(trace_path=trc_files[0].parent)
-    cc_pcan.trc_file_names[trc_files[0].parent] = []
+    cc_pcan._trc_file_names[trc_files[0].parent] = []
     for file in trc_files:
-        cc_pcan.trc_file_names[file.parent].append(file.name)
+        cc_pcan._trc_file_names[file.parent].append(file.name)
     result_path = trc_files[0]
     cc_pcan._merge_trc()
 
@@ -852,9 +852,9 @@ def test_merge_trc_with_old_file_version(trc_files_v1_1, mock_can_bus, mock_PCAN
     trc_files_v1_1[0] = trc_files_v1_1[0].parent / "result_file.trc"
 
     cc_pcan = CCPCanCan(trace_path=trc_files_v1_1[0])
-    cc_pcan.trc_file_names[trc_files_v1_1[0].parent] = []
+    cc_pcan._trc_file_names[trc_files_v1_1[0].parent] = []
     for file in trc_files_v1_1:
-        cc_pcan.trc_file_names[file.parent].append(file.name)
+        cc_pcan._trc_file_names[file.parent].append(file.name)
 
     result_path = trc_files_v1_1[0]
     cc_pcan._merge_trc()
@@ -869,11 +869,11 @@ def test_merge_trc_with_multiple_dir(trc_files_different_directory, mock_can_bus
     trc_files_different_directory[0] = trc_files_different_directory[0].parent / "result_file.trc"
 
     cc_pcan = CCPCanCan(trace_path=trc_files_different_directory[0])
-    cc_pcan.trc_file_names[trc_files_different_directory[0].parent] = []
+    cc_pcan._trc_file_names[trc_files_different_directory[0].parent] = []
     for file in trc_files_different_directory:
-        if cc_pcan.trc_file_names.get(file.parent) is None:
-            cc_pcan.trc_file_names[file.parent] = []
-        cc_pcan.trc_file_names[file.parent].append(file.name)
+        if cc_pcan._trc_file_names.get(file.parent) is None:
+            cc_pcan._trc_file_names[file.parent] = []
+        cc_pcan._trc_file_names[file.parent].append(file.name)
     result_path = trc_files_different_directory[0]
     result_path_second_dir = trc_files_different_directory[-1]
 
@@ -1005,9 +1005,9 @@ def test_rename_trace(trc_files, mock_can_bus, mock_PCANBasic):
     # Setup the ccpcan
     cc_pcan = CCPCanCan(trace_path=trc_files[0])
     cc_pcan.merge_trc_logs = False
-    cc_pcan.trc_file_names[trc_files[0].parent] = []
+    cc_pcan._trc_file_names[trc_files[0].parent] = []
     for file in trc_files:
-        cc_pcan.trc_file_names[file.parent].append(file.name)
+        cc_pcan._trc_file_names[file.parent].append(file.name)
 
     cc_pcan._rename_trc()
 
@@ -1033,9 +1033,9 @@ def test_rename_trace_multiple_dir(trc_files_different_directory, mock_can_bus, 
     cc_pcan.merge_trc_logs = False
     # Set the path for all trace
     for file in trc_files_different_directory:
-        if cc_pcan.trc_file_names.get(file.parent) is None:
-            cc_pcan.trc_file_names[file.parent] = []
-        cc_pcan.trc_file_names[file.parent].append(file.name)
+        if cc_pcan._trc_file_names.get(file.parent) is None:
+            cc_pcan._trc_file_names[file.parent] = []
+        cc_pcan._trc_file_names[file.parent].append(file.name)
 
     cc_pcan._rename_trc()
 
