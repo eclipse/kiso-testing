@@ -136,6 +136,7 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         self,
         blocking: bool = True,
         timeout_in_s: float = None,
+        receive_timestamp: bool = False,
     ) -> Optional[bytes]:
         """Receive a raw message.
 
@@ -167,9 +168,12 @@ class CommunicationAuxiliary(AuxiliaryInterface):
 
         msg = response.get("msg")
         remote_id = response.get("remote_id")
+        timestamp = response.get("timestamp")
 
         # stay with the old return type to not making a breaking change
-        if remote_id is not None:
+        if receive_timestamp:
+            return (msg, remote_id, timestamp)
+        elif remote_id and not receive_timestamp:
             return (msg, remote_id)
         return msg
 
