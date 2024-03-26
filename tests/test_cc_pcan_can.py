@@ -185,6 +185,33 @@ def trc_files(tmp_path):
 
 
 @pytest.fixture
+def trc_files_different_directory(tmp_path):
+    """
+    create fake trc files at two temporary directories
+    """
+    traces = [
+        trc_data_start_1 + trc_data_end,
+        trc_data_start_2 + trc_data_end,
+        trc_data_start_3 + trc_data_end,
+    ]
+    trc_folder = Path(tmp_path / "traces")
+    trc_folder.mkdir(parents=True, exist_ok=True)
+    trc_second_folder = Path(tmp_path / "traces_second_repo")
+    trc_second_folder.mkdir(parents=True, exist_ok=True)
+    file_paths = [
+        trc_folder / "trc_1.trc",
+        trc_folder / "trc_2.trc",
+        trc_second_folder / "trc_3.trc",
+    ]
+    for idx, file in enumerate(file_paths):
+        with open(file, "w+") as f:
+            f.write(traces[idx])
+            # Sleep to avoid failure on integration tests
+        os.utime(file, (1602179630 + idx * 2, 1602179630 + idx * 2))
+    return file_paths
+
+
+@pytest.fixture
 def trc_files_v1_1(tmp_path):
     """
     create fake trc files at a temporary directory
@@ -322,9 +349,7 @@ def test_import_uptime():
                 "data_sjw": 3,
                 "is_extended_id": True,
                 "remote_id": 0x10,
-                "can_filters": [
-                    {"can_id": 0x507, "can_mask": 0x7FF, "extended": False}
-                ],
+                "can_filters": [{"can_id": 0x507, "can_mask": 0x7FF, "extended": False}],
                 "logging_activated": False,
                 "bus_error_warning_filter": True,
             },
@@ -348,9 +373,7 @@ def test_import_uptime():
                 "data_sjw": 3,
                 "is_extended_id": True,
                 "remote_id": 0x10,
-                "can_filters": [
-                    {"can_id": 0x507, "can_mask": 0x7FF, "extended": False}
-                ],
+                "can_filters": [{"can_id": 0x507, "can_mask": 0x7FF, "extended": False}],
                 "logging_activated": False,
                 "bus_error_warning_filter": True,
             },
@@ -432,9 +455,7 @@ def test_cc_open(
     mock_PCANBasic,
 ):
     can_inst = CCPCanCan(logging_activated=logging_requested)
-    with mock.patch.object(
-        can_inst, "_pcan_configure_trace"
-    ) as mock_pcan_configure_trace:
+    with mock.patch.object(can_inst, "_pcan_configure_trace") as mock_pcan_configure_trace:
         can_inst._cc_open()
 
     assert isinstance(can_inst.bus, mock_can_bus.Bus) == True
@@ -454,9 +475,7 @@ def test_macos_instantiation(mock_can_bus, mock_PCANBasic, mocker, caplog):
     with caplog.at_level(logging.INTERNAL_DEBUG):
         connector._cc_open()
     # Validation of the warning popped
-    assert "TRACE_FILE_SEGMENTED deactivated for macos!" in [
-        record.getMessage() for record in caplog.records
-    ]
+    assert "TRACE_FILE_SEGMENTED deactivated for macos!" in [record.getMessage() for record in caplog.records]
 
 
 @pytest.mark.parametrize(
@@ -533,14 +552,8 @@ def test_pcan_configure_trace(
     with mock.patch.object(pathlib.Path, "mkdir", side_effect=os_makedirs_error):
         with mock.patch.object(can_inst, "_pcan_set_value", side_effect=side_effects):
             can_inst._pcan_configure_trace()
-            info_logs = [
-                record
-                for record in caplog.records
-                if record.levelname == "INTERNAL_INFO"
-            ]
-            error_logs = [
-                record for record in caplog.records if record.levelname == "ERROR"
-            ]
+            info_logs = [record for record in caplog.records if record.levelname == "INTERNAL_INFO"]
+            error_logs = [record for record in caplog.records if record.levelname == "ERROR"]
             assert len(info_logs) == logging_info_count
             assert len(error_logs) == logging_error_count
 
@@ -698,9 +711,7 @@ def test_can_recv(
     expected_type,
     mock_PCANBasic,
 ):
-    mock_can_bus.Bus.recv.return_value = python_can.Message(
-        data=raw_data, arbitration_id=can_id, timestamp=timestamp
-    )
+    mock_can_bus.Bus.recv.return_value = python_can.Message(data=raw_data, arbitration_id=can_id, timestamp=timestamp)
 
     with CCPCanCan() as can:
         response = can._cc_receive(timeout)
@@ -750,9 +761,7 @@ def test_can_recv_exception(caplog, mocker, mock_can_bus, mock_PCANBasic):
 
 def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBasic):
 
-    mocker.patch(
-        "can.interface.Bus.recv", side_effect=python_can.CanError("Invalid Message")
-    )
+    mocker.patch("can.interface.Bus.recv", side_effect=python_can.CanError("Invalid Message"))
 
     logging.getLogger("pykiso.lib.connectors.cc_pcan_can.log")
 
@@ -763,9 +772,7 @@ def test_can_recv_can_error_exception(caplog, mocker, mock_can_bus, mock_PCANBas
 
     assert response["msg"] is None
     assert response.get("remote_id") is None
-    assert (
-        "encountered CAN error while receiving message: Invalid Message" in caplog.text
-    )
+    assert "encountered CAN error while receiving message: Invalid Message" in caplog.text
 
 
 def test_extract_header(trc_files):
@@ -811,10 +818,12 @@ def test_extract_header(trc_files):
 def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):
 
     path = trc_files[0].parent
-    cc_pcan = CCPCanCan(trace_path=path)
-    cc_pcan.trc_count = 3
-
     result_path = trc_files[0].parent / "trc_1.trc"
+    cc_pcan = CCPCanCan(trace_path=path)
+    cc_pcan._trc_file_names[str(path)] = []
+    for file in trc_files:
+        cc_pcan._trc_file_names[str(file.parent)].append(None)
+
     cc_pcan._merge_trc()
 
     with open(result_path, "r") as trc:
@@ -824,13 +833,13 @@ def test_merge_trc(trc_files, mock_can_bus, mock_PCANBasic):
 
 
 def test_merge_trc_with_file_name(trc_files, mock_can_bus, mock_PCANBasic):
+    trc_files[0] = trc_files[0].parent / "result_file.trc"
 
-    path = trc_files[0].parent / "result_file.trc"
-
-    cc_pcan = CCPCanCan(trace_path=path)
-    cc_pcan.trc_count = 3
-
-    result_path = path
+    cc_pcan = CCPCanCan(trace_path=trc_files[0].parent)
+    cc_pcan._trc_file_names[trc_files[0].parent] = []
+    for file in trc_files:
+        cc_pcan._trc_file_names[file.parent].append(file.name)
+    result_path = trc_files[0]
     cc_pcan._merge_trc()
 
     with open(result_path, "r") as trc:
@@ -840,18 +849,40 @@ def test_merge_trc_with_file_name(trc_files, mock_can_bus, mock_PCANBasic):
 
 
 def test_merge_trc_with_old_file_version(trc_files_v1_1, mock_can_bus, mock_PCANBasic):
-    path = trc_files_v1_1[0].parent / "result_file.trc"
+    trc_files_v1_1[0] = trc_files_v1_1[0].parent / "result_file.trc"
 
-    cc_pcan = CCPCanCan(trace_path=path)
-    cc_pcan.trc_count = 3
+    cc_pcan = CCPCanCan(trace_path=trc_files_v1_1[0])
+    cc_pcan._trc_file_names[trc_files_v1_1[0].parent] = []
+    for file in trc_files_v1_1:
+        cc_pcan._trc_file_names[file.parent].append(file.name)
 
-    result_path = path
+    result_path = trc_files_v1_1[0]
     cc_pcan._merge_trc()
 
     with open(result_path, "r") as trc:
         result = trc.read()
 
     assert trc_data_start_4 + trc_data_end == result
+
+
+def test_merge_trc_with_multiple_dir(trc_files_different_directory, mock_can_bus, mock_PCANBasic):
+    trc_files_different_directory[0] = trc_files_different_directory[0].parent / "result_file.trc"
+
+    cc_pcan = CCPCanCan(trace_path=trc_files_different_directory[0])
+    cc_pcan._trc_file_names[trc_files_different_directory[0].parent] = []
+    for file in trc_files_different_directory:
+        if cc_pcan._trc_file_names.get(file.parent) is None:
+            cc_pcan._trc_file_names[file.parent] = []
+        cc_pcan._trc_file_names[file.parent].append(file.name)
+    result_path = trc_files_different_directory[0]
+    result_path_second_dir = trc_files_different_directory[-1]
+
+    cc_pcan._merge_trc()
+
+    # Check if all the trace from the different repo has been merged in one file
+    with open(result_path, "r") as trc:
+        result = trc.read()
+    assert trc_merge_data == result
 
 
 def test_read_trace_messages(mocker, trc_files, caplog):
@@ -883,22 +914,26 @@ def test_read_trace_messages_with_old_file_version(mocker, trc_files_v1_1, caplo
     with pytest.raises(ValueError):
         with caplog.at_level(logging.INTERNAL_WARNING):
             result = cc_pcan._read_trace_messages(trc_files_v1_1, trc_files_v1_1[0])
-            assert (
-                "Trace merging is not available for trc file version TRCFileVersion.V1_1"
-                in caplog.text
-            )
+            assert "Trace merging is not available for trc file version TRCFileVersion.V1_1" in caplog.text
+
+
 def test_disable_auto_merge(mocker, mock_can_bus, mock_PCANBasic):
     mock_merge = mocker.patch.object(CCPCanCan, "_merge_trc")
+    mock_rename = mocker.patch.object(CCPCanCan, "_rename_trc")
 
     cc_pcan = CCPCanCan(logging_activated=True, merge_trc_logs=True)
     cc_pcan.shutdown()
     mock_merge.assert_called_once()
+    mock_rename.assert_not_called()
 
-    mock_merge = mocker.patch.object(CCPCanCan, "_merge_trc")
+    mock_merge.reset_mock()
+    mock_rename.reset_mock()
 
     cc_pcan = CCPCanCan(logging_activated=True, merge_trc_logs=False)
     cc_pcan.shutdown()
     mock_merge.assert_not_called()
+    mock_rename.called_once()
+
 
 def test_remove_offset():
     class Msg:
@@ -923,3 +958,95 @@ def test_shutdown(mocker, mock_can_bus, mock_PCANBasic):
     cc_pcan.logging_activated = True
     cc_pcan.shutdown()
     mock_merge.assert_called_once()
+
+
+def test_stop_pcan_trace(mocker):
+    cc_pcan = CCPCanCan()
+    mock_pcan_set_value = mocker.patch.object(CCPCanCan, "_pcan_set_value")
+    cc_pcan.trace_running = True
+
+    cc_pcan.stop_pcan_trace()
+
+    mock_pcan_set_value.assert_called_once()
+    assert cc_pcan.trace_running is False
+
+
+def test_start_pcan_trace(mocker):
+    cc_pcan = CCPCanCan()
+    mock_init_trace = mocker.patch.object(CCPCanCan, "_initialize_trace")
+    mock_config_trace = mocker.patch.object(CCPCanCan, "_pcan_configure_trace")
+
+    cc_pcan.start_pcan_trace()
+
+    mock_init_trace.assert_called_once()
+    mock_config_trace.assert_called_once()
+
+
+def test_stop_pcan_trace_already_stopped(caplog):
+    cc_pcan = CCPCanCan()
+    with caplog.at_level(logging.WARNING):
+        cc_pcan.stop_pcan_trace()
+    assert "Trace is already stopped" in caplog.text
+
+
+def test_start_pcan_trace_already_started(caplog):
+    cc_pcan = CCPCanCan()
+    cc_pcan.trace_running = True
+    with caplog.at_level(logging.WARNING):
+        cc_pcan.start_pcan_trace()
+    assert "Trace is already started" in caplog.text
+
+
+def test_rename_trace(trc_files, mock_can_bus, mock_PCANBasic):
+    # Set the name that should be expected after the rename
+    trace_name = ["first_trace_renamed", "second_trace_renamed", "third_trace_renamed"]
+    for index, file_name in enumerate(trace_name):
+        trc_files[index] = trc_files[index].parent / file_name
+    # Setup the ccpcan
+    cc_pcan = CCPCanCan(trace_path=trc_files[0])
+    cc_pcan.merge_trc_logs = False
+    cc_pcan._trc_file_names[trc_files[0].parent] = []
+    for file in trc_files:
+        cc_pcan._trc_file_names[file.parent].append(file.name)
+
+    cc_pcan._rename_trc()
+
+    for trace, expected_result in zip(
+        trc_files,
+        [
+            trc_data_start_1 + trc_data_end,
+            trc_data_start_2 + trc_data_end,
+            trc_data_start_3 + trc_data_end,
+        ],
+    ):
+        with open(trace, "r") as trc:
+            expected_result = trc.read()
+
+
+def test_rename_trace_multiple_dir(trc_files_different_directory, mock_can_bus, mock_PCANBasic):
+    # Set the new the path that should be expected after the rename
+    trace_name = ["first_trace_renamed", "second_trace_renamed", "third_trace_renamed"]
+    for index, file_name in enumerate(trace_name):
+        trc_files_different_directory[index] = trc_files_different_directory[index].parent / file_name
+    # Setup the ccpcan
+    cc_pcan = CCPCanCan(trace_path=trc_files_different_directory[0])
+    cc_pcan.merge_trc_logs = False
+    # Set the path for all trace
+    for file in trc_files_different_directory:
+        if cc_pcan._trc_file_names.get(file.parent) is None:
+            cc_pcan._trc_file_names[file.parent] = []
+        cc_pcan._trc_file_names[file.parent].append(file.name)
+
+    cc_pcan._rename_trc()
+
+    # Read the trace file from the path with the rename trace to see if the file has been correctly renamed
+    for trace, expected_result in zip(
+        trc_files_different_directory,
+        [
+            trc_data_start_1 + trc_data_end,
+            trc_data_start_2 + trc_data_end,
+            trc_data_start_3 + trc_data_end,
+        ],
+    ):
+        with open(trace, "r") as trc:
+            expected_result = trc.read()
