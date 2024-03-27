@@ -27,7 +27,7 @@ import logging
 import queue
 import threading
 from contextlib import ContextDecorator
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 from pykiso import CChannel, Message
 from pykiso.auxiliary import AuxiliaryInterface, close_connector, open_connector
@@ -137,11 +137,12 @@ class CommunicationAuxiliary(AuxiliaryInterface):
         blocking: bool = True,
         timeout_in_s: float = None,
         receive_timestamp: bool = False,
-    ) -> Optional[bytes]:
+    ) -> Optional[bytes | Tuple[bytes, int] | Tuple[bytes, int, float]]:
         """Receive a raw message.
 
         :param blocking: wait for message till timeout elapses?
         :param timeout_in_s: maximum time in second to wait for a response
+        :param receive_timestamp: True if timestamp should be returned, False otherwise
 
         :returns: raw message
         """
