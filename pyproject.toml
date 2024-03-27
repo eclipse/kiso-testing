@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pykiso"
-version = "0.27.1"
+version = "0.28.0"
 description = "Embedded integration testing framework."
 authors = ["Sebastian Fischer <sebastian.fischer@de.bosch.com>"]
 license = "Eclipse Public License - v 2.0"
@@ -8,19 +8,12 @@ readme = "README.md"
 homepage = "https://pypi.org/project/pykiso/"
 repository = "https://github.com/eclipse/kiso-testing"
 documentation = "https://kiso-testing.readthedocs.io/en/latest/"
-packages = [
-    { include = "pykiso", from = "src" }
-]
+packages = [{ include = "pykiso", from = "src" }]
 include = [
     "src/pykiso/test_result/templates/report_template.html.j2",
     "src/pykiso/test_result/templates/report_template.css",
 ]
-keywords = [
-    "testing",
-    "integration testing",
-    "framework",
-    "testing framework",
-]
+keywords = ["testing", "integration testing", "framework", "testing framework"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -48,24 +41,24 @@ click = ">=7.0.0,<9.0.0"
 tabulate = ">=0.8.9,<0.10.0"
 Jinja2 = ">=2.11.0,<4.0.0"
 MarkupSafe = "~2.0.1" # Allow support for Jinja2 between 2.11 < x < 3
-importlib-metadata = {version = ">=4.12,<7.0", python = "<3.8"}
-pyreadline3 = {version = "^3.4.1", python = "^3.5"}
+importlib-metadata = { version = ">=4.12,<7.0", python = "<3.8" }
+pyreadline3 = { version = "^3.4.1", python = "^3.5" }
 hidapi = ">=0.12,<0.15"
-rich = {version = "^13.2.0", optional = true}
-requests = {version = "^2.28.2", optional = true}
-isort = {version = ">=5.11.4",optional = true}
-black = {version = "*",optional = true}
-pylink-square = {version = "~1.2.0", optional = true}
-pykiso-python-uds = {version = "~3.2.0", optional = true}
-pyserial = {version = "^3.0", optional = true}
-PyVISA = {version = "^1.12.0", optional = true}
-PyVISA-py = {version = "~0.5.3", optional = true}
-python-can = {version = "^4.2.1", optional = true, extras = ["pcan,vector"]}
+rich = { version = "^13.2.0", optional = true }
+requests = { version = "^2.28.2", optional = true }
+isort = { version = ">=5.11.4", optional = true }
+black = { version = "*", optional = true }
+pylink-square = { version = "~1.2.0", optional = true }
+pykiso-python-uds = { version = "~3.2.0", optional = true }
+pyserial = { version = "^3.0", optional = true }
+PyVISA = { version = "^1.12.0", optional = true }
+PyVISA-py = { version = "~0.5.3", optional = true }
+python-can = { version = "^4.2.1", optional = true, extras = ["pcan,vector"] }
 defusedxml = "^0.7.1"
 packaging = "*"
-grpcio = {version = "^1.0.0", optional = true}
-protobuf = {version = "^4.24.2", optional = true}
-cantools = {version = "^39.4.2", python = ">=3.8,<4.0"}
+grpcio = { version = "^1.0.0", optional = true }
+protobuf = { version = "^4.24.2", optional = true }
+cantools = { version = "^39.4.2", python = ">=3.8,<4.0" }
 
 [tool.poetry.extras]
 plugins = [
@@ -76,32 +69,13 @@ plugins = [
     "PyVISA",
     "PyVISA-py",
 ]
-can = [
-    "pykiso-python-uds",
-    "python-can",
-]
-debugger = [
-    "pylink-square",
-]
-instrument = [
-    "PyVISA",
-    "PyVISA-py",
-]
-serial = [
-    "pyserial",
-]
-grpc = [
-    "grpcio",
-    "protobuf",
-]
-testrail = [
-    "rich",
-    "requests",
-]
-pykitest = [
-    "black",
-    "isort",
-]
+can = ["pykiso-python-uds", "python-can"]
+debugger = ["pylink-square"]
+instrument = ["PyVISA", "PyVISA-py"]
+serial = ["pyserial"]
+grpc = ["grpcio", "protobuf"]
+testrail = ["rich", "requests"]
+pykitest = ["black", "isort"]
 all = [
     "pylink-square",
     "pykiso-python-uds",
@@ -144,9 +118,7 @@ testrail = "pykiso.tool.testrail.cli:cli_testrail"
 pytest11 = { pytest_kiso = "pykiso.pytest_plugin" }
 
 [tool.pytest.ini_options]
-testpaths = [
-    "./tests"
-]
+testpaths = ["./tests"]
 addopts = """\
     --verbose \
     --log-level=DEBUG \
@@ -171,7 +143,12 @@ omit = [
 ]
 
 [tool.coverage.report]
-exclude_lines = ["pass", "def __repr__" ,"pragma: no cover","if TYPE_CHECKING:"]
+exclude_lines = [
+    "pass",
+    "def __repr__",
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -180,4 +157,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff]
 # Linelength according to PEP 8.
 line-length = 120
-exclude = ['examples', 'tests','tasks.py']
+exclude = ['examples', 'tests', 'tasks.py']
