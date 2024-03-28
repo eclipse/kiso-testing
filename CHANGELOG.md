@@ -6,6 +6,14 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### New Features
+
+- Add start stop can trace ([#465](https://github.com/eclipse/kiso-testing/issues/465))
+- Com aux able to receive timestamps ([#466](https://github.com/eclipse/kiso-testing/issues/466))
+- Make release 0.28.0 ([#467](https://github.com/eclipse/kiso-testing/issues/467))
+
+## Version 0.27.1 (2024-03-06)
+
 ### Bug Fixes
 
 - Fix pytest verbosity ([#457](https://github.com/eclipse/kiso-testing/issues/457))
