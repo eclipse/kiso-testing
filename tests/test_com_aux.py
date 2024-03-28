@@ -12,10 +12,7 @@ import logging
 import pytest
 
 from pykiso import Message
-from pykiso.lib.auxiliaries.communication_auxiliary import (
-    CommunicationAuxiliary,
-    queue,
-)
+from pykiso.lib.auxiliaries.communication_auxiliary import CommunicationAuxiliary, queue
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
 
@@ -97,17 +94,46 @@ def test_com_aux_receive_messaging_without_contextmanager(caplog, com_aux_inst, 
     com_aux_inst.delete_instance()
 
 
+def test_com_aux_receive_with_id_messaging_without_contextmanager(caplog, com_aux_inst, mocker):
+    msg = {"remote_id": 1, "msg": "test"}
+    mocker.patch.object(com_aux_inst.channel, "_cc_receive", return_value=msg)
+
+    com_aux_inst.create_instance()
+
+    payload, remote_id = com_aux_inst.receive_message()
+
+    assert payload == msg.get("msg")
+    assert remote_id== msg.get("remote_id")
+    com_aux_inst.delete_instance()
+
+
+def test_com_aux_receive_with_timestamp_messaging_without_contextmanager(caplog, com_aux_inst, mocker):
+    msg = {"timestamp": 1005, "msg": "test"}
+    mocker.patch.object(com_aux_inst.channel, "_cc_receive", return_value=msg)
+
+    com_aux_inst.create_instance()
+
+    payload, remote_id, timestamp = com_aux_inst.receive_message(receive_timestamp=True)
+
+    assert payload == msg["msg"]
+    assert timestamp == msg["timestamp"]
+    assert remote_id == None
+    com_aux_inst.delete_instance()
+
+
 def test_com_aux_receive_full_messaging_with_contextmanager(
     caplog, com_aux_inst, mocker
 ):
-    msg = {"id": 1, "msg": "test"}
+    msg = {"remote_id": 1, "msg": "test", "timestamp": 52265}
     mocker.patch.object(com_aux_inst.channel, "_cc_receive", return_value=msg)
     com_aux_inst.create_instance()
 
     with com_aux_inst.collect_messages():
-        ret = com_aux_inst.receive_message()
+        payload, remote_id, timestamp = com_aux_inst.receive_message(receive_timestamp=True)
 
-    assert ret == msg["msg"]
+    assert payload == msg["msg"]
+    assert remote_id == msg["remote_id"]
+    assert timestamp == msg["timestamp"]
     com_aux_inst.delete_instance()
 
 
