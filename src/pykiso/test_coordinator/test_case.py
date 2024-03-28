@@ -24,7 +24,10 @@ from __future__ import annotations
 
 import functools
 import logging
+import sys
 import unittest
+from contextlib import contextmanager
+from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
 import pykiso.test_result.assert_step_report as step_report
@@ -107,6 +110,37 @@ class BasicTest(unittest.TestCase):
     def tearDown(self) -> None:
         """Closure hook method to execute code after each test method."""
         pass
+
+    @contextmanager
+    def check(self):
+        """
+        Context manager to perform non-critical assertions, i.e. assertions that
+        will appear in the test cases's result but won't stop the test case's execution.
+        """
+
+        def _check_wrapper(assert_func):
+            def wrapper(*args, **kwargs):
+                try:
+                    return assert_func(*args, **kwargs)
+                except AssertionError:
+                    exc_info = sys.exc_info()
+                    self._outcome.errors.append((self, exc_info))
+
+            return wrapper
+
+        try:
+            assert_methods = {
+                method_name: method
+                for method_name, method in self.__dict__.items()
+                if callable(method) and method_name.startswith("assert")
+            }
+            original_assert_methods = deepcopy(assert_methods)
+            for method_name, method in assert_methods.items():
+                setattr(self, method_name, _check_wrapper(method))
+            yield
+        finally:
+            for method_name, method in assert_methods.items():
+                setattr(self, method_name, original_assert_methods[method_name])
 
 
 class RemoteTest(BasicTest):
