@@ -102,14 +102,18 @@ class TestBannerTestResult:
         return BannerTestResult(sys.stderr, True, 1)
 
     @pytest.mark.parametrize(
-        "error,result_expected", [((Exception), True), (None, False)]
+        "error, result_expected",
+        [
+            ((ValueError, None, None), True),
+            (None, False),
+        ],
     )
     def test_addSubTest(
         self, mocker, banner_test_result_instance, error, result_expected
     ):
         add_subTest_mock = mocker.patch("unittest.result.TestResult.addSubTest")
         test_mock = mocker.patch("pykiso.test_coordinator.test_case.BasicTest")
-        subtest_mock = mocker.patch("unittest.case._SubTest")
+        subtest_mock = mocker.patch("unittest.case._SubTest", failureException=AssertionError)
 
         banner_test_result_instance.addSubTest(test_mock, subtest_mock, error)
 

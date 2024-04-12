@@ -45,6 +45,8 @@ class TestInfo(xmlrunner.result._TestInfo):
     Used by XmlTestResult
     """
 
+    __test__ = False
+
     def __init__(
         self,
         test_result: xmlrunner.runner._XMLTestResult,

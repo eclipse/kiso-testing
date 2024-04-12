@@ -75,45 +75,41 @@ def test_deactivate_all_loggers(caplog):
     assert "All loggers are activated" in caplog.text
 
 
-class TestLogger(logging.Logger):
+class DummyLogger(logging.Logger):
     def __init__(self, name: str, level=0) -> None:
         super().__init__(name, level)
         self.addHandler(logging.StreamHandler())
 
 
 def test_import_object(mocker):
-    import_module_mock = mocker.patch("importlib.import_module", return_value="module")
-    get_attr_mock = mocker.patch(
-        "pykiso.logging_initializer.getattr", return_value=TestLogger
-    )
+    mock_module = mocker.MagicMock(some_object=DummyLogger)
+    import_module_mock = mocker.patch("importlib.import_module", return_value=mock_module)
 
-    object = logging_initializer.import_object("test.path.object")
+    object = logging_initializer.import_object("test.path.some_object")
     no_path_object = logging_initializer.import_object(None)
 
     assert no_path_object is None
-    assert object == TestLogger
+    assert object == DummyLogger
     import_module_mock.assert_called_once_with("test.path")
-    get_attr_mock.assert_called_once_with("module", "object")
 
 
 def test_import_object_error(mocker):
-    import_module_mock = mocker.patch("importlib.import_module", return_value="module")
-    get_attr_mock = mocker.patch(
-        "pykiso.logging_initializer.getattr", return_value=logging.Manager
-    )
+    # case where the imported object is not a Logger subclass
+    mock_module = mocker.MagicMock(some_object=type(None))
+    import_module_mock = mocker.patch("importlib.import_module", return_value=mock_module)
+
     with pytest.raises(TypeError):
-        logging_initializer.import_object("test.path.object")
+        logging_initializer.import_object("test.path.some_object")
 
     import_module_mock.assert_called_once_with("test.path")
-    get_attr_mock.assert_called_once_with("module", "object")
 
 
 def test_remove_handler_from_logger():
-    TestLogger.__init__ = logging_initializer.remove_handler_from_logger(
-        TestLogger.__init__
+    DummyLogger.__init__ = logging_initializer.remove_handler_from_logger(
+        DummyLogger.__init__
     )
 
-    log = TestLogger("test")
+    log = DummyLogger("test")
 
     assert log.handlers == []
 
