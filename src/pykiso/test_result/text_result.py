@@ -153,7 +153,7 @@ class BannerTestResult(TextTestResult):
         if isinstance(text, str):
             text = text.split("\n")
         if isinstance(text, list):
-            text = "\n".join(f"{sym} {line: <{width-self.BANNER_CHAR_WIDTH}} {sym}" for line in text)
+            text = "\n".join(f"{sym} {line: <{width-self.BANNER_CHAR_WIDTH}} {sym}" for line in text)  # noqa: E226
         banner = f"{line}\n{text}\n{line}\n"
         return banner
 
@@ -169,6 +169,30 @@ class BannerTestResult(TextTestResult):
                 doc += "\n" + textwrap.fill(line.strip(), width=self.width - self.BANNER_CHAR_WIDTH)
         return doc
 
+    def print_skipped(self, test: Union[BasicTest, BaseTestSuite]) -> None:
+        """Print a banner for a skipped test with the reason why
+        it was skipped.
+
+        :param test: the running testcase
+        """
+        # gather test module, test class, test method and test description
+        module_name = test.__module__
+        test_name = str(test)
+        top_str = "SKIPPED TEST: "
+        is_skipped = True
+        if len(module_name + test_name) < self.width - len(top_str):
+            test_name = f"{module_name}.{test_name}"
+        else:
+            test_name += f"\nmodule: {module_name}"
+        reason = f"Reason: {test.__unittest_skip_why__}"
+        # create and print test start banner
+        top_str += f"{test_name}\n{reason}"
+        top_banner = self._banner(top_str)
+        if is_skipped:
+            top_banner += "\n"
+        self.stream.write(top_banner)
+        self.stream.flush()
+
     def startTest(self, test: Union[BasicTest, BaseTestSuite]) -> None:
         """Print a banner containing the test information and the test
         method docstring when starting a test case.
@@ -182,25 +206,15 @@ class BannerTestResult(TextTestResult):
         test_name = str(test)
         addendum = ""
         doc = self.getDescription(test).rstrip()
-        # verify if the test case is skipped
-        is_skipped = False
-        if getattr(test, "__unittest_skip__", False):
-            # in case of an entirely skipped test class only the top
-            # banner is printed
-            top_str = "SKIPPED TEST: "
-            addendum += f"\nReason: {test.__unittest_skip_why__}"
-            is_skipped = True
-        else:
-            top_str = "RUNNING TEST: "
+        top_str = "RUNNING TEST: "
         if len(module_name + test_name) < self.width - len(top_str):
             test_name = f"{module_name}.{test_name}"
         else:
             addendum += f"\nmodule: {module_name}"
-        # create and print test start banner
+        # create start banner
         top_str += f"{test_name}{addendum}{doc}"
         top_banner = self._banner(top_str)
-        if is_skipped:
-            top_banner += "\n"
+        # print it
         self.stream.write(top_banner)
         self.stream.flush()
         # start monitoring test duration
@@ -211,17 +225,23 @@ class BannerTestResult(TextTestResult):
 
         :param test: terminated testcase
         """
+        # print a banner indicating that the test was skipped
+        # this needs to be done here as startTest is not called for a skipped test with python>=3.12
         if getattr(test, "__unittest_skip__", False):
+            self.print_skipped(test)
             return super().stopTest(test)
+
         test.stop_time = time.time()
         test.elapsed_time = test.stop_time - test.start_time
         result = "FAILED" if self.error_occurred else "PASSED"
         bot_str = f"END OF TEST: {test}"
-        result_str = f"  ->  {result} in {test.elapsed_time:.3f}s"
+        result_str = f"  ->  {result} in {test.elapsed_time:.3f}s"  # noqa: E221,E222,E231
+
         if len(bot_str + result_str) < self.width - self.BANNER_CHAR_WIDTH:
             bot_str += result_str
         else:
             bot_str += "\n" + result_str
+
         bot_banner = self._banner(bot_str) + "\n"
         self.stream.write(bot_banner)
         self.stream.flush()

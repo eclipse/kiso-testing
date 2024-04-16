@@ -21,7 +21,6 @@ from pykiso.auxiliary import (
     queue,
     threading,
 )
-from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface
 
 
 @pytest.fixture
@@ -40,7 +39,7 @@ def aux_inst(mocker, cchannel_inst):
 
 @pytest.fixture
 def aux_inst_with_channel(mocker, cchannel_inst):
-    class MockDtAux(DTAuxiliaryInterface):
+    class MockDtAux(AuxiliaryInterface):
         def __init__(self, *arg, **kwargs):
             super().__init__(name="aux")
             self.channel = cchannel_inst

@@ -29,6 +29,8 @@ class PykisoError(Exception):
 class TestCollectionError(PykisoError):
     """Collection of test cases by the TestLoader failed."""
 
+    __test__ = False
+
     def __init__(self, test_suite_dir: Union[str, List[str]]) -> None:
         """Initialize attributes.
 

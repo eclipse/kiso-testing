@@ -932,7 +932,7 @@ def test_disable_auto_merge(mocker, mock_can_bus, mock_PCANBasic):
     cc_pcan = CCPCanCan(logging_activated=True, merge_trc_logs=False)
     cc_pcan.shutdown()
     mock_merge.assert_not_called()
-    mock_rename.called_once()
+    mock_rename.assert_called_once()
 
 
 def test_remove_offset():

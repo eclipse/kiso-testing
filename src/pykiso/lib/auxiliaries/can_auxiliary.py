@@ -26,15 +26,15 @@ from queue import Empty, Queue
 from typing import Any, Optional
 
 from pykiso import Message
+from pykiso.auxiliary import AuxiliaryInterface, close_connector, open_connector
 from pykiso.can_message import CanMessage
 from pykiso.can_parser import CanMessageParser
 from pykiso.connector import CChannel
-from pykiso.interfaces.dt_auxiliary import DTAuxiliaryInterface, close_connector, open_connector
 
 log = logging.getLogger(__name__)
 
 
-class CanAuxiliary(DTAuxiliaryInterface):
+class CanAuxiliary(AuxiliaryInterface):
     """Auxiliary is used for reading and writing can messages defined in dbc file"""
 
     def __init__(self, com: CChannel, dbc_file: str, **kwargs):
