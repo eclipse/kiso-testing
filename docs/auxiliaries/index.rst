@@ -12,7 +12,6 @@ Existing Auxiliaries
     communication_auxiliary
     dut_auxiliary
     instrument_control_auxiliary
-    mp_proxy_auxiliary
     proxy_auxiliary
     record_auxiliary
     simulated_auxiliary

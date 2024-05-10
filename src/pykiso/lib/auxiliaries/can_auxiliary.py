@@ -41,6 +41,7 @@ class CanAuxiliary(AuxiliaryInterface):
         """Constructor.
 
         :param com: CChannel that supports raw communication over CAN
+        :param dbc_file: dbc file that provides the can messages structure
         """
         self.tx_task_on = False
         super().__init__(is_proxy_capable=True, tx_task_on=True, rx_task_on=True, **kwargs)
@@ -98,6 +99,7 @@ class CanAuxiliary(AuxiliaryInterface):
 
     def get_last_message(self, message_name: str) -> Optional[CanMessage]:
         """Get the last message which has been received on the bus.
+
         :param message_name: name of the message, you want to get
 
         :return: last can massage or return none if the message, or return none if message is not occur
@@ -112,7 +114,9 @@ class CanAuxiliary(AuxiliaryInterface):
 
     def get_last_signal(self, message_name: str, signal_name: str) -> Optional[Any]:
         """Get the last message which has been received on the bus.
+
         :param message_name: name of the message, you want to get
+        :param signal_name: name of the signal, you want to get
 
         :return: last can massage or return none if the message or return none if message or signal is not occur
         """
@@ -127,8 +131,9 @@ class CanAuxiliary(AuxiliaryInterface):
 
     def wait_for_message(self, message_name: str, timeout: float = 0.2) -> dict[str, any]:
         """Get the last message with certain timeout in seconds.
+
         :param message_name: name of the message to receive
-        :param timeout time to wait till a message receives in seconds
+        :param timeout: time to wait till a message receives in seconds
 
         :return: list of last can messages or None if no messages for this component
         """
@@ -156,12 +161,11 @@ class CanAuxiliary(AuxiliaryInterface):
         expected_signals: dict[str, any],
         timeout: float = 0.2,
     ) -> dict[str, any]:
-        """Get first message which matches the patter of signals
-        .
+        """Get first message which matches the patter of signals.
 
         :param message_name: name of the message to receive
         :param expected_signal: list of expected signals to match with message
-        :param timeout time to wait till a message receives in seconds
+        :param timeout: time to wait till a message receives in seconds
 
         :return: list of last can messages or None if no messages for this component
         """

@@ -107,8 +107,6 @@ Existing Auxiliarys
 
 :ref:`instrument_control_auxiliary` - interface to arbitrary instrument (e.g. power supplies).
 
-:ref:`auxiliaries/mp_proxy_auxiliary:mp_proxy_auxiliary` - multiprocessing proxy auxiliary
-
 :ref:`auxiliaries/proxy_auxiliary:proxy_auxiliary` - connect multiple auxiliaries to one unique connector.
 
 :ref:`auxiliaries/record_auxiliary:record_auxiliary` - logging from connector.
