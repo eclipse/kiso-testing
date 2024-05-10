@@ -10,7 +10,6 @@ Included Connectors
     cc_base_interface
     cc_example
     cc_fdx_lauterbach
-    cc_mp_proxy
     cc_pcan_can
     cc_proxy
     cc_raw_loopback

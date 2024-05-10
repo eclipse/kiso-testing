@@ -10,7 +10,7 @@ Advanced Usage
     dynamic_conf
     remote_test
     reporting
-    apis_lifecycle
+    api_lifecycle
     how_to_auxiliary
     how_to_connector
     how_to_change_logger_class

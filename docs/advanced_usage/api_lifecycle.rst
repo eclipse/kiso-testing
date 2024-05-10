@@ -63,17 +63,19 @@ API States
 Approach
 --------
 
-**Green-field** - Contribution of a new module
+**Contribution of a new module**
+
 #. In `src/pykiso/lib/incubation` are two folders, one dedicated for the incubation of `auxiliaries` and the other for `connectors`.
-  #. Depending on the type of module you want to contribute (:ref:`_how_to_create_connector` or :ref:`_how_to_create_aux`), create a module in the right folder.
+#. Depending on the type of module you want to contribute (:ref:`how_to_create_connector` or :ref:`how_to_create_aux`), create a module in the right folder.
 #. Do not forget the unittests (same location of all unittests).
 #. Do not forget to add your module to the documentation. Also add a `warning` section to inform the user that this module is in incubation phase.
 #. Do not forget to add an usage example for your module.
 
-**Gray-field** - Refactoring of an existing module
+**Refactoring of an existing module**
+
 #. In `src/pykiso/lib/incubation` are two folders, one dedicated for the incubation of `auxiliaries` and the other for `connectors`.
 #. Copy the module to refactor to the right folder.
-#. Break, update the APIs, refactor it.
+#. Update/Refactor the APIs. Breaking the Api is fine in Incubation.
 #. In the old location, if possible, inherit from it and replace the content of the legacy APIs. There should be no breaking changes,
    this step is to support backward compatibility.
 #. In the documentation, extend the already existing .rst file with a warning specifying which APIs are in `incubation` / refactored and which one will be `deprecated`
@@ -83,14 +85,31 @@ Approach
 #. Users can access the new functionalities with from ebplugins.incubation.emb_aux the APIs with breaking changes.
 #. Update the examples to use the new API.
 
+**Deprecation of an existing module**
 
-Communication
--------------
+#. In the documentation, add a `deprecation` warning to the APIs.
+#. In case of a module, add a `deprecation` warning to the module.
+
+
+Versioning
+----------
 
 Like for any other changes, we will be using `conventional commits <https://www.conventionalcommits.org/en/v1.0.0/>`_.
 
-When a major release is planned, the breaking-changes will be communicated over the changelog.
+The versioning will be done according to the `semantic versioning <https://semver.org/>`_.
 
+.. list-table::
+   :header-rows: 1
+   :stub-columns: 1
+
+   * - Version
+     - Changes to expect
+   * - patch
+     - no breaking changes, no new incubation feature, no deprecation
+   * - minor
+     - no breaking changes in stable code, breaking changes for incubation features, new incubation feature, deprecation of an existing feature, move of an incubation feature to stable
+   * - major
+     - breaking changes, new incubation feature, deletion of deprecated feature
 
 
 ref: https://www.sebastianpfischer.com/index.php/2023/02/21/how-to-deal-with-breaking-changes-python/
