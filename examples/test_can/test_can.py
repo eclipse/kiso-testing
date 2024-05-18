@@ -21,10 +21,11 @@ import logging
 import threading
 import time
 
+from lib.auxiliaries.can_auxiliary.can_auxiliary import CanAuxiliary
+
 import pykiso
 from pykiso.auxiliaries import can_aux1, can_aux2
-from pykiso.can_message import CanMessage
-from pykiso.lib.auxiliaries.can_auxiliary import CanAuxiliary
+from pykiso.lib.auxiliaries.can_auxiliary.can_message import CanMessage
 
 can_aux1: CanAuxiliary
 can_aux2: CanAuxiliary
