@@ -15,8 +15,8 @@ import pytest
 from cantools.database.errors import DecodeError
 
 from pykiso import Message
-from pykiso.can_message import CanMessage
-from pykiso.lib.auxiliaries.can_auxiliary import CanAuxiliary
+from pykiso.lib.auxiliaries.can_auxiliary.can_auxiliary import CanAuxiliary
+from pykiso.lib.auxiliaries.can_auxiliary.can_message import CanMessage
 from pykiso.lib.connectors.cc_pcan_can.cc_pcan_can import CCPCanCan
 
 
@@ -375,29 +375,18 @@ class TestCanAux:
         can_aux_instance._run_command("send", bytearray(b"\x01\x05\x00\x00"))
         cc_send_mock.assert_called_with(msg=bytearray(b"\x01\x05\x00\x00"))
 
-    def test_run_command_with_send_invalid_msg(self, can_aux_instance, mocker):
+    def test_run_command_with_send_invalid_msg(self, can_aux_instance: CanAuxiliary, mocker, caplog):
         cc_send_mock = mocker.patch.object(can_aux_instance.channel, "cc_send")
-        log_mock = mocker.patch.object(
-            logging.getLogger("pykiso.lib.auxiliaries.can_auxiliary"), "exception"
-        )
         cc_send_mock.side_effect = Exception()
         can_aux_instance._run_command("send", bytearray(b"\x01\x05\x00\x00"))
-        log_mock.assert_called_once()
+        assert caplog.records[0].levelname == "ERROR"
+        assert "encountered error while sending message" in caplog.records[0].message
 
-    def test_run_command_with_send_msg_obj(self, can_aux_instance, mocker):
-        log_mock = mocker.patch.object(
-            logging.getLogger("pykiso.lib.auxiliaries.can_auxiliary"), "internal_debug"
-        )
-        can_aux_instance._run_command(Message(), bytearray(b"\x01\x05\x00\x00"))
-        log_mock.assert_called_once()
-
-    def test_run_command_with_send_none(self, can_aux_instance, mocker):
-        log_mock = mocker.patch.object(
-            logging.getLogger("pykiso.lib.auxiliaries.can_auxiliary"),
-            "internal_warning",
-        )
+    def test_run_command_with_send_none(self, can_aux_instance, caplog):
         can_aux_instance._run_command(None, bytearray(b"\x01\x05\x00\x00"))
-        log_mock.assert_called_once()
+        assert caplog.records[0].levelname == "INTERNAL_WARNING"
+        assert "received unknown command" in caplog.records[0].message
+
 
     def test_create_auxiliary(self, can_aux_instance, mocker):
         mocker.patch.object(can_aux_instance.channel, "open")

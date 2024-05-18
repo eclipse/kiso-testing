@@ -27,9 +27,10 @@ from typing import Any, Optional
 
 from pykiso import Message
 from pykiso.auxiliary import AuxiliaryInterface, close_connector, open_connector
-from pykiso.can_message import CanMessage
-from pykiso.can_parser import CanMessageParser
 from pykiso.connector import CChannel
+
+from .can_message import CanMessage
+from .can_parser import CanMessageParser
 
 log = logging.getLogger(__name__)
 
