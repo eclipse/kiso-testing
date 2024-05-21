@@ -357,7 +357,7 @@ class ProxyAuxiliary(AuxiliaryInterface):
             if received_data is not None:
                 self.logger.debug(
                     "received response : data %s || channel : %s",
-                    received_data.hex(),
+                    received_data,
                     self.channel.name,
                 )
                 for conn in self.proxy_channels:

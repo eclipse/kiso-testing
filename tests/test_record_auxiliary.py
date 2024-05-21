@@ -10,11 +10,10 @@
 import builtins
 import logging
 import pathlib
-import threading
 
 import pytest
 
-from pykiso.lib.auxiliaries.record_auxiliary import RecordAuxiliary, StringIOHandler
+from pykiso.lib.auxiliaries.record_auxiliary import RecordAuxiliary, StringIOHandler, threading
 
 
 @pytest.fixture
@@ -134,9 +133,7 @@ def test_delete_aux_error(caplog, mocker, mock_channel):
     ],
 )
 def test_receive(data, expected_data, mocker, mock_channel):
-    event_mock = mocker.patch.object(
-        threading.Event, "is_set", side_effect=[False, True]
-    )
+    event_mock = mocker.patch("pykiso.lib.auxiliaries.record_auxiliary.threading.Event.is_set", side_effect=[False, True])
     mocker.patch.object(threading.Thread, "start", return_value=None)
     record_aux = RecordAuxiliary(mock_channel, is_active=True)
 
