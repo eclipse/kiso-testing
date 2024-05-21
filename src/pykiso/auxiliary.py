@@ -24,7 +24,9 @@ import logging
 import queue
 import threading
 from enum import Enum, unique
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Self
+
+from pykiso.test_setup.config_registry import ConfigRegistry
 
 from .exceptions import AuxiliaryCreationError, AuxiliaryNotStarted
 from .logging_initializer import add_internal_log_levels, initialize_loggers
@@ -47,6 +49,15 @@ class AuxiliaryInterface(abc.ABC):
     << double threaded >> auxiliary, simply encapsulate two threads one
     for the reception and one for the transmmission.
     """
+
+    @classmethod
+    def get_instance(cls, name: str) -> Self:
+        """Experimental - Get an auxiliary instance by its name."""
+        auxiliary = ConfigRegistry.get_aux_by_alias(name)
+        # Verify if the auxiliary is of the right type
+        if not isinstance(auxiliary, cls):
+            raise ValueError(f"Requested auxiliary {name} is not of type {cls}")
+        return auxiliary
 
     def __init__(
         self,
@@ -201,7 +212,8 @@ class AuxiliaryInterface(abc.ABC):
 
         task_name = f"{self.name}_tx"
         log.internal_debug("start transmit task %s", task_name)
-        self.tx_thread = threading.Thread(name=task_name, target=self._transmit_task)
+        # Any created thread should disappear after main-thread exit
+        self.tx_thread = threading.Thread(name=task_name, target=self._transmit_task, daemon=True)
         self.tx_thread.start()
 
     def _start_rx_task(self) -> None:
@@ -212,7 +224,8 @@ class AuxiliaryInterface(abc.ABC):
         with self.rx_lock:
             task_name = f"{self.name}_rx"
             log.internal_debug("start reception task %s", task_name)
-            self.rx_thread = threading.Thread(name=task_name, target=self._reception_task)
+            # Any created thread should disappear after main-thread exit
+            self.rx_thread = threading.Thread(name=task_name, target=self._reception_task, daemon=True)
             self.rx_thread.start()
 
     def _stop_tx_task(self) -> None:
@@ -256,6 +269,21 @@ class AuxiliaryInterface(abc.ABC):
         :return: True if the auxiliary is stopped otherwise False
         """
         return self.delete_instance()
+
+    def __enter__(self) -> Self:
+        """Context manager entry point"""
+        if self.start():
+            return self
+        else:
+            raise AuxiliaryNotStarted(f"Failed to start auxiliary {self.name}")
+
+    def __exit__(self, type, value, traceback):
+        """Context manager exit point"""
+        stop_status = self.stop()
+        if traceback:
+            log.error(f"Error occurred during auxiliary {self.name} execution: {type=}, {value=}, {traceback=}")
+        if not stop_status:
+            raise RuntimeError(f"Failed to stop auxiliary {self.name}")
 
     def suspend(self) -> bool:
         """Supend current auxiliary's run.

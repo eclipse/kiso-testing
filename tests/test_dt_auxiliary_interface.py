@@ -8,6 +8,7 @@
 ##########################################################################
 
 import logging
+from unittest.mock import Mock
 
 import pytest
 
@@ -228,6 +229,38 @@ def test_stop(mocker, aux_inst):
     state = aux_inst.stop()
 
     assert state is True
+
+def test_aux_as_context_manager(mocker, aux_inst):
+    create_inst_mock: Mock = mocker.patch.object(aux_inst, "create_instance", return_value=True)
+    delete_inst_mock: Mock = mocker.patch.object(aux_inst, "delete_instance", return_value=True)
+
+    with aux_inst:
+        pass
+
+    create_inst_mock.assert_called_once()
+    delete_inst_mock.assert_called_once()
+
+def test_context_manager_with_errors(mocker, aux_inst, caplog):
+    mocker.patch.object(aux_inst, "create_instance", return_value=False)
+    # First test with failing start
+    with pytest.raises(AuxiliaryNotStarted):
+        with aux_inst:
+            pass
+
+    mocker.patch.object(aux_inst, "create_instance", return_value=True)
+    mocker.patch.object(aux_inst, "delete_instance", return_value=False)
+    # Second test with failing stop
+    with pytest.raises(RuntimeError):
+        with aux_inst:
+            pass
+
+    mocker.patch.object(aux_inst, "delete_instance", return_value=True)
+    # Last test: Check if the failure in the context was recorded
+    with pytest.raises(ValueError):
+        with aux_inst:
+            raise ValueError("Something went wrong")
+    assert "Something went wrong" in caplog.text
+
 
 
 def test_suspend(mocker, aux_inst):
