@@ -45,3 +45,17 @@ from .test_coordinator.test_suite import (
 )
 
 logging_initializer.add_internal_log_levels()
+
+# Experimental - load configuration and create auxiliaries
+from .config_parser import parse_config
+from .test_setup.config_registry import ConfigRegistry
+
+
+def load_config(config_file: str):
+    """Enable any user to load a pykiso yaml file from any script
+
+    :param config_file: path to the pykiso yaml file
+
+    """
+    cfg = parse_config(config_file)
+    ConfigRegistry.register_aux_con(cfg)
