@@ -14,9 +14,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from pykiso.lib.auxiliaries.udsaux.common.uds_callback import UdsCallback
-from pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary import (
-    UdsServerAuxiliary,
-)
+from pykiso.lib.auxiliaries.udsaux.uds_server_auxiliary import UdsServerAuxiliary
 
 ODX_REQUEST = {
     "service": 0x22,  # IsoServices.ReadDataByIdentifier
@@ -94,19 +92,12 @@ class TestUdsServerAuxiliary:
         padded_msg = UdsServerAuxiliary._pad_message(msg)
 
         assert len(padded_msg) == expected_padded_len
-        assert all(
-            [
-                el == UdsServerAuxiliary.CAN_FD_PADDING_PATTERN
-                for el in padded_msg[data_len:]
-            ]
-        )
+        assert all([el == UdsServerAuxiliary.CAN_FD_PADDING_PATTERN for el in padded_msg[data_len:]])
 
     @pytest.mark.parametrize("req_id, expected_req_id", [(None, 0x123), (0x42, 0x42)])
     def test_transmit(self, mocker, uds_server_aux_inst, req_id, expected_req_id):
         data = [1, 2, 3, 4]
-        mock_pad = mocker.patch.object(
-            uds_server_aux_inst, "_pad_message", return_value=data
-        )
+        mock_pad = mocker.patch.object(uds_server_aux_inst, "_pad_message", return_value=data)
         mock_channel = mocker.patch.object(uds_server_aux_inst, "channel")
 
         uds_server_aux_inst.transmit(data, req_id)
@@ -122,12 +113,8 @@ class TestUdsServerAuxiliary:
             ({"msg": b"DATA", "remote_id": 0xAC}, b"DATA"),
         ],
     )
-    def test_receive(
-        self, mocker, uds_server_aux_inst, cc_receive_return, expected_received_data
-    ):
-        mock_channel = mocker.patch.object(
-            uds_server_aux_inst.channel, "_cc_receive", return_value=cc_receive_return
-        )
+    def test_receive(self, mocker, uds_server_aux_inst, cc_receive_return, expected_received_data):
+        mock_channel = mocker.patch.object(uds_server_aux_inst.channel, "_cc_receive", return_value=cc_receive_return)
         uds_server_aux_inst.res_id = 0xAC
 
         received_data = uds_server_aux_inst.receive()
@@ -142,11 +129,7 @@ class TestUdsServerAuxiliary:
 
         uds_server_aux_inst.send_response(b"plop")
 
-        uds_mock.tp.encode_isotp.assert_called_with(
-            b"plop",
-            use_external_snd_rcv_functions=True,
-            tpWaitTime=uds_server_aux_inst.tp_waiting_time,
-        )
+        uds_mock.tp.encode_isotp.assert_called_with(b"plop", use_external_snd_rcv_functions=True)
         mock_transmit.assert_called_with("NOT NONE")
 
     @pytest.mark.parametrize(
@@ -169,9 +152,7 @@ class TestUdsServerAuxiliary:
             (0, 0, 0, [0x30, 0x00, 0x00]),
         ],
     )
-    def test_send_flow_control(
-        self, mocker, uds_server_aux_inst, fs, bs, stmin, expected_flow_control
-    ):
+    def test_send_flow_control(self, mocker, uds_server_aux_inst, fs, bs, stmin, expected_flow_control):
         mock_transmit = mocker.patch.object(uds_server_aux_inst, "transmit")
 
         uds_server_aux_inst.send_flow_control(fs, bs, stmin)
@@ -234,9 +215,7 @@ class TestUdsServerAuxiliary:
                 (ODX_REQUEST),
                 {
                     "0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55]),
-                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
-                        [0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55]
-                    ),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback([0x22, 0xA4, 0x55], [0x62, 0xA4, 0x55]),
                 },
                 id="Passed odx keyword dict directly no response given",
             ),
@@ -244,22 +223,16 @@ class TestUdsServerAuxiliary:
                 (ODX_REQUEST, {"Negative": 17}),
                 {
                     "0x22A455": UdsCallback([0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11]),
-                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback(
-                        [0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11]
-                    ),
+                    "ReadDataByIdentifier.SoftwareVersion": UdsCallback([0x22, 0xA4, 0x55], [0x7F, 0x22, 0x11]),
                 },
                 id="Negative response given",
             ),
         ],
     )
-    def test_register_callback(
-        self, uds_server_aux_inst, callback_params, expected_callback_dict
-    ):
+    def test_register_callback(self, uds_server_aux_inst, callback_params, expected_callback_dict):
         mock_request = [34, 42069]
         mock_response = [98, 42069]
-        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
-            side_effect=[mock_request, mock_response]
-        )
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(side_effect=[mock_request, mock_response])
 
         if isinstance(callback_params, tuple):
             uds_server_aux_inst.register_callback(*callback_params)
@@ -287,13 +260,9 @@ class TestUdsServerAuxiliary:
             ),
         ],
     )
-    def test_unregister_callback(
-        self, uds_server_aux_inst, callback_to_unregister, expected_callback_key
-    ):
+    def test_unregister_callback(self, uds_server_aux_inst, callback_to_unregister, expected_callback_key):
         uds_server_aux_inst.register_callback(0x1011FF)
-        assert isinstance(
-            uds_server_aux_inst._callbacks.get(expected_callback_key), UdsCallback
-        )
+        assert isinstance(uds_server_aux_inst._callbacks.get(expected_callback_key), UdsCallback)
 
         uds_server_aux_inst.unregister_callback(callback_to_unregister)
         assert uds_server_aux_inst._callbacks.get(expected_callback_key) is None
@@ -310,16 +279,12 @@ class TestUdsServerAuxiliary:
     def test_unregister_odx_based_callback(self, uds_server_aux_inst, hex_key, odx_key):
         mock_request = [34, 42069]
         mock_response = [98, 42069]
-        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
-            side_effect=[mock_request, mock_response]
-        )
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(side_effect=[mock_request, mock_response])
 
         uds_server_aux_inst.register_callback(ODX_REQUEST)
         assert isinstance(uds_server_aux_inst._callbacks.get(hex_key), UdsCallback)
         assert isinstance(uds_server_aux_inst._callbacks.get(odx_key), UdsCallback)
-        assert uds_server_aux_inst._callbacks.get(
-            hex_key
-        ) == uds_server_aux_inst._callbacks.get(odx_key)
+        assert uds_server_aux_inst._callbacks.get(hex_key) == uds_server_aux_inst._callbacks.get(odx_key)
 
         uds_server_aux_inst.unregister_callback(hex_key)
         assert uds_server_aux_inst._callbacks.get(hex_key) is None
@@ -431,21 +396,15 @@ class TestUdsServerAuxiliary:
         coded_values,
         expected_callback,
     ):
-        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
-            side_effect=coded_values
-        )
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(side_effect=coded_values)
 
-        callback = uds_server_aux_inst._create_callback_from_odx(
-            odx_request, odx_response
-        )
+        callback = uds_server_aux_inst._create_callback_from_odx(odx_request, odx_response)
         assert callback == expected_callback
 
     def test__create_callback_from_odx_parse_error(self, uds_server_aux_inst, caplog):
         mock_request = [35, 42069]
         mock_response = [98, 42069]
-        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(
-            side_effect=[mock_request, mock_response]
-        )
+        uds_server_aux_inst.odx_parser.get_coded_values = MagicMock(side_effect=[mock_request, mock_response])
 
         with pytest.raises(ValueError):
             with caplog.at_level(logging.ERROR):
@@ -472,8 +431,6 @@ class TestUdsServerAuxiliary:
             pytest.param([0x22, 0xA4, 0x55], ODX_RESPONSE, "SoftwareVersion"),
         ],
     )
-    def test__get_odx_callback_param(
-        self, uds_server_aux_inst, request_dict, response_dict, expected_param
-    ):
+    def test__get_odx_callback_param(self, uds_server_aux_inst, request_dict, response_dict, expected_param):
         param = uds_server_aux_inst._get_odx_callback_param(request_dict, response_dict)
         assert param == expected_param
