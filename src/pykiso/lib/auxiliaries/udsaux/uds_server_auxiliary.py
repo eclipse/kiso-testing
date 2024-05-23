@@ -131,6 +131,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         this method is a substitute to the reception method used in the
         python-uds package.
 
+        :param timeout: Time to wait in second for a message to be received
         :return: the received message or None.
         """
         rcv_data = self.channel._cc_receive(timeout=timeout)
