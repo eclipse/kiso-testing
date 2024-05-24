@@ -77,6 +77,7 @@ class AuxiliaryInterface(abc.ABC):
         self.is_proxy_capable = is_proxy_capable
         self.auto_start = auto_start
         self.lock = threading.RLock()
+        self.rx_lock = threading.Lock()
         self._stop_event = threading.Event()
         self.stop_tx = threading.Event()
         self.stop_rx = threading.Event()
@@ -208,11 +209,11 @@ class AuxiliaryInterface(abc.ABC):
         if self.rx_task_on is False:
             log.internal_debug("reception task is not needed, don't start it")
             return
-
-        task_name = f"{self.name}_rx"
-        log.internal_debug("start reception task %s", task_name)
-        self.rx_thread = threading.Thread(name=task_name, target=self._reception_task)
-        self.rx_thread.start()
+        with self.rx_lock:
+            task_name = f"{self.name}_rx"
+            log.internal_debug("start reception task %s", task_name)
+            self.rx_thread = threading.Thread(name=task_name, target=self._reception_task)
+            self.rx_thread.start()
 
     def _stop_tx_task(self) -> None:
         """Stop transmission task."""
@@ -231,11 +232,11 @@ class AuxiliaryInterface(abc.ABC):
         if self.rx_task_on is False:
             log.internal_debug("reception task was not started, no need to stop it")
             return
-
-        log.internal_debug(f"stop reception task {self.name}_rx")
-        self.stop_rx.set()
-        self.rx_thread.join()
-        self.stop_rx.clear()
+        with self.rx_lock:
+            log.internal_debug(f"stop reception task {self.name}_rx")
+            self.stop_rx.set()
+            self.rx_thread.join()
+            self.stop_rx.clear()
 
     def start(self) -> bool:
         """Force the auxiliary to start all running tasks and
