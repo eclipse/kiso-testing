@@ -66,7 +66,7 @@ pipeline
             }
             steps
             {
-                sh 'tox run'
+                sh 'poetry run tox -v run'
             }
         }
         stage('Run virtual-test')

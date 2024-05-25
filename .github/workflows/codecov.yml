@@ -29,19 +29,23 @@ jobs:
       - name: Prerequisite installation
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install poetry
         run: pip3 install poetry
 
       # Runs the preparation
-      - name: Prepare working environement
+      - name: Prepare working environment
         run: poetry install --all-extras
 
       # Runs the test
       - name: Run unittests
-        run: poetry run pytest --cov=./ --cov-report=xml -p no:pytest_kiso --runslow
+        run: poetry run coverage run -m pytest
+
+      # Run the coverage
+      - name: Run coverage
+        run: poetry run coverage xml
 
       # Upload the test result
       - name: Upload test-result to codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4

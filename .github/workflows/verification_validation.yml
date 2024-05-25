@@ -1,0 +1,74 @@
+
+name: Verification and validation of the code
+
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains 2 jobs
+  verification_validation:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-22.04
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Pre requisite installation
+      - name: Prerequisite installation
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install poetry
+        run: pip3 install poetry
+
+      # Runs the preparation
+      - name: Prepare working environment
+        run: poetry install --all-extras
+
+      # Formatting check
+      - name: Run format check
+        run: poetry run pre-commit
+
+      # Runs the tox test
+      - name: Run unittests (via tox)
+        run: poetry run tox -v run
+
+      # Run dummy test
+      - name: Dummy pykiso run
+        run: poetry run pykiso -c examples/dummy.yaml --junit
+
+      # Upload the test result
+      - name: Run doc
+        run: poetry run invoke docs
+
+  release:
+    runs-on: ubuntu-22.04
+    if: github.ref_type == 'tag'
+    needs: verification_validation
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Prerequisite installation
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install poetry
+        run: pip3 install poetry
+
+      - name: Prepare working environment
+        run: poetry install --all-extras
+
+      - name: Update to Pypi
+        run: poetry publish  --no-interaction  --build  --username __token__ --password ${{ secrets.pypi_token }}
