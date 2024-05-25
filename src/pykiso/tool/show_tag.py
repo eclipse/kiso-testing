@@ -33,8 +33,7 @@ from tabulate import tabulate
 
 from pykiso.config_parser import parse_config
 from pykiso.exceptions import TestCollectionError
-from pykiso.test_coordinator import test_execution
-from pykiso.test_coordinator.test_case import BasicTest
+from pykiso.test_coordinator import test_case, test_execution
 from pykiso.types import PathType
 
 
@@ -65,7 +64,7 @@ def get_yaml_files(config_path: PathType, recursive: bool) -> List[Path]:
     return config_files
 
 
-def get_test_cases(cfg_dict: Dict[str, List[dict]]) -> List[BasicTest]:
+def get_test_cases(cfg_dict: Dict[str, List[dict]]) -> List[test_case.BasicTest]:
     """Return the list of tests meant to be run by the provided
     test configuration file.
 
@@ -82,7 +81,7 @@ def get_test_cases(cfg_dict: Dict[str, List[dict]]) -> List[BasicTest]:
     return test_cases
 
 
-def get_test_tags(test_case_list: List[BasicTest]) -> Dict[str, List[str]]:
+def get_test_tags(test_case_list: List[test_case.BasicTest]) -> Dict[str, List[str]]:
     """Return the list of tag and values contained in the test case list
 
     :param test_case_list: list of loaded test cases.
@@ -90,10 +89,10 @@ def get_test_tags(test_case_list: List[BasicTest]) -> Dict[str, List[str]]:
     """
     tag_dict = {}
     # search the tag for each test case
-    for test_case in test_case_list:
-        if test_case.tag is None:
+    for testCase in test_case_list:
+        if testCase.tag is None:
             continue
-        for tag_name, tag_values in test_case.tag.items():
+        for tag_name, tag_values in testCase.tag.items():
             if tag_name not in tag_dict:
                 tag_dict[tag_name] = list()
             # tag values are lists of strings
@@ -106,7 +105,7 @@ def get_test_tags(test_case_list: List[BasicTest]) -> Dict[str, List[str]]:
 
 def build_result_dict(
     config_file_name: str,
-    test_case_list: List[BasicTest],
+    test_case_list: List[test_case.BasicTest],
     test_tags: Dict[str, list],
     show_test_cases: bool = False,
 ) -> Dict[str, Union[str, int]]:

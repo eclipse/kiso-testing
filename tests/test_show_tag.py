@@ -67,7 +67,7 @@ def tmp_yaml_files(tmp_path: Path, request):
 
 @pytest.fixture
 def basic_test_mock(mocker):
-    return mocker.patch("pykiso.tool.show_tag.BasicTest")
+    return mocker.patch("pykiso.tool.show_tag.test_case.BasicTest")
 
 
 @pytest.fixture(autouse=True, scope="module")
