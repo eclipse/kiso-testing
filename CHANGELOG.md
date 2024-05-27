@@ -6,6 +6,28 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### Documentation
+
+- Introduce api lifecycle
+- Fix all warnings
+
+### Miscellaneous Tasks
+
+- Bump pytest from 7.4.3 to 7.4.4 ([#435](https://github.com/eclipse/kiso-testing/issues/435))
+- Bump idna from 3.6 to 3.7
+- Bump sphinxcontrib-applehelp from 1.0.7 to 1.0.8
+
+### New Features
+
+- Ensure compatibility with python 3.12 ([#469](https://github.com/eclipse/kiso-testing/issues/469))
+- Migrate to github-actions ([#475](https://github.com/eclipse/kiso-testing/issues/475))
+
+### Refactorings
+
+- Make it one module
+
+## Version 0.28.0 (2024-03-28)
+
 ### New Features
 
 - Add start stop can trace ([#465](https://github.com/eclipse/kiso-testing/issues/465))
