@@ -126,14 +126,15 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
         data = self._pad_message(data)
         self.channel._cc_send(msg=data, remote_id=req_id)
 
-    def receive(self) -> Optional[bytes]:
+    def receive(self, timeout: float = 0) -> Optional[bytes]:
         """Receive a message through ITF connector. Called inside a thread,
         this method is a substitute to the reception method used in the
         python-uds package.
 
+        :param timeout: Time to wait in second for a message to be received
         :return: the received message or None.
         """
-        rcv_data = self.channel._cc_receive(timeout=0)
+        rcv_data = self.channel._cc_receive(timeout=timeout)
         msg, arbitration_id = rcv_data.get("msg"), rcv_data.get("remote_id")
         if msg is not None and arbitration_id == self.res_id:
             return msg
@@ -143,11 +144,7 @@ class UdsServerAuxiliary(UdsBaseAuxiliary):
 
         :param response_data: the UDS response to send.
         """
-        to_send = self.uds_config.tp.encode_isotp(
-            response_data,
-            use_external_snd_rcv_functions=True,
-            tpWaitTime=self.tp_waiting_time,
-        )
+        to_send = self.uds_config.tp.encode_isotp(response_data, use_external_snd_rcv_functions=True)
         if to_send is not None:
             self.transmit(to_send)
 
