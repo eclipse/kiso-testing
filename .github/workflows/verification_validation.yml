@@ -71,4 +71,4 @@ jobs:
         run: poetry install --all-extras
 
       - name: Update to Pypi
-        run: poetry publish  --no-interaction  --build  --username __token__ --password ${{ secrets.pypi_token }}
+        run: poetry publish  --no-interaction  --build  --username __token__ --password ${{ secrets.PYPI_TOKEN }}

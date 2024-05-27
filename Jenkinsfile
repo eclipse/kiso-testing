@@ -85,35 +85,6 @@ pipeline
                 }
             }
         }
-        stage('Release')
-        {
-            when
-            {
-                buildingTag()
-            }
-            parallel
-            {
-                stage('Release package')
-                {
-                    steps
-                    {
-                        script
-                        {
-                            withCredentials([string(
-                                credentialsId: 'pypi-bot-token',
-                                variable: 'token')])
-                                {
-                                    sh "poetry publish \
-                                            --no-interaction \
-                                            --build \
-                                            --username __token__\
-                                            --password ${token}"
-                                }
-                        }
-                    }
-                }
-            } // parallel
-        } // Release
     } // stages
 
     post // Called at very end of the script to notify developer and github about the result of the build
