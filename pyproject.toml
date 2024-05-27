@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.9"
 brainstem = "*"
 PyYAML = "^6.0"
 robotframework = "3.2.2"
@@ -106,6 +106,7 @@ sphinx-rtd-theme = "*"
 sphinxcontrib-programoutput = "*"
 sphinx-autodoc-typehints = "*"
 ruff = "0.2.1"
+tox = "^4.15.0"
 
 [tool.poetry.scripts]
 pykiso = 'pykiso.cli:main'
@@ -158,3 +159,18 @@ build-backend = "poetry.core.masonry.api"
 # Linelength according to PEP 8.
 line-length = 120
 exclude = ['examples', 'tests', 'tasks.py']
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    isolated_build = True
+    env_list =
+        python3.11
+        python3.12
+
+    [testenv]
+    description = run the tests with pytest
+    extras = all
+    allowlist_externals = pytest, poetry, invoke
+    commands = pytest
+"""
