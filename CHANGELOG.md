@@ -6,6 +6,11 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### Bug Fixes
+
+- Adapt uds server auxiliary ([#474](https://github.com/eclipse/kiso-testing/issues/474))
+- Stop rx task call before start rx task is called
+
 ### Documentation
 
 - Introduce api lifecycle
@@ -21,10 +26,15 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 - Ensure compatibility with python 3.12 ([#469](https://github.com/eclipse/kiso-testing/issues/469))
 - Migrate to github-actions ([#475](https://github.com/eclipse/kiso-testing/issues/475))
+- Make release 0.28.1
 
 ### Refactorings
 
 - Make it one module
+
+### Ci
+
+- Fix codecov & release secrets
 
 ## Version 0.28.0 (2024-03-28)
 
