@@ -134,6 +134,7 @@ class ConfigRegistry:
                 except (KeyError, TypeError):
                     # default value for auto_start is True
                     auto_start = True
+                if auto_start:
                     break
 
             # create a proxy auxiliary config for this shared channel
