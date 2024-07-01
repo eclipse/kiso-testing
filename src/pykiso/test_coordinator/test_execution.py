@@ -25,8 +25,10 @@ Execution of tests
 """
 from __future__ import annotations
 
+import functools
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable
+from unittest import util
 from unittest.loader import VALID_MODULE_NAME
 
 from pykiso.test_result.multi_result import MultiTestResult
@@ -34,6 +36,7 @@ from pykiso.test_result.multi_result import MultiTestResult
 if TYPE_CHECKING:
     from .test_case import BasicTest
     from ..types import ConfigDict, SuiteConfig
+    from ..lib.connectors.cc_pcan_can import CCPCanCan
 
 import enum
 import logging
@@ -41,6 +44,7 @@ import re
 import time
 import unittest
 from collections import OrderedDict, namedtuple
+from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -432,6 +436,7 @@ def execute(
         test_file_pattern = parse_test_selection_pattern(pattern_inject)
 
         test_suites = collect_test_suites(config["test_suite_list"], test_file_pattern.test_file)
+        test_suites = handle_pcan_trace_strategy(config, test_suites)
         # Group all the collected test suites in one global test suite
         all_tests_to_run = unittest.TestSuite(test_suites)
 
@@ -500,3 +505,129 @@ def execute(
         log.exception(f'Issue detected in the test-suite: {config["test_suite_list"]}!')
         exit_code = ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
     return int(exit_code)
+
+
+def handle_pcan_trace_strategy(
+    config: dict[str, Any], test_suites: list[unittest.TestSuite]
+) -> list[unittest.TestSuite]:
+    """Setup the test to get a trace file for every test or testCase if the user requested it
+        else just return the test suite passed in input
+
+    :param config: dict from converted YAML config file
+    :return: a list of all loaded test suites.
+
+    :return: a list of all loaded test suites with setUp and tearDown modified if needed.
+    """
+    strategy_trc_file = _retrieve_trc_file_strategy(config)
+    if strategy_trc_file is None:
+        return test_suites
+    cc_pcan_channel = _get_pcan_instance(config)
+    if cc_pcan_channel is None:
+        return test_suites
+
+    # Decorate function to call the start and stop pcan trace function
+    list_class = []
+    for suite in test_suites:
+        for test in suite._tests:
+            # If the user want to have one trace file for a testCase we decorate the setUpClass and tearDownClass
+            if strategy_trc_file == "testCase":
+                trc_file_name = util.strclass(test.__class__).replace(".", "_").replace("-", "_") + ".trc"
+                test_class = test.__class__
+                if test_class in list_class:
+                    continue
+                list_class.append(test_class)
+                test_class.setUpClass = start_pcan_trace_decorator(
+                    test_class.setUpClass, cc_pcan_channel, trc_file_name
+                )
+                test_class.tearDownClass = stop_pcan_trace_decorator(test_class.tearDownClass, cc_pcan_channel)
+
+            # If the user want to have one trace file for each test run we decorate the setUp and tearDown of the class
+            elif strategy_trc_file == "test":
+                trc_file_name = (
+                    util.strclass(test.__class__).replace(".", "_").replace("-", "_")
+                    + "_"
+                    + test._testMethodName
+                    + ".trc"
+                )
+                test.setUp = start_pcan_trace_decorator(test.setUp, cc_pcan_channel, trc_file_name)
+                test.tearDown = stop_pcan_trace_decorator(test.tearDown, cc_pcan_channel)
+    return test_suites
+
+
+def _get_pcan_instance(config: dict[str, Any]) -> CCPCanCan | None:
+    """Get pcan interface from auxiliaries created from the Yaml
+
+    :param config: dict from converted YAML config file
+    :return: the ccpcan instance if one was created else False
+    """
+    from ..lib.connectors.cc_pcan_can import CCPCanCan
+    from ..lib.connectors.cc_proxy import CCProxy
+
+    # Retrieve the pcan channel from the auxiliaries defined
+    for aux in config["auxiliaries"].keys():
+        instance_channel = getattr(getattr(pykiso.auxiliaries, aux, None), "channel", None)
+        if isinstance(instance_channel, CCProxy):
+            instance_channel = instance_channel._proxy.channel
+        if isinstance(instance_channel, CCPCanCan):
+            return instance_channel
+    return None
+
+
+def _retrieve_trc_file_strategy(config: dict[str, Any]) -> None | str:
+    """Retrieve the value for the strategy trace file in the config
+
+    :param config: dict from converted YAML config file
+
+    :return: a str with the strategy found for the pcan trace or None if
+        no pcan is present or the pcan strategy is not set
+    """
+    strategy_trc_file = None
+    # Check if a pcan with the right parameter is defined in the config
+    for connector in config["connectors"].values():
+        if (
+            connector.get("type", None) == "pykiso.lib.connectors.cc_pcan_can:CCPCanCan"
+            and "strategy_trc_file" in connector.get("config", {}).keys()
+        ):
+            strategy_trc_file = connector["config"]["strategy_trc_file"]
+            if strategy_trc_file not in ["test", "testCase"]:
+                raise ValueError(
+                    f"{strategy_trc_file} is not a valid value for strategy_trc_file, ",
+                    "valid values are ['test','testCase']",
+                )
+    return strategy_trc_file
+
+
+def start_pcan_trace_decorator(func: Callable, cc_pcan, trace_file_name: str):
+    """Decorator that will call start pcan trace before calling the function
+
+    :param func: function to execute
+    :param cc_pcan: channel used to get the pcan trace
+    :param trace_file_name: name of the trace file to create
+    """
+
+    @functools.wraps(func)
+    def decorator(*args, **kwargs):
+        # Add datetime in trace file name to not overwrite trace file when rerunning test
+        cc_pcan.start_pcan_trace(
+            trace_path=cc_pcan.trace_path
+            / trace_file_name.replace(".trc", f"_{datetime.today().strftime('%Y%d%m%H%M%S')}.trc")
+        )
+        return func(*args, **kwargs)
+
+    return decorator
+
+
+def stop_pcan_trace_decorator(func: Callable, cc_pcan):
+    """Decorator that will call stop pcan trace after calling the function
+
+    :param func: function to execute
+    :param cc_pcan: channel used to get the pcan trace
+    """
+
+    @functools.wraps(func)
+    def decorator(*args, **kwargs):
+        result = func(*args, **kwargs)
+        cc_pcan.stop_pcan_trace()
+        return result
+
+    return decorator
