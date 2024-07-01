@@ -23,7 +23,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 try:
     import can
@@ -93,6 +93,7 @@ class CCPCanCan(CChannel):
         logging_activated: bool = True,
         bus_error_warning_filter: bool = False,
         merge_trc_logs: bool = True,
+        strategy_trc_file: Literal["test", "testCase"] | None = None,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -134,6 +135,9 @@ class CCPCanCan(CChannel):
         :param bus_error_warning_filter: if True filter the PCAN driver warnings
             'Bus error: an error counter' from the logs.
         :param merge_trc_logs: if True, merge all traces in one file at the end of the program
+        :param strategy_trc_file: Strategy for the trace file by default (set to None) it will
+            be one trace file for all the tests run, if set to 'test' it will be one trace file
+            per test run and 'testCase' it will be one trace file per testCase.
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -159,13 +163,14 @@ class CCPCanCan(CChannel):
         self.bus = None
         self.logging_activated = logging_activated
         self.raw_pcan_interface = None
+        self.strategy_trc_file = strategy_trc_file
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
         self.trc_count = 0
         self.boottime_epoch = boottime_epoch
         self._initialize_trace()
-        self.merge_trc_logs = merge_trc_logs
+        self.merge_trc_logs = merge_trc_logs if strategy_trc_file is None else False
         self._trc_file_names: dict[Path, str | None] = {}
         self.trace_running = False
         if bus_error_warning_filter:
@@ -221,7 +226,8 @@ class CCPCanCan(CChannel):
 
         if self.logging_activated and self.raw_pcan_interface is None:
             self.raw_pcan_interface = PCANBasic.PCANBasic()
-            self._pcan_configure_trace()
+            if self.strategy_trc_file is None:
+                self._pcan_configure_trace()
 
     def _pcan_configure_trace(self) -> None:
         """Configure PCAN dongle to create a trace file.
@@ -327,6 +333,7 @@ class CCPCanCan(CChannel):
 
     def _cc_close(self) -> None:
         """Close the current can bus channel and uninitialize PCAN handle."""
+        self.stop_pcan_trace()
         self.bus.shutdown()
         self.bus = None
         if self.logging_activated:
@@ -562,6 +569,9 @@ class CCPCanCan(CChannel):
         if self.trace_running:
             log.warning("Trace is already started")
             return
+
+        if self.raw_pcan_interface is None:
+            self._cc_open()
 
         self.trace_size = trace_size or self.trace_size
         self.trace_path = Path(trace_path) if trace_path else self.trace_path

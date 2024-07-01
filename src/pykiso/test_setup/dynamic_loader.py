@@ -73,7 +73,7 @@ class AuxLinkLoader(importlib.abc.Loader):
     """A Loader for auxiliaries.
 
     Something is imported from `pykiso.auxiliaries` gets redirected to
-    a lookup table of configured auxiliares (done via config file).
+    a lookup table of configured auxiliaries (done via config file).
     """
 
     _COMMON_PREFIX = PACKAGE + ".auxiliaries"
