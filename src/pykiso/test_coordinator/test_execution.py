@@ -554,7 +554,7 @@ def handle_pcan_trace_strategy(
     return test_suites
 
 
-def _get_pcan_instance(config: dict[str, Any]) -> CCPCanCan | None:
+def _get_pcan_instance(config: dict[str, Any]) -> Optional[CCPCanCan]:
     """Get pcan interface from auxiliaries created from the Yaml
 
     :param config: dict from converted YAML config file
@@ -573,7 +573,7 @@ def _get_pcan_instance(config: dict[str, Any]) -> CCPCanCan | None:
     return None
 
 
-def _retrieve_trc_file_strategy(config: dict[str, Any]) -> None | str:
+def _retrieve_trc_file_strategy(config: dict[str, Any]) -> Optional[str]:
     """Retrieve the value for the strategy trace file in the config
 
     :param config: dict from converted YAML config file
