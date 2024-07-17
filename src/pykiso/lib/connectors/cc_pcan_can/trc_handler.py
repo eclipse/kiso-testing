@@ -122,7 +122,7 @@ class TRCReaderCanFD(TRCReader):
                 cols.insert(self.columns["L"], " ")
         return cols
 
-    def _parse_cols_V2_x(self, cols: List[str]) -> Optional[TypedMessage]:
+    def _parse_cols_v2_x(self, cols: List[str]) -> Optional[TypedMessage]:
         """Parse columns for file version 2.0 and 2.1.
 
         :param cols: list of columns to parse
@@ -133,12 +133,12 @@ class TRCReaderCanFD(TRCReader):
         cols = self._nomalize_cols(cols)
 
         if dtype in TRC_V2_FRAME_TYPES:
-            return self._parse_msg_V2_x(cols)
+            return self._parse_msg_v2_x(cols)
         else:
             log.info("TRCReader: Unsupported type '%s'", dtype)
             return None
 
-    def _parse_msg_V2_x(self, cols: List[str]) -> Optional[Message]:
+    def _parse_msg_v2_x(self, cols: List[str]) -> Optional[Message]:
         """Parse messages for file version 2.0 and 2.1.
 
         :param cols: list of columns to parse
