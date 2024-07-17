@@ -15,11 +15,7 @@ import pytest
 from can import Message
 from can.io.trc import TRCFileVersion
 
-from pykiso.lib.connectors.cc_pcan_can.trc_handler import (
-    TRCReaderCanFD,
-    TRCWriterCanFD,
-    TypedMessage,
-)
+from pykiso.lib.connectors.cc_pcan_can.trc_handler import TRCReaderCanFD, TRCWriterCanFD, TypedMessage
 
 trc_data_v20 = """;$FILEVERSION=2.0
 ;$STARTTIME=42209.4075997106
@@ -72,7 +68,7 @@ trc_data_v21 = """;$FILEVERSION=2.1
 5 1334.416 FD 1 0500 Tx - 9 01 02 03 04 05 06 07 08 09 0A 0B 0C
 6 1334.222 ER 1 - Rx - 5 04 00 02 00 00
 7 1334.224 EV 1 User-defined event for bus 1
-8 1334.225 EV - User-defined event for all busses
+8 1334.225 EV - User-defined event for all buses
 9 1334.231 ST 1 - Rx - 4 00 00 00 08
 10 1334.268 ER 1 - Rx - 5 04 00 02 08 00
 11 1334.643 EC 1 - Rx - 2 02 02
@@ -275,23 +271,23 @@ def test_trc_reader_can_fd_nomalize_cols(
         ),
     ],
 )
-def test_trc_reader_can_fd_parse_cols_V2_x(mocker, trc_file_v20, cols, caplog):
+def test_trc_reader_can_fd_parse_cols_v2_x(mocker, trc_file_v20, cols, caplog):
     my_reader = TRCReaderCanFD(trc_file_v20)
     my_reader.columns = {"N": 0, "O": 1, "T": 2, "I": 3, "d": 4, "L": 5, "D": 6}
 
     mocker.patch.object(TRCReaderCanFD, "_nomalize_cols", return_value=cols)
-    mocker.patch.object(TRCReaderCanFD, "_parse_msg_V2_x", return_value="result")
+    mocker.patch.object(TRCReaderCanFD, "_parse_msg_v2_x", return_value="result")
     with caplog.at_level(logging.INTERNAL_INFO):
-        result = my_reader._parse_cols_V2_x(cols)
+        result = my_reader._parse_cols_v2_x(cols)
 
     TRCReaderCanFD._nomalize_cols.assert_called_once_with(cols)
     type = cols[my_reader.columns["T"]]
     if type == "NA":
         assert f"TRCReader: Unsupported type '{type}'\n" in caplog.text
         assert result == None
-        TRCReaderCanFD._parse_msg_V2_x.assert_not_called()
+        TRCReaderCanFD._parse_msg_v2_x.assert_not_called()
     else:
-        TRCReaderCanFD._parse_msg_V2_x.assert_called_once_with(cols)
+        TRCReaderCanFD._parse_msg_v2_x.assert_called_once_with(cols)
         assert result == "result"
 
 
@@ -452,7 +448,7 @@ def test_trc_reader_can_fd_parse_cols_V2_x(mocker, trc_file_v20, cols, caplog):
         ),
     ],
 )
-def test_trc_reader_can_fd_parse_msg_V2_x(
+def test_trc_reader_can_fd_parse_msg_v2_x(
     trc_file_v20, trc_file_v21, file_version, cols, expected_result
 ):
 
@@ -464,7 +460,7 @@ def test_trc_reader_can_fd_parse_msg_V2_x(
     my_reader.file_version = file_version
     my_reader.columns = {"N": 0, "O": 1, "T": 2, "I": 3, "d": 4, "L": 5, "D": 6}
 
-    result_msg = my_reader._parse_msg_V2_x(cols)
+    result_msg = my_reader._parse_msg_v2_x(cols)
 
     assert result_msg.type == expected_result[0]
     assert result_msg.timestamp == expected_result[1]
@@ -481,25 +477,25 @@ def test_trc_reader_can_fd_parse_msg_V2_x(
     assert result_msg.is_remote_frame == expected_result[12]
 
 
-def test_trc_reader_can_fd_parse_msg_V2_x_length(trc_file_v21):
+def test_trc_reader_can_fd_parse_msg_v2_x_length(trc_file_v21):
     my_reader = TRCReaderCanFD(trc_file_v21)
     my_reader.file_version = TRCFileVersion.V2_1
     my_reader.columns = {"N": 0, "O": 1, "T": 2, "I": 3, "d": 4, "l": 5, "D": 6}
     cols = ["1", "639.182", "FD", "0200", "Rx", "4", "00", "00", "00", "00"]
 
-    result_msg = my_reader._parse_msg_V2_x(cols)
+    result_msg = my_reader._parse_msg_v2_x(cols)
 
     assert result_msg.dlc == 4
 
 
-def test_trc_reader_can_fd_parse_msg_V2_x_error(trc_file_v21):
+def test_trc_reader_can_fd_parse_msg_v2_x_error(trc_file_v21):
     my_reader = TRCReaderCanFD(trc_file_v21)
     my_reader.file_version = TRCFileVersion.V2_1
     my_reader.columns = {"N": 0, "O": 1, "T": 2, "I": 3, "d": 4, "D": 6}
     cols = ["1", "639.182", "FD", "0200", "Rx", "4", "00", "00", "00", "00"]
 
     with pytest.raises(ValueError) as e:
-        my_reader._parse_msg_V2_x(cols)
+        my_reader._parse_msg_v2_x(cols)
         assert str(e.value) == "No length/dlc columns present."
 
 
