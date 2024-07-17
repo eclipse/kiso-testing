@@ -8,6 +8,17 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Ci trigger when tag
+- Fix message ignored  with auto start flag
+
+### New Features
+
+- Update python can to 4 4 2
+
+## Version 0.28.1 (2024-06-05)
+
+### Bug Fixes
+
 - Adapt uds server auxiliary ([#474](https://github.com/eclipse/kiso-testing/issues/474))
 - Stop rx task call before start rx task is called
 
