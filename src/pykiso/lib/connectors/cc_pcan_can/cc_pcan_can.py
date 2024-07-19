@@ -547,6 +547,9 @@ class CCPCanCan(CChannel):
         Stops the PCAN trace if it is currently running.
         :return: None
         """
+        if not self.logging_activated:
+            log.warning("Logging is not activated")
+            return
         if not self.trace_running:
             log.warning("Trace is already stopped")
             return
@@ -566,6 +569,9 @@ class CCPCanCan(CChannel):
             the trace path defined for the last trace created, defaults to None
         :param trace_size:  maximum size of the trace (in MB), defaults to 10
         """
+        if not self.logging_activated:
+            log.warning("Logging is not activated")
+            return
         if self.trace_running:
             log.warning("Trace is already started")
             return
