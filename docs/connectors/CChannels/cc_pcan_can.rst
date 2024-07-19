@@ -11,11 +11,11 @@ Trace file Strategy
 By default the CCPCanCan will create one trace file for all the test executed when the command `pykiso -c`
 is executed.
 
-The logging can deactivated by passing the parameter `logging_activated` to False in the configuration.
+The logging can be deactivated by passing the parameter `logging_activated` to False in the configuration of the connector.
 
-But the strategy for the creation of the trace file can be modified to create trace file for every test run or
-for every testCase run, it can be modified in the configuration of the CCPCanCan with the parameter strategy_trc_file
-by passing a str : "test" or "testCase"
+The strategy for the creation of the trace file can also be modified to create trace file for every test run or
+for every testCase run, by adding in the configuration of the CCPCanCan the parameter strategy_trc_file
+that take two possible value : "test" or "testCase"
 
 .. code:: yaml
 
