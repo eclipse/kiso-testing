@@ -21,10 +21,9 @@ import logging
 import threading
 import time
 
-from lib.auxiliaries.can_auxiliary.can_auxiliary import CanAuxiliary
-
 import pykiso
 from pykiso.auxiliaries import can_aux1, can_aux2
+from pykiso.lib.auxiliaries.can_auxiliary.can_auxiliary import CanAuxiliary
 from pykiso.lib.auxiliaries.can_auxiliary.can_message import CanMessage
 
 can_aux1: CanAuxiliary
@@ -37,9 +36,7 @@ class CanAuxTest(pykiso.BasicTest):
         """
         Test send message and receive messages
         """
-        logging.info(
-            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
+        logging.info(f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------")
 
         send_t = threading.Thread(target=self.tx_thread, args=[can_aux1])
 
@@ -57,9 +54,7 @@ class CanAuxTest(pykiso.BasicTest):
 
         # wait certain time to receive specific message
         recv_msg = can_aux2.wait_for_message("Message_1", 1)
-        logging.info(
-            "New msg with wait Signal A = " + str(recv_msg.signals["signal_a"])
-        )
+        logging.info("New msg with wait Signal A = " + str(recv_msg.signals["signal_a"]))
         assert recv_msg.signals == {"signal_a": 7, "signal_b": 8}
         send_t.join()
 
@@ -67,19 +62,34 @@ class CanAuxTest(pykiso.BasicTest):
         """
         Send messages, and wait one of them to match the expected signals
         """
-        logging.info(
-            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
+        logging.info(f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------")
 
         send_t = threading.Thread(target=self.tx_thread, args=[can_aux1])
 
         send_t.start()
         time.sleep(0.3)
-        recv_msg = can_aux2.wait_to_match_message_with_signals(
-            "Message_1", {"signal_a": 7}, 1
-        )
+        recv_msg = can_aux2.wait_to_match_message_with_signals("Message_1", {"signal_a": 7}, 1)
         logging.info(f"Matched Message signals {recv_msg.signals}")
         assert recv_msg.signals == {"signal_a": 7, "signal_b": 8}
+        send_t.join()
+
+    def test_collect_messages_with_a_context_manager(self):
+        """Collect all the messages that were received while the context manager is active"""
+        logging.info(f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------")
+
+        send_t = threading.Thread(target=self.tx_thread, args=[can_aux1])
+
+        send_t.start()
+        time.sleep(0.1)
+        with can_aux2.collect_messages():
+            can_aux2.send_message("Message_1", {"signal_a": 1, "signal_b": 2})
+            time.sleep(0.6)
+        messages: list[CanMessage] = can_aux2.get_collected_messages()
+        assert messages[0].name == "Message_1"
+        assert messages[0].signals == {"signal_a": 4, "signal_b": 5}
+        assert messages[1].name == "Message_1"
+        assert messages[1].signals == {"signal_a": 7, "signal_b": 8}
+
         send_t.join()
 
     def tx_thread(self, can_aux):

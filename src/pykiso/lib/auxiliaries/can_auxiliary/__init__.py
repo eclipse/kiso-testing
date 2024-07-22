@@ -8,3 +8,4 @@
 ##########################################################################
 
 from . import can_auxiliary, can_message, can_parser
+from .can_auxiliary import CanAuxiliary

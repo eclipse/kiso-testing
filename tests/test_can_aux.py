@@ -27,9 +27,7 @@ class TestCanAux:
     @pytest.fixture(scope="function")
     def can_aux_instance(self):
         channel = CCPCanCan()
-        TestCanAux.can_aux_instance = CanAuxiliary(
-            channel, "./examples/test_can/simple.dbc"
-        )
+        TestCanAux.can_aux_instance = CanAuxiliary(channel, "./examples/test_can/simple.dbc")
         return TestCanAux.can_aux_instance
 
     def test_send_message(self, can_aux_instance, mocker):
@@ -50,9 +48,7 @@ class TestCanAux:
     def test_send_message_with_wrong_msg_name(self, can_aux_instance, mocker):
         message_name = "Message_2"
         message_signals = {"signal_a": 1, "signal_b": 5}
-        with pytest.raises(
-            ValueError, match=r"Message_2 is not a message defined in the DBC file."
-        ):
+        with pytest.raises(ValueError, match=r"Message_2 is not a message defined in the DBC file."):
             can_aux_instance.send_message(message_name, message_signals)
 
     def test_get_message_with_empty_queue(self, can_aux_instance):
@@ -61,14 +57,10 @@ class TestCanAux:
 
     def test_get_last_message(self, can_aux_instance):
         can_aux_instance.can_messages["Simple_Msg"] = Queue(maxsize=1)
-        can_aux_instance.can_messages["Simple_Msg"].put_nowait(
-            CanMessage("Simple_Msg", {"a": 5}, 5)
-        )
+        can_aux_instance.can_messages["Simple_Msg"].put_nowait(CanMessage("Simple_Msg", {"a": 5}, 5))
 
         can_aux_instance.can_messages["Simple_Msg1"] = Queue(maxsize=1)
-        can_aux_instance.can_messages["Simple_Msg1"].put_nowait(
-            CanMessage("Simple_Msg1", {"a": 4}, 4)
-        )
+        can_aux_instance.can_messages["Simple_Msg1"].put_nowait(CanMessage("Simple_Msg1", {"a": 4}, 4))
 
         result = can_aux_instance.get_last_message("Simple_Msg")
 
@@ -79,9 +71,7 @@ class TestCanAux:
 
     def test_get_last_signal(self, can_aux_instance):
         can_aux_instance.can_messages["Simple_Msg"] = Queue(maxsize=1)
-        can_aux_instance.can_messages["Simple_Msg"].put_nowait(
-            CanMessage("Simple_Msg", {"a": 5}, 5)
-        )
+        can_aux_instance.can_messages["Simple_Msg"].put_nowait(CanMessage("Simple_Msg", {"a": 5}, 5))
 
         result = can_aux_instance.get_last_signal("Simple_Msg", "a")
 
@@ -90,9 +80,7 @@ class TestCanAux:
 
     def test_get_last_signal_with_wrong_signal_name(self, can_aux_instance):
         can_aux_instance.can_messages["Simple_Msg"] = Queue(maxsize=1)
-        can_aux_instance.can_messages["Simple_Msg"].put_nowait(
-            CanMessage("Simple_Msg", {"a": 5}, 5)
-        )
+        can_aux_instance.can_messages["Simple_Msg"].put_nowait(CanMessage("Simple_Msg", {"a": 5}, 5))
 
         result = can_aux_instance.get_last_signal("Simple_Msg", "b")
 
@@ -106,9 +94,7 @@ class TestCanAux:
     def test_wait_for_message(self, can_aux_instance):
         result = []
         msg_to_send = CanMessage("Message_1", {"signal_a": 1, "signal_b": 2}, 5)
-        send_t = threading.Thread(
-            target=self.send_message, args=[can_aux_instance, msg_to_send]
-        )
+        send_t = threading.Thread(target=self.send_message, args=[can_aux_instance, msg_to_send])
         recv_t = threading.Thread(
             target=self.wait_for_receive_message,
             args=[can_aux_instance, 1, msg_to_send.name, result],
@@ -223,9 +209,7 @@ class TestCanAux:
         recv_msg = can_aux.wait_for_message(msg_name, timeout)
         result.append(recv_msg)
 
-    def send_multiple_messages_with_timeout(
-        self, can_aux, messages_to_send, timeout_between_messages
-    ):
+    def send_multiple_messages_with_timeout(self, can_aux, messages_to_send, timeout_between_messages):
         for msg_to_send in messages_to_send:
             if can_aux.can_messages.get(msg_to_send.name, None) is None:
                 can_aux.can_messages[msg_to_send.name] = Queue(maxsize=1)
@@ -235,9 +219,7 @@ class TestCanAux:
             time.sleep(timeout_between_messages)
 
     def wait_for_match_msg(self, can_aux, timeout, msg_name, expected_signals, result):
-        recv_msg = can_aux.wait_to_match_message_with_signals(
-            msg_name, expected_signals, timeout
-        )
+        recv_msg = can_aux.wait_to_match_message_with_signals(msg_name, expected_signals, timeout)
         result.append(recv_msg)
 
     def test_receive_message_with_empty_queue(self, can_aux_instance, mocker):
@@ -246,9 +228,7 @@ class TestCanAux:
             "remote_id": 16,
             "timestamp": 2,
         }
-        cc_receive_mock = mocker.patch.object(
-            self.can_aux_instance.channel, "cc_receive", return_value=simple_msg
-        )
+        cc_receive_mock = mocker.patch.object(self.can_aux_instance.channel, "cc_receive", return_value=simple_msg)
         msg_obj_magic_mock = mocker.MagicMock()
         msg_obj_magic_mock.name = "Message_1"
         get_msg_by_frame_mock = mocker.patch.object(
@@ -279,16 +259,12 @@ class TestCanAux:
             "remote_id": 16,
             "timestamp": 2,
         }
-        mocker.patch.object(
-            self.can_aux_instance.channel, "cc_receive", return_value=simple_msg
-        )
+        mocker.patch.object(self.can_aux_instance.channel, "cc_receive", return_value=simple_msg)
         get_msg_by_frame_mock = mocker.patch.object(
             can_aux_instance.parser.dbc,
             "get_message_by_frame_id",
         )
-        get_msg_by_frame_mock.side_effect = KeyError(
-            "Specific message signal is not found in message"
-        )
+        get_msg_by_frame_mock.side_effect = KeyError("Specific message signal is not found in message")
         parser_decode_mock = mocker.patch.object(
             can_aux_instance.parser,
             "decode",
@@ -304,9 +280,7 @@ class TestCanAux:
             "remote_id": 16,
             "timestamp": 2,
         }
-        mocker.patch.object(
-            self.can_aux_instance.channel, "cc_receive", return_value=simple_msg
-        )
+        mocker.patch.object(self.can_aux_instance.channel, "cc_receive", return_value=simple_msg)
         msg_obj_magic_mock = mocker.MagicMock()
         msg_obj_magic_mock.name = "Message_1"
         mocker.patch.object(
@@ -329,9 +303,7 @@ class TestCanAux:
             "remote_id": 16,
             "timestamp": 2,
         }
-        cc_receive_mock = mocker.patch.object(
-            self.can_aux_instance.channel, "cc_receive", return_value=simple_msg
-        )
+        cc_receive_mock = mocker.patch.object(self.can_aux_instance.channel, "cc_receive", return_value=simple_msg)
         msg_obj_magic_mock = mocker.MagicMock()
         msg_obj_magic_mock.name = "Message_1"
         get_msg_by_frame_mock = mocker.patch.object(
@@ -361,14 +333,10 @@ class TestCanAux:
         assert msg_int_the_queue.timestamp == 2
 
     def test_decode_msg(self, can_aux_instance, mocker):
-        parser_dbc_decode_mock = mocker.patch.object(
-            can_aux_instance.parser.dbc, "decode_message"
-        )
+        parser_dbc_decode_mock = mocker.patch.object(can_aux_instance.parser.dbc, "decode_message")
 
         can_aux_instance.parser.decode(bytearray(b"\x01\x05\x00\x00"), 16)
-        parser_dbc_decode_mock.assert_called_with(
-            16, bytearray(b"\x01\x05\x00\x00"), decode_choices=False
-        )
+        parser_dbc_decode_mock.assert_called_with(16, bytearray(b"\x01\x05\x00\x00"), decode_choices=False)
 
     def test_run_command_with_send_msg(self, can_aux_instance, mocker):
         cc_send_mock = mocker.patch.object(can_aux_instance.channel, "cc_send")
@@ -387,7 +355,6 @@ class TestCanAux:
         assert caplog.records[0].levelname == "INTERNAL_WARNING"
         assert "received unknown command" in caplog.records[0].message
 
-
     def test_create_auxiliary(self, can_aux_instance, mocker):
         mocker.patch.object(can_aux_instance.channel, "open")
         result = can_aux_instance._create_auxiliary_instance()
@@ -397,3 +364,27 @@ class TestCanAux:
         mocker.patch.object(can_aux_instance.channel, "close")
         result = can_aux_instance._delete_auxiliary_instance()
         assert result
+
+    def test_can_aux_collect_message(self, can_aux_instance, mocker):
+        msg = {"msg": b"test", "remote_id": 16}
+        cc_receive_mock = mocker.patch.object(can_aux_instance.channel, "cc_receive", return_value=msg)
+
+        with can_aux_instance.collect_messages():
+            can_aux_instance._receive_message()
+            can_aux_instance._receive_message()
+        messages = can_aux_instance.get_collected_messages()
+        assert messages[0].name == "Message_1"
+        assert messages[0].signals == {"signal_a": 116, "signal_b": 101}
+        assert messages[0].timestamp == 0.0
+        assert cc_receive_mock.call_count == len(messages)
+
+        with can_aux_instance.collect_messages():
+            can_aux_instance._receive_message()
+        can_aux_instance._receive_message()
+
+        messages: list[CanMessage] = can_aux_instance.get_collected_messages()
+
+        assert messages[0].name == "Message_1"
+        assert messages[0].signals == {"signal_a": 116, "signal_b": 101}
+        assert messages[0].timestamp == 0.0
+        assert len(messages) == 1
