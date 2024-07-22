@@ -19,9 +19,14 @@ The goal of this module is to be able to receive and send signals which are defi
 
 .. currentmodule:: can_auxiliary
 """
+from __future__ import annotations
 
+import functools
 import logging
+import threading
 import time
+from contextlib import ContextDecorator
+from copy import deepcopy
 from queue import Empty, Queue
 from typing import Any, Optional
 
@@ -33,6 +38,27 @@ from .can_message import CanMessage
 from .can_parser import CanMessageParser
 
 log = logging.getLogger(__name__)
+
+
+class _collect_messages(ContextDecorator):
+    """Context manager and decorator for the can auxiliary
+    allowing messages collection (putting them in a list of the auxiliary).
+    """
+
+    def __init__(self, can_aux: CanAuxiliary):
+        """Constructor used to inherit some of can auxiliary features."""
+        self.can_aux = can_aux
+
+    def __enter__(self):
+        """Start adding the message received in a list"""
+        log.internal_debug("Start collecting received can messages.")
+        self.can_aux._messages_collected = []
+        self.can_aux._collect_msg.set()
+
+    def __exit__(self, *exc):
+        """Stop adding message received in a list."""
+        log.internal_debug("Stop collecting received can messages.")
+        self.can_aux._collect_msg.clear()
 
 
 class CanAuxiliary(AuxiliaryInterface):
@@ -52,6 +78,10 @@ class CanAuxiliary(AuxiliaryInterface):
         path_to_dbc_file = dbc_file
         self.parser = CanMessageParser(path_to_dbc_file)
         self.can_messages = {}
+        # Variables to manage the collection of can messages with a context-manager
+        self._collect_msg = threading.Event()
+        self._messages_collected = []
+        self.collect_messages = functools.partial(_collect_messages, can_aux=self)
 
     @open_connector
     def _create_auxiliary_instance(self) -> bool:
@@ -91,6 +121,8 @@ class CanAuxiliary(AuxiliaryInterface):
                     self.can_messages[message_name].get_nowait()
                 can_msg = CanMessage(message_name, message_signals, message_timestamp)
                 self.can_messages[message_name].put(can_msg)
+                if self._collect_msg.is_set():
+                    self._messages_collected.append(can_msg)
         except KeyError:
             log.exception("Specific message signal is not found in message")
             pass
@@ -129,6 +161,13 @@ class CanAuxiliary(AuxiliaryInterface):
                 return last_can_message.signals.get(signal_name, None)
 
         return None
+
+    def get_collected_messages(self) -> list[CanMessage]:
+        """Get all the messages collected with the context manager
+
+        :return: a list with all the collected messages
+        """
+        return deepcopy(self._messages_collected)
 
     def wait_for_message(self, message_name: str, timeout: float = 0.2) -> dict[str, any]:
         """Get the last message with certain timeout in seconds.
