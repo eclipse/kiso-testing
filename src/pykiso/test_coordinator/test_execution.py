@@ -542,7 +542,7 @@ def handle_pcan_trace_strategy(
                 test_class.tearDownClass = stop_pcan_trace_decorator(test_class.tearDownClass, cc_pcan_channel)
 
             # If the user want to have one trace file for each test run we decorate the setUp and tearDown of the class
-            elif strategy_trc_file == "test":
+            elif strategy_trc_file == "testRun":
                 trc_file_name = (
                     util.strclass(test.__class__).replace(".", "_").replace("-", "_")
                     + "_"
@@ -589,10 +589,10 @@ def _retrieve_trc_file_strategy(config: dict[str, Any]) -> Optional[str]:
             and "strategy_trc_file" in connector.get("config", {}).keys()
         ):
             strategy_trc_file = connector["config"]["strategy_trc_file"]
-            if strategy_trc_file not in ["test", "testCase"]:
+            if strategy_trc_file not in ["testRun", "testCase"]:
                 raise ValueError(
                     f"{strategy_trc_file} is not a valid value for strategy_trc_file, ",
-                    "valid values are ['test','testCase']",
+                    "valid values are ['testRun','testCase']",
                 )
     return strategy_trc_file
 

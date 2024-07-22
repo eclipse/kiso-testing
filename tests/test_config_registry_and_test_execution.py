@@ -1033,7 +1033,7 @@ def test_abort(mocker: MockerFixture, caplog):
                 "connectors": {
                     "dummychannel": {
                         "type": "pykiso.lib.connectors.cc_pcan_can:CCPCanCan",
-                        "config": {"strategy_trc_file": "test"},
+                        "config": {"strategy_trc_file": "testRun"},
                     }
                 },
             },

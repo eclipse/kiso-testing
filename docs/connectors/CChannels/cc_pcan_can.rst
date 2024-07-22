@@ -15,7 +15,7 @@ The logging can be deactivated by passing the parameter `logging_activated` to F
 
 The strategy for the creation of the trace file can also be modified to create trace file for every test run or
 for every testCase run, by adding in the configuration of the CCPCanCan the parameter strategy_trc_file
-that take two possible value : "test" or "testCase"
+that take two possible values : "testRun" or "testCase"
 
 .. code:: yaml
 
@@ -26,4 +26,4 @@ that take two possible value : "test" or "testCase"
         channel: "PCAN_USBBUS1"
         state: "ACTIVE"
         type: pykiso.lib.connectors.cc_pcan_can:CCPCanCan
-        strategy_trc_file: "test"
+        strategy_trc_file: "testRun"

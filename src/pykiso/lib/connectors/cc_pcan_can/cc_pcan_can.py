@@ -93,7 +93,7 @@ class CCPCanCan(CChannel):
         logging_activated: bool = True,
         bus_error_warning_filter: bool = False,
         merge_trc_logs: bool = True,
-        strategy_trc_file: Optional[Literal["test", "testCase"]] = None,
+        strategy_trc_file: Optional[Literal["testRun", "testCase"]] = None,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -548,7 +548,6 @@ class CCPCanCan(CChannel):
         :return: None
         """
         if not self.logging_activated:
-            log.warning("Logging is not activated")
             return
         if not self.trace_running:
             log.warning("Trace is already stopped")
