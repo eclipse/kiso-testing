@@ -19,8 +19,11 @@ Integration Test Framework
 
 """
 import logging
+import os
 import pprint
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -33,6 +36,8 @@ from .logging_initializer import change_logger_class, initialize_logging
 from .test_coordinator import test_execution
 from .test_setup.config_registry import ConfigRegistry
 from .types import PathType
+
+UNRESOLVED_THREAD_TIMEOUT = 10
 
 
 def eval_user_tags(click_context: click.Context) -> Dict[str, List[str]]:
@@ -82,6 +87,35 @@ def check_file_extension(click_context: click.Context, param: click.Parameter, p
         if not path.endswith((".yaml", ".yml")):
             raise click.BadParameter(f"Configuration needs to be a .yaml file, but {path} was given")
     return paths
+
+
+def active_threads() -> list[str]:
+    """Get the names of all active threads except the main thread."""
+    return [thread.name for thread in threading.enumerate()][1:]
+
+
+def check_and_handle_unresolved_threads(log: logging.Logger, timeout: int = 10) -> None:
+    """Check if there are unresolved threads and handle them.
+    Process for unresolved threads:
+    - If there are unresolved threads, log a warning and wait for a timeout.
+    - If the threads are still running after the timeout, log a fatal error and force exit.
+    - If the threads are properly shut down, log a warning and exit normally.
+    """
+    # Skip main thread and get running threads
+    running_threads = active_threads()
+
+    if len(running_threads) > 0:
+        for thread in running_threads:
+            log.warning(f"Unresolved thread {thread} is still running")
+        log.warning(f"Wait {timeout}s for unresolved threads to be terminated.")
+        time.sleep(timeout)
+        if threading.active_count() > 1:
+            log.fatal(
+                f"Unresolved threads {', '.join(active_threads())} are still running after {timeout} seconds. Force pykiso to Exit."
+            )
+            os._exit(test_execution.ExitCode.UNRESOLVED_THREADS)
+        else:
+            log.warning("Unresolved threads has been properly shut down. Normal exit.")
 
 
 class CommandWithOptionalFlagValues(click.Command):
@@ -270,5 +304,7 @@ def main(
         for handler in logging.getLogger().handlers:
             if isinstance(handler, logging.FileHandler):
                 logging.getLogger().removeHandler(handler)
+
+        check_and_handle_unresolved_threads(log, timeout=UNRESOLVED_THREAD_TIMEOUT)
 
     sys.exit(exit_code)
