@@ -1037,7 +1037,7 @@ def test_abort(mocker: MockerFixture, caplog):
                     }
                 },
             },
-            "test",
+            "testRun",
         ),
     ],
 )
@@ -1101,7 +1101,7 @@ def test__get_pcan_instance_cc_proxy(mocker: MockerFixture):
     assert instance == auxiliary.channel._proxy.channel
 
 
-@pytest.mark.parametrize("trc_file_strategy", ("test", None))
+@pytest.mark.parametrize("trc_file_strategy", ("testRun", None))
 def test_handle_pcan_trace_strategy_no_change(mocker: MockerFixture, trc_file_strategy):
     mocked_test_suite = [mocker.MagicMock(spec=unittest.TestSuite)] * 4
     mocker.patch.object(test_execution, "_retrieve_trc_file_strategy", return_value=trc_file_strategy)
@@ -1112,7 +1112,7 @@ def test_handle_pcan_trace_strategy_no_change(mocker: MockerFixture, trc_file_st
     assert mocked_test_suite == test_suite_returned
 
 
-@pytest.mark.parametrize("trc_file_strategy,nb_call_expected", (["test", 4], ["testCase", 1]))
+@pytest.mark.parametrize("trc_file_strategy,nb_call_expected", (["testRun", 4], ["testCase", 1]))
 def test_handle_pcan_trace_strategy(mocker: MockerFixture, trc_file_strategy, nb_call_expected):
     test_suite_mock = mocker.MagicMock(spec=unittest.TestSuite)
     test_case_mock = mocker.MagicMock(spec=unittest.TestCase)
