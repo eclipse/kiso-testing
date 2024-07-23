@@ -973,13 +973,29 @@ def test_stop_pcan_trace(mocker):
 
 def test_start_pcan_trace(mocker):
     cc_pcan = CCPCanCan()
+    cc_pcan.raw_pcan_interface = "not None"
     mock_init_trace = mocker.patch.object(CCPCanCan, "_initialize_trace")
     mock_config_trace = mocker.patch.object(CCPCanCan, "_pcan_configure_trace")
+    mock_opened = mocker.patch.object(CCPCanCan, "_cc_open")
 
     cc_pcan.start_pcan_trace()
 
     mock_init_trace.assert_called_once()
     mock_config_trace.assert_called_once()
+    mock_opened.assert_not_called()
+
+
+def test_start_pcan_trace_not_opened(mocker):
+    cc_pcan = CCPCanCan()
+    mock_init_trace = mocker.patch.object(CCPCanCan, "_initialize_trace")
+    mock_config_trace = mocker.patch.object(CCPCanCan, "_pcan_configure_trace")
+    mock_opened = mocker.patch.object(CCPCanCan, "_cc_open")
+
+    cc_pcan.start_pcan_trace()
+
+    mock_init_trace.assert_called_once()
+    mock_config_trace.assert_called_once()
+    mock_opened.assert_called_once()
 
 
 def test_stop_pcan_trace_already_stopped(caplog):

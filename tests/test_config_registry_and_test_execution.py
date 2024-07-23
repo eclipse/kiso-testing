@@ -12,6 +12,7 @@ import logging
 import pathlib
 import re
 import signal
+import unittest
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
 from typing import Any
@@ -28,7 +29,9 @@ from pykiso import AuxiliaryInterface, CChannel
 from pykiso.cli import CommandWithOptionalFlagValues
 from pykiso.config_parser import parse_config
 from pykiso.exceptions import TestCollectionError
+from pykiso.lib.auxiliaries.dut_auxiliary import DUTAuxiliary
 from pykiso.lib.auxiliaries.proxy_auxiliary import ProxyAuxiliary
+from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_proxy import CCProxy
 from pykiso.test_coordinator import test_execution
 from pykiso.test_coordinator.test_execution import filter_test_modules_by_suite
@@ -99,15 +102,10 @@ def test_test_execution_with_pattern(tmp_test, file_name):
     ConfigRegistry.register_aux_con(cfg)
     exit_code = test_execution.execute(cfg, pattern_inject=file_name)
     ConfigRegistry.delete_aux_con()
-    assert (
-        exit_code
-        == test_execution.ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
-    )
+    assert exit_code == test_execution.ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
 
 
-@pytest.mark.parametrize(
-    "tmp_test", [("aux1_badtag", "aux2_badtag", False)], indirect=True
-)
+@pytest.mark.parametrize("tmp_test", [("aux1_badtag", "aux2_badtag", False)], indirect=True)
 def test_test_execution_with_bad_user_tags(tmp_test, capsys):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
@@ -166,9 +164,7 @@ def test_parse_test_selection_pattern():
     assert test_file_pattern.test_class == None
     assert test_file_pattern.test_case == None
 
-    test_file_pattern = test_execution.parse_test_selection_pattern(
-        "first::second::third"
-    )
+    test_file_pattern = test_execution.parse_test_selection_pattern("first::second::third")
     assert test_file_pattern.test_file == "first"
     assert test_file_pattern.test_class == "second"
     assert test_file_pattern.test_case == "third"
@@ -184,9 +180,7 @@ def test_parse_test_selection_pattern():
     assert test_file_pattern.test_case == "third"
 
 
-@pytest.mark.parametrize(
-    "tmp_test", [("aux1_collect", "aux2_collect", False)], indirect=True
-)
+@pytest.mark.parametrize("tmp_test", [("aux1_collect", "aux2_collect", False)], indirect=True)
 def test_test_execution_collect_error(tmp_test, capsys, mocker):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
@@ -195,9 +189,7 @@ def test_test_execution_collect_error(tmp_test, capsys, mocker):
     Validation criteria:
         -  run is executed without error
     """
-    mocker.patch(
-        "pykiso.test_coordinator.test_suite.tc_sort_key", side_effect=Exception
-    )
+    mocker.patch("pykiso.test_coordinator.test_suite.tc_sort_key", side_effect=Exception)
 
     cfg = parse_config(tmp_test)
     ConfigRegistry.register_aux_con(cfg)
@@ -298,9 +290,7 @@ def test_find_folders_between_paths(start, end, expected):
         ("banana", True, True, False),
     ],
 )
-def test_is_valid_module_test_nested_module(
-    pattern, parent_init_exist, child_init_exist, expected, tmp_path
-):
+def test_is_valid_module_test_nested_module(pattern, parent_init_exist, child_init_exist, expected, tmp_path):
 
     suite_folder = tmp_path / "test_suite_root" / "test_suite_lvl_1"
     test_moule = suite_folder / "test_module_1.py"
@@ -332,9 +322,7 @@ def test_collect_suites_with_invalid_cli_pattern(tmp_test, mocker):
         "pykiso.test_coordinator.test_execution._is_valid_module",
         return_value=False,
     )
-    create_test_suite = mocker.patch(
-        "pykiso.test_coordinator.test_execution.create_test_suite"
-    )
+    create_test_suite = mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite")
 
     pattern = "test_module*"
 
@@ -368,16 +356,10 @@ def test_collect_test_suites_without_any_tests(mocker):
         "pykiso.test_coordinator.test_execution._is_valid_module",
         side_effect=is_valid_module_return,
     )
-    create_test_suite = mocker.patch(
-        "pykiso.test_coordinator.test_execution.create_test_suite"
-    )
+    create_test_suite = mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite")
 
-    error_suites_dir = ", ".join(
-        config["suite_dir"] for config in config_test_suite_list
-    )
-    with pytest.raises(
-        TestCollectionError, match=f"Failed to collect test suites {error_suites_dir}"
-    ):
+    error_suites_dir = ", ".join(config["suite_dir"] for config in config_test_suite_list)
+    with pytest.raises(TestCollectionError, match=f"Failed to collect test suites {error_suites_dir}"):
         test_execution.collect_test_suites(config_test_suite_list)
 
     create_test_suite.assert_not_called()
@@ -394,9 +376,7 @@ def test_collect_test_suites_with_tests(mocker, is_valid_module_return):
         "pykiso.test_coordinator.test_execution._is_valid_module",
         side_effect=is_valid_module_return,
     )
-    create_test_suite = mocker.patch(
-        "pykiso.test_coordinator.test_execution.create_test_suite"
-    )
+    create_test_suite = mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite")
 
     calls_list = []
     for config_num in range((len(is_valid_module_return))):
@@ -420,9 +400,7 @@ def test_collect_suites_with_invalid_cfg_pattern(tmp_test, mocker):
         "pykiso.test_coordinator.test_execution._is_valid_module",
         return_value=False,
     )
-    create_test_suite = mocker.patch(
-        "pykiso.test_coordinator.test_execution.create_test_suite"
-    )
+    create_test_suite = mocker.patch("pykiso.test_coordinator.test_execution.create_test_suite")
 
     pattern = "test_module*"
 
@@ -430,9 +408,7 @@ def test_collect_suites_with_invalid_cfg_pattern(tmp_test, mocker):
     cfg["test_suite_list"][0]["test_filter_pattern"] = pattern
 
     ConfigRegistry.register_aux_con(cfg)
-    test_suite_dir = re.escape(
-        rf"Failed to collect test suites {cfg['test_suite_list'][0]['suite_dir']}"
-    )
+    test_suite_dir = re.escape(rf"Failed to collect test suites {cfg['test_suite_list'][0]['suite_dir']}")
     with pytest.raises(pykiso.TestCollectionError, match=test_suite_dir):
         test_execution.collect_test_suites(cfg["test_suite_list"])
 
@@ -470,15 +446,10 @@ def test_test_execution_collect_error_log(mocker, caplog, tmp_test):
         exit_code = test_execution.execute(config=cfg)
 
     assert "Error occurred during test collection." in caplog.text
-    assert (
-        exit_code
-        == test_execution.ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
-    )
+    assert exit_code == test_execution.ExitCode.ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
 
 
-@pytest.mark.parametrize(
-    "tmp_test", [("creation_error_aux1", "creation_error_aux2", False)], indirect=True
-)
+@pytest.mark.parametrize("tmp_test", [("creation_error_aux1", "creation_error_aux2", False)], indirect=True)
 def test_test_execution_with_auxiliary_creation_error(mocker, caplog, tmp_test):
     """Call execute function from test_execution using
     configuration data coming from parse_config method
@@ -550,9 +521,7 @@ def test_test_execution_test_failure(tmp_test, capsys):
     assert "->  FAILED" in output.err
 
 
-@pytest.mark.parametrize(
-    "tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True
-)
+@pytest.mark.parametrize("tmp_test", [("juint_aux1", "juint_aux2", False)], indirect=True)
 def test_test_execution_with_junit_reporting(tmp_test, capsys, mocker):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
@@ -593,9 +562,7 @@ def test_test_execution_with_junit_reporting(tmp_test, capsys, mocker):
     ],
     indirect=["tmp_test"],
 )
-def test_test_execution_with_junit_reporting_with_file_name(
-    tmp_test, path, capsys, mocker
-):
+def test_test_execution_with_junit_reporting_with_file_name(tmp_test, path, capsys, mocker):
     """Call execute function from test_execution using
     configuration data coming from parse_config method and
     --junit option to show the test results in console
@@ -673,18 +640,8 @@ def test_failure_and_error_handling():
 
     assert test_execution.failure_and_error_handling(TR_ALL_TESTS_SUCCEEDED) == 0
     assert test_execution.failure_and_error_handling(TR_ONE_OR_MORE_TESTS_FAILED) == 1
-    assert (
-        test_execution.failure_and_error_handling(
-            TR_ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION
-        )
-        == 2
-    )
-    assert (
-        test_execution.failure_and_error_handling(
-            TR_ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTIONE
-        )
-        == 3
-    )
+    assert test_execution.failure_and_error_handling(TR_ONE_OR_MORE_TESTS_RAISED_UNEXPECTED_EXCEPTION) == 2
+    assert test_execution.failure_and_error_handling(TR_ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTIONE) == 3
 
 
 @pytest.mark.parametrize(
@@ -833,9 +790,7 @@ def test_apply_variant_filter_multiple_testcases(mocker):
     assert not hasattr(mock_test_case_to_run, "__unittest_skip__")
     assert not hasattr(mock_test_case_to_run, "__unittest_skip_why__")
     assert mock_test_case_to_skip.__unittest_skip__ == True
-    assert (
-        "'k1' not present in test tags" in mock_test_case_to_skip.__unittest_skip_why__
-    )
+    assert "'k1' not present in test tags" in mock_test_case_to_skip.__unittest_skip_why__
 
 
 def test_apply_test_case_filter(mocker):
@@ -858,9 +813,7 @@ def test_apply_test_case_filter(mocker):
         return_value=test_cases,
     )
 
-    new_testsuite = test_execution.apply_test_case_filter(
-        {}, "testClass1", "test_run_[2-5]"
-    )
+    new_testsuite = test_execution.apply_test_case_filter({}, "testClass1", "test_run_[2-5]")
     assert len(new_testsuite._tests) == 4
     assert new_testsuite._tests[0]._testMethodName == "test_run_2"
     assert new_testsuite._tests[1]._testMethodName == "test_run_3"
@@ -870,9 +823,7 @@ def test_apply_test_case_filter(mocker):
     new_testsuite = test_execution.apply_test_case_filter({}, "testClass1", None)
     assert len(new_testsuite._tests) == 10
 
-    new_testsuite = test_execution.apply_test_case_filter(
-        {}, "NotExistingTestClass", None
-    )
+    new_testsuite = test_execution.apply_test_case_filter({}, "NotExistingTestClass", None)
     assert len(new_testsuite._tests) == 0
 
 
@@ -900,9 +851,7 @@ def sample_config(mocker: MockerFixture, request: pytest.FixtureRequest):
     }
 
     # set additional config parameters based on provided fixture params
-    mp_enable, aux1_auto_start, aux2_auto_start = getattr(
-        request, "param", (False, False, False)
-    )
+    mp_enable, aux1_auto_start, aux2_auto_start = getattr(request, "param", (False, False, False))
 
     if mp_enable:
         config["connectors"]["channel1"]["config"]["processing"] = True
@@ -1001,18 +950,12 @@ def test_config_registry_auto_proxy(mocker: MockerFixture, sample_config):
     ConfigRegistry.register_aux_con(config)
 
     mock_linker.install.assert_called_once()
-    mock_linker.provide_connector.assert_has_calls(
-        provide_connector_calls, any_order=True
-    )
-    mock_linker.provide_auxiliary.assert_has_calls(
-        provide_auxiliary_calls, any_order=True
-    )
+    mock_linker.provide_connector.assert_has_calls(provide_connector_calls, any_order=True)
+    mock_linker.provide_auxiliary.assert_has_calls(provide_auxiliary_calls, any_order=True)
     mock_linker._aux_cache.get_instance.assert_called_once_with("proxy_aux_channel1")
 
 
-def test_config_registry_auto_proxy_creation_error(
-    mocker: MockerFixture, sample_config
-):
+def test_config_registry_auto_proxy_creation_error(mocker: MockerFixture, sample_config):
     mock_linker = mocker.MagicMock()
     mocker.patch(
         "pykiso.test_setup.config_registry.DynamicImportLinker",
@@ -1031,19 +974,13 @@ def test_config_registry_auto_proxy_creation_error(
         ConfigRegistry.register_aux_con(config)
 
     mock_linker.install.assert_called_once()
-    mock_linker.provide_connector.assert_has_calls(
-        provide_connector_calls, any_order=True
-    )
-    mock_linker.provide_auxiliary.assert_has_calls(
-        provide_auxiliary_calls, any_order=True
-    )
+    mock_linker.provide_connector.assert_has_calls(provide_connector_calls, any_order=True)
+    mock_linker.provide_auxiliary.assert_has_calls(provide_auxiliary_calls, any_order=True)
     mock_delete_aux_con.assert_called_once()
 
 
 def test_config_registry_no_auto_proxy(mocker: MockerFixture, sample_config):
-    mock_make_px_channel = mocker.patch.object(
-        ConfigRegistry, "_make_proxy_channel_config"
-    )
+    mock_make_px_channel = mocker.patch.object(ConfigRegistry, "_make_proxy_channel_config")
     mock_make_px_aux = mocker.patch.object(ConfigRegistry, "_make_proxy_aux_config")
     mock_linker = mocker.MagicMock()
     mocker.patch(
@@ -1072,8 +1009,152 @@ def test_abort(mocker: MockerFixture, caplog):
     test_execution.abort(reason)
 
     assert reason in caplog.text
-    assert (
-        "Non recoverable error occurred during test execution, aborting test session."
-        in caplog.text
-    )
+    assert "Non recoverable error occurred during test execution, aborting test session." in caplog.text
     os_kill_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "config,expected_strategy",
+    [
+        (
+            {
+                "connectors": {"dummychannel": {"type": "dummyType"}},
+            },
+            None,
+        ),
+        (
+            {
+                "connectors": {"dummychannel": {"type": "pykiso.lib.connectors.cc_pcan_can:CCPCanCan"}},
+            },
+            None,
+        ),
+        (
+            {
+                "connectors": {
+                    "dummychannel": {
+                        "type": "pykiso.lib.connectors.cc_pcan_can:CCPCanCan",
+                        "config": {"strategy_trc_file": "testRun"},
+                    }
+                },
+            },
+            "testRun",
+        ),
+    ],
+)
+def test__retrieve_trc_file_strategy(config, expected_strategy):
+    strategy = test_execution._retrieve_trc_file_strategy(config)
+    assert expected_strategy == strategy
+
+
+def test__retrieve_trc_file_strategy_error_raised():
+    with pytest.raises(ValueError):
+        test_execution._retrieve_trc_file_strategy(
+            {
+                "connectors": {
+                    "dummychannel": {
+                        "type": "pykiso.lib.connectors.cc_pcan_can:CCPCanCan",
+                        "config": {"strategy_trc_file": "InvalidStrategy"},
+                    }
+                },
+            }
+        )
+
+
+def test__get_pcan_instance_no_instance_available(mocker: MockerFixture):
+    auxiliaries = mocker.MagicMock(spec=DUTAuxiliary)
+    auxiliaries.channel = None
+    channel_name = "aux"
+
+    pykiso.auxiliaries = mocker.MagicMock()
+    mocker.patch.object(pykiso.auxiliaries, channel_name, return_value=auxiliaries)
+
+    instance = test_execution._get_pcan_instance({"auxiliaries": {channel_name: None}})
+
+    assert instance == None
+
+
+def test__get_pcan_instance(mocker: MockerFixture):
+    auxiliary = DUTAuxiliary()
+    auxiliary.channel = CCPCanCan()
+    aux_name = "aux"
+
+    pykiso.auxiliaries = mocker.Mock()
+    pykiso.auxiliaries.aux = auxiliary
+
+    instance = test_execution._get_pcan_instance({"auxiliaries": {aux_name: None}})
+
+    assert instance == auxiliary.channel
+
+
+def test__get_pcan_instance_cc_proxy(mocker: MockerFixture):
+    auxiliary = DUTAuxiliary()
+    auxiliary.channel = CCProxy()
+    auxiliary.channel._proxy = mocker.Mock()
+    auxiliary.channel._proxy.channel = CCPCanCan()
+    aux_name = "aux"
+
+    pykiso.auxiliaries = mocker.mock_module.Mock()
+    pykiso.auxiliaries.aux = auxiliary
+
+    instance = test_execution._get_pcan_instance({"auxiliaries": {aux_name: None}})
+
+    assert instance == auxiliary.channel._proxy.channel
+
+
+@pytest.mark.parametrize("trc_file_strategy", ("testRun", None))
+def test_handle_pcan_trace_strategy_no_change(mocker: MockerFixture, trc_file_strategy):
+    mocked_test_suite = [mocker.MagicMock(spec=unittest.TestSuite)] * 4
+    mocker.patch.object(test_execution, "_retrieve_trc_file_strategy", return_value=trc_file_strategy)
+    mocker.patch.object(test_execution, "_get_pcan_instance", return_value=None)
+
+    test_suite_returned = test_execution.handle_pcan_trace_strategy("config", mocked_test_suite)
+
+    assert mocked_test_suite == test_suite_returned
+
+
+@pytest.mark.parametrize("trc_file_strategy,nb_call_expected", (["testRun", 4], ["testCase", 1]))
+def test_handle_pcan_trace_strategy(mocker: MockerFixture, trc_file_strategy, nb_call_expected):
+    test_suite_mock = mocker.MagicMock(spec=unittest.TestSuite)
+    test_case_mock = mocker.MagicMock(spec=unittest.TestCase)
+    test_case_mock._testMethodName = "testName"
+    test_suite_mock._tests = [test_case_mock]
+    mocked_test_suite = [test_suite_mock] * 4
+    mocker.patch.object(test_execution, "_retrieve_trc_file_strategy", return_value=trc_file_strategy)
+    mocker.patch.object(test_execution, "_get_pcan_instance", return_value="dummy_channel")
+    start_pcan_trace_mock = mocker.patch.object(test_execution, "start_pcan_trace_decorator")
+    stop_pcan_trace_mock = mocker.patch.object(test_execution, "stop_pcan_trace_decorator")
+
+    test_execution.handle_pcan_trace_strategy("config", mocked_test_suite)
+
+    assert start_pcan_trace_mock.call_count == nb_call_expected
+    assert stop_pcan_trace_mock.call_count == nb_call_expected
+
+
+def test_start_pcan_trace_decorator(mocker: MockerFixture):
+    pcan_mock = mocker.MagicMock(spec=CCPCanCan)
+    pcan_mock.trace_path = Path(".")
+    trace_name = "file_name"
+
+    def dummy_function():
+        return "value"
+
+    dummy_function = test_execution.start_pcan_trace_decorator(dummy_function, pcan_mock, trace_name)
+
+    returned_value = dummy_function()
+
+    assert returned_value == "value"
+    pcan_mock.start_pcan_trace.assert_called_once_with(trace_path=pcan_mock.trace_path / trace_name)
+
+
+def test_stop_pcan_trace_decorator(mocker: MockerFixture):
+    pcan_mock = mocker.MagicMock(spec=CCPCanCan)
+
+    def dummy_function():
+        return "value"
+
+    dummy_function = test_execution.stop_pcan_trace_decorator(dummy_function, pcan_mock)
+
+    returned_value = dummy_function()
+
+    assert returned_value == "value"
+    pcan_mock.stop_pcan_trace.assert_called_once_with()
