@@ -11,9 +11,21 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 - Ci trigger when tag
 - Fix message ignored  with auto start flag
 
+### Miscellaneous Tasks
+
+- Bump certifi from 2024.2.2 to 2024.7.4
+- Bump sphinxcontrib-devhelp from 1.0.5 to 1.0.6
+- Bump sphinxcontrib-qthelp from 1.0.6 to 1.0.7
+- Bump zipp from 3.18.2 to 3.19.1
+- Bump urllib3 from 2.2.1 to 2.2.2
+
 ### New Features
 
 - Update python can to 4 4 2
+- Add context manager to receive can message
+- Add one trace file per test case or test run ([#484](https://github.com/eclipse/kiso-testing/issues/484))
+- Force pykiso to close if threads are blocking ([#490](https://github.com/eclipse/kiso-testing/issues/490))
+- Make release 0.29.0 ([#491](https://github.com/eclipse/kiso-testing/issues/491))
 
 ## Version 0.28.1 (2024-06-05)
 
