@@ -75,6 +75,7 @@ class ExitCode(enum.IntEnum):
     ONE_OR_MORE_TESTS_FAILED_AND_RAISED_UNEXPECTED_EXCEPTION = 3
     AUXILIARY_CREATION_FAILED = 4
     BAD_CLI_USAGE = 5
+    UNRESOLVED_THREADS = 6
 
 
 def create_test_suite(
