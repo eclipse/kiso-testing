@@ -19,12 +19,7 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from pykiso.config_parser import (
-    YamlLoader,
-    check_requirements,
-    metadata,
-    parse_config,
-)
+from pykiso.config_parser import YamlLoader, check_requirements, metadata, parse_config
 from pykiso.exceptions import ConnectorRequiredError
 
 

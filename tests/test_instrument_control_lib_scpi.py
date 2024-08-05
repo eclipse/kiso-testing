@@ -11,12 +11,8 @@
 
 import pytest
 
-from pykiso.lib.auxiliaries.instrument_control_auxiliary import (
-    lib_scpi_commands,
-)
-from pykiso.lib.auxiliaries.instrument_control_auxiliary.lib_instruments import (
-    SCPI_COMMANDS_DICT,
-)
+from pykiso.lib.auxiliaries.instrument_control_auxiliary import lib_scpi_commands
+from pykiso.lib.auxiliaries.instrument_control_auxiliary.lib_instruments import SCPI_COMMANDS_DICT
 
 
 class MockVisaObject:

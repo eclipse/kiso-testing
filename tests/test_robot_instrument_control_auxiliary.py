@@ -10,13 +10,8 @@
 import pytest
 
 from pykiso.auxiliary import AuxiliaryInterface
-from pykiso.lib.auxiliaries.instrument_control_auxiliary.lib_scpi_commands import (
-    LibSCPI,
-)
-from pykiso.lib.robot_framework.instrument_control_auxiliary import (
-    InstAux,
-    InstrumentControlAuxiliary,
-)
+from pykiso.lib.auxiliaries.instrument_control_auxiliary.lib_scpi_commands import LibSCPI
+from pykiso.lib.robot_framework.instrument_control_auxiliary import InstAux, InstrumentControlAuxiliary
 from pykiso.test_setup.config_registry import ConfigRegistry
 
 

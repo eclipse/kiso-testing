@@ -8,9 +8,9 @@ auxiliaries:
 connectors:
   process1:
     config:
-      # Executable to start, can be overriden in the test. Here we execute a python program
+      # Executable to start, can be overridden in the test. Here we execute a python program
       executable: C:\Python38\python.exe
-      # Arguments to use, can be overriden in the test
+      # Arguments to use, can be overridden in the test
       args:
         - -c
         - print("hello");print("pykiso")

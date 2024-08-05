@@ -46,3 +46,4 @@ repos:
         entry: codespell
         language: python
         types: [text]
+        args: ["--ignore-words-list", "planation,te,documen"]

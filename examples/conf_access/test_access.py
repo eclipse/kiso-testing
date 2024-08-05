@@ -14,7 +14,7 @@ Configuration access example
 :module: test_access
 
 :synopsis: just a basic example on how to access configuration
-    information fron test case level
+    information from test case level
 """
 
 import logging
@@ -42,7 +42,7 @@ cli_config = GlobalConfig().cli
     tag={"variant": ["variant2", "variant1"], "branch_level": ["daily", "nightly"]},
 )
 class MyTest1(pykiso.BasicTest):
-    """Simply Test case use to show configuraton parameters access."""
+    """Simply Test case use to show configuration parameters access."""
 
     def setUp(self):
         """Just print all given cli parameters."""

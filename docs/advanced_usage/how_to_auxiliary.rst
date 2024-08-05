@@ -58,7 +58,7 @@ Each time the execution is entered, the following actions are performed:
 
 2. Verify if a Message is available for reception
 
-  #. Call the auxiliarie's :py:meth:`~pykiso.auxiliary.AuxiliaryInterface._receive_message` and simpy wait for a message coming from the connector.
+  #. Call the auxiliarie's :py:meth:`~pykiso.auxiliary.AuxiliaryInterface._receive_message` and simply wait for a message coming from the connector.
 
   #. If something is returned, put it in the output queue, otherwise repeat this execution cycle.
 
@@ -203,7 +203,7 @@ Auxiliary without connector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If by default all auxiliaries require a connector, in some specific cases,
-it may complicate the total implementation. Therefor `connector_required`
+it may complicate the total implementation. Therefore `connector_required`
 parameter was defined.
 
 .. note::

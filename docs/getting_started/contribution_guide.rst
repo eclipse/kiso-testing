@@ -154,7 +154,7 @@ before committing :
         :module: name_of_the_module
         :synopsis: short description of the module.
 
-        Extended description of the module's functionnality,
+        Extended description of the module's functionality,
         how it works, etc
 
         .. currentmodule:: name_of_the_module

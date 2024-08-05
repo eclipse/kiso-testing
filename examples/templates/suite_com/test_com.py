@@ -66,7 +66,7 @@ class TestCaseOverride(pykiso.BasicTest):
                 req = b"\x02\x04\x06"
                 logging.info(f"send request {req} over {com_aux.name}")
                 state = com_aux.send_message(req)
-                logging.info(f"request excecution state: {state}")
+                logging.info(f"request execution state: {state}")
                 self.assertEqual(state, True)
                 response = com_aux.receive_message()
                 logging.info(f"received data {response}")
