@@ -18,12 +18,7 @@ import pytest
 
 from pykiso.lib.connectors import cc_rtt_segger
 from pykiso.lib.connectors.cc_rtt_segger import CCRttSegger
-from pykiso.message import (
-    Message,
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.message import Message, MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",

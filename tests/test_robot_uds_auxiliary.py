@@ -14,12 +14,7 @@ import pytest
 
 from pykiso import AuxiliaryInterface
 from pykiso.lib.auxiliaries.udsaux.common import UDSCommands
-from pykiso.lib.robot_framework.uds_auxiliary import (
-    IsoServices,
-    UdsAux,
-    UdsAuxiliary,
-    UdsResponse,
-)
+from pykiso.lib.robot_framework.uds_auxiliary import IsoServices, UdsAux, UdsAuxiliary, UdsResponse
 from pykiso.test_setup.config_registry import ConfigRegistry
 
 

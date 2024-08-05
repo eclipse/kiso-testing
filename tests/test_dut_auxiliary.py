@@ -14,14 +14,7 @@ from typing import Optional
 import pytest
 
 from pykiso.exceptions import AuxiliaryCreationError
-from pykiso.lib.auxiliaries.dut_auxiliary import (
-    COMMAND_TYPE,
-    MESSAGE_TYPE,
-    REPORT_TYPE,
-    DUTAuxiliary,
-    message,
-    queue,
-)
+from pykiso.lib.auxiliaries.dut_auxiliary import COMMAND_TYPE, MESSAGE_TYPE, REPORT_TYPE, DUTAuxiliary, message, queue
 
 
 @pytest.fixture

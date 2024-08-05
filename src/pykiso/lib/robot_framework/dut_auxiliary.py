@@ -26,10 +26,7 @@ from robot.api import logger
 from robot.api.deco import keyword, library
 
 from pykiso.test_coordinator.test_case import RemoteTest
-from pykiso.test_coordinator.test_suite import (
-    RemoteTestSuiteSetup,
-    RemoteTestSuiteTeardown,
-)
+from pykiso.test_coordinator.test_suite import RemoteTestSuiteSetup, RemoteTestSuiteTeardown
 
 from ..auxiliaries.dut_auxiliary import COMMAND_TYPE
 from ..auxiliaries.dut_auxiliary import DUTAuxiliary as DutAux

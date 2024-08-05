@@ -9,10 +9,7 @@
 
 import pytest
 
-from pykiso.lib.robot_framework.communication_auxiliary import (
-    ComAux,
-    CommunicationAuxiliary,
-)
+from pykiso.lib.robot_framework.communication_auxiliary import ComAux, CommunicationAuxiliary
 
 
 @pytest.fixture

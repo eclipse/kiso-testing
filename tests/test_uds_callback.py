@@ -12,10 +12,7 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from pykiso.lib.auxiliaries.udsaux.common.uds_callback import (
-    UdsCallback,
-    UdsDownloadCallback,
-)
+from pykiso.lib.auxiliaries.udsaux.common.uds_callback import UdsCallback, UdsDownloadCallback
 
 
 @pytest.fixture()

@@ -40,7 +40,7 @@ This interface enforces the implementation of the following methods:
   Requires one positional argument ``timeout`` .
 
 
-Class definition and instanciation
+Class definition and instantiation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To create a new communication channel, the first step is to define its class

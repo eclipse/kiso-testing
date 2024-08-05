@@ -16,11 +16,7 @@ import pytest
 
 from pykiso import Message
 from pykiso.lib.connectors import cc_vector_can
-from pykiso.lib.connectors.cc_vector_can import (
-    CCVectorCan,
-    can,
-    detect_serial_number,
-)
+from pykiso.lib.connectors.cc_vector_can import CCVectorCan, can, detect_serial_number
 from pykiso.message import MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {

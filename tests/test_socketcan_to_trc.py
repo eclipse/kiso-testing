@@ -14,10 +14,7 @@ import sys
 import pytest
 
 from pykiso.lib.connectors.cc_socket_can import socketcan_to_trc
-from pykiso.lib.connectors.cc_socket_can.socketcan_to_trc import (
-    SocketCan2Trc,
-    can,
-)
+from pykiso.lib.connectors.cc_socket_can.socketcan_to_trc import SocketCan2Trc, can
 
 
 @pytest.fixture

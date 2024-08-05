@@ -13,12 +13,7 @@ import socket
 import pytest
 
 from pykiso.lib.connectors.cc_udp_server import CCUdpServer
-from pykiso.message import (
-    Message,
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.message import Message, MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",
@@ -161,7 +156,7 @@ def test_udp_recv_invalid(mocker, mock_udp_socket, side_effect_mock, caplog):
     """Test message _cc_receive method using context manager from Connector class.
 
     Validation criteria:
-     - correct Exception is catched
+     - correct Exception is caught
      - correct log message
      - return is None
     """
