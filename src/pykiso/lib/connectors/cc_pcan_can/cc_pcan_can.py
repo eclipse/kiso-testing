@@ -94,7 +94,6 @@ class CCPCanCan(CChannel):
         bus_error_warning_filter: bool = False,
         merge_trc_logs: bool = True,
         strategy_trc_file: Optional[Literal["testRun", "testCase"]] = None,
-        auto_start: bool = True,
         **kwargs,
     ):
         """Initialize can channel settings.
@@ -139,7 +138,6 @@ class CCPCanCan(CChannel):
         :param strategy_trc_file: Strategy for the trace file by default (set to None) it will
             be one trace file for all the tests run, if set to 'test' it will be one trace file
             per test run and 'testCase' it will be one trace file per testCase.
-        :param auto_start: determine if the channel is automatically started if stategy trace is used.
         """
         super().__init__(**kwargs)
         self.interface = interface
@@ -166,7 +164,6 @@ class CCPCanCan(CChannel):
         self.logging_activated = logging_activated
         self.raw_pcan_interface = None
         self.strategy_trc_file = strategy_trc_file
-        self.auto_start = auto_start
         # Set a timeout to send the signal to the GIL to change thread.
         # In case of a multi-threading system, all tasks will be called one after the other.
         self.timeout = 1e-6
@@ -577,9 +574,6 @@ class CCPCanCan(CChannel):
         if self.trace_running:
             log.warning("Trace is already started")
             return
-
-        if self.auto_start and self.raw_pcan_interface is None:
-            self._cc_open()
 
         self.trace_size = trace_size or self.trace_size
         self.trace_path = Path(trace_path) if trace_path else self.trace_path
