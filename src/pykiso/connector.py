@@ -74,16 +74,18 @@ class Connector(abc.ABC):
 class CChannel(Connector):
     """Abstract class for coordination channel."""
 
-    def __init__(self, processing=False, **kwargs: dict) -> None:
+    def __init__(self, processing=False, auto_open: bool = True, **kwargs: dict) -> None:
         """Constructor.
 
         :param processing: deprecated, will not be taken into account.
+        :param auto_open: determine if the channel is automatically open.
         """
         super().__init__(**kwargs)
 
         self._lock_tx = threading.RLock()
         self._lock_rx = threading.RLock()
         self._lock = threading.Lock()
+        self.auto_open = auto_open
 
     def open(self) -> None:
         """Open a thread-safe channel."""

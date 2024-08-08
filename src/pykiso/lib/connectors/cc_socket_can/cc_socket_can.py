@@ -97,7 +97,7 @@ class CCSocketCan(CChannel):
 
         if self.logging_activated:
             # Just avoid the case the given trace directory is None
-            self.log_path = "" if self.log_name is None else self.log_name
+            self.log_path = "" if self.log_path is None else self.log_path
             # if the given log path is not absolute add root path
             # (where pykiso is launched) otherwise take it as it is
             dir_path = (

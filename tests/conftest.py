@@ -24,11 +24,7 @@ from pykiso.lib.auxiliaries import dut_auxiliary
 from pykiso.lib.connectors import cc_example
 from pykiso.lib.connectors.cc_pcan_can import CCPCanCan
 from pykiso.lib.connectors.cc_vector_can import CCVectorCan
-from pykiso.logging_initializer import (
-    LogOptions,
-    get_logging_options,
-    initialize_logging,
-)
+from pykiso.logging_initializer import LogOptions, get_logging_options, initialize_logging
 from pykiso.test_coordinator import test_case
 from pykiso.test_coordinator.test_case import define_test_parameters
 from pykiso.test_setup.dynamic_loader import DynamicImportLinker
@@ -61,6 +57,7 @@ class TestConnector:
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        self.auto_open = False
 
 class TestAux:
     def __init__(self, com = None, *args, **kwargs):

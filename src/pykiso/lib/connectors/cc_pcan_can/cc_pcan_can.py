@@ -561,12 +561,12 @@ class CCPCanCan(CChannel):
         )
         self.trace_running = False
 
-    def start_pcan_trace(self, trace_path: Optional[str] = None, trace_size: int = 10) -> None:
+    def start_pcan_trace(self, trace_path: Optional[str] = None, trace_size: int = None) -> None:
         """Start the PCAN trace, the trace file will be renamed after the pcan trace will be stopped.
 
         :param trace_path: Trace path where the trace should be written if None is given it will use
             the trace path defined for the last trace created, defaults to None
-        :param trace_size:  maximum size of the trace (in MB), defaults to 10
+        :param trace_size:  maximum size of the trace (in MB), defaults to None
         """
         if not self.logging_activated:
             log.warning("Logging is not activated")
@@ -574,9 +574,6 @@ class CCPCanCan(CChannel):
         if self.trace_running:
             log.warning("Trace is already started")
             return
-
-        if self.raw_pcan_interface is None:
-            self._cc_open()
 
         self.trace_size = trace_size or self.trace_size
         self.trace_path = Path(trace_path) if trace_path else self.trace_path
