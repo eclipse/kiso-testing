@@ -30,9 +30,7 @@ from pykiso.auxiliaries import uds_server_aux
 
 # helper objects to build callbacks can be imported from the pykiso lib
 from pykiso.lib.auxiliaries.udsaux import UdsCallback
-from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
-    NegativeResponseCode,
-)
+from pykiso.lib.auxiliaries.udsaux.common.uds_response import NegativeResponseCode
 
 UDS_CALLBACKS = [
     UdsCallback(

@@ -127,7 +127,7 @@ All threaded auxiliaries are capable to delay their start-up (not starting at im
 This means, from user point of view, it's possible to start it on demand and especially where
 it's really needed.
 
-.. warning:: in an explicitely defined proxy setup (for shared communication channels) be sure to
+.. warning:: in an explicitly defined proxy setup (for shared communication channels) be sure to
     always start the proxy auxiliary last. Otherwise, an error will occur due to the specific
     :py:class:`~pykiso.lib.auxiliaries.proxy_auxiliary.ProxyAuxiliary` import rules.
 

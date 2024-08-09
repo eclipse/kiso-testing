@@ -27,13 +27,7 @@ import threading
 import warnings
 from typing import Any, Callable, List, Optional
 
-from ..auxiliary import (
-    AuxCommand,
-    AuxiliaryInterface,
-    close_connector,
-    flash_target,
-    open_connector,
-)
+from ..auxiliary import AuxCommand, AuxiliaryInterface, close_connector, flash_target, open_connector
 from ..exceptions import AuxiliaryCreationError, AuxiliaryNotStarted
 from ..logging_initializer import add_internal_log_levels, initialize_loggers
 

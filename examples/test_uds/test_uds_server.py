@@ -28,11 +28,7 @@ import pykiso
 from pykiso.auxiliaries import uds_aux
 
 # helper objects to build callbacks can be imported from the pykiso lib
-from pykiso.lib.auxiliaries.udsaux import (
-    UdsCallback,
-    UdsDownloadCallback,
-    UdsServerAuxiliary,
-)
+from pykiso.lib.auxiliaries.udsaux import UdsCallback, UdsDownloadCallback, UdsServerAuxiliary
 
 
 def custom_callback(

@@ -25,9 +25,7 @@ from typing import Tuple, Union
 from robot.api import logger
 from robot.api.deco import keyword, library
 
-from ..auxiliaries.communication_auxiliary import (
-    CommunicationAuxiliary as ComAux,
-)
+from ..auxiliaries.communication_auxiliary import CommunicationAuxiliary as ComAux
 from .aux_interface import RobotAuxInterface
 
 

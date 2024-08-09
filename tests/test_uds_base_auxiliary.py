@@ -10,12 +10,7 @@
 
 import pytest
 
-from pykiso.lib.auxiliaries.udsaux.common.uds_base_auxiliary import (
-    Config,
-    Uds,
-    UdsBaseAuxiliary,
-    warnings,
-)
+from pykiso.lib.auxiliaries.udsaux.common.uds_base_auxiliary import Config, Uds, UdsBaseAuxiliary, warnings
 
 
 class TestUdsBaseAuxiliary:

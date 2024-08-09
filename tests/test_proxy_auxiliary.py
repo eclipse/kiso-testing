@@ -15,13 +15,7 @@ import threading
 
 import pytest
 
-from pykiso.lib.auxiliaries.proxy_auxiliary import (
-    AuxiliaryInterface,
-    CCProxy,
-    ConfigRegistry,
-    ProxyAuxiliary,
-    log,
-)
+from pykiso.lib.auxiliaries.proxy_auxiliary import AuxiliaryInterface, CCProxy, ConfigRegistry, ProxyAuxiliary, log
 
 AUX_LIST_NAMES = ["MockAux1", "MockAux2"]
 AUX_LIST_INCOMPATIBLE = ["MockAux3"]

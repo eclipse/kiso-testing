@@ -18,7 +18,7 @@ Adapted modules for this release:
 - UDS Auxiliary
 - UDS server Auxiliary
 
-There is not API changes, therefor, as user, your tests should not be affected.
+There is not API changes, therefore, as user, your tests should not be affected.
 
 
 Kiso log levels
@@ -93,7 +93,7 @@ See :ref:`communication_auxiliary`
 Configurable waiting for send_uds_raw
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To avoid extra waiting time during long/heavy UDS data exchange(flashing) expose
-the parameter tpWaitTime from kiso-testing-python-uds for uds auxilary send_uds_raw
+the parameter tpWaitTime from kiso-testing-python-uds for uds auxiliary send_uds_raw
 method
 
 See :ref:`uds_auxiliary_usage`

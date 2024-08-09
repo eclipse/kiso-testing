@@ -12,9 +12,7 @@ import logging
 import pytest
 
 import pykiso
-from pykiso.lib.auxiliaries.instrument_control_auxiliary import (
-    instrument_control_cli,
-)
+from pykiso.lib.auxiliaries.instrument_control_auxiliary import instrument_control_cli
 
 
 class MockVisaObject:

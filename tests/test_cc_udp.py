@@ -13,12 +13,7 @@ import socket
 import pytest
 
 from pykiso.lib.connectors.cc_udp import CCUdp
-from pykiso.message import (
-    Message,
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.message import Message, MessageCommandType, MessageType, TlvKnownTags
 
 tlv_dict_to_send = {
     TlvKnownTags.TEST_REPORT: "OK",

@@ -18,10 +18,7 @@ import pytest
 
 from pykiso.lib.auxiliaries.udsaux import uds_auxiliary
 from pykiso.lib.auxiliaries.udsaux.common import UDSCommands
-from pykiso.lib.auxiliaries.udsaux.common.uds_response import (
-    NegativeResponseCode,
-    UdsResponse,
-)
+from pykiso.lib.auxiliaries.udsaux.common.uds_response import NegativeResponseCode, UdsResponse
 from pykiso.lib.auxiliaries.udsaux.uds_auxiliary import UdsAuxiliary
 
 

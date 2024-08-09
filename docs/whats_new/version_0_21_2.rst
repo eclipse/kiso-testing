@@ -25,7 +25,7 @@ Better skipping of test cases based on tags
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The test case filtering strategy based on the test tags has been reworked.
-The resulting skipped test cases now appear explicitly as skiped in the test run output
+The resulting skipped test cases now appear explicitly as skipped in the test run output
 
 For more information refer to :ref:`test_tags`
 

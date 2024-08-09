@@ -17,11 +17,7 @@ import pytest
 
 from pykiso import cli, message
 from pykiso.connector import CChannel
-from pykiso.lib.auxiliaries.simulated_auxiliary import (
-    scenario,
-    simulated_auxiliary,
-    simulation,
-)
+from pykiso.lib.auxiliaries.simulated_auxiliary import scenario, simulated_auxiliary, simulation
 from pykiso.test_coordinator import test_execution
 from pykiso.test_setup.config_registry import ConfigRegistry
 

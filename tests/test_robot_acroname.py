@@ -9,10 +9,7 @@
 
 import pytest
 
-from pykiso.lib.robot_framework.acroname_auxiliary import (
-    AcroAux,
-    AcronameAuxiliary,
-)
+from pykiso.lib.robot_framework.acroname_auxiliary import AcroAux, AcronameAuxiliary
 
 
 @pytest.fixture

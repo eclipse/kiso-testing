@@ -13,9 +13,7 @@ import threading
 import pytest
 
 from pykiso import CChannel
-from pykiso.lib.auxiliaries.instrument_control_auxiliary import (
-    InstrumentControlAuxiliary,
-)
+from pykiso.lib.auxiliaries.instrument_control_auxiliary import InstrumentControlAuxiliary
 from pykiso.lib.connectors.cc_visa import VISAChannel
 
 

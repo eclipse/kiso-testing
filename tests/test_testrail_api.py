@@ -8,12 +8,7 @@
 ##########################################################################
 import pytest
 
-from pykiso.tool.testrail.api import (
-    HttpError,
-    HttpRequest,
-    TestRailApi,
-    requests,
-)
+from pykiso.tool.testrail.api import HttpError, HttpRequest, TestRailApi, requests
 
 # prevent pytest from collecting these as test cases
 TestRailApi.__test__ = False

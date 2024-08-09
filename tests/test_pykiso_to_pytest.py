@@ -11,14 +11,7 @@
 import pytest
 from click.testing import CliRunner
 
-from pykiso.tool.pykiso_to_pytest.cli import (
-    find_string_in,
-    format_value,
-    get_imports,
-    main,
-    nested_get,
-    remove_key,
-)
+from pykiso.tool.pykiso_to_pytest.cli import find_string_in, format_value, get_imports, main, nested_get, remove_key
 
 
 @pytest.fixture

@@ -14,13 +14,7 @@ import unittest
 import pytest
 
 from pykiso import message as message_mod
-from pykiso.message import (
-    Message,
-    MessageAckType,
-    MessageCommandType,
-    MessageType,
-    TlvKnownTags,
-)
+from pykiso.message import Message, MessageAckType, MessageCommandType, MessageType, TlvKnownTags
 
 
 class MessageTest(unittest.TestCase):

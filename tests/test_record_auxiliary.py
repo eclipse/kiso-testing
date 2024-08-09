@@ -14,10 +14,7 @@ import threading
 
 import pytest
 
-from pykiso.lib.auxiliaries.record_auxiliary import (
-    RecordAuxiliary,
-    StringIOHandler,
-)
+from pykiso.lib.auxiliaries.record_auxiliary import RecordAuxiliary, StringIOHandler
 
 
 @pytest.fixture
