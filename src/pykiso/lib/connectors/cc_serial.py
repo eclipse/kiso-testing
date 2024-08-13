@@ -198,6 +198,9 @@ class CCSerial(connector.CChannel):
             self.current_write_timeout = timeout
             self.serial.write_timeout = timeout
 
+        if isinstance(msg, str):
+            msg = msg.encode()
+
         self.serial.write(msg)
 
     def _cc_receive(self, timeout=0.00001) -> Dict[str, Optional[bytes]]:
