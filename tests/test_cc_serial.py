@@ -151,3 +151,9 @@ def test_send(mocker):
     recv = cc_serial.cc_send(test_chars, timeout=123)
     assert cc_serial.current_write_timeout == 123
     assert cc_serial.serial.write_timeout == 123
+
+
+    test_str = "boo"
+    recv = cc_serial.cc_send(test_str, timeout=123)
+    assert cc_serial.current_write_timeout == 123
+    assert cc_serial.serial.write_timeout == 123
