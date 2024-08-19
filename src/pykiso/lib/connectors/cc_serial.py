@@ -184,7 +184,7 @@ class CCSerial(connector.CChannel):
         """Close serial port"""
         self.serial.close()
 
-    def _cc_send(self, msg: ByteString, timeout: float = None, **kwargs) -> None:
+    def _cc_send(self, msg: Union[ByteString, str], timeout: float = None, **kwargs) -> None:
         """Sends data to the serial port
 
         :param msg: data to send
@@ -198,6 +198,7 @@ class CCSerial(connector.CChannel):
             self.current_write_timeout = timeout
             self.serial.write_timeout = timeout
 
+        # Some auxiliaries pass msg as a string
         if isinstance(msg, str):
             msg = msg.encode()
 
