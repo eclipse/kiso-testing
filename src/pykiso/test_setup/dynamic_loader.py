@@ -269,6 +269,9 @@ class AuxiliaryCache(ModuleCache):
         if not inst.is_instance and auto_start:
             inst.start()
             inst.create_instance()
+            # Can't used the CChannel typing here due to cyclic import
+            if hasattr(inst, "channel") and inst.channel is not None and inst.channel.auto_open:
+                inst.channel.open()
             log.internal_debug(f"called create_instance on {name}")
         self.instances[name] = inst
         return inst

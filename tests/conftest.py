@@ -57,6 +57,7 @@ class TestConnector:
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
+        self.auto_open = False
 
 class TestAux:
     def __init__(self, com = None, *args, **kwargs):
