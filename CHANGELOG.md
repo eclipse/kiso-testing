@@ -8,6 +8,25 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Remove incompability between instrument aux and serial connector
+- Fix side effect when one auxiliary get suspended ([#499](https://github.com/eclipse/kiso-testing/issues/499))
+
+### Documentation
+
+- Add comment
+
+### Miscellaneous Tasks
+
+- Apply precommit all files
+
+### Testing
+
+- Adapt unit test
+
+## Version 0.29.0 (2024-07-24)
+
+### Bug Fixes
+
 - Ci trigger when tag
 - Fix message ignored  with auto start flag
 
@@ -208,7 +227,7 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 - Fix step report show wrong result ([#309](https://github.com/eclipse/kiso-testing/issues/309))
 - Update python version ([#314](https://github.com/eclipse/kiso-testing/issues/314))
-- Handle proxy autostart when being instantiated after auxiliaries and close channel at last
+- Handle proxy autostart when being instanciated after auxiliaries and close channel at last
 - Use shutil.move for renaming the merged trace to avoid windows errors
 - Add junitxml option to default pytest options ([#321](https://github.com/eclipse/kiso-testing/issues/321))
 
@@ -549,7 +568,7 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Documentation
 
-- Add what's new for 0.17.0
+- Add whats new for 0.17.0
 - Make usage of TestSuite elements more visible
 - Add quality goals
 
@@ -578,8 +597,8 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 ### Documentation
 
 - Remove not maintained 'list of limitations' section
-- Add section what's new ([#38](https://github.com/eclipse/kiso-testing/issues/38))
-- Replace all occurrences of pipenv with poetry
+- Add section whats new ([#38](https://github.com/eclipse/kiso-testing/issues/38))
+- Replace all occurences of pipenv with poetry
 - Rework getting_started
 
 ### New Features
