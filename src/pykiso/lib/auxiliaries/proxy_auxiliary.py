@@ -124,7 +124,8 @@ class ProxyAuxiliary(AuxiliaryInterface):
         with self.lock:
             # on the original proxy setup, the auxiliaries are created before the proxy
             # therefore, when the first auxiliary will be stopped, the counter value will be -1
-            if value < 0:
+            # and if an auxiliary is started then stopped the counter will be 0
+            if value <= 0:
                 value = self._count_open_proxy_channels()
             last_connection_closed = value == 0 and self._open_count == 1
             first_connection_opened = value == 1 and self._open_count == 0
