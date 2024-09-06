@@ -225,11 +225,9 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
 
     # store previous loggers to keep active (union of previous and current loggers)
     active_loggers |= set(loggers)
-    logging.warning("active loggers are : %s", active_loggers)
+
     # set the loggers that are not part of active_loggers to level WARNING
     loggers_to_deactivate = set(relevant_loggers) - set(active_loggers)
-    logging.warning("loggers to deactivate are : %s", loggers_to_deactivate)
-
     for logger_name in loggers_to_deactivate:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
 
