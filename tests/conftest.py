@@ -31,11 +31,10 @@ from pykiso.test_setup.dynamic_loader import DynamicImportLinker
 
 pytest_plugins = ["pytester"]
 
+
 ## skip slow test by default
 def pytest_addoption(parser):
-    parser.addoption(
-        "--runslow", action="store_true", default=False, help="run slow tests"
-    )
+    parser.addoption("--runslow", action="store_true", default=False, help="run slow tests")
 
 
 def pytest_configure(config):
@@ -57,7 +56,9 @@ class TestConnector:
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        self.auto_open = False
+        self.auto_open = True
+    def open(self):
+        pass
 
 class TestAux:
     def __init__(self, com = None, *args, **kwargs):
@@ -203,9 +204,7 @@ def CustomTestCaseAndSuite(request):
                 self.auxiliaries[-1].create_instance()
 
         def prepare_default_test_cases(self, param):
-            @define_test_parameters(
-                suite_id=param[0], case_id=param[1], aux_list=param[2]
-            )
+            @define_test_parameters(suite_id=param[0], case_id=param[1], aux_list=param[2])
             class MyTestCase(test_case.BasicTest):
                 def test_run(self) -> None:
                     pass
@@ -213,29 +212,19 @@ def CustomTestCaseAndSuite(request):
             self.suite.addTest(MyTestCase(methodName="test_run"))
 
         def prepare_remote_test_cases(self, param):
-            @define_test_parameters(
-                suite_id=param[0], case_id=param[1], aux_list=param[2]
-            )
+            @define_test_parameters(suite_id=param[0], case_id=param[1], aux_list=param[2])
             class MyTestCase(test_case.RemoteTest):
                 pass
 
             self.suite.addTest(MyTestCase("test_run"))
 
-        def prepare_default_test_suites(
-            self, modules_to_add_dir, test_filter_pattern, test_suite_id
-        ):
+        def prepare_default_test_suites(self, modules_to_add_dir, test_filter_pattern, test_suite_id):
             class MyTestSuite(test_suite.BasicTestSuite):
-                def __init__(
-                    self, modules_to_add_dir, test_filter_pattern, test_suite_id
-                ):
-                    super(MyTestSuite, self).__init__(
-                        modules_to_add_dir, test_filter_pattern, test_suite_id
-                    )
+                def __init__(self, modules_to_add_dir, test_filter_pattern, test_suite_id):
+                    super(MyTestSuite, self).__init__(modules_to_add_dir, test_filter_pattern, test_suite_id)
 
             # Start integration test
-            self.custom_test_suite = MyTestSuite(
-                modules_to_add_dir, test_filter_pattern, test_suite_id
-            )
+            self.custom_test_suite = MyTestSuite(modules_to_add_dir, test_filter_pattern, test_suite_id)
 
         def stop(self):
             for aux in self.auxiliaries:
@@ -406,9 +395,7 @@ def cases_response():
 def runs_response():
     response = requests.Response()
     response.status_code = 200
-    response._content = json.dumps(
-        {"offset": 0, "runs": [{"id": 1, "name": "..."}, {"id": 2, "name": "..."}]}
-    )
+    response._content = json.dumps({"offset": 0, "runs": [{"id": 1, "name": "..."}, {"id": 2, "name": "..."}]})
     return response
 
 
@@ -446,9 +433,7 @@ def add_result_response():
 def add_run_response():
     response = requests.Response()
     response.status_code = 200
-    response._content = json.dumps(
-        {"id": 1, "config": "Firefox, Ubuntu 12", "milestone_id": 1, "failed_count": 10}
-    )
+    response._content = json.dumps({"id": 1, "config": "Firefox, Ubuntu 12", "milestone_id": 1, "failed_count": 10})
     return response
 
 
