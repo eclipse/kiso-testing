@@ -74,7 +74,7 @@ class Connector(abc.ABC):
 class CChannel(Connector):
     """Abstract class for coordination channel."""
 
-    def __init__(self, processing=False, auto_open: bool = True, **kwargs: dict) -> None:
+    def __init__(self, processing=False, auto_open: bool = False, **kwargs: dict) -> None:
         """Constructor.
 
         :param processing: deprecated, will not be taken into account.
