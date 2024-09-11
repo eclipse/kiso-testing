@@ -1,59 +1,169 @@
-import concurrent.futures
-import functools
 import json
 import logging
 import os
-import sys
-from pathlib import Path
-from typing import List, Tuple
+import tempfile
+from xml.etree.ElementTree import ElementTree
 
-from ..testrail.console import console
-from ..testrail.containers import ResultContainer
-from ..testrail.extraction import JunitReport, Status
-from .api import XrayApi
+import requests
+
+API_VERSION = "api/v2/"
 
 
-def extract_test_results(results: str) -> list:
-    """Extract each test result from the given xml reports.
-
-    :param results: full path to the directory containing all Junit
-        report
-
-    :return: for each identified test cases the xray test id, and the it status, all the content
-    """
-    data = []
-    test_path = "C:\\Users\\MOI4RT\\Documents\\workspace_ITF_projects\\Open_source\\kiso-testing\\"
-    for file in os.listdir(test_path):
-        if file.endswith(".xml"):
-            with open(test_path + file) as xml:
-                # logging.info(xml.read())
-                data.append(xml.read())
-            return data
+class XrayException(Exception):
+    """Raise when sending the post request is unsuccessful."""
 
 
-def add_case_results(
+class XrayPublisher:
+    """Xray Publisher command API."""
+
+    def __init__(self, base_url: str, client_id: str, client_secret: str) -> None:
+        self.base_url = base_url[:-1] if base_url.endswith("/") else base_url
+        self.rest_api_version = API_VERSION
+        self.client_id = client_id
+        self.client_secret = client_secret
+
+    def get_url(self, url_endpoint: str) -> str:
+        """
+        Get the complete url to send the post request.
+
+        :param url_endpoint: the endpoint of the url
+
+        :return: the complete url to send the post request
+        """
+        return f"{self.base_url}/{self.rest_api_version}{url_endpoint}"
+
+    def get_token(self, url: str) -> str:
+        """
+        Get the token to authenticate to xray from a client ID and a client SECRET.
+
+        :param url: the url to send the post request to authenticate
+
+        :return: the Bearer token
+        """
+        client = {"client_id": self.client_id, "client_secret": self.client_secret}
+        headers = {"Content-Type": "application/json"}
+        token_result = requests.post(url=url, headers=headers, json=client)
+        return token_result.json()
+
+    def get_publisher_headers(self, token: str) -> dict[str, str]:
+        """
+        Get the request header by adding content and authorization part.
+
+        :param token: the requested Bearer token
+
+        :return: the post request's header
+        """
+        headers = {"Authorization": "Bearer " + token}
+        headers["Content-Type"] = "test/xml"
+        return headers
+
+    def publish_xml_result(
+        self,
+        token: str,
+        data: dict,
+        test_execution_id: str | None = None,
+    ) -> dict[str, str]:
+        """
+        Publish the xml test results to xray.
+
+        :param token: the requested Bearer token
+        :param data: the test results
+        :param test_execution_id: the xray's test execution ticket id where to import the test results,
+            if none is specified a new test execution ticket will be created
+
+        :return: the content of the post request to create the execution test ticket: its id, its key, and its issue
+        """
+        # construct the request header
+        headers = self.get_publisher_headers(token)
+
+        if test_execution_id is not None:
+            url_endpoint = "import/execution/junit/?" + "projectKey=BDU3" + "&testExecKey=" + test_execution_id
+        else:
+            url_endpoint = "import/execution/junit/?" + "projectKey=BDU3"
+
+        # construct the complete url to send the post request
+        url_publisher = self.get_url(url_endpoint=url_endpoint)
+
+        try:
+            query_response = requests.post(url=url_publisher, headers=headers, data=data)
+        except requests.exceptions.ConnectionError:
+            raise XrayException(f"Cannot connect to JIRA service at {url_endpoint}")
+        else:
+            try:
+                query_response.raise_for_status()
+            except requests.exceptions.HTTPError:
+                raise XrayException(
+                    f"Cannot post to JIRA service at {url_endpoint} due to Response status code: {query_response.status_code}"
+                )
+        return json.loads(query_response.content)
+
+
+def upload_test_results(
     base_url: str,
     user: str,
     password: str,
-    results: List[Tuple[int, Status]],
+    results: str,
     test_execution_id: str | None = None,
-) -> ResultContainer:
-    """Upload all given results to xray.
-
-    :param base_url: xray's base url
-    :param user: user's session id
-    :param password: user's password
-    :param test_execution_id: xray's test ticket id
-    :param results: test case ids to update and their results
-
-    :return: all new test result information
+) -> dict[str, str]:
     """
-    responses = XrayApi.add_result_with_xml(
-        base_url=base_url,
-        user=user,
-        password=password,
-        test_execution_id=test_execution_id,
-        data=results,
-    )
+    Upload all given results to xray.
 
+    :param base_url: the xray's base url
+    :param user: the user's session id
+    :param password: the user's password
+    :param results: the test results
+    :param test_execution_id: the xray's test execution ticket id where to import the test results,
+        if none is specified a new test execution ticket will be created
+
+    :return: the content of the post request to create the execution test ticket: its id, its key, and its issue
+    """
+    xray_publisher = XrayPublisher(base_url=base_url, client_id=user, client_secret=password)
+    # authenticate: get the correct token from the authenticate endpoint
+    url_authenticate = xray_publisher.get_url(url_endpoint="authenticate/")
+    token = xray_publisher.get_token(url=url_authenticate)
+
+    # publish: post request to send the junit xml result to the junit xml endpoint
+    responses = xray_publisher.publish_xml_result(token=token, data=results, test_execution_id=test_execution_id)
     return responses
+
+
+def extract_test_results(
+    path_results: str,
+) -> str:
+    """
+    Extract the test results linked to an xray test key. Filter the JUnit xml files generated by the execution of tests,
+    to keep only the results of tests marked with an xray decorator. A temporary file is created with the test results.
+
+    :param path_results: the path to the xml files
+
+    :return: the filtered test results
+    """
+    # from the JUnit xml files, create a temporary file
+    for file in os.listdir(path_results):
+        if file.endswith(".xml"):
+            tree = ElementTree()
+            tree.parse(file)
+            root = tree.getroot()
+            # scan all the xml to keep the testsuite with the property "test_key"
+            for testsuite in root.findall("testsuite"):
+                testcase = testsuite.find("testcase")
+                properties = testcase.find("properties")
+                if properties is None:
+                    # remove the testsuite not marked by the xray decorator
+                    tree.getroot().remove(testsuite)
+                    continue
+                is_xray = False
+                for property in properties.findall("property"):
+                    if property.attrib.get("name") == "test_key":
+                        is_xray = True
+                        break
+                if not is_xray:
+                    # remove the testsuite not marked by the xray decorator
+                    tree.getroot().remove(testsuite)
+
+            with tempfile.TemporaryFile() as fp:
+                tree.write(fp)
+                fp.seek(0)
+                xml_results = fp.read().decode()
+    # TODO: handle list of xml_results, if several xml files are in the folder
+    return xml_results

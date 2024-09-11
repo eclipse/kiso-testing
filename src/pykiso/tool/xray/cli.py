@@ -1,11 +1,8 @@
 import getpass
-import os
-import tempfile
-from xml.etree.ElementTree import ElementTree
 
 import click
 
-from .xray import add_case_results, extract_test_results
+from .xray import extract_test_results, upload_test_results
 
 
 @click.group()
@@ -25,7 +22,7 @@ from .xray import add_case_results, extract_test_results
 )
 @click.option(
     "--url",
-    help="URL of Xray server",
+    help="Base URL of Xray server",
     required=True,
 )
 @click.pass_context
@@ -40,7 +37,7 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
 @cli_xray.command("upload")
 @click.option(
     "--test-execution-id",
-    help="Test execution ticket ID to import the JUnit xml test results",
+    help="Import the JUnit xml test results into an existing Test Execution ticket by overwriting",
     required=False,
     default=None,
     type=click.STRING,
@@ -48,7 +45,7 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
 @click.option(
     "-r",
     "--path-results",
-    help="full path to the folder containing the JUNIT reports",
+    help="Full path to a JUnit report or to the folder containing the JUNIT reports",
     type=click.Path(exists=True, resolve_path=True),
     required=True,
 )
@@ -59,45 +56,15 @@ def cli_upload(
     test_execution_id: str,
 ) -> None:
     """Upload the JUnit xml test results on xray."""
-    # From the JUnit xml files, create a temporary file to keep only the results marked with an xray decorator.
-    for file in os.listdir(path_results):
-        if file.endswith(".xml"):
-            tree = ElementTree()
-            tree.parse(file)
-            root = tree.getroot()
-            for testsuite in root.findall("testsuite"):
-                testcase = testsuite.find("testcase")
-                properties = testcase.find("properties")
-                if properties is None:
-                    tree.getroot().remove(testsuite)
-                    continue
-                is_test_key = False
-                for property in properties.findall("property"):
-                    if property.attrib.get("name") == "test_key":
-                        # breakpoint()
-                        is_test_key = True
-                        break
-                if not is_test_key:
-                    print("delete")
-                    tree.getroot().remove(testsuite)
+    # From the JUnit xml files found, create a temporary file to keep only the test results marked with an xray decorator.
+    test_results = extract_test_results(path_results=path_results)
 
-            with tempfile.TemporaryFile() as fp:
-                tree.write(fp)
-                fp.seek(0)
-                xml_results = fp.read().decode()
-
-    # def extract_test_results(path_results: str):
-    #     ...
-
-    # def publish_test_results():
-    #     ...
-
-    # update the new created run with case statuses
-    test_results = add_case_results(
+    # Upload the test results into Xray
+    responses = upload_test_results(
         base_url=ctx.obj["URL"],
         user=ctx.obj["USER"],
         password=ctx.obj["PASSWORD"],
-        results=xml_results,
+        results=test_results,
         test_execution_id=test_execution_id,
     )
-    print(test_results)
+    print(f"The test results can be found in JIRA by: {responses}")
