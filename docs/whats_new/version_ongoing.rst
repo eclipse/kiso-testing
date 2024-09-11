@@ -14,3 +14,9 @@ PCAN Connector
 By default the CCPCanCan will use the trace size define in during the initialisation.
 
 The log path is now initialise if set at None.
+
+Results can be exported on Xrax
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+see :ref:`xray`
+
