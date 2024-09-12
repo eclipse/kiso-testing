@@ -126,6 +126,7 @@ def test_define_test_parameters_on_basic_tc(
         pass
 
     tc_inst = MyClass()
+
     assert tc_inst.test_suite_id == suite_id
     assert tc_inst.test_case_id == case_id
     aux_list = aux_list or []
@@ -384,3 +385,20 @@ def test_xray_decorator(test_key, req_id, properties, mocker):
     del mock_test_case_class.properties
 
     assert getattr(mock_test_case_class, "properties", None) is None
+
+
+@pytest.mark.parametrize("value, type", [("dummy", str), ({"dummy": 1}, dict)])
+def test_properties(value, type):
+    class DummyClass(test_case.BasicTest):
+        pass
+
+    test_case_inst = DummyClass(1, 1, None, {"Component1": ["Req1", "Req2"]}, None, None, None, None)
+    assert test_case_inst.properties is None
+
+    # update properties
+    test_case_inst.properties = value
+    assert isinstance(test_case_inst.properties, type)
+
+    # delete properties
+    del test_case_inst.properties
+    assert getattr(test_case_inst, "properties", None) is None
