@@ -74,7 +74,7 @@ class CCPCanCan(CChannel):
         channel: str = "PCAN_USBBUS1",
         state: str = "ACTIVE",
         trace_path: str = "",
-        trace_size: int = 10,
+        trace_size: int = 100,  # 100 is maximum size
         bitrate: int = 500000,
         is_fd: bool = True,
         enable_brs: bool = False,
@@ -242,9 +242,9 @@ class CCPCanCan(CChannel):
         pcan_channel = getattr(PCANBasic, self.channel)
         if self.trace_path is None:
             log.internal_warning("No trace path specified, an existing trace will be overwritten.")
-            pcan_path_argument = PCANBasic.TRACE_FILE_OVERWRITE
+            pcan_trace_configuration = PCANBasic.TRACE_FILE_OVERWRITE
         else:
-            pcan_path_argument = PCANBasic.TRACE_FILE_DATE | PCANBasic.TRACE_FILE_TIME
+            pcan_trace_configuration = PCANBasic.TRACE_FILE_DATE | PCANBasic.TRACE_FILE_TIME
 
         try:
             if self.trace_path is not None:
@@ -263,11 +263,7 @@ class CCPCanCan(CChannel):
 
             if sys.platform != "darwin":
                 log.internal_info("Segmented option of trace file activated.")
-                self._pcan_set_value(
-                    pcan_channel,
-                    PCANBasic.TRACE_FILE_SEGMENTED,
-                    PCANBasic.PCAN_PARAMETER_ON,
-                )
+                pcan_trace_configuration |= PCANBasic.TRACE_FILE_SEGMENTED
 
                 if self.trace_size != 10:
                     log.internal_info("Trace size set to %d MB.", self.trace_size)
@@ -278,11 +274,12 @@ class CCPCanCan(CChannel):
                     )
             else:
                 log.internal_warning("TRACE_FILE_SEGMENTED deactivated for macos!")
+                pcan_trace_configuration |= PCANBasic.TRACE_FILE_SINGLE
 
             self._pcan_set_value(
                 pcan_channel,
                 PCANBasic.PCAN_TRACE_CONFIGURE,
-                pcan_path_argument,
+                pcan_trace_configuration,
             )
             log.internal_info("Tracefile configured")
 
