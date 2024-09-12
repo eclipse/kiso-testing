@@ -55,11 +55,6 @@ class SuiteTearDown(pykiso.RemoteTestSuiteTeardown):
     yaml configuration file)
     """
 
-    def tearDown(self):
-        """Hook method from unittest in order to execute code before test case run."""
-        logging.info(f"--------------- TEARDOWN: {self.test_suite_id}, {self.test_case_id} ---------------")
-        self.assertTrue(True)  # False
-
 
 @pykiso.define_test_parameters(
     suite_id=1,
@@ -95,7 +90,6 @@ class MyTest1(pykiso.BasicTest):
         super().setUp()
 
     @pykiso.retry_test_case(max_try=5, rerun_setup=True, rerun_teardown=True)
-    @pykiso.xray(test_key="BDU3-13303", req_id="BDU_req_123")
     def test_run(self):
         """In this case the default test_run method is overridden and
         instead of calling test_run from RemoteTest class the following
@@ -104,23 +98,12 @@ class MyTest1(pykiso.BasicTest):
         tearDown methods are called for each attempt.
         """
         logging.info("TAG daily")
-        logging.info(f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------")
+        logging.info(
+            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
+        )
         # define any additional key-value pair that will appear as property in the JUnit report
         self.properties = {"testrail_attachment": "some/path/to/afile.txt"}
 
-        # self.properties.update()
-
-        self.assertTrue(next(side_effect))
-        logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")
-
-    @pykiso.retry_test_case(max_try=5, rerun_setup=True, rerun_teardown=True)
-    @pykiso.xray(test_key="BDU3-13141", req_id="BDU_req_blabla")
-    def test_run_blabla(self):
-        """blablabla."""
-        logging.info("TAG daily")
-        logging.info(f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------")
-        # define any additional key-value pair that will appear as property in the JUnit report
-        self.properties = {"testrail_attachment": "some/path/to/afile.txt"}
         self.assertTrue(next(side_effect))
         logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")
 
@@ -132,7 +115,6 @@ class MyTest1(pykiso.BasicTest):
         we will run the default tearDown()
         """
         super().tearDown()
-        # self.properties = {"test_key": "BDU3-13305"}
 
 
 @pykiso.define_test_parameters(
@@ -166,7 +148,9 @@ class MyTest2(pykiso.RemoteTest):
     default timeout value is 10 seconds for each.
     """
 
-    @pykiso.retry_test_case(max_try=3, rerun_setup=False, rerun_teardown=False, stability_test=True)
+    @pykiso.retry_test_case(
+        max_try=3, rerun_setup=False, rerun_teardown=False, stability_test=True
+    )
     def test_run(self):
         """In this case the default test_run method is called using the
         python syntax super(), in addition aux3, aux2 running is paused
@@ -174,14 +158,6 @@ class MyTest2(pykiso.RemoteTest):
         This test will be run 3 times in order to test stability (setUp
         and tearDown excluded as the flags are set to False).
         """
-        #
-        remote_dut_software_version = "42.0.0"
-        self.properties = {
-            "property_name": 42,
-            "Software Version": remote_dut_software_version,
-            # "test_key": "BDU3-13141",
-        }
-        #
         logging.info(f"------------suspend auxiliaries run-------------")
         logging.info("TAG nightly")
         aux3.suspend()
