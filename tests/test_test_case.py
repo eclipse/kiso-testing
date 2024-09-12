@@ -359,17 +359,23 @@ def test_retry_on_failure_decorator_step_report(mocker):
     assert add_retry_mocker.call_count == 2
 
 
-@pytest.mark.parametrize("test_key,req_id", [("ABC-12345", "ABC-req-12345"), ("dummy_test_key", "dummy_req_id")])
-def test_xray_decorator(test_key, req_id, mocker):
+@pytest.mark.parametrize(
+    "test_key,req_id, properties",
+    [("ABC-12345", "ABC-req-12345", {}), ("dummy_test_key", "dummy_req_id", {"test_summary": "Dummy summary"})],
+)
+def test_xray_decorator(test_key, req_id, properties, mocker):
     mock_test_case_class = mocker.Mock()
 
     # fix __name__ for the mock.test_run
     mock_test_case_class.test_run.__name__ = "test_run"
     mock_test_case_class._testMethodName = "test_run"
+    mock_test_case_class.properties = properties
 
     partial_test_run = partial(xray(test_key, req_id)(mock_test_case_class.test_run))
 
     partial_test_run(mock_test_case_class)
+
+    assert isinstance(mock_test_case_class.properties, dict)
 
     assert mock_test_case_class.test_run.call_count == 1
     assert mock_test_case_class.properties["test_key"] == test_key
