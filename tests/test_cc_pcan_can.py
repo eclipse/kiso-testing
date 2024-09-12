@@ -508,7 +508,7 @@ def test_macos_instantiation(mock_can_bus, mock_PCANBasic, mocker, caplog):
         (
             [None, RuntimeError("Test Exception 2"), None, None],
             None,
-            3,
+            4,
             1,
             (pathlib.Path.cwd() / "test/path"),
             True,
