@@ -98,9 +98,7 @@ class MyTest1(pykiso.BasicTest):
         tearDown methods are called for each attempt.
         """
         logging.info("TAG daily")
-        logging.info(
-            f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------"
-        )
+        logging.info(f"--------------- RUN: {self.test_suite_id}, {self.test_case_id} ---------------")
         # define any additional key-value pair that will appear as property in the JUnit report
         self.properties = {"testrail_attachment": "some/path/to/afile.txt"}
 
@@ -148,9 +146,7 @@ class MyTest2(pykiso.RemoteTest):
     default timeout value is 10 seconds for each.
     """
 
-    @pykiso.retry_test_case(
-        max_try=3, rerun_setup=False, rerun_teardown=False, stability_test=True
-    )
+    @pykiso.retry_test_case(max_try=3, rerun_setup=False, rerun_teardown=False, stability_test=True)
     def test_run(self):
         """In this case the default test_run method is called using the
         python syntax super(), in addition aux3, aux2 running is paused
