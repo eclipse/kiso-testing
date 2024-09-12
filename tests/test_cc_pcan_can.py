@@ -302,13 +302,13 @@ def test_import_uptime():
     "constructor_params, expected_config",
     [
         (
-            {},
-            {
+            {},  # contructor_params
+            {  # expected_config
                 "interface": "pcan",
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "result.trc",
-                "trace_size": 10,
+                "trace_size": 100,
                 "bitrate": 500000,
                 "is_fd": True,
                 "enable_brs": False,
@@ -329,12 +329,12 @@ def test_import_uptime():
             },
         ),
         (
-            {
+            {  # contructor_params
                 "interface": "pcan",
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "result.trc",
-                "trace_size": 1000,
+                "trace_size": 1000,  # More than maximum (100)
                 "bitrate": 500000,
                 "is_fd": False,
                 "enable_brs": True,
@@ -358,7 +358,7 @@ def test_import_uptime():
                 "channel": "PCAN_USBBUS1",
                 "state": "ACTIVE",
                 "trace_path": "result.trc",
-                "trace_size": 10,
+                "trace_size": 100,
                 "bitrate": 500000,
                 "is_fd": False,
                 "enable_brs": True,

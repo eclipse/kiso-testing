@@ -197,8 +197,8 @@ class CCPCanCan(CChannel):
             raise ValueError(f"Trace name {self.trace_path.name} is incorrect, it should be a trc file")
 
         # Check trace size
-        if not 0 < self.trace_size <= 100:
-            self.trace_size = 10
+        if not (0 < self.trace_size <= 100):
+            self.trace_size = 100
             log.internal_warning(
                 "Make sure trace size is between 1 and 100 Mb. Setting trace size to default value "
                 f"value : {self.trace_size}."
