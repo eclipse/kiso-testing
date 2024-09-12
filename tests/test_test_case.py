@@ -387,8 +387,8 @@ def test_xray_decorator(test_key, req_id, properties, mocker):
     assert getattr(mock_test_case_class, "properties", None) is None
 
 
-@pytest.mark.parametrize("value, type", [("dummy", str), ({"dummy": 1}, dict)])
-def test_properties(value, type):
+@pytest.mark.parametrize("properties,value, type", [("dummy1", "dummy2", str), ({}, {"dummy": 1}, dict)])
+def test_properties(value, type, properties):
     class DummyClass(test_case.BasicTest):
         pass
 
@@ -396,8 +396,14 @@ def test_properties(value, type):
     assert test_case_inst.properties is None
 
     # update properties
+    test_case_inst.properties = properties
+    assert isinstance(test_case_inst.properties, type)
+
+    # update properties
     test_case_inst.properties = value
     assert isinstance(test_case_inst.properties, type)
+
+    assert getattr(test_case_inst, "properties") == value
 
     # delete properties
     del test_case_inst.properties
