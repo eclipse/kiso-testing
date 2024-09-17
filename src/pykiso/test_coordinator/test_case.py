@@ -343,7 +343,7 @@ def xray(test_key: str, req_id: str | None = None) -> None:
     """Decorator: to mark the test to import the JUnit xml results into xray
 
     :param test_key: the xray ticket id linked to be linked to the test
-    :param requirement: the requirement ticket id to be linked to the test
+    :param req_id: the requirement ticket id to be linked to the test
     """
 
     def decorator(func):

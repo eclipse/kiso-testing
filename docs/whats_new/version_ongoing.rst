@@ -15,7 +15,7 @@ By default the CCPCanCan will use the trace size define in during the initialisa
 
 The log path is now initialise if set at None.
 
-Results can be exported on Xray
+Results can be exported to Xray
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 see :ref:`xray`

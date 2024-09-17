@@ -7,6 +7,7 @@ from .xray import extract_test_results, upload_test_results
 
 @click.group()
 @click.option(
+    "-u",
     "--user",
     help="Xray user id",
     required=True,
@@ -14,6 +15,7 @@ from .xray import extract_test_results, upload_test_results
     hide_input=True,
 )
 @click.option(
+    "-p",
     "--password",
     help="Valid Xray API key (if not given ask at command prompt level)",
     required=False,

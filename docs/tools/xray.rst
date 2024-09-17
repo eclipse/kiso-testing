@@ -1,14 +1,14 @@
 
 .. _xray:
 
-Export results on Xray
+Export results to Xray
 ======================
 
 The ``xray`` CLI utility takes your Pykiso Junit report and export them on `Xray <https://xray.cloud.getxray.app/>`__.
 
 Upload your results
 -------------------
-To upload your results on Xray users have to follow the command :
+To upload your results to Xray users have to follow the command :
 
 .. code:: bash
 
