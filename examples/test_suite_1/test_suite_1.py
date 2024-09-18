@@ -23,6 +23,9 @@ from itertools import cycle
 import pykiso
 from pykiso.auxiliaries import aux1, aux2, aux3
 
+# from pytest_check import check
+
+
 # define an external iterator that can be used for retry_test_case demo
 side_effect = cycle([False, False, True])
 
@@ -106,6 +109,25 @@ class MyTest1(pykiso.BasicTest):
 
         self.assertTrue(next(side_effect))
         logging.info(f"I HAVE RUN 0.1.1 for tag {self.tag}!")
+
+        # subTest is originally meant for iterating tests and adds testcase entries to the report with tampered testcase name
+        with self.subTest("some subtest"):
+            self.assertTrue(False, "Subtest failed")
+
+        # how it works in the background
+        try:
+            # step-report with catch the AssertionError and reraise
+            self.assertTrue(False, "Catching the error")
+        except AssertionError:
+            # reraised AssertionError is added to unittest's errors in order to be reported
+            import sys
+
+            exc_info = sys.exc_info()
+            self._outcome.errors.append((self, exc_info))
+
+        # how it could be integrated, a migration to pytest would mean replacing self.check() with pytest_check.check
+        with self.check():
+            self.assertTrue(False, "Checking a value")
 
     @pykiso.retry_test_case(max_try=3)
     def tearDown(self):
