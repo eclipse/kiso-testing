@@ -35,7 +35,7 @@ from .interfaces.dt_auxiliary import DTAuxiliaryInterface
 from .logging_initializer import disable_logging
 from .message import Message
 from .test_coordinator import test_case, test_message_handler, test_suite
-from .test_coordinator.test_case import BasicTest, RemoteTest, define_test_parameters, retry_test_case
+from .test_coordinator.test_case import BasicTest, RemoteTest, define_test_parameters, retry_test_case, xray
 from .test_coordinator.test_execution import abort
 from .test_coordinator.test_suite import (
     BasicTestSuiteSetup,

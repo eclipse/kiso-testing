@@ -15,7 +15,7 @@ from functools import partial
 import pytest
 
 import pykiso.test_result.assert_step_report as step_report
-from pykiso import cli, retry_test_case
+from pykiso import cli, retry_test_case, xray
 from pykiso.logging_initializer import LogOptions
 from pykiso.test_coordinator import test_case
 
@@ -126,6 +126,7 @@ def test_define_test_parameters_on_basic_tc(
         pass
 
     tc_inst = MyClass()
+
     assert tc_inst.test_suite_id == suite_id
     assert tc_inst.test_case_id == case_id
     aux_list = aux_list or []
@@ -133,10 +134,7 @@ def test_define_test_parameters_on_basic_tc(
 
     if setup_timeout is not None:
         with caplog.at_level(logging.INTERNAL_WARNING):
-            assert (
-                "BasicTest does not support test timeouts, it will be discarded"
-                in caplog.text
-            )
+            assert "BasicTest does not support test timeouts, it will be discarded" in caplog.text
 
     assert tc_inst.test_ids == test_ids
     assert tc_inst.tag == tag
@@ -317,17 +315,13 @@ def test_retry_on_failure_decorator(
             "bingo",
         ]
     else:
-        mock_test_case_class.test_run.side_effect = list(range(5)) + [
-            Exception("Exception")
-        ]
+        mock_test_case_class.test_run.side_effect = list(range(5)) + [Exception("Exception")]
     # fix __name__ for the mock.test_run
     mock_test_case_class.test_run.__name__ = "test_run"
     mock_test_case_class._testMethodName = "test_run"
 
     partial_test_run = partial(
-        retry_test_case(max_try, rerun_setup, rerun_teardown, stability_test)(
-            mock_test_case_class.test_run
-        )
+        retry_test_case(max_try, rerun_setup, rerun_teardown, stability_test)(mock_test_case_class.test_run)
     )
     if expected_exception:
         with pytest.raises(expected_exception):
@@ -347,28 +341,70 @@ def test_retry_on_failure_decorator_step_report(mocker):
     mock_test_case_class.test_run.__name__ = "test_run"
     mock_test_case_class._testMethodName = "test_run"
     mock_test_case_class.step_report = step_report.StepReportData()
-    mock_test_case_class.step_report.header = OrderedDict(
-        {"ITF version": "pykiso.__version__"}
-    )
+    mock_test_case_class.step_report.header = OrderedDict({"ITF version": "pykiso.__version__"})
     all_step_report_mock = {type(mock_test_case_class).__name__: {"succeed": True}}
     step_report.ALL_STEP_REPORT = all_step_report_mock
-    prepare_report_mock = mocker.patch(
-        "pykiso.test_result.assert_step_report._prepare_report"
-    )
-    add_retry_mocker = mocker.patch(
-        "pykiso.test_result.assert_step_report.add_retry_information"
-    )
+    prepare_report_mock = mocker.patch("pykiso.test_result.assert_step_report._prepare_report")
+    add_retry_mocker = mocker.patch("pykiso.test_result.assert_step_report.add_retry_information")
     mock_test_case_class.test_run.side_effect = [
         Exception("try again"),
         Exception("try harder"),
         "bingo",
     ]
 
-    partial_test_run = partial(
-        retry_test_case(max_try, False, False, False)(mock_test_case_class.test_run)
-    )
+    partial_test_run = partial(retry_test_case(max_try, False, False, False)(mock_test_case_class.test_run))
 
     partial_test_run(mock_test_case_class)
 
     prepare_report_mock.assert_called_once_with(mock_test_case_class, "test_run")
     assert add_retry_mocker.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "test_key,req_id, properties",
+    [("ABC-12345", "ABC-req-12345", {}), ("dummy_test_key", "dummy_req_id", {"test_summary": "Dummy summary"})],
+)
+def test_xray_decorator(test_key, req_id, properties, mocker):
+    mock_test_case_class = mocker.Mock()
+
+    # fix __name__ for the mock.test_run
+    mock_test_case_class.test_run.__name__ = "test_run"
+    mock_test_case_class._testMethodName = "test_run"
+    mock_test_case_class.properties = properties
+
+    partial_test_run = partial(xray(test_key, req_id)(mock_test_case_class.test_run))
+
+    partial_test_run(mock_test_case_class)
+
+    assert isinstance(mock_test_case_class.properties, dict)
+
+    assert mock_test_case_class.test_run.call_count == 1
+    assert mock_test_case_class.properties["test_key"] == test_key
+    assert mock_test_case_class.properties["req_id"] == req_id
+
+    del mock_test_case_class.properties
+
+    assert getattr(mock_test_case_class, "properties", None) is None
+
+
+@pytest.mark.parametrize("properties,value, type", [("dummy1", "dummy2", str), ({}, {"dummy": 1}, dict)])
+def test_properties(value, type, properties):
+    class DummyClass(test_case.BasicTest):
+        pass
+
+    test_case_inst = DummyClass(1, 1, None, {"Component1": ["Req1", "Req2"]}, None, None, None, None)
+    assert test_case_inst.properties is None
+
+    # update properties
+    test_case_inst.properties = properties
+    assert isinstance(test_case_inst.properties, type)
+
+    # update properties
+    test_case_inst.properties = value
+    assert isinstance(test_case_inst.properties, type)
+
+    assert getattr(test_case_inst, "properties") == value
+
+    # delete properties
+    del test_case_inst.properties
+    assert getattr(test_case_inst, "properties", None) is None

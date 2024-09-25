@@ -27,6 +27,9 @@ import logging
 import unittest
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
+import lxml
+import lxml.etree
+
 import pykiso.test_result.assert_step_report as step_report
 
 from .. import message
@@ -85,6 +88,8 @@ class BasicTest(unittest.TestCase):
         if any([setup_timeout, run_timeout, teardown_timeout]) and not isinstance(self, RemoteTest):
             log.warning("BasicTest does not support test timeouts, it will be discarded")
 
+        self._properties = None
+
     def cleanup_and_skip(self, aux: AuxiliaryInterface, info_to_print: str) -> None:
         """Cleanup auxiliary and log reasons.
 
@@ -107,6 +112,21 @@ class BasicTest(unittest.TestCase):
     def tearDown(self) -> None:
         """Closure hook method to execute code after each test method."""
         pass
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @properties.setter
+    def properties(self, value):
+        if isinstance(self._properties, dict) and isinstance(value, dict):
+            self._properties.update(value)
+        else:
+            self._properties = value
+
+    @properties.deleter
+    def properties(self):
+        del self._properties
 
 
 class RemoteTest(BasicTest):
@@ -313,6 +333,30 @@ def retry_test_case(
 
                     # print counter only after failing test to avoid spamming the console
                     log.info(f">>>>>>>>>> Attempt: {retry_nb +1}/{max_try} <<<<<<<<<<")
+
+        return func_wrapper
+
+    return decorator
+
+
+def xray(test_key: str, req_id: str | None = None) -> None:
+    """Decorator: to mark the test to import the JUnit xml results into xray
+
+    :param test_key: the xray ticket id linked to be linked to the test
+    :param req_id: the requirement ticket id to be linked to the test
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def func_wrapper(*args, **kwargs):
+            args[0].properties = {
+                "test_key": test_key,
+                "req_id": req_id,
+                "test_description": func.__doc__,
+                "test_summary": func.__name__,
+            }
+            result = func(*args, **kwargs)
+            return result
 
         return func_wrapper
 
