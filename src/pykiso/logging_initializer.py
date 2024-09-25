@@ -233,7 +233,9 @@ def initialize_loggers(loggers: Optional[List[str]]) -> None:
 
     # but keep the other ones to the configured level as they could have deactivated by a previous call
     for logger_name in active_loggers:
-        logging.getLogger(logger_name).setLevel(log_options.log_level)
+        logging.getLogger(logger_name).setLevel(
+            get_internal_level(log_options.log_level) if log_options.verbose else log_options.log_level
+        )
 
 
 def import_object(path: str) -> Union[None, logging.Logger]:
