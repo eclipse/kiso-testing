@@ -8,6 +8,12 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ### Bug Fixes
 
+- Fix issue of connector ([#506](https://github.com/eclipse/kiso-testing/issues/506))
+
+## Version 0.29.3 (2024-09-27)
+
+### Bug Fixes
+
 - Log level when verbose is activated ([#503](https://github.com/eclipse/kiso-testing/issues/503))
 
 ### New Features

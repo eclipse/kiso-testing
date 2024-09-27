@@ -25,6 +25,9 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Union
 
+import psutil
+from can.interfaces.pcan.pcan import PcanCanInitializationError
+
 try:
     import can
     import can.bus
@@ -210,23 +213,37 @@ class CCPCanCan(CChannel):
         if self.opened:
             log.warning("Pcan is already opened")
             return
-        self.bus = can.interface.Bus(
-            interface=self.interface,
-            channel=self.channel,
-            state=self.state,
-            bitrate=self.bitrate,
-            fd=self.is_fd,
-            f_clock_mhz=self.f_clock_mhz,
-            nom_brp=self.nom_brp,
-            nom_tseg1=self.nom_tseg1,
-            nom_tseg2=self.nom_tseg2,
-            nom_sjw=self.nom_sjw,
-            data_brp=self.data_brp,
-            data_tseg1=self.data_tseg1,
-            data_tseg2=self.data_tseg2,
-            data_sjw=self.data_sjw,
-            can_filters=self.can_filters,
-        )
+        try:
+            self.bus = can.interface.Bus(
+                interface=self.interface,
+                channel=self.channel,
+                state=self.state,
+                bitrate=self.bitrate,
+                fd=self.is_fd,
+                f_clock_mhz=self.f_clock_mhz,
+                nom_brp=self.nom_brp,
+                nom_tseg1=self.nom_tseg1,
+                nom_tseg2=self.nom_tseg2,
+                nom_sjw=self.nom_sjw,
+                data_brp=self.data_brp,
+                data_tseg1=self.data_tseg1,
+                data_tseg2=self.data_tseg2,
+                data_sjw=self.data_sjw,
+                can_filters=self.can_filters,
+            )
+        except PcanCanInitializationError as e:
+            # find process which has the libpcanbasic dll/so loaded
+            for proc in psutil.process_iter():
+                # check every process except this one
+                if not os.getpid() == proc.pid:
+                    for dll in proc.memory_maps():
+                        if "libpcanbasic" in dll.path:
+                            print(f"PCAN interface is already opened by process {proc.name()} with pid {proc.pid}")
+                            this_proc = psutil.Process(os.getpid())
+                            print(f"This process is {this_proc.name()} with pid {this_proc.pid}")
+                            raise e
+            print("PCAN interface is not opened by any process")
+            raise e
 
         if self.logging_activated and self.raw_pcan_interface is None:
             self.raw_pcan_interface = PCANBasic.PCANBasic()
