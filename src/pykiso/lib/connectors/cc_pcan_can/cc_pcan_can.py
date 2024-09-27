@@ -208,7 +208,7 @@ class CCPCanCan(CChannel):
     def _cc_open(self) -> None:
         """Open a can bus channel, set filters for reception and activate PCAN log."""
         if self.opened:
-            log.error("Pcan is already opened")
+            log.warning("Pcan is already opened")
             return
         self.bus = can.interface.Bus(
             interface=self.interface,
@@ -336,6 +336,7 @@ class CCPCanCan(CChannel):
     def _cc_close(self) -> None:
         """Close the current can bus channel and uninitialize PCAN handle."""
         if not self.opened:
+            log.warning("Pcan is already closed")
             return
         self.stop_pcan_trace()
         self.bus.shutdown()
