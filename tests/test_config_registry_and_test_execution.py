@@ -1130,8 +1130,10 @@ def test_handle_pcan_trace_strategy(mocker: MockerFixture, trc_file_strategy, nb
     assert stop_pcan_trace_mock.call_count == nb_call_expected
 
 
-def test_start_pcan_trace_decorator(mocker: MockerFixture):
+@pytest.mark.parametrize("opened", (True, False))
+def test_start_pcan_trace_decorator(mocker: MockerFixture, opened: bool):
     pcan_mock = mocker.MagicMock(spec=CCPCanCan)
+    pcan_mock.opened = opened
     pcan_mock.trace_path = Path(".")
     trace_name = "file_name"
 
@@ -1144,6 +1146,10 @@ def test_start_pcan_trace_decorator(mocker: MockerFixture):
 
     assert returned_value == "value"
     pcan_mock.start_pcan_trace.assert_called_once_with(trace_path=pcan_mock.trace_path / trace_name)
+    if not opened:
+        pcan_mock.open.assert_called_once()
+    else:
+        pcan_mock.open.assert_not_called()
 
 
 def test_stop_pcan_trace_decorator(mocker: MockerFixture):
