@@ -10,6 +10,10 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 - Log level when verbose is activated ([#503](https://github.com/eclipse/kiso-testing/issues/503))
 
+### New Features
+
+- Make release 0.29.3 ([#505](https://github.com/eclipse/kiso-testing/issues/505))
+
 ## Version 0.29.1 (2024-09-05)
 
 ### Bug Fixes
