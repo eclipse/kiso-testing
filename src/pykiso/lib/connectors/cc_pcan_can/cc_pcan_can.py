@@ -173,6 +173,7 @@ class CCPCanCan(CChannel):
         self.merge_trc_logs = merge_trc_logs if strategy_trc_file is None else False
         self._trc_file_names: dict[Path, str | None] = {}
         self.trace_running = False
+        self.opened = False
         if bus_error_warning_filter:
             logging.getLogger("can.pcan").addFilter(PcanFilter())
 
@@ -206,6 +207,9 @@ class CCPCanCan(CChannel):
 
     def _cc_open(self) -> None:
         """Open a can bus channel, set filters for reception and activate PCAN log."""
+        if self.opened:
+            log.warning("Pcan is already opened")
+            return
         self.bus = can.interface.Bus(
             interface=self.interface,
             channel=self.channel,
@@ -228,6 +232,7 @@ class CCPCanCan(CChannel):
             self.raw_pcan_interface = PCANBasic.PCANBasic()
             if self.strategy_trc_file is None:
                 self._pcan_configure_trace()
+        self.opened = True
 
     def _pcan_configure_trace(self) -> None:
         """Configure PCAN dongle to create a trace file.
@@ -330,6 +335,9 @@ class CCPCanCan(CChannel):
 
     def _cc_close(self) -> None:
         """Close the current can bus channel and uninitialize PCAN handle."""
+        if not self.opened:
+            log.warning("Pcan is already closed")
+            return
         self.stop_pcan_trace()
         self.bus.shutdown()
         self.bus = None
@@ -344,6 +352,7 @@ class CCPCanCan(CChannel):
                     log.error(error_msg)
             finally:
                 self.raw_pcan_interface = None
+        self.opened = False
 
     def _cc_send(self, msg: bytes, remote_id: Optional[int] = None, **kwargs) -> None:
         """Send a CAN message at the configured id.

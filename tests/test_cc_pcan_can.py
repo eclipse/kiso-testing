@@ -1053,3 +1053,19 @@ def test_rename_trace_multiple_dir(trc_files_different_directory, mock_can_bus, 
     ):
         with open(trace, "r") as trc:
             expected_result = trc.read()
+
+
+def test_stop_pcan_already_stopped(caplog):
+    cc_pcan = CCPCanCan()
+    cc_pcan.opened = False
+    with caplog.at_level(logging.WARNING):
+        cc_pcan._cc_close()
+    assert "Pcan is already closed" in caplog.text
+
+
+def test_start_pcan_already_started(caplog):
+    cc_pcan = CCPCanCan()
+    cc_pcan.opened = True
+    with caplog.at_level(logging.WARNING):
+        cc_pcan._cc_open()
+    assert "Pcan is already opened" in caplog.text

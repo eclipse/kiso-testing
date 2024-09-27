@@ -598,7 +598,7 @@ def _retrieve_trc_file_strategy(config: dict[str, Any]) -> Optional[str]:
     return strategy_trc_file
 
 
-def start_pcan_trace_decorator(func: Callable, cc_pcan, trace_file_name: str):
+def start_pcan_trace_decorator(func: Callable, cc_pcan: CCPCanCan, trace_file_name: str):
     """Decorator that will call start pcan trace before calling the function
 
     :param func: function to execute
@@ -609,6 +609,8 @@ def start_pcan_trace_decorator(func: Callable, cc_pcan, trace_file_name: str):
     @functools.wraps(func)
     def decorator(*args, **kwargs):
         # Add datetime in trace file name to not overwrite trace file when rerunning test
+        if not cc_pcan.opened:
+            cc_pcan.open()
         cc_pcan.start_pcan_trace(
             trace_path=cc_pcan.trace_path
             / trace_file_name.replace(".trc", f"_{datetime.today().strftime('%Y%d%m%H%M%S')}.trc")
