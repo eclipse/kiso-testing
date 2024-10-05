@@ -19,6 +19,7 @@ Loopback CChannel
 
 """
 import threading
+import time
 from collections import deque
 from typing import Dict, Optional
 
@@ -62,8 +63,12 @@ class CCLoopback(CChannel):
         :return: dictionary containing the received bytes if successful, otherwise None
         """
         with self.lock:
-            try:
-                recv_msg = self._loopback_buffer.popleft()
-                return {"msg": recv_msg}
-            except IndexError:
-                return {"msg": None}
+            # Simulate a blocking on receive
+            start = time.time_ns()
+            while (time.time_ns() - start) < timeout * 1e9:
+                try:
+                    recv_msg = self._loopback_buffer.popleft()
+                    return {"msg": recv_msg}
+                except IndexError:
+                    time.sleep(0.1)
+            return {"msg": None}

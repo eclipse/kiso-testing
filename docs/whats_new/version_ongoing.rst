@@ -15,7 +15,16 @@ By default the CCPCanCan will use the trace size define in during the initialisa
 
 The log path is now initialise if set at None.
 
+
 Results can be exported to Xray
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 see :ref:`xray`
+
+pykiso modules detachment
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The pykiso modules are now detached from the main testing framework.
+This enable users to define their hw setup and load it in python. The auxiliaries
+can now be used in a more flexible way in python.
+See :ref:`pykiso_as_simulator` for more details.
