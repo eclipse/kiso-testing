@@ -877,6 +877,17 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
+name = "junitparser"
+version = "3.2.0"
+description = "Manipulates JUnit/xUnit Result XML files"
+optional = false
+python-versions = "*"
+files = [
+    {file = "junitparser-3.2.0-py2.py3-none-any.whl", hash = "sha256:e14fdc0a999edfc15889b637390e8ef6ca09a49532416d3bd562857d42d4b96d"},
+    {file = "junitparser-3.2.0.tar.gz", hash = "sha256:b05e89c27e7b74b3c563a078d6e055d95cf397444f8f689b0ca616ebda0b3c65"},
+]
+
+[[package]]
 name = "lxml"
 version = "5.2.2"
 description = "Powerful and Pythonic XML processing library combining libxml2/libxslt with the ElementTree API."
@@ -2317,4 +2328,4 @@ testrail = ["requests", "rich"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "0189466ecce70ed2297e30d056bcb38f39044ea414d7ff797ab92114a7974362"
+content-hash = "d1789b2ac34cebeef87d4f233e4986eedad24eb8a115e19f51dd94cef1801a7a"
