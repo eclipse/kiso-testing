@@ -20,7 +20,7 @@ Options:
   --password TEXT               Valid Xray API key (if not given ask at command prompt
                                 level)  [optional]
   --url TEXT                    URL of Xray server  [required]
-  --project-key TEXT             Key of the project  [required]
+  --project-key TEXT            Key of the project  [required]
   --path-results PATH           Full path to the folder containing the JUNIT reports
                                 [required]
   --test-execution-id TEXT      Xray test execution ticket id's use to import the
