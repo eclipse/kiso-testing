@@ -353,7 +353,6 @@ def xray(test_key: str, req_id: str | None = None) -> None:
                 "test_key": test_key,
                 "req_id": req_id,
                 "test_description": func.__doc__,
-                "test_summary": func.__name__,
             }
             result = func(*args, **kwargs)
             return result

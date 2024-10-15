@@ -1,10 +1,10 @@
 import json
-import logging
-import os
 import tempfile
+from pathlib import Path
 from xml.etree.ElementTree import ElementTree
 
 import requests
+from junitparser.cli import merge as merge_junit_xml
 
 API_VERSION = "api/v2/"
 
@@ -37,12 +37,13 @@ class XrayPublisher:
         Get the token to authenticate to xray from a client ID and a client SECRET.
 
         :param url: the url to send the post request to authenticate
-
+        :raises HTTPError: if the token couldn't be retrieved
         :return: the Bearer token
         """
         client = {"client_id": self.client_id, "client_secret": self.client_secret}
         headers = {"Content-Type": "application/json"}
         token_result = requests.post(url=url, headers=headers, json=client)
+        token_result.raise_for_status()
         return token_result.json()
 
     def get_publisher_headers(self, token: str) -> dict[str, str]:
@@ -61,7 +62,9 @@ class XrayPublisher:
         self,
         token: str,
         data: dict,
+        project_key: str,
         test_execution_id: str | None = None,
+        test_execution_name: str | None = None,
     ) -> dict[str, str]:
         """
         Publish the xml test results to xray.
@@ -73,13 +76,26 @@ class XrayPublisher:
 
         :return: the content of the post request to create the execution test ticket: its id, its key, and its issue
         """
+        if test_execution_name is None:
+            return self._publish_xml_result(
+                token=token, data=data, project_key=project_key, test_execution_id=test_execution_id
+            )
+        return self._publish_xml_result_multipart(
+            token=token,
+            data=data,
+            project_key=project_key,
+            test_execution_name=test_execution_name,
+        )
+
+    def _publish_xml_result(
+        self, token: str, data: dict, project_key: str, test_execution_id: str | None = None
+    ) -> dict[str, str]:
         # construct the request header
         headers = self.get_publisher_headers(token)
 
+        url_endpoint = f"import/execution/junit/?projectKey={project_key}"
         if test_execution_id is not None:
-            url_endpoint = "import/execution/junit/?" + "projectKey=BDU3" + "&testExecKey=" + test_execution_id
-        else:
-            url_endpoint = "import/execution/junit/?" + "projectKey=BDU3"
+            url_endpoint += f"&testExecKey={test_execution_id}"
 
         # construct the complete url to send the post request
         url_publisher = self.get_url(url_endpoint=url_endpoint)
@@ -89,12 +105,48 @@ class XrayPublisher:
         except requests.exceptions.ConnectionError:
             raise XrayException(f"Cannot connect to JIRA service at {url_endpoint}")
         else:
-            try:
-                query_response.raise_for_status()
-            except requests.exceptions.HTTPError:
-                raise XrayException(
-                    f"Cannot post to JIRA service at {url_endpoint} due to Response status code: {query_response.status_code}"
-                )
+            query_response.raise_for_status()
+
+        return json.loads(query_response.content)
+
+    def _publish_xml_result_multipart(
+        self,
+        token: str,
+        data: dict,
+        project_key: str,
+        test_execution_name: str,
+    ):
+        # construct the request header
+        headers = {"Authorization": "Bearer " + token}
+        url_endpoint = "import/execution/junit/multipart"
+        url_publisher = self.get_url(url_endpoint="import/execution/junit/multipart")
+        files = {
+            "info": json.dumps(
+                {
+                    "fields": {
+                        "project": {"key": project_key},
+                        "summary": test_execution_name,
+                        "issuetype": {"name": "Xray Test Execution"},
+                    }
+                }
+            ),
+            "results": data,
+            "testInfo": json.dumps(
+                {
+                    "fields": {
+                        "project": {"key": project_key},
+                        "summary": test_execution_name,
+                        "issuetype": {"id": None},
+                    }
+                }
+            ),
+        }
+        try:
+            query_response = requests.post(url_publisher, headers=headers, files=files)
+        except requests.exceptions.ConnectionError:
+            raise XrayException(f"Cannot connect to JIRA service at {url_endpoint}")
+        else:
+            query_response.raise_for_status()
         return json.loads(query_response.content)
 
 
@@ -103,7 +155,9 @@ def upload_test_results(
     user: str,
     password: str,
     results: str,
+    project_key: str,
     test_execution_id: str | None = None,
+    test_execution_name: str | None = None,
 ) -> dict[str, str]:
     """
     Upload all given results to xray.
@@ -121,26 +175,45 @@ def upload_test_results(
     # authenticate: get the correct token from the authenticate endpoint
     url_authenticate = xray_publisher.get_url(url_endpoint="authenticate/")
     token = xray_publisher.get_token(url=url_authenticate)
-
     # publish: post request to send the junit xml result to the junit xml endpoint
-    responses = xray_publisher.publish_xml_result(token=token, data=results, test_execution_id=test_execution_id)
+    responses = xray_publisher.publish_xml_result(
+        token=token,
+        data=results,
+        project_key=project_key,
+        test_execution_id=test_execution_id,
+        test_execution_name=test_execution_name,
+    )
     return responses
 
 
-def extract_test_results(
-    path_results: str,
-) -> str:
+def extract_test_results(path_results: Path, merge_xml_files: bool) -> list[str]:
     """
     Extract the test results linked to an xray test key. Filter the JUnit xml files generated by the execution of tests,
     to keep only the results of tests marked with an xray decorator. A temporary file is created with the test results.
 
     :param path_results: the path to the xml files
+    :param merge_xml_files: merge all the files to return only a list with one element
+    :return: the filtered test results"""
+    xml_results = []
+    if path_results.is_file():
+        if path_results.suffix != ".xml":
+            raise RuntimeError(
+                f"Expected xml file but found a {path_results.suffix} file instead, from path {path_results}"
+            )
+        file_to_parse = [path_results]
+    elif path_results.is_dir():
+        file_to_parse = list(path_results.glob("*.xml"))
+        if not file_to_parse:
+            raise RuntimeError(f"No xml found in following repository {path_results}")
 
-    :return: the filtered test results
-    """
-    # from the JUnit xml files, create a temporary file
-    for file in os.listdir(path_results):
-        if file.endswith(".xml"):
+    with tempfile.TemporaryDirectory() as xml_dir:
+        if merge_xml_files and len(file_to_parse) > 1:
+            xml_dir = Path(xml_dir).resolve()
+            xml_path = xml_dir / "xml_merged.xml"
+            merge_junit_xml(file_to_parse, xml_path, None)
+            file_to_parse = [xml_path]
+        # from the JUnit xml files, create a temporary file
+        for file in file_to_parse:
             tree = ElementTree()
             tree.parse(file)
             root = tree.getroot()
@@ -164,6 +237,6 @@ def extract_test_results(
             with tempfile.TemporaryFile() as fp:
                 tree.write(fp)
                 fp.seek(0)
-                xml_results = fp.read().decode()
-    # TODO: handle list of xml_results, if several xml files are in the folder
-    return xml_results
+                xml_results.append(fp.read().decode())
+
+        return xml_results

@@ -1,4 +1,6 @@
 import getpass
+import json
+from pathlib import Path
 
 import click
 
@@ -51,22 +53,54 @@ def cli_xray(ctx: dict, user: str, password: str, url: str) -> None:
     type=click.Path(exists=True, resolve_path=True),
     required=True,
 )
+@click.option(
+    "-k",
+    "--project-key",
+    help="Key of the project",
+    type=click.STRING,
+    required=True,
+)
+@click.option(
+    "-n",
+    "--test-execution-name",
+    help="Name of the test execution ticket created",
+    type=click.STRING,
+    required=False,
+)
+@click.option(
+    "-m",
+    "--merge-xml-files",
+    help="Merge multiple xml files to be send in one xml file",
+    is_flag=True,
+    required=False,
+)
 @click.pass_context
 def cli_upload(
     ctx,
     path_results: str,
     test_execution_id: str,
+    project_key: str,
+    test_execution_name: str,
+    merge_xml_files: bool,
 ) -> None:
     """Upload the JUnit xml test results on xray."""
     # From the JUnit xml files found, create a temporary file to keep only the test results marked with an xray decorator.
-    test_results = extract_test_results(path_results=path_results)
+    path_results = Path(path_results).resolve()
+    test_results = extract_test_results(path_results=path_results, merge_xml_files=merge_xml_files)
 
-    # Upload the test results into Xray
-    responses = upload_test_results(
-        base_url=ctx.obj["URL"],
-        user=ctx.obj["USER"],
-        password=ctx.obj["PASSWORD"],
-        results=test_results,
-        test_execution_id=test_execution_id,
-    )
-    print(f"The test results can be found in JIRA by: {responses}")
+    responses = []
+    for result in test_results:
+        # Upload the test results into Xray
+        responses.append(
+            upload_test_results(
+                base_url=ctx.obj["URL"],
+                user=ctx.obj["USER"],
+                password=ctx.obj["PASSWORD"],
+                results=result,
+                test_execution_id=test_execution_id,
+                project_key=project_key,
+                test_execution_name=test_execution_name,
+            )
+        )
+    responses_result_str = json.dumps(responses, indent=2)
+    print(f"The test results can be found in JIRA by: {responses_result_str}")

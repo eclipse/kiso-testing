@@ -105,12 +105,14 @@ def test_check_file_extension(mocker):
     actual = cli.check_file_extension(click_context_mock, click_param_mock, paths)
     assert actual == paths
 
+
 def test_check_and_handle_unresolved_threads_no_unresolved_threads(mocker):
     log_mock = mocker.MagicMock()
     mocker.patch("pykiso.cli.active_threads", return_value=[])
     cli.check_and_handle_unresolved_threads(log_mock)
     log_mock.warning.assert_not_called()
     log_mock.fatal.assert_not_called()
+
 
 def test_check_and_handle_unresolved_threads_with_unresolved_threads_resolved_before_timeout(mocker):
     log_mock = mocker.MagicMock()
@@ -119,6 +121,7 @@ def test_check_and_handle_unresolved_threads_with_unresolved_threads_resolved_be
     cli.check_and_handle_unresolved_threads(log_mock, timeout=5)
     log_mock.warning.assert_called()
     log_mock.fatal.assert_not_called()
+
 
 def test_check_and_handle_unresolved_threads_with_unresolved_threads_not_resolved_after_timeout(mocker):
     log_mock = mocker.MagicMock()
@@ -131,6 +134,7 @@ def test_check_and_handle_unresolved_threads_with_unresolved_threads_not_resolve
     log_mock.fatal.assert_called()
     os_mock.assert_called_with(cli.test_execution.ExitCode.UNRESOLVED_THREADS)
 
+
 def test_active_threads(mocker):
     """Get the names of all active threads except the main thread."""
     main_thread = mocker.MagicMock()
@@ -139,6 +143,6 @@ def test_active_threads(mocker):
     other_thread = mocker.MagicMock()
     other_thread.configure_mock(name="Thread-1")
 
-    mocker.patch("threading.enumerate", return_value= [main_thread, other_thread])
+    mocker.patch("threading.enumerate", return_value=[main_thread, other_thread])
     actual = cli.active_threads()
     assert actual == ["Thread-1"]
