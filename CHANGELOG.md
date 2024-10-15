@@ -6,6 +6,12 @@ Commits have to follow following convention: https://www.conventionalcommits.org
 
 ## Version Unreleased
 
+### New Features
+
+- Add improvement for xray ([#508](https://github.com/eclipse/kiso-testing/issues/508))
+
+## Version 0.29.4 (2024-09-27)
+
 ### Bug Fixes
 
 - Fix issue of connector ([#506](https://github.com/eclipse/kiso-testing/issues/506))
