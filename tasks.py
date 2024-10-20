@@ -125,6 +125,7 @@ def clean_build(c):
     _delete_folders(".eggs", root_dir=ROOT_DIR)
     _delete_folders("**/*.egg-info", root_dir=ROOT_DIR)
     _delete_files("**/*.egg", root_dir=ROOT_DIR)
+    _delete_folders(".ruff_cache", root_dir=ROOT_DIR)
 
 
 @task
@@ -148,8 +149,10 @@ def clean_tests(c):
     """
     Clean up files from testing
     """
-    _delete_folders("**/\.pytest_cache", root_dir=ROOT_DIR)
+    _delete_folders(".pytest_cache", root_dir=ROOT_DIR)
     _delete_files(".coverage", root_dir=ROOT_DIR)
+    _delete_files("coverage.xml", root_dir=ROOT_DIR)
+    _delete_folders("htmlcov", root_dir=ROOT_DIR)
     shutil.rmtree(COVERAGE_DIR, ignore_errors=True)
 
 
